@@ -45,12 +45,14 @@ export function CesiumSpatialViewer({
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<Viewer | null>(null);
   const dataSourceRef = useRef<GeoJsonDataSource | null>(null);
+  const osmBuildingsRef = useRef<{ show: boolean; destroy?: () => void } | null>(null);
   const [viewerReady, setViewerReady] = useState(false);
+  const osmBuildingsEnabled = Boolean(import.meta.env.VITE_CESIUM_ION_ACCESS_TOKEN);
   const geometryQuery = trpc.postgis.geojson.useQuery(undefined, { refetchInterval: 20_000, retry: 1 });
 
   useEffect(() => {
     if (!containerRef.current || viewerRef.current) return;
-    Ion.defaultAccessToken = "";
+    Ion.defaultAccessToken = import.meta.env.VITE_CESIUM_ION_ACCESS_TOKEN || "";
     const viewer = new Viewer(containerRef.current, {
       animation: false,
       baseLayer: false,
@@ -83,11 +85,39 @@ export function CesiumSpatialViewer({
     }, ScreenSpaceEventType.LEFT_CLICK);
     viewerRef.current = viewer;
     setViewerReady(true);
+    let cancelled = false;
+    if (osmBuildingsEnabled) {
+      void import("cesium").then(async ({ createOsmBuildingsAsync }) => {
+        if (cancelled || !viewerRef.current) return;
+        try {
+          const osmBuildings = await createOsmBuildingsAsync();
+          if (cancelled || !viewerRef.current) {
+            osmBuildings.destroy?.();
+            return;
+          }
+          osmBuildings.show = true;
+          viewer.scene.primitives.add(osmBuildings);
+          osmBuildingsRef.current = osmBuildings;
+          viewer.scene.requestRender();
+        } catch (error) {
+          console.warn("[Cesium] Optional OSM Buildings layer unavailable", error);
+        }
+      });
+    }
     return () => {
+      cancelled = true;
+      osmBuildingsRef.current = null;
       viewer.destroy();
       viewerRef.current = null;
     };
-  }, [onFeatureSelect]);
+  }, [onFeatureSelect, osmBuildingsEnabled]);
+
+  useEffect(() => {
+    const osmBuildings = osmBuildingsRef.current;
+    if (!osmBuildings) return;
+    osmBuildings.show = layers.buildings;
+    viewerRef.current?.scene.requestRender();
+  }, [layers.buildings]);
 
   useEffect(() => {
     const viewer = viewerRef.current;
@@ -171,7 +201,8 @@ export function CesiumSpatialViewer({
 
   return (
     <div className="cesium-spatial-viewer" ref={containerRef} aria-label="Live PostGIS Cesium map">
-      <div className="cesium-status"><i className={geometryQuery.isFetching ? "loading" : ""} />{geometryQuery.isFetching ? "Refreshing PostGIS" : geometryQuery.data ? `${geometryQuery.data.features.filter(feature => layers[featureLayer(feature.properties)] && (!focusUlpins || focusUlpins.includes(feature.properties.ulpin))).length} visible / ${geometryQuery.data.features.length} live` : "Connecting to PostGIS"}</div>
+      <div className="cesium-status"><i className={geometryQuery.isFetching ? "loading" : ""} />{geometryQuery.isFetching ? "Refreshing PostGIS" : geometryQuery.data ? `${geometryQuery.data.features.filter(feature => layers[featureLayer(feature.properties)] && (!focusUlpins || focusUlpins.includes(feature.properties.ulpin))).length} visible / ${geometryQuery.data.features.length} live${osmBuildingsEnabled ? " · OSM 3D context" : ""}` : "Connecting to PostGIS"}</div>
+      {osmBuildingsEnabled && <div className="cesium-osm-attribution">© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap contributors</a> · visual context only</div>}
       {geometryQuery.error && <div className="cesium-error">Live geometry unavailable. The connection will retry automatically.</div>}
     </div>
   );

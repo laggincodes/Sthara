@@ -85,3 +85,7 @@
 - [x] Extend guarded AI-assisted search aliases and Three.js/Cesium focus so approved Patna references resolve only to matching live source geometry.
 - [x] Validate matched and unmatched Patna place searches, source labels, 3D preview, and true-mobile behavior after the data expansion.
 - [x] Prevent authority-edit submissions with a short change note from reaching the API, and show the user the eight-character requirement inline.
+- [x] Assess IIT Patna’s current source geometry and licensed public evidence options for a more meaningful 3D building presentation without inferring height, floors, or architectural form.
+- [x] Improve the IIT Patna matched-search presentation with a source-safe building-structure diagram and explicit authority-pending floor/height evidence state.
+- [x] Validate IIT Patna, authority-pending, and unknown-place visual states on desktop and touch layouts after the presentation improvement.
+- [x] Re-test the post-improvement workspace with an unknown or unmapped query on desktop and touch layouts, confirming no geometry/model state remains clear alongside the OSM context and structure-diagram UI.
