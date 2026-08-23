@@ -70,3 +70,11 @@
 - [x] Add and validate additional source-backed public building reference areas only where official/open geometry and provenance can be retained; otherwise show an explicit data-unavailable state.
 - [x] Verify desktop and mobile Cesium workspace controls, ordered layer visibility, source labels, and no-inference safeguards after the 3D workspace upgrade.
 - [x] Interactively verify the upgraded true-mobile workspace using an ordered review control, a spatial-layer toggle, and a Cesium map control while preserving source labels and no-inference safeguards.
+- [ ] Use the official Bihar BhuNaksha and BiharBhumi/Jamabandi workflow to obtain an explicit Amity-adjacent parcel reference, geometry, holder/owner basis, and official ULPIN only if the government records expose them.
+- [ ] Validate the user-supplied Patna → Danapur → Danapur Circle → Mauza 12 candidate path against official BhuNaksha selections and capture the corresponding map sheet and Plot Info only if available.
+- [x] Improve searched-place building visualization with AI-assisted query routing that resolves only to source-backed live footprints and shows an explicit unavailable state for unmatched buildings.
+- [x] Replace the weak searched-building inspector treatment with a clearer footprint-focused 3D diagram and evidence status that does not fabricate height, floor, unit, ownership, or legal cadastral data.
+- [ ] Validate Amity building search, matched-footprint camera focus, AI-assisted fallback messaging, inspector clarity, and true-mobile behavior after the enhancement.
+- [x] Add an evidence-safe Three.js searched-building presentation that renders only matched live footprint geometry and uses approved heights only when an authority source is present.
+- [ ] Validate the Three.js presentation for matched and unmatched searches on desktop and true-mobile layouts without implying AI detection of unsupported buildings.
+- [x] Prevent false-positive AI building alias matches by requiring a bounded lexical anchor and confidence threshold before routing to a source-backed area.
