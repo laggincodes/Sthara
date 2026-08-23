@@ -80,3 +80,7 @@
 - [x] Re-run a matched Amity search and an unmatched search in a confirmed true-mobile session, recording source focus, inspector, AI-route, and no-model states.
 - [x] Interact with the Three.js source-footprint preview in a confirmed mobile session and record verifiable touch-safe behavior without inventing unsupported building data.
 - [x] Prevent false-positive AI building alias matches by requiring a bounded lexical anchor and confidence threshold before routing to a source-backed area.
+- [x] Identify several real Patna city, college, and university location references with openly licensed or official provenance suitable for source-backed building-footprint search.
+- [x] Import bounded individual public building detections around the verified Patna references without asserting parcel, campus-boundary, ownership, height, or legal-cadastre status.
+- [x] Extend guarded AI-assisted search aliases and Three.js/Cesium focus so approved Patna references resolve only to matching live source geometry.
+- [x] Validate matched and unmatched Patna place searches, source labels, 3D preview, and true-mobile behavior after the data expansion.
