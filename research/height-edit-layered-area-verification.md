@@ -21,3 +21,7 @@ The viewer currently renders all imported building footprints as individual poly
 **URL restoration check.** Loading `?editor=MS-BUILDING-123133020-4ccb72e4db684f81` restored the matching source-traced footprint directly into the full-page editor, including its four assisted vertices and administrator-only save state. The mobile capture initially displayed the dashboard while live PostGIS data was still loading; the URL editor opens after that query resolves, as confirmed in the interactive browser flow.
 
 **True mobile check.** The dedicated 390 × 844 browser verification waited for live PostGIS data, then confirmed `editorOpen: true`, the exact selected source record, `formWidth: 390`, and `formLeft: 0`. The captured screen shows the authority editor—not the dashboard—occupying the full mobile viewport with readable, single-column inputs and no split pane.
+
+**User confirmation.** The formerly inactive administrator requirement control was replaced with an enabled **Sign in as administrator** action that retains the selected source-record context before entering secure sign-in. The user confirmed that the repaired action works correctly.
+
+**End-to-end access confirmation.** The user confirmed that, after completing administrator sign-in, the application returned to the same selected footprint’s **Correct live footprint** authority editor. This verifies the resume key and URL-backed context restoration path in the real sign-in flow.

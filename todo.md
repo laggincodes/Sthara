@@ -43,3 +43,5 @@
 - [x] Preserve the selected footprint in a full-page authority-editor URL so the separate-page action opens the correct record instead of the dashboard default.
 - [x] Re-verify the full-page authority form on desktop and mobile, including the separate-page path and final typecheck/build.
 - [x] Confirm the URL-backed authority editor in a true 390×844 mobile session after live PostGIS data loads, with the selected footprint restored and the full-page form usable.
+- [x] Make the administrator sign-in required control actionable and verify it preserves the selected authority-editor context after sign-in.
+- [x] Verify an authenticated administrator return reopens the same selected footprint in the authority editor and records post-login URL/context evidence.
