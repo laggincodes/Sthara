@@ -39,3 +39,7 @@
 - [ ] Create persisted parcel/ULPIN ownership records and explicit footprint links, then show linked ownership details on selection.
 - [x] Replace the hardcoded area focus with a query-driven site/ULPIN/parcel layered-area search result.
 - [ ] Verify an authority-approved height, geometry revision, ownership link, area search, and mobile workflow end to end.
+- [x] Replace the cramped split-view presentation with a full-screen responsive dashboard and full-screen authority data-entry workspace.
+- [x] Preserve the selected footprint in a full-page authority-editor URL so the separate-page action opens the correct record instead of the dashboard default.
+- [x] Re-verify the full-page authority form on desktop and mobile, including the separate-page path and final typecheck/build.
+- [x] Confirm the URL-backed authority editor in a true 390×844 mobile session after live PostGIS data loads, with the selected footprint restored and the full-page form usable.
