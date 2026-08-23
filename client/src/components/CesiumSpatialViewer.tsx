@@ -18,7 +18,7 @@ import {
 } from "cesium";
 import { useEffect, useRef, useState } from "react";
 
-export type MapCommand = { kind: "zoom-in" | "zoom-out" | "north" | "fullscreen"; nonce: number } | null;
+export type MapCommand = { kind: "zoom-in" | "zoom-out" | "north" | "fullscreen" | "inspect-footprint"; nonce: number } | null;
 export type CesiumLayerFlags = { parcels: boolean; buildings: boolean; utilities: boolean; terrain: boolean };
 
 function featureLayer(properties: Record<string, unknown>): keyof CesiumLayerFlags {
@@ -138,7 +138,19 @@ export function CesiumSpatialViewer({
     if (command.kind === "zoom-out") viewer.camera.zoomOut(180);
     if (command.kind === "north") viewer.camera.setView({ destination: Cartesian3.fromDegrees(77.6245, 12.9352, 2300), orientation: { heading: 0, pitch: -0.75, roll: 0 } });
     if (command.kind === "fullscreen") void containerRef.current?.requestFullscreen?.();
-  }, [command]);
+    if (command.kind === "inspect-footprint") {
+      const entity = dataSourceRef.current?.entities.values.find(candidate => {
+        const properties = (candidate.properties?.getValue?.() ?? {}) as Record<string, unknown>;
+        return Boolean(candidate.polygon && typeof properties.ulpin === "string");
+      });
+      const ulpin = entity?.properties?.ulpin?.getValue?.();
+      if (entity && typeof ulpin === "string") {
+        const properties = (entity.properties?.getValue?.() ?? {}) as Record<string, unknown>;
+        viewer.selectedEntity = entity;
+        onFeatureSelect?.({ ulpin, properties });
+      }
+    }
+  }, [command, onFeatureSelect]);
 
   return (
     <div className="cesium-spatial-viewer" ref={containerRef} aria-label="Live PostGIS Cesium map">

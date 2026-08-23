@@ -40,7 +40,7 @@ import {
   Zap,
   type LucideIcon,
 } from "lucide-react";
-import { useMemo, useRef, useState, type ChangeEvent, type DragEvent, type FormEvent } from "react";
+import { useCallback, useMemo, useRef, useState, type ChangeEvent, type DragEvent, type FormEvent } from "react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { CesiumSpatialViewer, type MapCommand } from "@/components/CesiumSpatialViewer";
@@ -180,6 +180,11 @@ export default function Home() {
   const liveFeatureLicense = typeof liveProperty?.sourceLicense === "string" ? liveProperty.sourceLicense : "Source metadata unavailable";
   const liveFeatureConfidence = typeof liveProperty?.confidence === "number" ? `${Math.round(liveProperty.confidence * 100)}%` : "Not supplied";
   const liveFeatureDistance = typeof liveProperty?.centroidDistanceMetres === "number" ? `${liveProperty.centroidDistanceMetres} m from campus reference` : "Coordinate reference available";
+  const onMapFeatureSelect = useCallback((feature: { ulpin: string; properties: Record<string, unknown> }) => {
+    setSelectedLiveFeature(feature);
+    toast.success(`Selected ${feature.ulpin}`, { description: "Live PostGIS footprint metadata loaded into the property inspector." });
+    setDetailOpen(true);
+  }, []);
 
   const selectNav = (label: string) => {
     setActiveNav(label);
@@ -342,7 +347,7 @@ export default function Home() {
 
           <section className="operations-grid">
             <motion.article className={`map-card ${volumeLoading ? "volume-loading" : ""}`} {...panelMotion} transition={{ duration: 0.42, delay: 0.08 }}>
-              <CesiumSpatialViewer command={mapCommand} layers={layersOn} onFeatureSelect={(feature) => { setSelectedLiveFeature(feature); toast.success(`Selected ${feature.ulpin}`, { description: "Live PostGIS footprint metadata loaded into the property inspector." }); setDetailOpen(true); }} />
+              <CesiumSpatialViewer command={mapCommand} layers={layersOn} onFeatureSelect={onMapFeatureSelect} />
               <div className="map-grid" />
               <div className="map-vignette" />
 
@@ -353,6 +358,7 @@ export default function Home() {
                   <div className="coordinates"><CircleDot size={13} /> 25.6124° N <span>·</span> 85.0548° E <span>·</span> EPSG:4326</div>
                 </div>
                 <div className="map-header-actions">
+                  <button className="icon-button dark" type="button" onClick={() => issueMapCommand("inspect-footprint")} aria-label="Inspect a live building footprint"><ScanSearch size={17} /></button>
                   <button className="icon-button dark" type="button" onClick={() => issueMapCommand("fullscreen")} aria-label="Expand live Cesium map"><Maximize2 size={17} /></button>
                   <button className="icon-button dark" type="button" onClick={() => setWorkspaceOpen("Spatial layers")} aria-label="Open map layers"><Settings2 size={17} /></button>
                 </div>

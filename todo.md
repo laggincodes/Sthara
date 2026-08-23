@@ -13,7 +13,7 @@
 - [x] Verify the repaired controls and new map/upload workflows on desktop and touch-sized layouts.
 - [x] Wire the spatial-layer controls to the Cesium/PostGIS data source and verify real geometry rendering.
 - [x] Add a floor-plan footprint derivation and georeferencing workflow before mapping floor-plan geometry.
-- [ ] Run and record interactive desktop and touch verification of all repaired controls, Cesium controls, and evidence workflows.
+- [x] Run and record interactive desktop and touch verification of all repaired controls, Cesium controls, and evidence workflows.
 - [x] Synchronize the current verified project code to the connected GitHub repository.
 - [x] Source and validate reusable geospatial geometry for the Amity University Patna campus.
 - [x] Import the verified campus location reference into Neon PostGIS with building-layer metadata and OSM attribution.
@@ -26,3 +26,5 @@
 - [x] Verify the individual Microsoft building footprints render in Cesium with source metadata.
 - [x] Make imported Microsoft footprint polygons selectable in Cesium and show their live source metadata in the inspector.
 - [x] Record an end-to-end browser verification of footprint selection, metadata display, and map visibility.
+- [x] Run true mobile viewport interactions for the command rail, evidence intake, and Cesium controls.
+- [x] Verify mobile footprint selection updates the source-metadata inspector and correct any touch-layout issue found.
