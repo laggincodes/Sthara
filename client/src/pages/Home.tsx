@@ -238,21 +238,22 @@ export default function Home() {
     toast.success(`Selected ${feature.ulpin}`, { description: "Live PostGIS footprint metadata loaded into the property inspector." });
     setDetailOpen(true);
   }, []);
-  const openFootprintEditor = () => {
-    const geometry = geometryQuery.data?.features.find(feature => feature.properties.ulpin === selectedLiveFeature?.ulpin)?.geometry;
-    if (!selectedLiveFeature || !geometry) {
+  const openFootprintEditor = (featureToEdit = selectedLiveFeature) => {
+    const geometry = geometryQuery.data?.features.find(feature => feature.properties.ulpin === featureToEdit?.ulpin)?.geometry;
+    if (!featureToEdit || !geometry) {
       toast.error("Select a live building footprint first", { description: "Choose a building in the Cesium viewer to load its editable geometry." });
       return;
     }
-    const ownership = selectedOwnership;
+    const featureProperties = featureToEdit.properties;
+    const ownership = featureProperties.ownershipData && typeof featureProperties.ownershipData === "object" && !Array.isArray(featureProperties.ownershipData) ? featureProperties.ownershipData as Record<string, unknown> : {};
     const geometryText = JSON.stringify(geometry, null, 2);
     setSourceGeometry(geometryText);
     setEditorForm({
       geometry: geometryText,
-      approvedHeightMetres: typeof liveProperty?.approvedHeightMetres === "number" ? String(liveProperty.approvedHeightMetres) : "",
-      heightSource: typeof liveProperty?.heightSource === "string" ? liveProperty.heightSource : "",
-      parcelReference: typeof liveProperty?.parcelReference === "string" ? liveProperty.parcelReference : "",
-      ulpinRecord: typeof liveProperty?.ulpinRecord === "string" ? liveProperty.ulpinRecord : "",
+      approvedHeightMetres: typeof featureProperties.approvedHeightMetres === "number" ? String(featureProperties.approvedHeightMetres) : "",
+      heightSource: typeof featureProperties.heightSource === "string" ? featureProperties.heightSource : "",
+      parcelReference: typeof featureProperties.parcelReference === "string" ? featureProperties.parcelReference : "",
+      ulpinRecord: typeof featureProperties.ulpinRecord === "string" ? featureProperties.ulpinRecord : "",
       ownerName: typeof ownership.ownerName === "string" ? ownership.ownerName : "",
       ownershipBasis: typeof ownership.ownershipBasis === "string" ? ownership.ownershipBasis : "",
       rightsSummary: typeof ownership.rightsSummary === "string" ? ownership.rightsSummary : "",
@@ -262,6 +263,20 @@ export default function Home() {
     });
     setEditorOpen(true);
   };
+  useEffect(() => {
+    const requestedUlpin = new URLSearchParams(window.location.search).get("editor");
+    if (!requestedUlpin || !geometryQuery.data || editorOpen) return;
+    const requestedFeature = geometryQuery.data.features.find(feature => feature.properties.ulpin === requestedUlpin);
+    if (!requestedFeature) {
+      toast.error("The requested live footprint could not be opened", { description: "The source record is no longer present in the current PostGIS layer." });
+      window.history.replaceState({}, "", window.location.pathname);
+      return;
+    }
+    setSelectedLiveFeature({ ulpin: requestedUlpin, properties: requestedFeature.properties });
+    setDetailOpen(false);
+    window.history.replaceState({}, "", window.location.pathname);
+    openFootprintEditor({ ulpin: requestedUlpin, properties: requestedFeature.properties });
+  }, [editorOpen, geometryQuery.data]);
   const saveFootprintCorrection = () => {
     if (!selectedLiveFeature) return;
     let geometry: { type: "Polygon" | "MultiPolygon"; coordinates: unknown } | undefined;
@@ -665,7 +680,7 @@ export default function Home() {
       {editorOpen && selectedLiveFeature && (
         <div className="modal-shell editor-shell" role="dialog" aria-modal="true" aria-labelledby="footprint-editor-title">
           <motion.div className="editor-dialog" initial={{ opacity: 0, scale: 0.97, y: 14 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.22 }}>
-            <button className="icon-button modal-close" type="button" aria-label="Close footprint editor" onClick={() => setEditorOpen(false)}><X size={18} /></button>
+            <div className="editor-top-actions"><button className="icon-button" type="button" aria-label="Open authority workspace in a separate full page" title="Open in a separate full page" onClick={() => { const url = new URL(window.location.href); url.searchParams.set("editor", selectedLiveFeature.ulpin); window.open(url.toString(), "_blank", "noopener,noreferrer"); }}><ArrowUpRight size={18} /></button><button className="icon-button" type="button" aria-label="Open authority workspace in full screen" title="Use browser full screen" onClick={() => void document.documentElement.requestFullscreen?.()}><Maximize2 size={18} /></button><button className="icon-button" type="button" aria-label="Close footprint editor" onClick={() => { if (document.fullscreenElement) void document.exitFullscreen(); setEditorOpen(false); }}><X size={18} /></button></div>
             <p className="eyebrow cyan-text">Authority correction & cadastral linkage</p><h2 id="footprint-editor-title">Correct live footprint</h2><p className="dialog-intro">Save a revision with the original Microsoft footprint retained, then attach approved height and verified parcel/ULPIN ownership references.</p>
             <div className="editor-grid"><label>Approved height (metres)<input value={editorForm.approvedHeightMetres} inputMode="decimal" onChange={event => setEditorForm(current => ({ ...current, approvedHeightMetres: event.target.value }))} placeholder="e.g. 18.5" /></label><label>Height approval source<input value={editorForm.heightSource} onChange={event => setEditorForm(current => ({ ...current, heightSource: event.target.value }))} placeholder="Survey / approved drawing reference" /></label><label>Parcel reference<input value={editorForm.parcelReference} onChange={event => setEditorForm(current => ({ ...current, parcelReference: event.target.value }))} placeholder="Parcel ID" /></label><label>3D ULPIN record<input value={editorForm.ulpinRecord} onChange={event => setEditorForm(current => ({ ...current, ulpinRecord: event.target.value }))} placeholder="Verified ULPIN" /></label><label>Owner / rights-holder<input value={editorForm.ownerName} onChange={event => setEditorForm(current => ({ ...current, ownerName: event.target.value }))} placeholder="Verified record name" /></label><label>Ownership basis<input value={editorForm.ownershipBasis} onChange={event => setEditorForm(current => ({ ...current, ownershipBasis: event.target.value }))} placeholder="Registry reference" /></label><label>Rights summary<input value={editorForm.rightsSummary} onChange={event => setEditorForm(current => ({ ...current, rightsSummary: event.target.value }))} placeholder="Recorded rights or restrictions" /></label><label>Source reference<input value={editorForm.sourceReference} onChange={event => setEditorForm(current => ({ ...current, sourceReference: event.target.value }))} placeholder="Registry, order, or deed reference" /></label><label>Authority audit identity<input value="Server records the signed-in administrator" readOnly aria-label="Server records the signed-in administrator identity" /></label><label>Revision note<input value={editorForm.editNote} onChange={event => setEditorForm(current => ({ ...current, editNote: event.target.value }))} placeholder="Why this correction is approved" /></label></div>
             {editableVertices.length > 0 ? <section className="vertex-editor"><div><p className="section-kicker">Assisted vertex correction</p><strong>Edit longitude and latitude values; the closing polygon vertex is maintained automatically.</strong></div><button type="button" className="text-action" onClick={() => setEditorForm(current => ({ ...current, geometry: sourceGeometry }))}>Reset to source</button><div className="vertex-grid">{editableVertices.map((vertex, index) => <div key={index}><span>V{index + 1}</span><input aria-label={`Vertex ${index + 1} longitude`} value={vertex[0]} inputMode="decimal" onChange={event => setEditorForm(current => ({ ...current, geometry: replacePolygonVertex(current.geometry, index, 0, event.target.value) }))} /><input aria-label={`Vertex ${index + 1} latitude`} value={vertex[1]} inputMode="decimal" onChange={event => setEditorForm(current => ({ ...current, geometry: replacePolygonVertex(current.geometry, index, 1, event.target.value) }))} /></div>)}</div></section> : <p className="editor-note">This feature uses a MultiPolygon or a non-standard geometry. Use the reviewed GeoJSON editor below.</p>}
