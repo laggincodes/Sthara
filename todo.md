@@ -63,3 +63,5 @@
 - [x] Explicitly confirm search input, Cesium map controls, and source-status labels remain visible and usable after the second screenshot is integrated.
 - [x] Interactively verify the mobile search input, Show in 3D action, Cesium map controls, and source-status labels after the second screenshot integration.
 - [x] Capture independently verifiable before-and-after camera data for a true-mobile Cesium zoom or reset action after the second screenshot integration.
+- [x] Fix operational 3D-review routes so an empty home search uses the verified Amity reference fallback instead of navigating with an empty `site` query.
+- [ ] Verify the visible Operator account control opens its authority-access workspace through a normal browser click or touch interaction.

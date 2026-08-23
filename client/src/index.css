@@ -74,6 +74,12 @@ button:focus-visible, input:focus-visible { outline: 2px solid #2ad4d9; outline-
 .account-row strong, .account-row small { display: block; }
 .account-row strong { font-size: 11px; font-weight: 600; }.account-row small { margin-top: 2px; color: #768886; font-size: 9.5px; }.account-row svg { margin-left: auto; color: #71817f; }
 
+@media (max-height: 820px) {
+  .sidebar-bottom { padding: 8px 12px 10px; }
+  .survey-state { padding: 4px 8px 8px; }
+  .account-row { min-height: 52px; touch-action: manipulation; }
+}
+
 .workspace { min-height: 100vh; margin-left: var(--nav-width); background: #0a1015; }
 .topbar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: 18px; height: 67px; padding: 0 30px; background: rgba(10,16,21,.88); border-bottom: 1px solid rgba(209, 234, 228, .08); backdrop-filter: blur(18px); }
 .crumbs { display: flex; align-items: center; gap: 7px; color: #778886; font-size: 11.5px; }.crumbs strong { color: #d7e4e2; font-weight: 500; }
