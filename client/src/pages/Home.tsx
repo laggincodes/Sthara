@@ -268,6 +268,7 @@ export default function Home() {
   const editableVertices = useMemo(() => getEditablePolygonVertices(editorForm.geometry), [editorForm.geometry]);
   const displayedLayerCount = areaSearch.data ? areaSearch.data.buildingCount : liveFootprintCount;
   const displayedSiteArea = areaSearch.data ? areaSearch.data.totalFootprintAreaSquareMetres : selectedSiteArea;
+  const hasFocusedSearchGeometry = Boolean(areaSearch.data && areaSearch.data.buildingCount > 0);
   useEffect(() => {
     if (!areaSearch.data || areaSearch.data.query !== areaSearchRequest) return;
     setMapCommand({ kind: "focus-site", nonce: Date.now() });
@@ -569,9 +570,9 @@ export default function Home() {
 
               <div className="map-header">
                 <div>
-                  <p className="section-kicker">Live 3D model</p>
-                  <h2>Live source-linked 3D review</h2>
-                  <div className="coordinates"><CircleDot size={13} /> Individual footprints <span>·</span> vertical mapping <span>·</span> EPSG:4326</div>
+                  <p className="section-kicker">Source-backed building structure</p>
+                  <h2>{selectedLiveFeature ? liveFeatureName : hasFocusedSearchGeometry ? `${areaSearch.data?.siteLabel ?? "Search result"} · 3D focus` : "Search a place to focus its live 3D geometry"}</h2>
+                  <div className="coordinates"><CircleDot size={13} /> {hasFocusedSearchGeometry ? "Matched PostGIS geometry focused" : "Individual footprints ready"} <span>·</span> approved heights extrude only after authority approval <span>·</span> EPSG:4326</div>
                 </div>
                 <div className="map-header-actions">
                   <button className="icon-button dark" type="button" onClick={() => setLocation(`/workspace?site=${encodeURIComponent(areaSearchQuery)}`)} aria-label="Open the dedicated layered 3D area"><MapPinned size={17} /></button>
@@ -599,15 +600,15 @@ export default function Home() {
 
             <aside className="inspector-column">
               <motion.article className="inspector-card" {...panelMotion} transition={{ duration: 0.42, delay: 0.13 }}>
-                <div className="card-title-row"><div><p className="section-kicker">Property inspector</p><h2>{selectedLiveFeature ? "Live footprint" : "Block B12"}</h2></div><button className="icon-button ghost" type="button" aria-label="Open inspector" onClick={() => setDetailOpen(true)}><PanelRightOpen size={17} /></button></div>
+                <div className="card-title-row"><div><p className="section-kicker">Property inspector</p><h2>{selectedLiveFeature ? "Live footprint" : "3D structure preview"}</h2></div><button className="icon-button ghost" type="button" aria-label="Open inspector" onClick={() => selectedLiveFeature ? setDetailOpen(true) : issueMapCommand("inspect-footprint")}><PanelRightOpen size={17} /></button></div>
                 <div className="inspector-visual"><div className="visual-floor floor-top" /><div className="visual-floor floor-mid" /><div className="visual-floor floor-active"><span>F{activeFloor}</span></div><div className="visual-floor floor-low" /><i /></div>
-                <div className="inspector-main"><div><p>{selectedLiveFeature ? "Live detected building" : "Active vertical parcel"}</p><strong>{selectedLiveFeature ? liveFeatureName : `Unit 4C · Floor ${activeFloor}`}</strong></div><SmallBadge tone={selectedLiveFeature ? "cyan" : "green"}>{selectedLiveFeature ? <><Building2 size={12} /> source traced</> : <><Check size={12} /> verified</>}</SmallBadge></div>
+                <div className="inspector-main"><div><p>{selectedLiveFeature ? "Live detected building" : "Illustrative vertical workflow"}</p><strong>{selectedLiveFeature ? liveFeatureName : "Select a source-backed footprint"}</strong></div><SmallBadge tone={selectedLiveFeature ? "cyan" : "slate"}>{selectedLiveFeature ? <><Building2 size={12} /> source traced</> : <><Layers3 size={12} /> guide only</>}</SmallBadge></div>
                 <div className="data-list">
-                  <div><span>{selectedLiveFeature ? "Source record" : "3D ULPIN"}</span><code>{selectedLiveFeature ? selectedLiveFeature.ulpin : `KA-29-105-0421-B12-F${String(activeFloor).padStart(2, "0")}-021`}</code></div>
-                  <div><span>{selectedLiveFeature ? "Footprint area" : "Volume"}</span><strong>{selectedLiveFeature ? liveFootprintArea : "486.2 m³"}</strong></div>
-                  <div><span>{selectedLiveFeature ? "3D height" : "Elevation"}</span><strong>{selectedLiveFeature ? liveFeatureHeight : `+${activeFloor * 3.2 - 0.1} m → +${activeFloor * 3.2 + 3.0} m`}</strong></div>
+                  <div><span>{selectedLiveFeature ? "Source record" : "Structure source"}</span><code>{selectedLiveFeature ? selectedLiveFeature.ulpin : "Select a live PostGIS footprint"}</code></div>
+                  <div><span>{selectedLiveFeature ? "Footprint area" : "3D visual"}</span><strong>{selectedLiveFeature ? liveFootprintArea : hasFocusedSearchGeometry ? "Matched geometry in Cesium" : "No place selected"}</strong></div>
+                  <div><span>{selectedLiveFeature ? "3D height" : "Height status"}</span><strong>{selectedLiveFeature ? liveFeatureHeight : "Authority approval required"}</strong></div>
                 </div>
-                <button className="secondary-button" type="button" onClick={() => selectedLiveFeature ? openFootprintEditor() : setDetailOpen(true)}>{selectedLiveFeature ? "Correct & link record" : "Review volume profile"} <ArrowUpRight size={16} /></button>
+                <button className="secondary-button" type="button" onClick={() => selectedLiveFeature ? openFootprintEditor() : issueMapCommand("inspect-footprint")}>{selectedLiveFeature ? "Correct & link record" : "Inspect live structure"} <ArrowUpRight size={16} /></button>
               </motion.article>
 
               <motion.article className="layer-card" {...panelMotion} transition={{ duration: 0.42, delay: 0.18 }}>
