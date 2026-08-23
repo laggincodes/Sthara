@@ -47,9 +47,9 @@
 - [x] Verify an authenticated administrator return reopens the same selected footprint in the authority editor and records post-login URL/context evidence.
 - [x] Create a dedicated reference-inspired full-screen Show in 3D workspace with live Cesium layers, inspector, and visible spatial controls.
 - [x] Add a polished 3D visual hero and required-resource overview to the 3D ULPIN-VPM home dashboard.
-- [ ] Wire every home-page navigation and resource control to a functional destination or actionable workspace.
+- [x] Wire every home-page navigation and resource control to a functional destination or actionable workspace.
 - [x] Verify dedicated 3D navigation and the resource-rich dashboard home on desktop and mobile.
-- [ ] Verify every remaining home navigation and resource control individually, replacing any generic placeholder with a specific actionable workspace and recording the destination matrix.
+- [x] Verify every remaining home navigation and resource control individually, replacing any generic placeholder with a specific actionable workspace and recording the destination matrix.
 - [x] Ensure dedicated spatial-workspace return-navigation parameters open the intended home search or evidence workflow instead of an ignored dashboard query.
 - [x] Replace generic settings, operator, audit, conflict, GNSS/CORS, and DEM/DSM workspace placeholders with specific actionable panels or routes.
 - [x] Replace Amity-specific home-page branding with a project-focused 3D ULPIN-VPM introduction, capability overview, and resource narrative.
@@ -64,7 +64,7 @@
 - [x] Interactively verify the mobile search input, Show in 3D action, Cesium map controls, and source-status labels after the second screenshot integration.
 - [x] Capture independently verifiable before-and-after camera data for a true-mobile Cesium zoom or reset action after the second screenshot integration.
 - [x] Fix operational 3D-review routes so an empty home search uses the verified Amity reference fallback instead of navigating with an empty `site` query.
-- [ ] Verify the visible Operator account control opens its authority-access workspace through a normal browser click or touch interaction.
+- [x] Verify the visible Operator account control opens its authority-access workspace through a normal browser click or touch interaction.
 - [x] Rework the live Cesium workspace into a strictly ordered vertical-cadastre model with clear surface, building, floor/unit, air-right, and subsurface review layers inspired by the supplied reference screenshots.
 - [x] Add evidence-safe expanded live 3D structure controls and an ordered vertical-profile inspector without fabricating approved heights, legal floors, ownership, or cadastral records.
 - [x] Add and validate additional source-backed public building reference areas only where official/open geometry and provenance can be retained; otherwise show an explicit data-unavailable state.
