@@ -52,3 +52,6 @@
 - [ ] Verify every remaining home navigation and resource control individually, replacing any generic placeholder with a specific actionable workspace and recording the destination matrix.
 - [x] Ensure dedicated spatial-workspace return-navigation parameters open the intended home search or evidence workflow instead of an ignored dashboard query.
 - [x] Replace generic settings, operator, audit, conflict, GNSS/CORS, and DEM/DSM workspace placeholders with specific actionable panels or routes.
+- [x] Replace Amity-specific home-page branding with a project-focused 3D ULPIN-VPM introduction, capability overview, and resource narrative.
+- [x] Integrate the user-provided 3D workspace screenshot as the home-page primary visual while preserving its live 3D workspace destination.
+- [x] Verify the project-focused home page and provided-visual treatment on desktop and mobile.
