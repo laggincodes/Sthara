@@ -1,4 +1,11 @@
-export const sourceBackedSearchAliases = ["Amity University Patna", "Koramangala 5th Block", "cimage"] as const;
+export const sourceBackedSearchAliases = [
+  "Amity University Patna",
+  "Koramangala 5th Block",
+  "cimage",
+  "IIT Patna reference area",
+  "AIIMS Patna reference area",
+  "Gandhi Maidan Patna reference area",
+] as const;
 
 export type SourceBackedAlias = (typeof sourceBackedSearchAliases)[number];
 
@@ -6,6 +13,9 @@ const sourceAliasAnchors: Record<SourceBackedAlias, string[]> = {
   "Amity University Patna": ["amity", "rupaspur", "cimage"],
   "Koramangala 5th Block": ["koramangala", "5th block", "south bengaluru"],
   cimage: ["cimage"],
+  "IIT Patna reference area": ["iit patna", "indian institute of technology patna", "bihta lai"],
+  "AIIMS Patna reference area": ["aiims patna", "all india institute of medical sciences patna", "phulwarisharif"],
+  "Gandhi Maidan Patna reference area": ["gandhi maidan", "gandhi ground patna"],
 };
 
 export function eligibleSourceAliases(query: string): SourceBackedAlias[] {

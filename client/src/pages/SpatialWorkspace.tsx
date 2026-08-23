@@ -24,6 +24,14 @@ const verticalLayers: Array<{ id: VerticalLayerId; order: string; label: string;
   { id: "subsurface", order: "05", label: "Subsurface assets", shortLabel: "Subsurface", description: "Utility or underground layers require surveyed source evidence and depth metadata.", evidence: "Survey required" },
 ];
 
+const sourceBackedSearchSuggestions = [
+  "Amity University Patna",
+  "IIT Patna",
+  "AIIMS Patna",
+  "Gandhi Maidan Patna",
+  "Koramangala 5th Block",
+] as const;
+
 export default function SpatialWorkspace() {
   const [, setLocation] = useLocation();
   const initialSite = useMemo(() => new URLSearchParams(window.location.search).get("site") ?? "Amity University Patna", []);
@@ -88,7 +96,7 @@ export default function SpatialWorkspace() {
       </aside>
 
       <section className="spatial-workspace-main">
-        <header className="spatial-workspace-topbar"><div><span>Operations</span><b>›</b><strong>{searchResult.data?.siteLabel ?? siteQuery}</strong></div><form onSubmit={submitSearch}><ScanSearch size={16} /><input value={searchText} onChange={event => setSearchText(event.target.value)} aria-label="Search live 3D site, ULPIN, or parcel" /><button type="submit">Locate</button></form><button className="workspace-home-button" type="button" onClick={() => setLocation("/")}><ArrowLeft size={15} /> Dashboard</button></header>
+        <header className="spatial-workspace-topbar"><div><span>Operations</span><b>›</b><strong>{searchResult.data?.siteLabel ?? siteQuery}</strong></div><form onSubmit={submitSearch}><ScanSearch size={16} /><input list="source-backed-place-suggestions" value={searchText} onChange={event => setSearchText(event.target.value)} aria-label="Search live 3D site, ULPIN, or parcel" placeholder="Try IIT Patna, AIIMS Patna, or Gandhi Maidan" /><datalist id="source-backed-place-suggestions">{sourceBackedSearchSuggestions.map(suggestion => <option key={suggestion} value={suggestion} />)}</datalist><button type="submit">Locate</button></form><button className="workspace-home-button" type="button" onClick={() => setLocation("/")}><ArrowLeft size={15} /> Dashboard</button></header>
 
         <div className="spatial-model-layout">
           <section className="spatial-model-stage">
