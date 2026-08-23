@@ -45,6 +45,7 @@ import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { CesiumSpatialViewer, type MapCommand } from "@/components/CesiumSpatialViewer";
 import { startLogin } from "@/const";
+import { REVISION_NOTE_MINIMUM_LENGTH, validateRevisionNote } from "../../../shared/authorityEditValidation";
 import { useLocation } from "wouter";
 
 type LayerKey = "parcels" | "buildings" | "utilities" | "terrain";
@@ -198,6 +199,7 @@ export default function Home() {
   const resolvedWorkspaceSite = areaSearchQuery.trim() || "Amity University Patna";
   const [sourceGeometry, setSourceGeometry] = useState("");
   const [editorForm, setEditorForm] = useState({ geometry: "", approvedHeightMetres: "", heightSource: "", parcelReference: "", ulpinRecord: "", ownerName: "", ownershipBasis: "", rightsSummary: "", sourceReference: "", editorName: "Authority operator", editNote: "" });
+  const [authorityNoteError, setAuthorityNoteError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const aiSearch = trpc.cadastre.search.useMutation();
   const cadastreUpload = trpc.cadastre.upload.useMutation();
@@ -244,6 +246,16 @@ export default function Home() {
     return Math.round(features.reduce((sum, feature) => sum + (typeof feature.properties.footprintAreaSquareMetres === "number" ? feature.properties.footprintAreaSquareMetres : 0), 0) * 100) / 100;
   }, [geometryQuery.data]);
   const canSaveAuthorityRecord = authQuery.data?.role === "admin";
+  const revisionNoteValidation = validateRevisionNote(editorForm.editNote);
+  const validateAuthorityRevisionNote = () => {
+    if (revisionNoteValidation.valid) {
+      setAuthorityNoteError(null);
+      return true;
+    }
+    setAuthorityNoteError(revisionNoteValidation.message);
+    toast.error("Revision note is required", { description: revisionNoteValidation.message });
+    return false;
+  };
   const requestAuthoritySignIn = () => {
     if (!selectedLiveFeature) return;
     if (canSaveAuthorityRecord) {
@@ -303,6 +315,7 @@ export default function Home() {
       editorName: "Authority operator",
       editNote: "",
     });
+    setAuthorityNoteError(null);
     setEditorOpen(true);
   };
   useEffect(() => {
@@ -321,6 +334,7 @@ export default function Home() {
   }, [editorOpen, geometryQuery.data]);
   const saveFootprintCorrection = () => {
     if (!selectedLiveFeature) return;
+    if (!validateAuthorityRevisionNote()) return;
     let geometry: { type: "Polygon" | "MultiPolygon"; coordinates: unknown } | undefined;
     try {
       geometry = JSON.parse(editorForm.geometry) as { type: "Polygon" | "MultiPolygon"; coordinates: unknown };
@@ -351,7 +365,7 @@ export default function Home() {
         rightsSummary: editorForm.rightsSummary || undefined,
         sourceReference: editorForm.sourceReference || undefined,
       } : undefined,
-      editNote: editorForm.editNote,
+      editNote: revisionNoteValidation.normalized,
     }, {
       onSuccess: () => {
         void trpcUtils.postgis.geojson.invalidate();
@@ -753,10 +767,10 @@ export default function Home() {
           <motion.div className="editor-dialog" initial={{ opacity: 0, scale: 0.97, y: 14 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.22 }}>
             <div className="editor-top-actions"><button className="icon-button" type="button" aria-label="Open authority workspace in a separate full page" title="Open in a separate full page" onClick={() => { const url = new URL(window.location.href); url.searchParams.set("editor", selectedLiveFeature.ulpin); window.open(url.toString(), "_blank", "noopener,noreferrer"); }}><ArrowUpRight size={18} /></button><button className="icon-button" type="button" aria-label="Open authority workspace in full screen" title="Use browser full screen" onClick={() => void document.documentElement.requestFullscreen?.()}><Maximize2 size={18} /></button><button className="icon-button" type="button" aria-label="Close footprint editor" onClick={() => { if (document.fullscreenElement) void document.exitFullscreen(); setEditorOpen(false); }}><X size={18} /></button></div>
             <p className="eyebrow cyan-text">Authority correction & cadastral linkage</p><h2 id="footprint-editor-title">Correct live footprint</h2><p className="dialog-intro">Save a revision with the original Microsoft footprint retained, then attach approved height and verified parcel/ULPIN ownership references.</p>
-            <div className="editor-grid"><label>Approved height (metres)<input value={editorForm.approvedHeightMetres} inputMode="decimal" onChange={event => setEditorForm(current => ({ ...current, approvedHeightMetres: event.target.value }))} placeholder="e.g. 18.5" /></label><label>Height approval source<input value={editorForm.heightSource} onChange={event => setEditorForm(current => ({ ...current, heightSource: event.target.value }))} placeholder="Survey / approved drawing reference" /></label><label>Parcel reference<input value={editorForm.parcelReference} onChange={event => setEditorForm(current => ({ ...current, parcelReference: event.target.value }))} placeholder="Parcel ID" /></label><label>3D ULPIN record<input value={editorForm.ulpinRecord} onChange={event => setEditorForm(current => ({ ...current, ulpinRecord: event.target.value }))} placeholder="Verified ULPIN" /></label><label>Owner / rights-holder<input value={editorForm.ownerName} onChange={event => setEditorForm(current => ({ ...current, ownerName: event.target.value }))} placeholder="Verified record name" /></label><label>Ownership basis<input value={editorForm.ownershipBasis} onChange={event => setEditorForm(current => ({ ...current, ownershipBasis: event.target.value }))} placeholder="Registry reference" /></label><label>Rights summary<input value={editorForm.rightsSummary} onChange={event => setEditorForm(current => ({ ...current, rightsSummary: event.target.value }))} placeholder="Recorded rights or restrictions" /></label><label>Source reference<input value={editorForm.sourceReference} onChange={event => setEditorForm(current => ({ ...current, sourceReference: event.target.value }))} placeholder="Registry, order, or deed reference" /></label><label>Authority audit identity<input value="Server records the signed-in administrator" readOnly aria-label="Server records the signed-in administrator identity" /></label><label>Revision note<input value={editorForm.editNote} onChange={event => setEditorForm(current => ({ ...current, editNote: event.target.value }))} placeholder="Why this correction is approved" /></label></div>
+            <div className="editor-grid"><label>Approved height (metres)<input value={editorForm.approvedHeightMetres} inputMode="decimal" onChange={event => setEditorForm(current => ({ ...current, approvedHeightMetres: event.target.value }))} placeholder="e.g. 18.5" /></label><label>Height approval source<input value={editorForm.heightSource} onChange={event => setEditorForm(current => ({ ...current, heightSource: event.target.value }))} placeholder="Survey / approved drawing reference" /></label><label>Parcel reference<input value={editorForm.parcelReference} onChange={event => setEditorForm(current => ({ ...current, parcelReference: event.target.value }))} placeholder="Parcel ID" /></label><label>3D ULPIN record<input value={editorForm.ulpinRecord} onChange={event => setEditorForm(current => ({ ...current, ulpinRecord: event.target.value }))} placeholder="Verified ULPIN" /></label><label>Owner / rights-holder<input value={editorForm.ownerName} onChange={event => setEditorForm(current => ({ ...current, ownerName: event.target.value }))} placeholder="Verified record name" /></label><label>Ownership basis<input value={editorForm.ownershipBasis} onChange={event => setEditorForm(current => ({ ...current, ownershipBasis: event.target.value }))} placeholder="Registry reference" /></label><label>Rights summary<input value={editorForm.rightsSummary} onChange={event => setEditorForm(current => ({ ...current, rightsSummary: event.target.value }))} placeholder="Recorded rights or restrictions" /></label><label>Source reference<input value={editorForm.sourceReference} onChange={event => setEditorForm(current => ({ ...current, sourceReference: event.target.value }))} placeholder="Registry, order, or deed reference" /></label><label>Authority audit identity<input value="Server records the signed-in administrator" readOnly aria-label="Server records the signed-in administrator identity" /></label><label>Revision note<input value={editorForm.editNote} minLength={REVISION_NOTE_MINIMUM_LENGTH} required aria-invalid={Boolean(authorityNoteError || !revisionNoteValidation.valid)} aria-describedby="revision-note-help" onBlur={() => { if (!revisionNoteValidation.valid) setAuthorityNoteError(revisionNoteValidation.message); }} onChange={event => { const editNote = event.target.value; setEditorForm(current => ({ ...current, editNote })); if (validateRevisionNote(editNote).valid) setAuthorityNoteError(null); }} placeholder="Why this correction is approved" /><small id="revision-note-help" className={`editor-field-validation ${authorityNoteError || !revisionNoteValidation.valid ? "invalid" : "valid"}`}>{authorityNoteError ?? (revisionNoteValidation.valid ? "Revision note meets the save requirement." : `Required: at least ${REVISION_NOTE_MINIMUM_LENGTH} characters.`)}</small></label></div>
             {editableVertices.length > 0 ? <section className="vertex-editor"><div><p className="section-kicker">Assisted vertex correction</p><strong>Edit longitude and latitude values; the closing polygon vertex is maintained automatically.</strong></div><button type="button" className="text-action" onClick={() => setEditorForm(current => ({ ...current, geometry: sourceGeometry }))}>Reset to source</button><div className="vertex-grid">{editableVertices.map((vertex, index) => <div key={index}><span>V{index + 1}</span><input aria-label={`Vertex ${index + 1} longitude`} value={vertex[0]} inputMode="decimal" onChange={event => setEditorForm(current => ({ ...current, geometry: replacePolygonVertex(current.geometry, index, 0, event.target.value) }))} /><input aria-label={`Vertex ${index + 1} latitude`} value={vertex[1]} inputMode="decimal" onChange={event => setEditorForm(current => ({ ...current, geometry: replacePolygonVertex(current.geometry, index, 1, event.target.value) }))} /></div>)}</div></section> : <p className="editor-note">This feature uses a MultiPolygon or a non-standard geometry. Use the reviewed GeoJSON editor below.</p>}
             <label className="geometry-editor">Reviewed GeoJSON geometry<textarea value={editorForm.geometry} onChange={event => setEditorForm(current => ({ ...current, geometry: event.target.value }))} spellCheck={false} /></label>
-            <div className="editor-actions"><span>Source record: <code>{selectedLiveFeature.ulpin}</code></span><button className="primary-button" type="button" disabled={footprintUpdate.isPending} onClick={requestAuthoritySignIn}>{footprintUpdate.isPending ? <><Loader2 className="spin-icon" size={16} /> Saving revision…</> : !authQuery.data ? <><ShieldCheck size={16} /> Sign in as administrator</> : !canSaveAuthorityRecord ? "Administrator role required" : <><Check size={16} /> Save approved correction</>}</button></div>
+            <div className="editor-actions"><span>Source record: <code>{selectedLiveFeature.ulpin}</code></span><button className="primary-button" type="button" disabled={footprintUpdate.isPending || (canSaveAuthorityRecord && !revisionNoteValidation.valid)} onClick={requestAuthoritySignIn}>{footprintUpdate.isPending ? <><Loader2 className="spin-icon" size={16} /> Saving revision…</> : !authQuery.data ? <><ShieldCheck size={16} /> Sign in as administrator</> : !canSaveAuthorityRecord ? "Administrator role required" : !revisionNoteValidation.valid ? `Add ${REVISION_NOTE_MINIMUM_LENGTH}-character note` : <><Check size={16} /> Save approved correction</>}</button></div>
           </motion.div>
         </div>
       )}
