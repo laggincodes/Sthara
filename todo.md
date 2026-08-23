@@ -45,3 +45,10 @@
 - [x] Confirm the URL-backed authority editor in a true 390×844 mobile session after live PostGIS data loads, with the selected footprint restored and the full-page form usable.
 - [x] Make the administrator sign-in required control actionable and verify it preserves the selected authority-editor context after sign-in.
 - [x] Verify an authenticated administrator return reopens the same selected footprint in the authority editor and records post-login URL/context evidence.
+- [x] Create a dedicated reference-inspired full-screen Show in 3D workspace with live Cesium layers, inspector, and visible spatial controls.
+- [x] Add a polished 3D visual hero and required-resource overview to the 3D ULPIN-VPM home dashboard.
+- [ ] Wire every home-page navigation and resource control to a functional destination or actionable workspace.
+- [x] Verify dedicated 3D navigation and the resource-rich dashboard home on desktop and mobile.
+- [ ] Verify every remaining home navigation and resource control individually, replacing any generic placeholder with a specific actionable workspace and recording the destination matrix.
+- [x] Ensure dedicated spatial-workspace return-navigation parameters open the intended home search or evidence workflow instead of an ignored dashboard query.
+- [ ] Replace generic settings, operator, audit, conflict, GNSS/CORS, and DEM/DSM workspace placeholders with specific actionable panels or routes.

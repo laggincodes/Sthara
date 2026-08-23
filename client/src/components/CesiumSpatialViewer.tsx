@@ -11,6 +11,7 @@ import {
   EllipsoidTerrainProvider,
   Entity,
   GeoJsonDataSource,
+  HeadingPitchRange,
   Ion,
   LabelGraphics,
   PointGraphics,
@@ -129,10 +130,7 @@ export function CesiumSpatialViewer({
       dataSourceRef.current = dataSource;
       await viewer.dataSources.add(dataSource);
       if (filteredCollection.features.length > 0) {
-        viewer.camera.setView({
-          destination: Cartesian3.fromDegrees(85.054779, 25.6124294, 650),
-          orientation: { heading: 0, pitch: -Math.PI / 2, roll: 0 },
-        });
+        viewer.camera.lookAt(Cartesian3.fromDegrees(85.054779, 25.6124294), new HeadingPitchRange(0.22, -1.12, 980));
       }
     };
     void renderGeometry().catch(error => console.error("[Cesium] Failed to render the PostGIS GeoJSON collection", error));
@@ -144,8 +142,8 @@ export function CesiumSpatialViewer({
     if (!viewer || !command) return;
     if (command.kind === "zoom-in") viewer.camera.zoomIn(180);
     if (command.kind === "zoom-out") viewer.camera.zoomOut(180);
-    if (command.kind === "north") viewer.camera.setView({ destination: Cartesian3.fromDegrees(77.6245, 12.9352, 2300), orientation: { heading: 0, pitch: -0.75, roll: 0 } });
-    if (command.kind === "focus-site") viewer.camera.flyTo({ destination: Cartesian3.fromDegrees(85.054779, 25.6124294, 720), orientation: { heading: 0, pitch: -0.92, roll: 0 }, duration: 0.6 });
+    if (command.kind === "north") viewer.camera.lookAt(Cartesian3.fromDegrees(85.054779, 25.6124294), new HeadingPitchRange(0, -1.22, 980));
+    if (command.kind === "focus-site") viewer.camera.lookAt(Cartesian3.fromDegrees(85.054779, 25.6124294), new HeadingPitchRange(0.22, -1.12, 980));
     if (command.kind === "fullscreen") void containerRef.current?.requestFullscreen?.();
     if (command.kind === "inspect-footprint") {
       const entity = dataSourceRef.current?.entities.values.find(candidate => {
