@@ -4,6 +4,7 @@ import { createServer } from "http";
 import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
+import { hasValidPostgisApiKey, getPostgisFeatureCollection } from "../postgis";
 import { registerStorageProxy } from "./storageProxy";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
@@ -36,6 +37,18 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   registerStorageProxy(app);
   registerOAuthRoutes(app);
+  app.get("/api/postgis/geojson", async (req, res) => {
+    if (!hasValidPostgisApiKey(req.header("authorization"))) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+    try {
+      res.type("application/geo+json").json(await getPostgisFeatureCollection());
+    } catch (error) {
+      console.error("[PostGIS] GeoJSON request failed", error);
+      res.status(503).json({ error: "Spatial geometry service unavailable" });
+    }
+  });
   // tRPC API
   app.use(
     "/api/trpc",

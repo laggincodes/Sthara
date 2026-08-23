@@ -7,8 +7,35 @@
 - [x] Verify the new workflows on desktop and mobile before delivery.
 - [x] Connect AI search to persisted ULPIN/property records while retaining the LLM rationale layer.
 - [x] Replace simulated upload percentage updates with real browser read progress and server-state-driven validation/storage feedback.
-- [ ] Repair all command-rail and dashboard action buttons so each opens a usable corresponding workspace.
-- [ ] Add a Cesium 3D viewer with an adapter for live PostGIS geometry and visible spatial layer controls.
-- [ ] Extend GeoJSON and floor-plan processing with AI-assisted building footprint and floor-metadata extraction.
-- [ ] Verify the repaired controls and new map/upload workflows on desktop and touch-sized layouts.
+- [x] Repair all command-rail and dashboard action buttons so each opens a usable corresponding workspace.
+- [x] Add a Cesium 3D viewer with an adapter for live PostGIS geometry and visible spatial layer controls.
+- [x] Extend GeoJSON and floor-plan processing with AI-assisted building footprint and floor-metadata extraction.
+- [x] Verify the repaired controls and new map/upload workflows on desktop and touch-sized layouts.
+- [x] Wire the spatial-layer controls to the Cesium/PostGIS data source and verify real geometry rendering.
+- [x] Add a floor-plan footprint derivation and georeferencing workflow before mapping floor-plan geometry.
+- [x] Run and record interactive desktop and touch verification of all repaired controls, Cesium controls, and evidence workflows.
 - [x] Synchronize the current verified project code to the connected GitHub repository.
+- [x] Source and validate reusable geospatial geometry for the Amity University Patna campus.
+- [x] Import the verified campus location reference into Neon PostGIS with building-layer metadata and OSM attribution.
+- [x] Verify the imported Amity University Patna reference renders in the live Cesium viewer.
+- [x] Superseded by the user’s instruction to avoid creating or assuming a campus boundary.
+- [x] Superseded by the user’s instruction to avoid creating or assuming a campus boundary.
+- [x] Superseded by the user’s instruction to avoid creating or assuming a campus boundary.
+- [x] Stream the official Microsoft Global ML Building Footprints shard and select only detected footprints near the verified Amity University Patna location.
+- [x] Import the selected individual detected footprints into Neon PostGIS with CDLA Permissive 2.0 attribution, without generating a campus boundary.
+- [x] Verify the individual Microsoft building footprints render in Cesium with source metadata.
+- [x] Make imported Microsoft footprint polygons selectable in Cesium and show their live source metadata in the inspector.
+- [x] Record an end-to-end browser verification of footprint selection, metadata display, and map visibility.
+- [x] Run true mobile viewport interactions for the command rail, evidence intake, and Cesium controls.
+- [x] Verify mobile footprint selection updates the source-metadata inspector and correct any touch-layout issue found.
+- [x] Create and validate a reusable skill for importing Microsoft building footprints into PostGIS/Cesium with cadastral traceability.
+- [x] Add approved-height storage and render height-based 3D extrusion for imported building footprints in Cesium.
+- [x] Add a manual footprint correction workflow with editable geometry, owner/authority review context, and saved revision metadata.
+- [x] Link imported footprints to persisted parcel and ULPIN ownership records, exposing detailed records on map selection.
+- [x] Build a search-led layered 3D area view that presents the selected site, building layers, footprint area, and situated area details.
+- [x] Verify height-extrusion contract, editing workflow, explicit ownership-record linkage UI, layered search, and responsive behavior before delivery.
+- [ ] Protect approved-height, ownership-link, and correction saves with a server-authorized authority workflow; verify a saved height produces a Cesium extrusion.
+- [ ] Replace raw-only correction with an assisted vertex-edit workflow and verify revision save plus reload persistence.
+- [ ] Create persisted parcel/ULPIN ownership records and explicit footprint links, then show linked ownership details on selection.
+- [x] Replace the hardcoded area focus with a query-driven site/ULPIN/parcel layered-area search result.
+- [ ] Verify an authority-approved height, geometry revision, ownership link, area search, and mobile workflow end to end.

@@ -2,11 +2,13 @@ import { z } from "zod";
 import { COOKIE_NAME } from "@shared/const";
 import { fallbackCadastreSearch, mergeAiSearchResponse, validateCadastreUpload } from "./cadastreService";
 import { createEvidenceFile, ensureCadastreSeedData, getCadastreRecords } from "./db";
+import { extractEvidenceMetadata } from "./evidenceExtraction";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { invokeLLM } from "./_core/llm";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, router } from "./_core/trpc";
-import { storagePut } from "./storage";
+import { adminProcedure, publicProcedure, router } from "./_core/trpc";
+import { getPostgisFeatureCollection, searchPostgisLayeredArea, updatePostgisFootprint, upsertPostgisGeoJsonFeatures } from "./postgis";
+import { storageGetSignedUrl, storagePut } from "./storage";
 
 const aiSearchInput = z.object({
   query: z.string().trim().min(3, "Ask a little more specifically.").max(280, "Keep the query under 280 characters."),
@@ -17,6 +19,26 @@ const uploadInput = z.object({
   fileName: z.string().trim().min(1).max(160),
   mimeType: z.string().trim().min(1).max(120),
   dataBase64: z.string().min(4).max(10_000_000),
+});
+
+const footprintUpdateInput = z.object({
+  ulpin: z.string().trim().min(3).max(96),
+  geometry: z.object({ type: z.enum(["Polygon", "MultiPolygon"]), coordinates: z.unknown() }).optional(),
+  approvedHeightMetres: z.number().positive().max(600).optional(),
+  heightSource: z.string().trim().max(240).optional(),
+  ownershipRecord: z.object({
+    parcelReference: z.string().trim().min(2).max(128),
+    ulpinRecord: z.string().trim().min(3).max(128),
+    ownerName: z.string().trim().min(2).max(240),
+    ownershipBasis: z.string().trim().min(3).max(400),
+    rightsSummary: z.string().trim().max(800).optional(),
+    sourceReference: z.string().trim().max(400).optional(),
+  }).optional(),
+  editNote: z.string().trim().min(8).max(1200),
+});
+
+const layeredAreaSearchInput = z.object({
+  query: z.string().trim().min(2, "Enter a site, ULPIN, parcel, or ownership reference.").max(180),
 });
 
 function safeFileName(fileName: string) {
@@ -32,6 +54,14 @@ export const appRouter = router({
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
     }),
+  }),
+  postgis: router({
+    geojson: publicProcedure.query(async () => getPostgisFeatureCollection()),
+    areaSearch: publicProcedure.input(layeredAreaSearchInput).query(async ({ input }) => searchPostgisLayeredArea(input.query)),
+    updateFootprint: adminProcedure.input(footprintUpdateInput).mutation(async ({ input, ctx }) => updatePostgisFootprint({
+      ...input,
+      editorName: ctx.user.name?.trim() || ctx.user.openId,
+    })),
   }),
   cadastre: router({
     search: publicProcedure.input(aiSearchInput).mutation(async ({ input }) => {
@@ -87,6 +117,18 @@ export const appRouter = router({
       const buffer = Buffer.from(input.dataBase64, "base64");
       const keyPrefix = input.category === "geojson" ? "cadastre/geojson" : "cadastre/floor-plans";
       const stored = await storagePut(`${keyPrefix}/${Date.now()}-${safeFileName(input.fileName)}`, buffer, input.mimeType);
+      const signedUrl = await storageGetSignedUrl(stored.key);
+      let extraction = null;
+      let spatialImport = { imported: 0, skipped: 0 };
+      try {
+        extraction = await extractEvidenceMetadata({ category: input.category, dataBase64: input.dataBase64, mimeType: input.mimeType, signedUrl });
+        if (input.category === "geojson") {
+          const parsed = JSON.parse(buffer.toString("utf8"));
+          spatialImport = await upsertPostgisGeoJsonFeatures(parsed);
+        }
+      } catch (error) {
+        console.warn("[Cadastre upload] AI extraction or PostGIS geometry import could not complete.", error);
+      }
       const persisted = await createEvidenceFile({
         name: input.fileName,
         category: input.category,
@@ -100,6 +142,8 @@ export const appRouter = router({
         stored: true,
         persisted,
         validation,
+        extraction,
+        spatialImport,
         file: { key: stored.key, url: stored.url, name: input.fileName, category: input.category },
       };
     }),
