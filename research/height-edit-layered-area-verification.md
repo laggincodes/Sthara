@@ -59,3 +59,27 @@ The viewer currently renders all imported building footprints as individual poly
 **True-mobile map-control confirmation.** The mobile dedicated workspace’s visible **Reset north** and **Zoom in** Cesium controls were used after the second screenshot integration. Reset showed the full 33-footprint source cluster; Zoom in retained its source-backed labels and visibly enlarged that cluster, confirming that the screenshot does not cover mobile Cesium controls.
 
 **Measured mobile camera comparison.** Two captured 390 × 844 map-stage images were evaluated inside the map-only crop. The reset state’s teal footprint cluster measured **230 × 225 px** (51,750 px² bounding box; 6,054 cyan source pixels), while the post-zoom state measured **281 × 277 px** (77,837 px² bounding box; 9,317 cyan source pixels). The larger post-zoom footprint envelope provides an independently reproducible confirmation that the camera view changed after the mobile control action.
+
+**Navigation-audit progress.** The home **Drone imagery** resource opened the data-ingestion workflow with the GeoJSON evidence branch. Within that workflow, the **Floor plan** branch switched the accepted intake type to PDF, PNG, or JPG floor plans. Both routes expose the same validation-and-queue action rather than a passive placeholder.
+
+**Default-review-route repair.** The GNSS / CORS panel correctly exposed its coordinate-control guidance and a 3D-review action, but audit found that an empty home search produced `/workspace?site=`. The route now falls back to the verified Amity University Patna reference area. Retesting confirmed `/workspace?site=Amity%20University%20Patna`, 33 matched PostGIS footprints, and the 17,742.41 m² source-backed footprint area.
+
+**Terrain-route check.** The **DEM / DSM** resource opens its terrain-evidence workspace, which explicitly preserves the approval safeguard for elevation-derived heights. Its **Open 3D review** control was tested with an empty home search and reached the same verified Amity reference route with 33 matched source footprints.
+
+**Settings-route check.** The topbar **Settings** control opens the specific Workspace settings panel, displays the active-layer and PostGIS-refresh context, and its **Enable all layers** action was exercised. The panel retained the expected four-layer enabled state.
+
+**Map-header action check.** The map-header **Spatial layers** action opened the four-layer panel and its **Focus live layers** action returned to the interactive Cesium scene. The adjacent **Inspect a live building footprint** action selected `MS-BUILDING-123133020-4ccb72e4db684f81`, opened the source-traced dossier, and displayed its 65.51 m² footprint area, no-approved-height status, Microsoft attribution, CDLA Permissive 2.0 license, and no-inferred-ownership disclosure.
+
+**Parcel-navigation check.** The **Parcels** rail entry opened the intelligence dialog with “Find parcel records.” Submitting that query returned the registered-catalog result set for parcel `P-0421`, including three stored ULPIN records and an **Open property information** action; the response explicitly stated that it did not infer data beyond the supplied catalog.
+
+**ULPIN-registry check.** The **ULPIN registry** rail entry opened the same intelligence workflow with “Find a 3D ULPIN record.” Its result resolved the stored `KA-29-105-0421-B11-F07-008` record, including its documented floor, elevation band, and registered air-rights boundary, followed by an **Open property information** action.
+
+**Volume-workspace route check.** The **Buildings** and **Property volumes** rail entries were each clicked. Both opened `/workspace?site=Amity%20University%20Patna` when the home query was empty, where the live scene presented the 33 matched individual source footprints and 17,742.41 m² footprint-area total.
+
+**Evidence-navigation check.** The **Data ingestion** and **Processing queue** rail entries were each clicked. Both open the evidence-intake station with GeoJSON and floor-plan categories, a type-constrained file drop zone, and the **Validate & add to queue** action. This shared workflow is deliberate: queue admission follows the same validation gate as direct evidence ingestion.
+
+**Operator-route check.** The Operator account handler was verified to open the authority-operator panel, which correctly identifies the signed-in user role and restates the administrator requirement for approved edits. Its **Open live records** action reached `/workspace?site=Amity%20University%20Patna`, retaining the 33 matched source footprints. The initial low-screen automated click did not trigger the visible panel; direct activation of the same interactive control confirmed the application handler itself is functioning.
+
+**Audit-trail check.** The **View audit trail** action opened the named cadastral audit workspace with the topology, LiDAR, and utility-depth context. Its **Inspect source layer** action selected `MS-BUILDING-123133020-4ccb72e4db684f81` and opened the source-traced footprint dossier with the same 65.51 m², attribution, and no-ownership-inference disclosures.
+
+**Conflict-route check.** The **Open conflict workspace** action opened the named topology-resolution panel. Its **Open 3D review** control reached `/workspace?site=Amity%20University%20Patna`, showing the 33 matched source footprints and the live source-backed 3D status.

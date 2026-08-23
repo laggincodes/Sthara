@@ -195,6 +195,7 @@ export default function Home() {
   const [selectedLiveFeature, setSelectedLiveFeature] = useState<{ ulpin: string; properties: Record<string, unknown> } | null>(null);
   const [areaSearchQuery, setAreaSearchQuery] = useState("");
   const [areaSearchRequest, setAreaSearchRequest] = useState<string | null>(null);
+  const resolvedWorkspaceSite = areaSearchQuery.trim() || "Amity University Patna";
   const [sourceGeometry, setSourceGeometry] = useState("");
   const [editorForm, setEditorForm] = useState({ geometry: "", approvedHeightMetres: "", heightSource: "", parcelReference: "", ulpinRecord: "", ownerName: "", ownershipBasis: "", rightsSummary: "", sourceReference: "", editorName: "Authority operator", editNote: "" });
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -365,7 +366,7 @@ export default function Home() {
     setActiveNav(label);
     setIsNavOpen(false);
     if (label === "3D workspace") {
-      setLocation(`/workspace?site=${encodeURIComponent(areaSearchQuery)}`);
+      setLocation(`/workspace?site=${encodeURIComponent(resolvedWorkspaceSite)}`);
       return;
     }
     if (label === "Parcels" || label === "ULPIN registry") {
@@ -374,7 +375,7 @@ export default function Home() {
       return;
     }
     if (label === "Buildings" || label === "Property volumes") {
-      setLocation(`/workspace?site=${encodeURIComponent(areaSearchQuery)}`);
+      setLocation(`/workspace?site=${encodeURIComponent(resolvedWorkspaceSite)}`);
       return;
     }
     if (label === "Data ingestion") {
@@ -545,7 +546,7 @@ export default function Home() {
             <img src="/manus-storage/ulpin-vpm-user-3d-workspace_acdcc803.png" alt="3D ULPIN-VPM workspace reference supplied by the project team" style={{ opacity: 0.88, objectPosition: "center" }} />
             <div className="home-spatial-hero-shade" style={{ background: "linear-gradient(90deg, rgba(7,16,20,.98), rgba(7,16,20,.84) 40%, rgba(7,16,20,.24) 69%, rgba(7,16,20,.08)), linear-gradient(0deg, rgba(7,16,20,.35), transparent 52%)" }} />
             <div className="home-spatial-hero-grid" />
-            <div className="home-spatial-hero-copy"><p className="section-kicker">3D ULPIN-VPM project overview</p><h2>One interoperable view for land, buildings, infrastructure, and vertical rights.</h2><p>Combine GIS parcel layers, drone imagery, LiDAR and point clouds, floor plans, GNSS/CORS control, and DEM/DSM data into auditable 3D property records.</p><button className="primary-button" type="button" onClick={() => setLocation(`/workspace?site=${encodeURIComponent(areaSearchQuery.trim() || "Amity University Patna")}`)}>Open live 3D workspace <ArrowUpRight size={16} /></button></div>
+            <div className="home-spatial-hero-copy"><p className="section-kicker">3D ULPIN-VPM project overview</p><h2>One interoperable view for land, buildings, infrastructure, and vertical rights.</h2><p>Combine GIS parcel layers, drone imagery, LiDAR and point clouds, floor plans, GNSS/CORS control, and DEM/DSM data into auditable 3D property records.</p><button className="primary-button" type="button" onClick={() => setLocation(`/workspace?site=${encodeURIComponent(resolvedWorkspaceSite)}`)}>Open live 3D workspace <ArrowUpRight size={16} /></button></div>
             <div className="home-spatial-hero-metrics"><span><Building2 size={16} /><b>3D</b> parcel identity</span><span><Layers3 size={16} /><b>{activeLayerCount}</b> spatial layers</span><span><ShieldCheck size={16} /> authority-gated edits</span></div>
           </section>
 
@@ -575,9 +576,9 @@ export default function Home() {
                   <div className="coordinates"><CircleDot size={13} /> {hasFocusedSearchGeometry ? "Matched PostGIS geometry focused" : "Individual footprints ready"} <span>·</span> approved heights extrude only after authority approval <span>·</span> EPSG:4326</div>
                 </div>
                 <div className="map-header-actions">
-                  <button className="icon-button dark" type="button" onClick={() => setLocation(`/workspace?site=${encodeURIComponent(areaSearchQuery)}`)} aria-label="Open the dedicated layered 3D area"><MapPinned size={17} /></button>
+                  <button className="icon-button dark" type="button" onClick={() => setLocation(`/workspace?site=${encodeURIComponent(resolvedWorkspaceSite)}`)} aria-label="Open the dedicated layered 3D area"><MapPinned size={17} /></button>
                   <button className="icon-button dark" type="button" onClick={() => issueMapCommand("inspect-footprint")} aria-label="Inspect a live building footprint"><ScanSearch size={17} /></button>
-                  <button className="icon-button dark" type="button" onClick={() => setLocation(`/workspace?site=${encodeURIComponent(areaSearchQuery)}`)} aria-label="Open full 3D spatial workspace"><Maximize2 size={17} /></button>
+                  <button className="icon-button dark" type="button" onClick={() => setLocation(`/workspace?site=${encodeURIComponent(resolvedWorkspaceSite)}`)} aria-label="Open full 3D spatial workspace"><Maximize2 size={17} /></button>
                   <button className="icon-button dark" type="button" onClick={() => setWorkspaceOpen("Spatial layers")} aria-label="Open map layers"><Settings2 size={17} /></button>
                 </div>
               </div>
@@ -742,7 +743,7 @@ export default function Home() {
             {workspaceOpen === "Audit trail" && <div className="workspace-context-list"><span><Check size={14} /> Block B12 topology validation passed</span><span><FileUp size={14} /> LiDAR classification received</span><span><AlertTriangle size={14} /> Utility depth review requires resolution</span></div>}
             {workspaceOpen === "Workspace settings" && <div className="workspace-context-list"><span><Layers3 size={14} /> {activeLayerCount} spatial layers currently enabled</span><span><Database size={14} /> PostGIS refreshes live geometry every 20 seconds</span></div>}
             {workspaceOpen === "Operator account" && <div className="workspace-context-list"><span><ShieldCheck size={14} /> Approved edits require administrator access</span><span><Building2 size={14} /> Original Microsoft source geometry remains immutable</span></div>}
-            <div className="workspace-actions"><button className="secondary-button" type="button" onClick={() => setWorkspaceOpen(null)}>Return to command desk</button>{workspaceOpen === "Workspace settings" ? <button className="primary-button" type="button" onClick={() => setLayersOn({ parcels: true, buildings: true, utilities: true, terrain: true })}>Enable all layers <Layers3 size={16} /></button> : workspaceOpen === "Operator account" ? <button className="primary-button" type="button" onClick={() => setLocation(`/workspace?site=${encodeURIComponent(areaSearchQuery)}`)}>Open live records <ArrowUpRight size={16} /></button> : workspaceOpen === "Audit trail" ? <button className="primary-button" type="button" onClick={() => { setWorkspaceOpen(null); issueMapCommand("inspect-footprint"); }}>Inspect source layer <ScanSearch size={16} /></button> : workspaceOpen === "Conflict workspace" || workspaceOpen === "GNSS / CORS alignment" || workspaceOpen === "DEM / DSM terrain" ? <button className="primary-button" type="button" onClick={() => setLocation(`/workspace?site=${encodeURIComponent(areaSearchQuery)}`)}>Open 3D review <MapPinned size={16} /></button> : workspaceOpen === "Spatial layers" ? <button className="primary-button" type="button" onClick={() => { setWorkspaceOpen(null); issueMapCommand("focus-site"); }}>Focus live layers <MapPinned size={16} /></button> : null}</div>
+            <div className="workspace-actions"><button className="secondary-button" type="button" onClick={() => setWorkspaceOpen(null)}>Return to command desk</button>{workspaceOpen === "Workspace settings" ? <button className="primary-button" type="button" onClick={() => setLayersOn({ parcels: true, buildings: true, utilities: true, terrain: true })}>Enable all layers <Layers3 size={16} /></button> : workspaceOpen === "Operator account" ? <button className="primary-button" type="button" onClick={() => setLocation(`/workspace?site=${encodeURIComponent(resolvedWorkspaceSite)}`)}>Open live records <ArrowUpRight size={16} /></button> : workspaceOpen === "Audit trail" ? <button className="primary-button" type="button" onClick={() => { setWorkspaceOpen(null); issueMapCommand("inspect-footprint"); }}>Inspect source layer <ScanSearch size={16} /></button> : workspaceOpen === "Conflict workspace" || workspaceOpen === "GNSS / CORS alignment" || workspaceOpen === "DEM / DSM terrain" ? <button className="primary-button" type="button" onClick={() => setLocation(`/workspace?site=${encodeURIComponent(resolvedWorkspaceSite)}`)}>Open 3D review <MapPinned size={16} /></button> : workspaceOpen === "Spatial layers" ? <button className="primary-button" type="button" onClick={() => { setWorkspaceOpen(null); issueMapCommand("focus-site"); }}>Focus live layers <MapPinned size={16} /></button> : null}</div>
           </motion.div>
         </div>
       )}
