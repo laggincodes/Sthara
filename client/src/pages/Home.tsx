@@ -508,15 +508,15 @@ export default function Home() {
         </div>
 
         <div className="sidebar-bottom">
-          <div className="survey-state">
-            <span className="pulse-dot" />
-            <div><strong>CORS link stable</strong><small>± 1.8 cm accuracy</small></div>
-          </div>
           <button className="account-row" type="button" onClick={() => setWorkspaceOpen("Operator account")}>
             <div className="avatar">AR</div>
             <div><strong>Arjun Rao</strong><small>Authority operator</small></div>
             <MoreHorizontal size={18} />
           </button>
+          <div className="survey-state">
+            <span className="pulse-dot" />
+            <div><strong>CORS link stable</strong><small>± 1.8 cm accuracy</small></div>
+          </div>
         </div>
       </aside>
 
