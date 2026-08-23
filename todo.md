@@ -84,3 +84,4 @@
 - [x] Import bounded individual public building detections around the verified Patna references without asserting parcel, campus-boundary, ownership, height, or legal-cadastre status.
 - [x] Extend guarded AI-assisted search aliases and Three.js/Cesium focus so approved Patna references resolve only to matching live source geometry.
 - [x] Validate matched and unmatched Patna place searches, source labels, 3D preview, and true-mobile behavior after the data expansion.
+- [x] Prevent authority-edit submissions with a short change note from reaching the API, and show the user the eight-character requirement inline.
