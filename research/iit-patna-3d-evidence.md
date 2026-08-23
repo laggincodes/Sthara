@@ -26,3 +26,7 @@ The IIT Patna workspace was checked at 1280×720 and 396×857. The matched resul
 The OSM context layer is controlled by the existing building-layer toggle. It is not used to write `approvedHeightMetres`, floor metadata, ownership, ULPIN, rights, or subsurface records.
 
 References: [Cesium OSM Buildings documentation](https://cesium.com/platform/cesium-ion/content/cesium-osm-buildings/); [IIT Patna official website](https://www.iitp.ac.in/).
+
+## Unknown-place regression
+
+After the presentation upgrade, `Unknown tower in Patna` was checked at 1280×720 and 396×857. Both views showed **No verified 3D visual**, zero source-backed footprint area, the empty Three.js state, the ordered review panel, and the OSM visual-context disclaimer. No geometry or floor diagram was fabricated for the unmatched query.
