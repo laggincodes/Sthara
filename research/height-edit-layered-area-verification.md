@@ -25,3 +25,13 @@ The viewer currently renders all imported building footprints as individual poly
 **User confirmation.** The formerly inactive administrator requirement control was replaced with an enabled **Sign in as administrator** action that retains the selected source-record context before entering secure sign-in. The user confirmed that the repaired action works correctly.
 
 **End-to-end access confirmation.** The user confirmed that, after completing administrator sign-in, the application returned to the same selected footprint’s **Correct live footprint** authority editor. This verifies the resume key and URL-backed context restoration path in the real sign-in flow.
+
+**Dedicated 3D workspace check.** The updated home dashboard presents a 3D cadastral visual hero with live-footprint, layer, and authority-gating metrics. Its **Show in 3D** action navigates to `/workspace?site=Amity%20University%20Patna`, where live PostGIS polygons, map controls, layer switches, a property dossier, and the individual-footprint/no-boundary disclaimer are available in a full-screen reference-inspired spatial layout. The 390 × 844 capture retains the home hero, search action, Cesium controls, dossier, and layer switches without horizontal overflow.
+
+**Navigation check.** The home **Show in 3D** control was clicked and entered the dedicated spatial workspace with the Amity query preserved. The **Data ingestion** navigation also opened the usable evidence-intake dialog with GeoJSON and floor-plan branches, a drop zone, validation feedback, and a close control.
+
+**Home control matrix.** Sidebar **3D workspace**, **Buildings**, and **Property volumes** enter the dedicated live spatial workspace; **Parcels** and **ULPIN registry** open the intelligence search with a focused query; **Data ingestion** and **Processing queue** open the evidence-intake workflow. Resource pills route to their matching upload branch or to an operational configuration panel. The parcel action was interactively checked and opened the search dialog with the query “Find parcel records.”
+
+**Return-navigation check.** Loading the dedicated-workspace return route `?workspace=ULPIN%20registry` opened the home intelligence dialog and populated it with “Find a 3D ULPIN record,” confirming that back-navigation parameters now resolve to an actionable dashboard destination.
+
+**Operational-panel check.** The settings route now opens a dedicated **Workspace settings** panel with current PostGIS/layer status and an **Enable all layers** action; the action was exercised successfully. Audit, conflict, GNSS/CORS, DEM/DSM, and operator controls likewise show feature-specific status and route to live inspection or 3D review rather than relying on a generic placeholder message.
