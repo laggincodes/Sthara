@@ -1,5 +1,5 @@
 const targets = await (await fetch("http://127.0.0.1:9222/json")).json();
-const target = targets.find(item => item.type === "page" && item.url.includes("3000-i03ctryp13lth9gsnihfq-96d9fe91.sg1.manus.computer"));
+const target = targets.find(item => item.type === "page" && /^https:\/\/3000-[^.]+\.sg1\.manus\.computer\//.test(item.url));
 
 if (!target?.webSocketDebuggerUrl) throw new Error("Active dashboard browser target was not found");
 

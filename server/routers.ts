@@ -7,6 +7,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { invokeLLM } from "./_core/llm";
 import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, publicProcedure, router } from "./_core/trpc";
+import { confirmedSourceAlias, eligibleSourceAliases, sourceBackedSearchAliases } from "./buildingSearchAliases";
 import { getPostgisFeatureCollection, searchPostgisLayeredArea, updatePostgisFootprint, upsertPostgisGeoJsonFeatures } from "./postgis";
 import { storageGetSignedUrl, storagePut } from "./storage";
 
@@ -41,6 +42,10 @@ const layeredAreaSearchInput = z.object({
   query: z.string().trim().min(2, "Enter a site, ULPIN, parcel, or ownership reference.").max(180),
 });
 
+const buildingResolutionInput = z.object({
+  query: z.string().trim().min(2, "Enter a building or place to resolve.").max(180),
+});
+
 function safeFileName(fileName: string) {
   return fileName.toLowerCase().replace(/[^a-z0-9._-]+/g, "-").replace(/^-+|-+$/g, "") || "upload";
 }
@@ -58,6 +63,44 @@ export const appRouter = router({
   postgis: router({
     geojson: publicProcedure.query(async () => getPostgisFeatureCollection()),
     areaSearch: publicProcedure.input(layeredAreaSearchInput).query(async ({ input }) => searchPostgisLayeredArea(input.query)),
+    resolveBuilding: publicProcedure.input(buildingResolutionInput).mutation(async ({ input }) => {
+      const direct = await searchPostgisLayeredArea(input.query);
+      if (direct.buildingCount > 0) return { ...direct, resolvedQuery: input.query, resolution: "direct-source-match" as const, rationale: "Matched directly against live source-backed geometry." };
+      const candidateAliases = eligibleSourceAliases(input.query);
+      if (candidateAliases.length === 0) return { ...direct, resolvedQuery: input.query, resolution: "unavailable" as const, rationale: "No live source-backed building geometry matches this search." };
+      try {
+        const response = await invokeLLM({
+          model: "gpt-5-mini",
+          messages: [
+            { role: "system", content: "Resolve the user query to at most one item from the supplied source-backed alias catalog. Return JSON only. Do not invent locations, buildings, heights, floors, owners, ULPINs, or geometry. Use 'none' when no catalog alias is justified." },
+            { role: "user", content: `Query: ${input.query}\nLexically eligible source-backed aliases: ${JSON.stringify(candidateAliases)}` },
+          ],
+          response_format: {
+            type: "json_schema",
+            json_schema: {
+              name: "source_backed_building_resolution",
+              strict: true,
+              schema: {
+                type: "object",
+                properties: { alias: { type: "string" }, confidence: { type: "number" }, rationale: { type: "string" } },
+                required: ["alias", "confidence", "rationale"],
+                additionalProperties: false,
+              },
+            },
+          },
+        });
+        const content = response.choices[0]?.message.content;
+        const parsed = content && typeof content === "string" ? JSON.parse(content) as { alias?: string; confidence?: number; rationale?: string } : null;
+        const alias = confirmedSourceAlias(input.query, parsed?.alias, parsed?.confidence);
+        if (!alias) return { ...direct, resolvedQuery: input.query, resolution: "unavailable" as const, rationale: "No live source-backed building geometry matches this search." };
+        const resolved = await searchPostgisLayeredArea(alias);
+        if (resolved.buildingCount === 0) return { ...direct, resolvedQuery: input.query, resolution: "unavailable" as const, rationale: "The suggested alias has no current live geometry." };
+        return { ...resolved, resolvedQuery: alias, resolution: "ai-assisted-source-alias" as const, confidence: Math.max(0, Math.min(1, parsed?.confidence ?? 0)), rationale: "AI routed the request to an existing source-backed area; rendered geometry is live PostGIS data." };
+      } catch (error) {
+        console.warn("[PostGIS resolver] AI alias resolution unavailable.", error);
+        return { ...direct, resolvedQuery: input.query, resolution: "unavailable" as const, rationale: "No live source-backed building geometry matches this search." };
+      }
+    }),
     updateFootprint: adminProcedure.input(footprintUpdateInput).mutation(async ({ input, ctx }) => updatePostgisFootprint({
       ...input,
       editorName: ctx.user.name?.trim() || ctx.user.openId,
