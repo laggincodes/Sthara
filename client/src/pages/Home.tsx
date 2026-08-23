@@ -40,7 +40,7 @@ import {
   Zap,
   type LucideIcon,
 } from "lucide-react";
-import { useCallback, useMemo, useRef, useState, type ChangeEvent, type DragEvent, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type DragEvent, type FormEvent } from "react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { CesiumSpatialViewer, type MapCommand } from "@/components/CesiumSpatialViewer";
@@ -74,6 +74,33 @@ const panelMotion = {
   initial: { opacity: 0, y: 12 },
   animate: { opacity: 1, y: 0 },
 };
+
+function getEditablePolygonVertices(geometryText: string): Array<[number, number]> {
+  try {
+    const geometry = JSON.parse(geometryText) as { type?: string; coordinates?: unknown };
+    if (geometry.type !== "Polygon" || !Array.isArray(geometry.coordinates) || !Array.isArray(geometry.coordinates[0])) return [];
+    const ring = geometry.coordinates[0] as unknown[];
+    return ring.slice(0, -1).filter((vertex): vertex is [number, number] => Array.isArray(vertex) && typeof vertex[0] === "number" && typeof vertex[1] === "number");
+  } catch {
+    return [];
+  }
+}
+
+function replacePolygonVertex(geometryText: string, vertexIndex: number, axis: 0 | 1, value: string) {
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue)) return geometryText;
+  try {
+    const geometry = JSON.parse(geometryText) as { type?: string; coordinates?: unknown };
+    if (geometry.type !== "Polygon" || !Array.isArray(geometry.coordinates) || !Array.isArray(geometry.coordinates[0])) return geometryText;
+    const ring = geometry.coordinates[0] as number[][];
+    if (!Array.isArray(ring[vertexIndex]) || ring.length < 4) return geometryText;
+    ring[vertexIndex][axis] = numericValue;
+    if (vertexIndex === 0) ring[ring.length - 1] = [...ring[0]];
+    return JSON.stringify(geometry, null, 2);
+  } catch {
+    return geometryText;
+  }
+}
 
 function BrandMark({ className = "" }: { className?: string }) {
   return (
@@ -159,12 +186,22 @@ export default function Home() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [volumeLoading, setVolumeLoading] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [editorOpen, setEditorOpen] = useState(false);
   const [workspaceOpen, setWorkspaceOpen] = useState<string | null>(null);
   const [mapCommand, setMapCommand] = useState<MapCommand>(null);
   const [selectedLiveFeature, setSelectedLiveFeature] = useState<{ ulpin: string; properties: Record<string, unknown> } | null>(null);
+  const [areaSearchQuery, setAreaSearchQuery] = useState("Amity University Patna");
+  const [areaSearchRequest, setAreaSearchRequest] = useState<string | null>(null);
+  const [sourceGeometry, setSourceGeometry] = useState("");
+  const [editorForm, setEditorForm] = useState({ geometry: "", approvedHeightMetres: "", heightSource: "", parcelReference: "", ulpinRecord: "", ownerName: "", ownershipBasis: "", rightsSummary: "", sourceReference: "", editorName: "Authority operator", editNote: "" });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const aiSearch = trpc.cadastre.search.useMutation();
   const cadastreUpload = trpc.cadastre.upload.useMutation();
+  const geometryQuery = trpc.postgis.geojson.useQuery(undefined, { refetchInterval: 20_000 });
+  const authQuery = trpc.auth.me.useQuery();
+  const areaSearchInput = useMemo(() => ({ query: areaSearchRequest ?? "Amity University Patna" }), [areaSearchRequest]);
+  const areaSearch = trpc.postgis.areaSearch.useQuery(areaSearchInput, { enabled: Boolean(areaSearchRequest) });
+  const footprintUpdate = trpc.postgis.updateFootprint.useMutation();
   const trpcUtils = trpc.useUtils();
   const [layersOn, setLayersOn] = useState<Record<LayerKey, boolean>>({
     parcels: true,
@@ -180,11 +217,93 @@ export default function Home() {
   const liveFeatureLicense = typeof liveProperty?.sourceLicense === "string" ? liveProperty.sourceLicense : "Source metadata unavailable";
   const liveFeatureConfidence = typeof liveProperty?.confidence === "number" ? `${Math.round(liveProperty.confidence * 100)}%` : "Not supplied";
   const liveFeatureDistance = typeof liveProperty?.centroidDistanceMetres === "number" ? `${liveProperty.centroidDistanceMetres} m from campus reference` : "Coordinate reference available";
+  const selectedOwnership = liveProperty?.ownershipData && typeof liveProperty.ownershipData === "object" && !Array.isArray(liveProperty.ownershipData) ? liveProperty.ownershipData as Record<string, unknown> : {};
+  const liveFootprintArea = typeof liveProperty?.footprintAreaSquareMetres === "number" ? `${liveProperty.footprintAreaSquareMetres.toLocaleString()} m²` : "Area awaiting calculation";
+  const liveFeatureHeight = typeof liveProperty?.approvedHeightMetres === "number" ? `${liveProperty.approvedHeightMetres} m approved` : "Height not approved";
+  const liveFootprintCount = geometryQuery.data?.features.length ?? 0;
+  const selectedSiteArea = useMemo(() => {
+    const features = geometryQuery.data?.features ?? [];
+    return Math.round(features.reduce((sum, feature) => sum + (typeof feature.properties.footprintAreaSquareMetres === "number" ? feature.properties.footprintAreaSquareMetres : 0), 0) * 100) / 100;
+  }, [geometryQuery.data]);
+  const editableVertices = useMemo(() => getEditablePolygonVertices(editorForm.geometry), [editorForm.geometry]);
+  const displayedLayerCount = areaSearch.data ? areaSearch.data.buildingCount : liveFootprintCount;
+  const displayedSiteArea = areaSearch.data ? areaSearch.data.totalFootprintAreaSquareMetres : selectedSiteArea;
+  useEffect(() => {
+    if (!areaSearch.data || areaSearch.data.query !== areaSearchRequest) return;
+    setMapCommand({ kind: "focus-site", nonce: Date.now() });
+    toast.success("Layered 3D search result ready", { description: `${areaSearch.data.buildingCount} matching building layers · ${areaSearch.data.totalFootprintAreaSquareMetres.toLocaleString()} m² footprint area.` });
+  }, [areaSearch.data, areaSearchRequest]);
   const onMapFeatureSelect = useCallback((feature: { ulpin: string; properties: Record<string, unknown> }) => {
     setSelectedLiveFeature(feature);
     toast.success(`Selected ${feature.ulpin}`, { description: "Live PostGIS footprint metadata loaded into the property inspector." });
     setDetailOpen(true);
   }, []);
+  const openFootprintEditor = () => {
+    const geometry = geometryQuery.data?.features.find(feature => feature.properties.ulpin === selectedLiveFeature?.ulpin)?.geometry;
+    if (!selectedLiveFeature || !geometry) {
+      toast.error("Select a live building footprint first", { description: "Choose a building in the Cesium viewer to load its editable geometry." });
+      return;
+    }
+    const ownership = selectedOwnership;
+    const geometryText = JSON.stringify(geometry, null, 2);
+    setSourceGeometry(geometryText);
+    setEditorForm({
+      geometry: geometryText,
+      approvedHeightMetres: typeof liveProperty?.approvedHeightMetres === "number" ? String(liveProperty.approvedHeightMetres) : "",
+      heightSource: typeof liveProperty?.heightSource === "string" ? liveProperty.heightSource : "",
+      parcelReference: typeof liveProperty?.parcelReference === "string" ? liveProperty.parcelReference : "",
+      ulpinRecord: typeof liveProperty?.ulpinRecord === "string" ? liveProperty.ulpinRecord : "",
+      ownerName: typeof ownership.ownerName === "string" ? ownership.ownerName : "",
+      ownershipBasis: typeof ownership.ownershipBasis === "string" ? ownership.ownershipBasis : "",
+      rightsSummary: typeof ownership.rightsSummary === "string" ? ownership.rightsSummary : "",
+      sourceReference: typeof ownership.sourceReference === "string" ? ownership.sourceReference : "",
+      editorName: "Authority operator",
+      editNote: "",
+    });
+    setEditorOpen(true);
+  };
+  const saveFootprintCorrection = () => {
+    if (!selectedLiveFeature) return;
+    let geometry: { type: "Polygon" | "MultiPolygon"; coordinates: unknown } | undefined;
+    try {
+      geometry = JSON.parse(editorForm.geometry) as { type: "Polygon" | "MultiPolygon"; coordinates: unknown };
+    } catch {
+      toast.error("Geometry must be valid GeoJSON", { description: "Use a Polygon or MultiPolygon coordinate object." });
+      return;
+    }
+    const height = editorForm.approvedHeightMetres ? Number(editorForm.approvedHeightMetres) : undefined;
+    if (height !== undefined && (!Number.isFinite(height) || height <= 0)) {
+      toast.error("Enter a positive approved height");
+      return;
+    }
+    const ownershipSupplied = Boolean(editorForm.parcelReference || editorForm.ulpinRecord || editorForm.ownerName || editorForm.ownershipBasis || editorForm.rightsSummary || editorForm.sourceReference);
+    if (ownershipSupplied && (!editorForm.parcelReference || !editorForm.ulpinRecord || !editorForm.ownerName || !editorForm.ownershipBasis)) {
+      toast.error("Complete the verified ownership record", { description: "Parcel reference, ULPIN record, owner or rights-holder, and ownership basis are required for a link." });
+      return;
+    }
+    footprintUpdate.mutate({
+      ulpin: selectedLiveFeature.ulpin,
+      geometry,
+      approvedHeightMetres: height,
+      heightSource: editorForm.heightSource,
+      ownershipRecord: ownershipSupplied ? {
+        parcelReference: editorForm.parcelReference,
+        ulpinRecord: editorForm.ulpinRecord,
+        ownerName: editorForm.ownerName,
+        ownershipBasis: editorForm.ownershipBasis,
+        rightsSummary: editorForm.rightsSummary || undefined,
+        sourceReference: editorForm.sourceReference || undefined,
+      } : undefined,
+      editNote: editorForm.editNote,
+    }, {
+      onSuccess: () => {
+        void trpcUtils.postgis.geojson.invalidate();
+        setEditorOpen(false);
+        toast.success("Footprint revision saved", { description: "The original source geometry remains preserved with the new approved revision." });
+      },
+      onError: error => toast.error("Correction could not be saved", { description: error.message }),
+    });
+  };
 
   const selectNav = (label: string) => {
     setActiveNav(label);
@@ -197,6 +316,16 @@ export default function Home() {
   };
 
   const issueMapCommand = (kind: Exclude<MapCommand, null>["kind"]) => setMapCommand({ kind, nonce: Date.now() });
+
+  const submitAreaSearch = (event?: FormEvent<HTMLFormElement>) => {
+    event?.preventDefault();
+    const query = areaSearchQuery.trim();
+    if (query.length < 2) {
+      toast.error("Enter a site, ULPIN, parcel, or ownership reference");
+      return;
+    }
+    setAreaSearchRequest(query);
+  };
 
   const selectFloor = (floor: number) => {
     setActiveFloor(floor);
@@ -298,8 +427,8 @@ export default function Home() {
           <NavGroup items={dataItems} active={activeNav} onSelect={selectNav} />
           <div className="rail-datum">
             <span className="rail-label">Active field mode</span>
-            <strong><i /> South Bengaluru pilot</strong>
-            <small>KA-BLR-S5 · vertical cadastre</small>
+            <strong><i /> Amity University Patna area</strong>
+            <small>OSM reference · individual footprints</small>
           </div>
         </div>
 
@@ -319,7 +448,7 @@ export default function Home() {
       <section className="workspace">
         <header className="topbar">
           <button className="icon-button mobile-menu" type="button" aria-label="Open navigation" onClick={() => setIsNavOpen(true)}><Menu size={20} /></button>
-          <div className="crumbs"><span>Operations</span><ChevronRight size={14} /><strong>South Bengaluru pilot</strong><ChevronDown size={14} /></div>
+          <div className="crumbs"><span>Operations</span><ChevronRight size={14} /><strong>Amity University Patna</strong><ChevronDown size={14} /></div>
           <div className="top-actions">
             <button className="search-button ai-search-trigger" type="button" onClick={() => setSearchOpen(true)}><BrainCircuit size={17} /><span>Ask ULPIN intelligence</span><kbd>⌘ K</kbd></button>
             <button className="icon-button" type="button" aria-label="Open settings" onClick={() => setWorkspaceOpen("Workspace settings")}><Settings2 size={18} /></button>
@@ -332,10 +461,16 @@ export default function Home() {
           <section className="heading-row">
             <div>
               <p className="eyebrow cyan-text">Vertical cadastre command desk</p>
-              <h1>South Bengaluru vertical cadastre<br className="desktop-break" /> ready for volume review.</h1>
-              <p className="subhead">1,248 parcels and 8,936 registered volumes are synchronized against the latest LiDAR, GIS, floor-plan, and CORS evidence.</p>
+              <h1>Amity University Patna building layers<br className="desktop-break" /> ready for cadastral review.</h1>
+              <p className="subhead">Individual Microsoft building footprints are live in PostGIS with their source attribution preserved. They remain building detections, not a campus boundary or ownership assertion.</p>
             </div>
             <div className="sync-card"><Check size={15} /><span>All sources synchronized</span><small>08:32 IST</small></div>
+          </section>
+
+          <section className="area-search-panel" aria-label="Layered 3D area search">
+            <div><p className="section-kicker">Layered 3D area search</p><strong>Locate a site, display its building layers, and review its situated area.</strong></div>
+            <form className="area-search-controls" onSubmit={submitAreaSearch}><Search size={17} /><input value={areaSearchQuery} onChange={event => setAreaSearchQuery(event.target.value)} placeholder="Search site, ULPIN, parcel, owner, or cimage" /><button className="primary-button compact" type="submit" disabled={areaSearch.isFetching}>{areaSearch.isFetching ? <Loader2 className="spin-icon" size={16} /> : <>Show in 3D <MapPinned size={16} /></>}</button></form>
+            <div className="area-search-meta"><span><Building2 size={13} /> {displayedLayerCount} matching building layers</span><span><Grid3X3 size={13} /> {displayedSiteArea.toLocaleString()} m² situated footprint area</span><span><ShieldCheck size={13} /> individual footprints only · no campus boundary inferred</span>{areaSearch.data && <span><Database size={13} /> query: {areaSearch.data.siteLabel}</span>}{areaSearch.data && areaSearch.data.ownershipLinkCount > 0 && <span><Users size={13} /> {areaSearch.data.ownershipLinkCount} authority-linked records</span>}</div>
           </section>
 
           <section className="stats-grid" aria-label="Pilot program metrics">
@@ -347,7 +482,7 @@ export default function Home() {
 
           <section className="operations-grid">
             <motion.article className={`map-card ${volumeLoading ? "volume-loading" : ""}`} {...panelMotion} transition={{ duration: 0.42, delay: 0.08 }}>
-              <CesiumSpatialViewer command={mapCommand} layers={layersOn} onFeatureSelect={onMapFeatureSelect} />
+              <CesiumSpatialViewer command={mapCommand} layers={layersOn} focusUlpins={areaSearch.data?.matchedUlpins} onFeatureSelect={onMapFeatureSelect} />
               <div className="map-grid" />
               <div className="map-vignette" />
 
@@ -358,6 +493,7 @@ export default function Home() {
                   <div className="coordinates"><CircleDot size={13} /> 25.6124° N <span>·</span> 85.0548° E <span>·</span> EPSG:4326</div>
                 </div>
                 <div className="map-header-actions">
+                  <button className="icon-button dark" type="button" onClick={() => issueMapCommand("focus-site")} aria-label="Focus the layered 3D area"><MapPinned size={17} /></button>
                   <button className="icon-button dark" type="button" onClick={() => issueMapCommand("inspect-footprint")} aria-label="Inspect a live building footprint"><ScanSearch size={17} /></button>
                   <button className="icon-button dark" type="button" onClick={() => issueMapCommand("fullscreen")} aria-label="Expand live Cesium map"><Maximize2 size={17} /></button>
                   <button className="icon-button dark" type="button" onClick={() => setWorkspaceOpen("Spatial layers")} aria-label="Open map layers"><Settings2 size={17} /></button>
@@ -370,7 +506,7 @@ export default function Home() {
                 <button type="button" onClick={() => issueMapCommand("north")} aria-label="Reset map to north"><span className="north-mark">N</span></button>
               </div>
 
-              <div className="property-tag live-property-tag"><span className="status-dot cyan" /> LIVE POSTGIS REFERENCE <strong>Amity University Patna · OSM</strong></div>
+              <div className="property-tag live-property-tag"><span className="status-dot cyan" /> LIVE POSTGIS AREA <strong>{displayedLayerCount} building layers · {displayedSiteArea.toLocaleString()} m²</strong></div>
 
               {volumeLoading && <motion.div className="volume-sync-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}><Loader2 size={17} /><span>Synchronizing selected volume</span><i /></motion.div>}
 
@@ -387,10 +523,10 @@ export default function Home() {
                 <div className="inspector-main"><div><p>{selectedLiveFeature ? "Live detected building" : "Active vertical parcel"}</p><strong>{selectedLiveFeature ? liveFeatureName : `Unit 4C · Floor ${activeFloor}`}</strong></div><SmallBadge tone={selectedLiveFeature ? "cyan" : "green"}>{selectedLiveFeature ? <><Building2 size={12} /> source traced</> : <><Check size={12} /> verified</>}</SmallBadge></div>
                 <div className="data-list">
                   <div><span>{selectedLiveFeature ? "Source record" : "3D ULPIN"}</span><code>{selectedLiveFeature ? selectedLiveFeature.ulpin : `KA-29-105-0421-B12-F${String(activeFloor).padStart(2, "0")}-021`}</code></div>
-                  <div><span>{selectedLiveFeature ? "Dataset" : "Volume"}</span><strong>{selectedLiveFeature ? liveFeatureSource : "486.2 m³"}</strong></div>
-                  <div><span>{selectedLiveFeature ? "Confidence" : "Elevation"}</span><strong>{selectedLiveFeature ? liveFeatureConfidence : `+${activeFloor * 3.2 - 0.1} m → +${activeFloor * 3.2 + 3.0} m`}</strong></div>
+                  <div><span>{selectedLiveFeature ? "Footprint area" : "Volume"}</span><strong>{selectedLiveFeature ? liveFootprintArea : "486.2 m³"}</strong></div>
+                  <div><span>{selectedLiveFeature ? "3D height" : "Elevation"}</span><strong>{selectedLiveFeature ? liveFeatureHeight : `+${activeFloor * 3.2 - 0.1} m → +${activeFloor * 3.2 + 3.0} m`}</strong></div>
                 </div>
-                <button className="secondary-button" type="button" onClick={() => setDetailOpen(true)}>{selectedLiveFeature ? "View source metadata" : "Review volume profile"} <ArrowUpRight size={16} /></button>
+                <button className="secondary-button" type="button" onClick={() => selectedLiveFeature ? openFootprintEditor() : setDetailOpen(true)}>{selectedLiveFeature ? "Correct & link record" : "Review volume profile"} <ArrowUpRight size={16} /></button>
               </motion.article>
 
               <motion.article className="layer-card" {...panelMotion} transition={{ duration: 0.42, delay: 0.18 }}>
@@ -507,9 +643,9 @@ export default function Home() {
             <button className="icon-button modal-close" type="button" aria-label="Close property information" onClick={() => setDetailOpen(false)}><X size={18} /></button>
             <div className="detail-hero"><div><p className="eyebrow cyan-text">{selectedLiveFeature ? "Live footprint source metadata" : "Detailed property information"}</p><h2 id="property-detail-title">{selectedLiveFeature ? liveFeatureName : "Unit 4C · Block B12"}</h2><p>{selectedLiveFeature ? "Individual open building footprint selected from the live Neon PostGIS layer; no campus boundary has been inferred." : `Registered vertical parcel on Floor ${activeFloor} within Koramangala Sector 5.`}</p></div><SmallBadge tone={selectedLiveFeature ? "cyan" : "green"}>{selectedLiveFeature ? <><Building2 size={12} /> detected footprint</> : <><Check size={12} /> topology verified</>}</SmallBadge></div>
             <div className="detail-ulpin"><span>{selectedLiveFeature ? "Source record" : "3D ULPIN"}</span><code>{selectedLiveFeature ? selectedLiveFeature.ulpin : `KA-29-105-0421-B12-F${String(activeFloor).padStart(2, "0")}-021`}</code><span className="detail-score">{selectedLiveFeature ? liveFeatureConfidence : "98.7% topology health"}</span></div>
-            <div className="detail-metrics"><div><span>{selectedLiveFeature ? "Dataset" : "Footprint"}</span><strong>{selectedLiveFeature ? liveFeatureSource : "152.4 m²"}</strong></div><div><span>{selectedLiveFeature ? "Licence" : "Volume"}</span><strong>{selectedLiveFeature ? liveFeatureLicense : "486.2 m³"}</strong></div><div><span>{selectedLiveFeature ? "Spatial proximity" : "Elevation band"}</span><strong>{selectedLiveFeature ? liveFeatureDistance : `+${activeFloor * 3.2 - 0.1} → +${activeFloor * 3.2 + 3.0} m`}</strong></div></div>
+            <div className="detail-metrics"><div><span>{selectedLiveFeature ? "Footprint area" : "Footprint"}</span><strong>{selectedLiveFeature ? liveFootprintArea : "152.4 m²"}</strong></div><div><span>{selectedLiveFeature ? "Approved 3D height" : "Volume"}</span><strong>{selectedLiveFeature ? liveFeatureHeight : "486.2 m³"}</strong></div><div><span>{selectedLiveFeature ? "Spatial proximity" : "Elevation band"}</span><strong>{selectedLiveFeature ? liveFeatureDistance : `+${activeFloor * 3.2 - 0.1} → +${activeFloor * 3.2 + 3.0} m`}</strong></div></div>
             <div className="detail-columns"><section><p className="section-kicker">{selectedLiveFeature ? "Dataset scope" : "Registered rights"}</p><h3>{selectedLiveFeature ? "Individual footprint only" : "Residential ownership"}</h3><ul>{selectedLiveFeature ? <><li>No campus boundary inferred</li><li>Selected from an 180 m location radius</li><li>Rendered as a flat plan footprint only</li></> : <><li>Exclusive possession of Unit 4C</li><li>Shared circulation and service easements</li><li>One assigned parking-right reference</li></>}</ul></section><section><p className="section-kicker">{selectedLiveFeature ? "Traceability" : "Evidence bundle"}</p><h3>{selectedLiveFeature ? "Reusable source record" : "Source confidence"}</h3><ul>{selectedLiveFeature ? <><li><Check size={14} /> Microsoft Global ML Building Footprints</li><li><Check size={14} /> CDLA Permissive 2.0 attribution</li><li><Check size={14} /> Stored in live Neon PostGIS</li></> : <><li><Check size={14} /> LiDAR classified · 2026.06</li><li><Check size={14} /> Approved floor plan · v3</li><li><Check size={14} /> GNSS / CORS aligned</li></>}</ul></section></div>
-            <div className="detail-validation"><ShieldCheck size={18} /><div><strong>{selectedLiveFeature ? "Source metadata preserved" : "Topology validation passed"}</strong><span>{selectedLiveFeature ? "The selected building footprint remains attributed to its Microsoft open-data source and is not treated as a cadastral parcel or campus boundary." : "No parcel overlaps, containment failures, or CRS deviations detected in the current review cycle."}</span></div><button type="button" onClick={() => setWorkspaceOpen(selectedLiveFeature ? "Spatial layers" : "Audit trail")}>{selectedLiveFeature ? "Layers" : "View audit"}</button></div>
+            <div className="detail-validation"><ShieldCheck size={18} /><div><strong>{selectedLiveFeature ? "Source metadata preserved" : "Topology validation passed"}</strong><span>{selectedLiveFeature ? `${typeof selectedOwnership.ownerName === "string" ? `Linked owner: ${selectedOwnership.ownerName}. ` : "No ownership record linked yet. "}The selected building footprint remains attributed to its Microsoft open-data source and is not treated as a cadastral parcel or campus boundary.` : "No parcel overlaps, containment failures, or CRS deviations detected in the current review cycle."}</span></div><button type="button" onClick={() => selectedLiveFeature ? openFootprintEditor() : setWorkspaceOpen("Audit trail")}>{selectedLiveFeature ? "Correct & link" : "View audit"}</button></div>
           </motion.div>
         </div>
       )}
@@ -522,6 +658,19 @@ export default function Home() {
             <h2 id="workspace-title">{workspaceOpen}</h2>
             <p>{workspaceOpen === "3D workspace" ? "The live Cesium workspace is connected to the PostGIS geometry layer and refreshes automatically. Use the map controls to navigate the field model." : workspaceOpen === "Parcels" ? "Parcel records can be found through natural-language ULPIN search or spatial selection in the live map." : workspaceOpen === "Buildings" ? "Building volumes and floor-plan evidence are available through the AI-assisted ingestion workflow." : workspaceOpen === "Property volumes" ? "Select a live geometry or a building floor to inspect its vertical property information." : workspaceOpen === "ULPIN registry" ? "Search by ULPIN, building, unit, floor, rights, or validation status from the intelligence command bar." : workspaceOpen === "Processing queue" ? "New uploads appear here after validation, AI metadata extraction, and spatial import." : workspaceOpen === "Conflict workspace" ? "The selected utility-depth review is ready for cadastral resolution and audit assignment." : workspaceOpen === "Spatial layers" ? `${activeLayerCount} layers are active. Use the layer switches in the property inspector to adjust the display.` : "Review your command-desk preferences and continue to the relevant cadastral workflow."}</p>
             <div className="workspace-actions"><button className="secondary-button" type="button" onClick={() => setWorkspaceOpen(null)}>Return to command desk</button>{workspaceOpen === "3D workspace" && <button className="primary-button" type="button" onClick={() => { setWorkspaceOpen(null); issueMapCommand("fullscreen"); }}>Open live map <Maximize2 size={16} /></button>}{workspaceOpen === "Parcels" || workspaceOpen === "ULPIN registry" ? <button className="primary-button" type="button" onClick={() => { setWorkspaceOpen(null); setSearchOpen(true); }}>Search records <Search size={16} /></button> : null}{workspaceOpen === "Buildings" || workspaceOpen === "Processing queue" ? <button className="primary-button" type="button" onClick={() => { setWorkspaceOpen(null); setUploadOpen(true); }}>Add evidence <FileUp size={16} /></button> : null}</div>
+          </motion.div>
+        </div>
+      )}
+
+      {editorOpen && selectedLiveFeature && (
+        <div className="modal-shell editor-shell" role="dialog" aria-modal="true" aria-labelledby="footprint-editor-title">
+          <motion.div className="editor-dialog" initial={{ opacity: 0, scale: 0.97, y: 14 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.22 }}>
+            <button className="icon-button modal-close" type="button" aria-label="Close footprint editor" onClick={() => setEditorOpen(false)}><X size={18} /></button>
+            <p className="eyebrow cyan-text">Authority correction & cadastral linkage</p><h2 id="footprint-editor-title">Correct live footprint</h2><p className="dialog-intro">Save a revision with the original Microsoft footprint retained, then attach approved height and verified parcel/ULPIN ownership references.</p>
+            <div className="editor-grid"><label>Approved height (metres)<input value={editorForm.approvedHeightMetres} inputMode="decimal" onChange={event => setEditorForm(current => ({ ...current, approvedHeightMetres: event.target.value }))} placeholder="e.g. 18.5" /></label><label>Height approval source<input value={editorForm.heightSource} onChange={event => setEditorForm(current => ({ ...current, heightSource: event.target.value }))} placeholder="Survey / approved drawing reference" /></label><label>Parcel reference<input value={editorForm.parcelReference} onChange={event => setEditorForm(current => ({ ...current, parcelReference: event.target.value }))} placeholder="Parcel ID" /></label><label>3D ULPIN record<input value={editorForm.ulpinRecord} onChange={event => setEditorForm(current => ({ ...current, ulpinRecord: event.target.value }))} placeholder="Verified ULPIN" /></label><label>Owner / rights-holder<input value={editorForm.ownerName} onChange={event => setEditorForm(current => ({ ...current, ownerName: event.target.value }))} placeholder="Verified record name" /></label><label>Ownership basis<input value={editorForm.ownershipBasis} onChange={event => setEditorForm(current => ({ ...current, ownershipBasis: event.target.value }))} placeholder="Registry reference" /></label><label>Rights summary<input value={editorForm.rightsSummary} onChange={event => setEditorForm(current => ({ ...current, rightsSummary: event.target.value }))} placeholder="Recorded rights or restrictions" /></label><label>Source reference<input value={editorForm.sourceReference} onChange={event => setEditorForm(current => ({ ...current, sourceReference: event.target.value }))} placeholder="Registry, order, or deed reference" /></label><label>Authority audit identity<input value="Server records the signed-in administrator" readOnly aria-label="Server records the signed-in administrator identity" /></label><label>Revision note<input value={editorForm.editNote} onChange={event => setEditorForm(current => ({ ...current, editNote: event.target.value }))} placeholder="Why this correction is approved" /></label></div>
+            {editableVertices.length > 0 ? <section className="vertex-editor"><div><p className="section-kicker">Assisted vertex correction</p><strong>Edit longitude and latitude values; the closing polygon vertex is maintained automatically.</strong></div><button type="button" className="text-action" onClick={() => setEditorForm(current => ({ ...current, geometry: sourceGeometry }))}>Reset to source</button><div className="vertex-grid">{editableVertices.map((vertex, index) => <div key={index}><span>V{index + 1}</span><input aria-label={`Vertex ${index + 1} longitude`} value={vertex[0]} inputMode="decimal" onChange={event => setEditorForm(current => ({ ...current, geometry: replacePolygonVertex(current.geometry, index, 0, event.target.value) }))} /><input aria-label={`Vertex ${index + 1} latitude`} value={vertex[1]} inputMode="decimal" onChange={event => setEditorForm(current => ({ ...current, geometry: replacePolygonVertex(current.geometry, index, 1, event.target.value) }))} /></div>)}</div></section> : <p className="editor-note">This feature uses a MultiPolygon or a non-standard geometry. Use the reviewed GeoJSON editor below.</p>}
+            <label className="geometry-editor">Reviewed GeoJSON geometry<textarea value={editorForm.geometry} onChange={event => setEditorForm(current => ({ ...current, geometry: event.target.value }))} spellCheck={false} /></label>
+            <div className="editor-actions"><span>Source record: <code>{selectedLiveFeature.ulpin}</code></span><button className="primary-button" type="button" disabled={footprintUpdate.isPending || authQuery.data?.role !== "admin"} onClick={saveFootprintCorrection}>{footprintUpdate.isPending ? <><Loader2 className="spin-icon" size={16} /> Saving revision…</> : authQuery.data?.role !== "admin" ? "Administrator sign-in required" : <><Check size={16} /> Save approved correction</>}</button></div>
           </motion.div>
         </div>
       )}

@@ -1,3 +1,4 @@
+import { getApprovedExtrusionHeight } from "@/lib/footprint3d";
 import { trpc } from "@/lib/trpc";
 import "cesium/Build/Cesium/Widgets/widgets.css";
 import {
@@ -18,7 +19,7 @@ import {
 } from "cesium";
 import { useEffect, useRef, useState } from "react";
 
-export type MapCommand = { kind: "zoom-in" | "zoom-out" | "north" | "fullscreen" | "inspect-footprint"; nonce: number } | null;
+export type MapCommand = { kind: "zoom-in" | "zoom-out" | "north" | "fullscreen" | "inspect-footprint" | "focus-site"; nonce: number } | null;
 export type CesiumLayerFlags = { parcels: boolean; buildings: boolean; utilities: boolean; terrain: boolean };
 
 function featureLayer(properties: Record<string, unknown>): keyof CesiumLayerFlags {
@@ -32,10 +33,12 @@ function featureLayer(properties: Record<string, unknown>): keyof CesiumLayerFla
 export function CesiumSpatialViewer({
   command,
   layers,
+  focusUlpins,
   onFeatureSelect,
 }: {
   command: MapCommand;
   layers: CesiumLayerFlags;
+  focusUlpins?: string[];
   onFeatureSelect?: (feature: { ulpin: string; properties: Record<string, unknown> }) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -91,7 +94,7 @@ export function CesiumSpatialViewer({
     if (!viewer || !collection || !viewerReady) return;
     const filteredCollection = {
       ...collection,
-      features: collection.features.filter(feature => layers[featureLayer(feature.properties)]),
+      features: collection.features.filter(feature => layers[featureLayer(feature.properties)] && (!focusUlpins || focusUlpins.includes(feature.properties.ulpin))),
     };
     let cancelled = false;
     const renderGeometry = async () => {
@@ -112,10 +115,15 @@ export function CesiumSpatialViewer({
           entity.label = new LabelGraphics({ text: typeof properties.name === "string" ? properties.name : "Live PostGIS reference", font: "600 13px sans-serif", fillColor: Color.fromCssColorString("#eaffff"), outlineColor: Color.fromCssColorString("#082126"), outlineWidth: 3, pixelOffset: new Cartesian2(0, -22) });
         }
         if (entity.polygon) {
+          const extrusionHeight = getApprovedExtrusionHeight(properties);
           entity.polygon.material = new ColorMaterialProperty(Color.fromCssColorString("#2ad4d9").withAlpha(0.34));
           entity.polygon.outline = new ConstantProperty(true);
           entity.polygon.outlineColor = new ConstantProperty(Color.fromCssColorString("#e9ffff"));
           entity.polygon.height = new ConstantProperty(1);
+          if (extrusionHeight) {
+            entity.polygon.extrudedHeight = new ConstantProperty(extrusionHeight);
+            entity.polygon.material = new ColorMaterialProperty(Color.fromCssColorString("#55dcb4").withAlpha(0.62));
+          }
         }
       });
       dataSourceRef.current = dataSource;
@@ -129,7 +137,7 @@ export function CesiumSpatialViewer({
     };
     void renderGeometry().catch(error => console.error("[Cesium] Failed to render the PostGIS GeoJSON collection", error));
     return () => { cancelled = true; };
-  }, [geometryQuery.data, layers, viewerReady]);
+  }, [geometryQuery.data, layers, viewerReady, focusUlpins]);
 
   useEffect(() => {
     const viewer = viewerRef.current;
@@ -137,6 +145,7 @@ export function CesiumSpatialViewer({
     if (command.kind === "zoom-in") viewer.camera.zoomIn(180);
     if (command.kind === "zoom-out") viewer.camera.zoomOut(180);
     if (command.kind === "north") viewer.camera.setView({ destination: Cartesian3.fromDegrees(77.6245, 12.9352, 2300), orientation: { heading: 0, pitch: -0.75, roll: 0 } });
+    if (command.kind === "focus-site") viewer.camera.flyTo({ destination: Cartesian3.fromDegrees(85.054779, 25.6124294, 720), orientation: { heading: 0, pitch: -0.92, roll: 0 }, duration: 0.6 });
     if (command.kind === "fullscreen") void containerRef.current?.requestFullscreen?.();
     if (command.kind === "inspect-footprint") {
       const entity = dataSourceRef.current?.entities.values.find(candidate => {
@@ -154,7 +163,7 @@ export function CesiumSpatialViewer({
 
   return (
     <div className="cesium-spatial-viewer" ref={containerRef} aria-label="Live PostGIS Cesium map">
-      <div className="cesium-status"><i className={geometryQuery.isFetching ? "loading" : ""} />{geometryQuery.isFetching ? "Refreshing PostGIS" : geometryQuery.data ? `${geometryQuery.data.features.filter(feature => layers[featureLayer(feature.properties)]).length} visible / ${geometryQuery.data.features.length} live` : "Connecting to PostGIS"}</div>
+      <div className="cesium-status"><i className={geometryQuery.isFetching ? "loading" : ""} />{geometryQuery.isFetching ? "Refreshing PostGIS" : geometryQuery.data ? `${geometryQuery.data.features.filter(feature => layers[featureLayer(feature.properties)] && (!focusUlpins || focusUlpins.includes(feature.properties.ulpin))).length} visible / ${geometryQuery.data.features.length} live` : "Connecting to PostGIS"}</div>
       {geometryQuery.error && <div className="cesium-error">Live geometry unavailable. The connection will retry automatically.</div>}
     </div>
   );

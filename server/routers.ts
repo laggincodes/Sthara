@@ -6,8 +6,8 @@ import { extractEvidenceMetadata } from "./evidenceExtraction";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { invokeLLM } from "./_core/llm";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, router } from "./_core/trpc";
-import { getPostgisFeatureCollection, upsertPostgisGeoJsonFeatures } from "./postgis";
+import { adminProcedure, publicProcedure, router } from "./_core/trpc";
+import { getPostgisFeatureCollection, searchPostgisLayeredArea, updatePostgisFootprint, upsertPostgisGeoJsonFeatures } from "./postgis";
 import { storageGetSignedUrl, storagePut } from "./storage";
 
 const aiSearchInput = z.object({
@@ -19,6 +19,26 @@ const uploadInput = z.object({
   fileName: z.string().trim().min(1).max(160),
   mimeType: z.string().trim().min(1).max(120),
   dataBase64: z.string().min(4).max(10_000_000),
+});
+
+const footprintUpdateInput = z.object({
+  ulpin: z.string().trim().min(3).max(96),
+  geometry: z.object({ type: z.enum(["Polygon", "MultiPolygon"]), coordinates: z.unknown() }).optional(),
+  approvedHeightMetres: z.number().positive().max(600).optional(),
+  heightSource: z.string().trim().max(240).optional(),
+  ownershipRecord: z.object({
+    parcelReference: z.string().trim().min(2).max(128),
+    ulpinRecord: z.string().trim().min(3).max(128),
+    ownerName: z.string().trim().min(2).max(240),
+    ownershipBasis: z.string().trim().min(3).max(400),
+    rightsSummary: z.string().trim().max(800).optional(),
+    sourceReference: z.string().trim().max(400).optional(),
+  }).optional(),
+  editNote: z.string().trim().min(8).max(1200),
+});
+
+const layeredAreaSearchInput = z.object({
+  query: z.string().trim().min(2, "Enter a site, ULPIN, parcel, or ownership reference.").max(180),
 });
 
 function safeFileName(fileName: string) {
@@ -37,6 +57,11 @@ export const appRouter = router({
   }),
   postgis: router({
     geojson: publicProcedure.query(async () => getPostgisFeatureCollection()),
+    areaSearch: publicProcedure.input(layeredAreaSearchInput).query(async ({ input }) => searchPostgisLayeredArea(input.query)),
+    updateFootprint: adminProcedure.input(footprintUpdateInput).mutation(async ({ input, ctx }) => updatePostgisFootprint({
+      ...input,
+      editorName: ctx.user.name?.trim() || ctx.user.openId,
+    })),
   }),
   cadastre: router({
     search: publicProcedure.input(aiSearchInput).mutation(async ({ input }) => {

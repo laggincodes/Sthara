@@ -28,3 +28,14 @@
 - [x] Record an end-to-end browser verification of footprint selection, metadata display, and map visibility.
 - [x] Run true mobile viewport interactions for the command rail, evidence intake, and Cesium controls.
 - [x] Verify mobile footprint selection updates the source-metadata inspector and correct any touch-layout issue found.
+- [x] Create and validate a reusable skill for importing Microsoft building footprints into PostGIS/Cesium with cadastral traceability.
+- [x] Add approved-height storage and render height-based 3D extrusion for imported building footprints in Cesium.
+- [x] Add a manual footprint correction workflow with editable geometry, owner/authority review context, and saved revision metadata.
+- [x] Link imported footprints to persisted parcel and ULPIN ownership records, exposing detailed records on map selection.
+- [x] Build a search-led layered 3D area view that presents the selected site, building layers, footprint area, and situated area details.
+- [x] Verify height-extrusion contract, editing workflow, explicit ownership-record linkage UI, layered search, and responsive behavior before delivery.
+- [ ] Protect approved-height, ownership-link, and correction saves with a server-authorized authority workflow; verify a saved height produces a Cesium extrusion.
+- [ ] Replace raw-only correction with an assisted vertex-edit workflow and verify revision save plus reload persistence.
+- [ ] Create persisted parcel/ULPIN ownership records and explicit footprint links, then show linked ownership details on selection.
+- [x] Replace the hardcoded area focus with a query-driven site/ULPIN/parcel layered-area search result.
+- [ ] Verify an authority-approved height, geometry revision, ownership link, area search, and mobile workflow end to end.
