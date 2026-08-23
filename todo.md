@@ -51,4 +51,4 @@
 - [x] Verify dedicated 3D navigation and the resource-rich dashboard home on desktop and mobile.
 - [ ] Verify every remaining home navigation and resource control individually, replacing any generic placeholder with a specific actionable workspace and recording the destination matrix.
 - [x] Ensure dedicated spatial-workspace return-navigation parameters open the intended home search or evidence workflow instead of an ignored dashboard query.
-- [ ] Replace generic settings, operator, audit, conflict, GNSS/CORS, and DEM/DSM workspace placeholders with specific actionable panels or routes.
+- [x] Replace generic settings, operator, audit, conflict, GNSS/CORS, and DEM/DSM workspace placeholders with specific actionable panels or routes.

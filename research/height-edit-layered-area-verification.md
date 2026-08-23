@@ -35,3 +35,11 @@ The viewer currently renders all imported building footprints as individual poly
 **Return-navigation check.** Loading the dedicated-workspace return route `?workspace=ULPIN%20registry` opened the home intelligence dialog and populated it with “Find a 3D ULPIN record,” confirming that back-navigation parameters now resolve to an actionable dashboard destination.
 
 **Operational-panel check.** The settings route now opens a dedicated **Workspace settings** panel with current PostGIS/layer status and an **Enable all layers** action; the action was exercised successfully. Audit, conflict, GNSS/CORS, DEM/DSM, and operator controls likewise show feature-specific status and route to live inspection or 3D review rather than relying on a generic placeholder message.
+
+**Conflict navigation check.** The **Conflict workspace** panel was opened and its **Open 3D review** action was clicked. It routed to the dedicated `/workspace` view with the Amity University Patna site query preserved and the live building-layer dossier visible.
+
+**Coordinate resource check.** The home **GNSS / CORS** resource opened the specific **GNSS / CORS alignment** panel, showed its EPSG:4326 reference-point guidance, and exposed an **Open 3D review** route for inspecting individual live footprints against the verified location reference.
+
+**Operator check.** The **Operator account** route opened a specific authority-access panel with the authenticated account’s current role, edit requirements, source-geometry guardrail, and an **Open live records** action. That action was clicked and returned to the dedicated Amity live 3D workspace.
+
+**Audit source-layer check.** The **View audit trail** control opened a specific cadastral audit panel. Its **Inspect source layer** action selected `MS-BUILDING-123133020-4ccb72e4db684f81` in the live PostGIS inspector and opened the traceability detail with area, height, distance, attribution, and no-inferred-ownership disclosures.
