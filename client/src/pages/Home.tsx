@@ -193,7 +193,7 @@ export default function Home() {
   const [workspaceOpen, setWorkspaceOpen] = useState<string | null>(null);
   const [mapCommand, setMapCommand] = useState<MapCommand>(null);
   const [selectedLiveFeature, setSelectedLiveFeature] = useState<{ ulpin: string; properties: Record<string, unknown> } | null>(null);
-  const [areaSearchQuery, setAreaSearchQuery] = useState("Amity University Patna");
+  const [areaSearchQuery, setAreaSearchQuery] = useState("");
   const [areaSearchRequest, setAreaSearchRequest] = useState<string | null>(null);
   const [sourceGeometry, setSourceGeometry] = useState("");
   const [editorForm, setEditorForm] = useState({ geometry: "", approvedHeightMetres: "", heightSource: "", parcelReference: "", ulpinRecord: "", ownerName: "", ownershipBasis: "", rightsSummary: "", sourceReference: "", editorName: "Authority operator", editNote: "" });
@@ -500,8 +500,8 @@ export default function Home() {
           <NavGroup items={dataItems} active={activeNav} onSelect={selectNav} />
           <div className="rail-datum">
             <span className="rail-label">Active field mode</span>
-            <strong><i /> Amity University Patna area</strong>
-            <small>OSM reference · individual footprints</small>
+            <strong><i /> 3D ULPIN-VPM framework</strong>
+            <small>source-linked vertical mapping</small>
           </div>
         </div>
 
@@ -521,7 +521,7 @@ export default function Home() {
       <section className="workspace">
         <header className="topbar">
           <button className="icon-button mobile-menu" type="button" aria-label="Open navigation" onClick={() => setIsNavOpen(true)}><Menu size={20} /></button>
-          <div className="crumbs"><span>Operations</span><ChevronRight size={14} /><strong>Amity University Patna</strong><ChevronDown size={14} /></div>
+          <div className="crumbs"><span>Operations</span><ChevronRight size={14} /><strong>3D ULPIN-VPM project</strong><ChevronDown size={14} /></div>
           <div className="top-actions">
             <button className="search-button ai-search-trigger" type="button" onClick={() => setSearchOpen(true)}><BrainCircuit size={17} /><span>Ask ULPIN intelligence</span><kbd>⌘ K</kbd></button>
             <button className="icon-button" type="button" aria-label="Open settings" onClick={() => setWorkspaceOpen("Workspace settings")}><Settings2 size={18} /></button>
@@ -533,32 +533,32 @@ export default function Home() {
         <div className="workspace-content">
           <section className="heading-row">
             <div>
-              <p className="eyebrow cyan-text">Vertical cadastre command desk</p>
-              <h1>Amity University Patna building layers<br className="desktop-break" /> ready for cadastral review.</h1>
-              <p className="subhead">Individual Microsoft building footprints are live in PostGIS with their source attribution preserved. They remain building detections, not a campus boundary or ownership assertion.</p>
+              <p className="eyebrow cyan-text">Department of Land Resources · project command desk</p>
+              <h1>3D ULPIN generation<br className="desktop-break" /> &amp; vertical property mapping.</h1>
+              <p className="subhead">A source-linked framework for creating spatial identities across surface parcels, multi-storey property rights, subsurface infrastructure, and air-space interests—without inferring legal ownership from detected geometry.</p>
             </div>
             <div className="sync-card"><Check size={15} /><span>All sources synchronized</span><small>08:32 IST</small></div>
           </section>
 
           <section className="home-spatial-hero" aria-label="3D spatial workspace overview">
-            <img src="/manus-storage/ulpin-hero-volumetric-city_6813da43.png" alt="3D cadastral city and building volumes" />
-            <div className="home-spatial-hero-shade" />
+            <img src="/manus-storage/ulpin-vpm-user-3d-workspace_acdcc803.png" alt="3D ULPIN-VPM workspace reference supplied by the project team" style={{ opacity: 0.88, objectPosition: "center" }} />
+            <div className="home-spatial-hero-shade" style={{ background: "linear-gradient(90deg, rgba(7,16,20,.98), rgba(7,16,20,.84) 40%, rgba(7,16,20,.24) 69%, rgba(7,16,20,.08)), linear-gradient(0deg, rgba(7,16,20,.35), transparent 52%)" }} />
             <div className="home-spatial-hero-grid" />
-            <div className="home-spatial-hero-copy"><p className="section-kicker">3D ULPIN-VPM spatial intelligence</p><h2>Review live building layers, vertical volumes, and evidence in one operational view.</h2><p>The workspace connects individual PostGIS footprints, approved-height extrusion, ULPIN records, and cadastral evidence without inferring a campus boundary.</p><button className="primary-button" type="button" onClick={() => setLocation(`/workspace?site=${encodeURIComponent(areaSearchQuery)}`)}>Open full 3D workspace <ArrowUpRight size={16} /></button></div>
-            <div className="home-spatial-hero-metrics"><span><Building2 size={16} /><b>{liveFootprintCount}</b> live footprints</span><span><Layers3 size={16} /><b>{activeLayerCount}</b> spatial layers</span><span><ShieldCheck size={16} /> authority-gated edits</span></div>
+            <div className="home-spatial-hero-copy"><p className="section-kicker">3D ULPIN-VPM project overview</p><h2>One interoperable view for land, buildings, infrastructure, and vertical rights.</h2><p>Combine GIS parcel layers, drone imagery, LiDAR and point clouds, floor plans, GNSS/CORS control, and DEM/DSM data into auditable 3D property records.</p><button className="primary-button" type="button" onClick={() => setLocation(`/workspace?site=${encodeURIComponent(areaSearchQuery.trim() || "Amity University Patna")}`)}>Open live 3D workspace <ArrowUpRight size={16} /></button></div>
+            <div className="home-spatial-hero-metrics"><span><Building2 size={16} /><b>3D</b> parcel identity</span><span><Layers3 size={16} /><b>{activeLayerCount}</b> spatial layers</span><span><ShieldCheck size={16} /> authority-gated edits</span></div>
           </section>
 
           <section className="area-search-panel" aria-label="Layered 3D area search">
-            <div><p className="section-kicker">Layered 3D area search</p><strong>Locate a site, display its building layers, and review its situated area.</strong></div>
+            <div><p className="section-kicker">Layered 3D area search</p><strong>Locate a site, ULPIN, parcel, or rights record and review its situated 3D context.</strong></div>
             <form className="area-search-controls" onSubmit={submitAreaSearch}><Search size={17} /><input value={areaSearchQuery} onChange={event => setAreaSearchQuery(event.target.value)} placeholder="Search site, ULPIN, parcel, owner, or cimage" /><button className="primary-button compact" type="submit" disabled={areaSearch.isFetching}>{areaSearch.isFetching ? <Loader2 className="spin-icon" size={16} /> : <>Show in 3D <MapPinned size={16} /></>}</button></form>
             <div className="area-search-meta"><span><Building2 size={13} /> {displayedLayerCount} matching building layers</span><span><Grid3X3 size={13} /> {displayedSiteArea.toLocaleString()} m² situated footprint area</span><span><ShieldCheck size={13} /> individual footprints only · no campus boundary inferred</span>{areaSearch.data && <span><Database size={13} /> query: {areaSearch.data.siteLabel}</span>}{areaSearch.data && areaSearch.data.ownershipLinkCount > 0 && <span><Users size={13} /> {areaSearch.data.ownershipLinkCount} authority-linked records</span>}</div>
           </section>
 
           <section className="stats-grid" aria-label="Pilot program metrics">
-            <StatCard label="Mapped parcels" value="1,248" detail="Across 18.6 km² of pilot area" trend="+5.2%" color="cyan" />
-            <StatCard label="Registered volumes" value="8,936" detail="Flats, parking rights & air space" trend="+184" color="green" />
-            <StatCard label="Topology health" value="98.7%" detail="116 checks completed this cycle" trend="12 flags" color="amber" />
-            <StatCard label="Processing queue" value="03" detail="LiDAR & floor plans awaiting review" color="cyan" />
+            <StatCard label="Surface parcels" value="2D → 3D" detail="Standardized spatial identities" trend="ULPIN" color="cyan" />
+            <StatCard label="Vertical rights" value="Floor · unit" detail="Apartments, parking & air rights" trend="volume" color="green" />
+            <StatCard label="Underground assets" value="Utility" detail="Subsurface corridor mapping" trend="depth" color="amber" />
+            <StatCard label="Evidence resources" value="06" detail="Drone, LiDAR, GIS, plans, GNSS & DEM" color="cyan" />
           </section>
 
           <section className="operations-grid">
@@ -570,8 +570,8 @@ export default function Home() {
               <div className="map-header">
                 <div>
                   <p className="section-kicker">Live 3D model</p>
-                  <h2>Amity University Patna</h2>
-                  <div className="coordinates"><CircleDot size={13} /> 25.6124° N <span>·</span> 85.0548° E <span>·</span> EPSG:4326</div>
+                  <h2>Live source-linked 3D review</h2>
+                  <div className="coordinates"><CircleDot size={13} /> Individual footprints <span>·</span> vertical mapping <span>·</span> EPSG:4326</div>
                 </div>
                 <div className="map-header-actions">
                   <button className="icon-button dark" type="button" onClick={() => setLocation(`/workspace?site=${encodeURIComponent(areaSearchQuery)}`)} aria-label="Open the dedicated layered 3D area"><MapPinned size={17} /></button>
