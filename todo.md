@@ -58,3 +58,8 @@
 - [x] Replace the generic live 3D model heading with a clear building-structure visual and source-status presentation.
 - [x] Make place or building searches focus the returned source-backed geometry in the live Cesium scene and report when no verified visual is available.
 - [x] Verify the structure-focused live panel and search-to-3D flow on desktop and mobile.
+- [x] Integrate the second user-provided source-backed building-structure screenshot into the live 3D structure presentation while retaining the interactive Cesium scene.
+- [x] Verify the second screenshot treatment on desktop and mobile without obscuring search, map controls, or source-status information.
+- [x] Explicitly confirm search input, Cesium map controls, and source-status labels remain visible and usable after the second screenshot is integrated.
+- [x] Interactively verify the mobile search input, Show in 3D action, Cesium map controls, and source-status labels after the second screenshot integration.
+- [x] Capture independently verifiable before-and-after camera data for a true-mobile Cesium zoom or reset action after the second screenshot integration.
