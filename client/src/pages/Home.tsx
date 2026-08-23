@@ -6,17 +6,22 @@ import { motion } from "framer-motion";
 import {
   AlertTriangle,
   ArrowUpRight,
+  BrainCircuit,
   Box,
   Building2,
   Check,
+  CheckCircle2,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   CircleDot,
   Database,
   FileUp,
+  FileJson,
+  FileText,
   Grid3X3,
   Layers3,
+  Loader2,
   MapPinned,
   Maximize2,
   Menu,
@@ -25,16 +30,19 @@ import {
   Play,
   Plus,
   Search,
+  ScanSearch,
   Settings2,
   ShieldCheck,
   Sparkles,
   Users,
+  UploadCloud,
   X,
   Zap,
   type LucideIcon,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState, type ChangeEvent, type DragEvent, type FormEvent } from "react";
 import { toast } from "sonner";
+import { trpc } from "@/lib/trpc";
 
 type LayerKey = "parcels" | "buildings" | "utilities" | "terrain";
 
@@ -142,6 +150,17 @@ export default function Home() {
   const [isNavOpen, setIsNavOpen] = useState(false);
   const [generatorOpen, setGeneratorOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [uploadCategory, setUploadCategory] = useState<"geojson" | "floorplan">("geojson");
+  const [stagedFile, setStagedFile] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [volumeLoading, setVolumeLoading] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const aiSearch = trpc.cadastre.search.useMutation();
+  const cadastreUpload = trpc.cadastre.upload.useMutation();
   const [layersOn, setLayersOn] = useState<Record<LayerKey, boolean>>({
     parcels: true,
     buildings: true,
@@ -154,7 +173,74 @@ export default function Home() {
   const selectNav = (label: string) => {
     setActiveNav(label);
     setIsNavOpen(false);
+    if (label === "Data ingestion") {
+      setUploadOpen(true);
+      return;
+    }
     if (label !== "Mission control") toast(`${label} selected`, { description: "This demonstration keeps the command center context in view." });
+  };
+
+  const selectFloor = (floor: number) => {
+    setActiveFloor(floor);
+    setVolumeLoading(true);
+    window.setTimeout(() => setVolumeLoading(false), 520);
+  };
+
+  const submitAiSearch = (event?: FormEvent<HTMLFormElement>, suggestedQuery?: string) => {
+    event?.preventDefault();
+    const query = (suggestedQuery ?? searchQuery).trim();
+    if (query.length < 3) {
+      toast.error("Add a more specific property question", { description: "Try a ULPIN, block, floor, unit, right, or validation state." });
+      return;
+    }
+    setSearchQuery(query);
+    aiSearch.mutate({ query }, {
+      onSuccess: (result) => { if (result.record) selectFloor(result.record.floor); },
+      onError: () => toast.error("Search could not be completed", { description: "Please try again in a moment." }),
+    });
+  };
+
+  const stageFile = (file?: File) => {
+    if (!file) return;
+    const inferredCategory = /\.(geojson|json)$/i.test(file.name) ? "geojson" : "floorplan";
+    setUploadCategory(inferredCategory);
+    setStagedFile(file);
+    setUploadProgress(0);
+    cadastreUpload.reset();
+  };
+
+  const onFileInput = (event: ChangeEvent<HTMLInputElement>) => stageFile(event.target.files?.[0]);
+  const onFileDrop = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    stageFile(event.dataTransfer.files?.[0]);
+  };
+
+  const beginUpload = async () => {
+    if (!stagedFile) {
+      toast.error("Choose a file first", { description: "Upload a GeoJSON parcel layer or a floor plan in PDF, PNG, or JPG format." });
+      return;
+    }
+    const reader = new FileReader();
+    reader.onerror = () => toast.error("The selected file could not be read");
+    reader.onprogress = event => {
+      if (event.lengthComputable) setUploadProgress(Math.min(45, Math.round((event.loaded / event.total) * 45)));
+    };
+    reader.onload = () => {
+      const encoded = typeof reader.result === "string" ? reader.result.split(",")[1] : "";
+      if (!encoded) return toast.error("The selected file could not be encoded");
+      setUploadProgress(45);
+      cadastreUpload.mutate({ category: uploadCategory, fileName: stagedFile.name, mimeType: stagedFile.type || "application/octet-stream", dataBase64: encoded }, {
+        onSuccess: (response) => {
+          setUploadProgress(100);
+          if (response.stored) toast.success("Evidence file validated", { description: `${stagedFile.name} is ready for the processing queue.` });
+        },
+        onError: () => {
+          setUploadProgress(0);
+          toast.error("Upload service unavailable", { description: "Your file was not stored. Please try again." });
+        },
+      });
+    };
+    reader.readAsDataURL(stagedFile);
   };
 
   const generateUlpIn = () => {
@@ -212,8 +298,9 @@ export default function Home() {
           <button className="icon-button mobile-menu" type="button" aria-label="Open navigation" onClick={() => setIsNavOpen(true)}><Menu size={20} /></button>
           <div className="crumbs"><span>Operations</span><ChevronRight size={14} /><strong>South Bengaluru pilot</strong><ChevronDown size={14} /></div>
           <div className="top-actions">
-            <button className="search-button" type="button" onClick={() => toast("Search ready", { description: "Search parcels, buildings, ULPINs, or coordinates." })}><Search size={17} /><span>Search spatial records</span><kbd>⌘ K</kbd></button>
+            <button className="search-button ai-search-trigger" type="button" onClick={() => setSearchOpen(true)}><BrainCircuit size={17} /><span>Ask ULPIN intelligence</span><kbd>⌘ K</kbd></button>
             <button className="icon-button" type="button" aria-label="Open settings" onClick={() => toast("Workspace settings", { description: "Layer and coordinate preferences are coming next." })}><Settings2 size={18} /></button>
+            <button className="icon-button upload-top-trigger" type="button" aria-label="Upload spatial evidence" onClick={() => setUploadOpen(true)}><FileUp size={18} /></button>
             <button className="primary-button compact" type="button" onClick={() => setGeneratorOpen(true)}><Plus size={17} /> Generate ULPIN</button>
           </div>
         </header>
@@ -236,7 +323,7 @@ export default function Home() {
           </section>
 
           <section className="operations-grid">
-            <motion.article className="map-card" {...panelMotion} transition={{ duration: 0.42, delay: 0.08 }}>
+            <motion.article className={`map-card ${volumeLoading ? "volume-loading" : ""}`} {...panelMotion} transition={{ duration: 0.42, delay: 0.08 }}>
               <div className="map-image" />
               <div className="map-grid" />
               <div className="map-vignette" />
@@ -261,7 +348,7 @@ export default function Home() {
 
               <div className="property-tag"><span className="status-dot cyan" /> SELECTED VOLUME <strong>B12 · FLOOR {activeFloor}</strong></div>
 
-              <div className="building-scene" aria-label="Selected building volume model">
+              <div className="building-scene" aria-label="Selected building volume model" aria-busy={volumeLoading}>
                 <div className="ground-plane" />
                 <div className="tower-shadow" />
                 <div className="tower">
@@ -270,12 +357,13 @@ export default function Home() {
                       className={`tower-floor ${activeFloor === floor ? "selected" : ""}`}
                       style={{ bottom: `${(floor - 1) * 21 + 28}px` }}
                       type="button"
-                      onClick={() => setActiveFloor(floor)}
+                      onClick={() => selectFloor(floor)}
                       aria-label={`Select floor ${floor}`}
                       key={floor}
                     >
                       <span className="floor-glow" />
                       <em>{floor}</em>
+                      <span className="floor-tooltip">Floor {floor}<small>{floor === 4 ? "Unit 4C · verified" : "Click to inspect volume"}</small></span>
                     </button>
                   ))}
                   <div className="tower-roof" />
@@ -285,6 +373,8 @@ export default function Home() {
                 <div className="map-pin pin-one"><span />B12</div>
                 <div className="map-pin pin-two"><span />P-04</div>
               </div>
+
+              {volumeLoading && <motion.div className="volume-sync-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}><Loader2 size={17} /><span>Synchronizing selected volume</span><i /></motion.div>}
 
               <div className="map-footer">
                 <div className="map-scale"><i /><span>50 m</span></div>
@@ -302,7 +392,7 @@ export default function Home() {
                   <div><span>Volume</span><strong>486.2 m³</strong></div>
                   <div><span>Elevation</span><strong>+{activeFloor * 3.2 - 0.1} m → +{activeFloor * 3.2 + 3.0} m</strong></div>
                 </div>
-                <button className="secondary-button" type="button" onClick={() => toast("Volume profile loaded", { description: "Review the cadastral volume, rights, and validation history." })}>Review volume profile <ArrowUpRight size={16} /></button>
+                <button className="secondary-button" type="button" onClick={() => setDetailOpen(true)}>Review volume profile <ArrowUpRight size={16} /></button>
               </motion.article>
 
               <motion.article className="layer-card" {...panelMotion} transition={{ duration: 0.42, delay: 0.18 }}>
@@ -358,6 +448,69 @@ export default function Home() {
             <div className="generator-code"><span>Proposed identifier</span><code>KA-29-105-0421-B12-F{String(activeFloor).padStart(2, "0")}-021</code></div>
             <div className="generation-checks"><span><Check size={14} /> CRS aligned</span><span><Check size={14} /> topology valid</span><span><Check size={14} /> volume unique</span></div>
             <button className="primary-button generator-button" type="button" disabled={isGenerating} onClick={generateUlpIn}>{isGenerating ? <><span className="button-spinner" /> Generating identity…</> : <><Zap size={17} /> Generate & register</>}</button>
+          </motion.div>
+        </div>
+      )}
+
+      {searchOpen && (
+        <div className="modal-shell ai-search-shell" role="dialog" aria-modal="true" aria-labelledby="ai-search-title">
+          <motion.div className="ai-search-dialog" initial={{ opacity: 0, scale: 0.97, y: 14 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.22 }}>
+            <button className="icon-button modal-close" type="button" aria-label="Close AI search" onClick={() => setSearchOpen(false)}><X size={18} /></button>
+            <div className="dialog-heading"><div className="generator-symbol ai-symbol"><BrainCircuit size={21} /></div><div><p className="eyebrow cyan-text">Natural-language record intelligence</p><h2 id="ai-search-title">Ask the cadastre.</h2></div></div>
+            <p className="dialog-intro">Query a ULPIN, property right, validation status, building, unit, or floor in plain language.</p>
+            <form className="ai-search-form" onSubmit={submitAiSearch}>
+              <ScanSearch size={19} />
+              <input value={searchQuery} onChange={event => setSearchQuery(event.target.value)} autoFocus placeholder="e.g. show the parking volume with a utility conflict" />
+              <button className="primary-button search-submit" type="submit" disabled={aiSearch.isPending}>{aiSearch.isPending ? <Loader2 size={16} className="spin-icon" /> : "Search"}</button>
+            </form>
+            <div className="suggestion-row"><span>Try</span>{["Show Block B12 floor 4", "Find a parking conflict", "Which volume has air-rights?"].map(prompt => <button key={prompt} type="button" onClick={() => submitAiSearch(undefined, prompt)}>{prompt}</button>)}</div>
+            <div className="ai-result-zone">
+              {aiSearch.isPending && <div className="ai-search-loading"><div><Loader2 size={19} className="spin-icon" /><strong>Interpreting your spatial question</strong><span>Matching registered volumes, rights, and validation signals.</span></div><i /><i /></div>}
+              {!aiSearch.isPending && aiSearch.data?.record && (
+                <motion.div className="ai-result-card" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+                  <div className="ai-result-top"><SmallBadge tone={aiSearch.data.poweredBy === "AI semantic match" ? "cyan" : "slate"}><BrainCircuit size={11} /> {aiSearch.data.poweredBy}</SmallBadge><span>{aiSearch.data.confidence}% confidence</span></div>
+                  <h3>{aiSearch.data.record.title}</h3>
+                  <p>{aiSearch.data.answer}</p>
+                  <div className="record-identifier"><span>Matched 3D ULPIN</span><code>{aiSearch.data.record.ulpin}</code></div>
+                  <div className="ai-result-grid"><div><span>Parcel / Building</span><strong>{aiSearch.data.record.parcel} · {aiSearch.data.record.building}</strong></div><div><span>Volume / elevation</span><strong>{aiSearch.data.record.volume} · {aiSearch.data.record.elevation}</strong></div><div><span>Rights</span><strong>{aiSearch.data.record.rights}</strong></div><div><span>Reasoning</span><strong>{aiSearch.data.rationale}</strong></div></div>
+                  <button className="secondary-button" type="button" onClick={() => { const record = aiSearch.data?.record; if (!record) return; selectFloor(record.floor); setDetailOpen(true); setSearchOpen(false); }}>Open property information <ArrowUpRight size={16} /></button>
+                </motion.div>
+              )}
+              {!aiSearch.isPending && !aiSearch.data && <div className="ai-empty-state"><BrainCircuit size={25} /><p>Semantic search is standing by.</p><span>Results will cite the matched registered record rather than infer ownership data.</span></div>}
+              {!aiSearch.isPending && aiSearch.data && !aiSearch.data.record && <div className="ai-empty-state"><Search size={25} /><p>No stored ULPIN records yet.</p><span>{aiSearch.data.answer}</span></div>}
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {uploadOpen && (
+        <div className="modal-shell upload-shell" role="dialog" aria-modal="true" aria-labelledby="upload-title">
+          <motion.div className="upload-dialog" initial={{ opacity: 0, scale: 0.97, y: 14 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.22 }}>
+            <button className="icon-button modal-close" type="button" aria-label="Close data ingestion" onClick={() => setUploadOpen(false)}><X size={18} /></button>
+            <div className="dialog-heading"><div className="generator-symbol upload-symbol"><UploadCloud size={21} /></div><div><p className="eyebrow cyan-text">Evidence intake station</p><h2 id="upload-title">Add spatial evidence.</h2></div></div>
+            <p className="dialog-intro">Bring parcel geometry and floor-plan evidence into the processing queue. Each file is checked before it is stored.</p>
+            <div className="upload-tabs"><button className={uploadCategory === "geojson" ? "active" : ""} type="button" onClick={() => { setUploadCategory("geojson"); setStagedFile(null); cadastreUpload.reset(); }}><FileJson size={16} /> GeoJSON layer</button><button className={uploadCategory === "floorplan" ? "active" : ""} type="button" onClick={() => { setUploadCategory("floorplan"); setStagedFile(null); cadastreUpload.reset(); }}><FileText size={16} /> Floor plan</button></div>
+            <div className="upload-dropzone" onDragOver={event => event.preventDefault()} onDrop={onFileDrop} onClick={() => fileInputRef.current?.click()} role="button" tabIndex={0} onKeyDown={event => { if (event.key === "Enter" || event.key === " ") fileInputRef.current?.click(); }}>
+              <input ref={fileInputRef} type="file" accept={uploadCategory === "geojson" ? ".geojson,.json,application/geo+json,application/json" : ".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg"} onChange={onFileInput} />
+              <UploadCloud size={25} /><strong>{stagedFile ? stagedFile.name : uploadCategory === "geojson" ? "Drop a GeoJSON parcel layer" : "Drop a PDF, PNG, or JPG floor plan"}</strong><span>{stagedFile ? `${(stagedFile.size / 1024 / 1024).toFixed(2)} MB · click to replace` : "or click to browse · max 7 MB"}</span>
+            </div>
+            {stagedFile && <div className="upload-file-row"><div className="file-type-icon">{uploadCategory === "geojson" ? <FileJson size={17} /> : <FileText size={17} />}</div><div><strong>{stagedFile.name}</strong><span>{uploadCategory === "geojson" ? "Parcel layer · structure and feature count will be checked" : "Floor plan · format and georeference readiness will be checked"}</span></div><button type="button" onClick={() => { setStagedFile(null); cadastreUpload.reset(); setUploadProgress(0); }}><X size={16} /></button></div>}
+            {(cadastreUpload.isPending || uploadProgress > 0) && <div className="upload-progress-wrap"><div><span>{cadastreUpload.isPending ? "Server validation & storage in progress" : cadastreUpload.data?.stored ? "Evidence stored" : "Validation complete"}</span><strong>{cadastreUpload.isPending ? "Working" : `${uploadProgress}%`}</strong></div><div className="upload-progress"><i className={cadastreUpload.isPending ? "server-indeterminate" : ""} style={{ width: `${uploadProgress}%` }} /></div></div>}
+            {cadastreUpload.data && <div className={`validation-report ${cadastreUpload.data.validation.accepted ? "accepted" : "rejected"}`}><div className="validation-heading">{cadastreUpload.data.validation.accepted ? <CheckCircle2 size={18} /> : <AlertTriangle size={18} />}<div><strong>{cadastreUpload.data.validation.accepted ? "Validation feedback" : "File needs attention"}</strong><span>Readiness score {cadastreUpload.data.validation.score}/100</span></div></div><div className="validation-checks">{cadastreUpload.data.validation.checks.map(check => <span className={check.state} key={check.label}><i />{check.label}</span>)}</div><p>{cadastreUpload.data.validation.findings.join(" ")}</p></div>}
+            <button className="primary-button upload-submit" type="button" onClick={beginUpload} disabled={cadastreUpload.isPending}>{cadastreUpload.isPending ? <><Loader2 className="spin-icon" size={16} /> Validating evidence…</> : <><Check size={16} /> Validate & add to queue</>}</button>
+          </motion.div>
+        </div>
+      )}
+
+      {detailOpen && (
+        <div className="modal-shell property-detail-shell" role="dialog" aria-modal="true" aria-labelledby="property-detail-title">
+          <motion.div className="property-detail-dialog" initial={{ opacity: 0, scale: 0.97, y: 14 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.22 }}>
+            <button className="icon-button modal-close" type="button" aria-label="Close property information" onClick={() => setDetailOpen(false)}><X size={18} /></button>
+            <div className="detail-hero"><div><p className="eyebrow cyan-text">Detailed property information</p><h2 id="property-detail-title">Unit 4C · Block B12</h2><p>Registered vertical parcel on Floor {activeFloor} within Koramangala Sector 5.</p></div><SmallBadge tone="green"><Check size={12} /> topology verified</SmallBadge></div>
+            <div className="detail-ulpin"><span>3D ULPIN</span><code>KA-29-105-0421-B12-F{String(activeFloor).padStart(2, "0")}-021</code><span className="detail-score">98.7% topology health</span></div>
+            <div className="detail-metrics"><div><span>Footprint</span><strong>152.4 m²</strong></div><div><span>Volume</span><strong>486.2 m³</strong></div><div><span>Elevation band</span><strong>+{activeFloor * 3.2 - 0.1} → +{activeFloor * 3.2 + 3.0} m</strong></div></div>
+            <div className="detail-columns"><section><p className="section-kicker">Registered rights</p><h3>Residential ownership</h3><ul><li>Exclusive possession of Unit 4C</li><li>Shared circulation and service easements</li><li>One assigned parking-right reference</li></ul></section><section><p className="section-kicker">Evidence bundle</p><h3>Source confidence</h3><ul><li><Check size={14} /> LiDAR classified · 2026.06</li><li><Check size={14} /> Approved floor plan · v3</li><li><Check size={14} /> GNSS / CORS aligned</li></ul></section></div>
+            <div className="detail-validation"><ShieldCheck size={18} /><div><strong>Topology validation passed</strong><span>No parcel overlaps, containment failures, or CRS deviations detected in the current review cycle.</span></div><button type="button" onClick={() => toast("Audit record queued", { description: "The validation history is available in the complete registry workflow." })}>View audit</button></div>
           </motion.div>
         </div>
       )}
