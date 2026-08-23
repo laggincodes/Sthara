@@ -55,3 +55,6 @@
 - [x] Replace Amity-specific home-page branding with a project-focused 3D ULPIN-VPM introduction, capability overview, and resource narrative.
 - [x] Integrate the user-provided 3D workspace screenshot as the home-page primary visual while preserving its live 3D workspace destination.
 - [x] Verify the project-focused home page and provided-visual treatment on desktop and mobile.
+- [x] Replace the generic live 3D model heading with a clear building-structure visual and source-status presentation.
+- [x] Make place or building searches focus the returned source-backed geometry in the live Cesium scene and report when no verified visual is available.
+- [x] Verify the structure-focused live panel and search-to-3D flow on desktop and mobile.

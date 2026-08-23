@@ -130,7 +130,11 @@ export function CesiumSpatialViewer({
       dataSourceRef.current = dataSource;
       await viewer.dataSources.add(dataSource);
       if (filteredCollection.features.length > 0) {
-        viewer.camera.lookAt(Cartesian3.fromDegrees(85.054779, 25.6124294), new HeadingPitchRange(0.22, -1.12, 980));
+        if (focusUlpins?.length) {
+          await viewer.flyTo(dataSource, { duration: 0.7, offset: new HeadingPitchRange(0.22, -0.92, 260) });
+        } else {
+          viewer.camera.lookAt(Cartesian3.fromDegrees(85.054779, 25.6124294), new HeadingPitchRange(0.22, -1.12, 980));
+        }
       }
     };
     void renderGeometry().catch(error => console.error("[Cesium] Failed to render the PostGIS GeoJSON collection", error));
@@ -143,7 +147,13 @@ export function CesiumSpatialViewer({
     if (command.kind === "zoom-in") viewer.camera.zoomIn(180);
     if (command.kind === "zoom-out") viewer.camera.zoomOut(180);
     if (command.kind === "north") viewer.camera.lookAt(Cartesian3.fromDegrees(85.054779, 25.6124294), new HeadingPitchRange(0, -1.22, 980));
-    if (command.kind === "focus-site") viewer.camera.lookAt(Cartesian3.fromDegrees(85.054779, 25.6124294), new HeadingPitchRange(0.22, -1.12, 980));
+    if (command.kind === "focus-site") {
+      if (focusUlpins?.length && dataSourceRef.current) {
+        void viewer.flyTo(dataSourceRef.current, { duration: 0.7, offset: new HeadingPitchRange(0.22, -0.92, 260) });
+      } else {
+        viewer.camera.lookAt(Cartesian3.fromDegrees(85.054779, 25.6124294), new HeadingPitchRange(0.22, -1.12, 980));
+      }
+    }
     if (command.kind === "fullscreen") void containerRef.current?.requestFullscreen?.();
     if (command.kind === "inspect-footprint") {
       const entity = dataSourceRef.current?.entities.values.find(candidate => {
@@ -157,7 +167,7 @@ export function CesiumSpatialViewer({
         onFeatureSelect?.({ ulpin, properties });
       }
     }
-  }, [command, onFeatureSelect]);
+  }, [command, focusUlpins, onFeatureSelect]);
 
   return (
     <div className="cesium-spatial-viewer" ref={containerRef} aria-label="Live PostGIS Cesium map">
