@@ -1,16 +1,26 @@
 import { CesiumSpatialViewer, type CesiumLayerFlags, type MapCommand } from "@/components/CesiumSpatialViewer";
 import { trpc } from "@/lib/trpc";
-import { ArrowLeft, Building2, CircleDot, Database, Layers3, Maximize2, Minus, Plus, ScanSearch, Settings2, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Box, Building2, CircleDot, Database, Layers3, Maximize2, Minus, Plus, ScanSearch, Settings2, ShieldAlert, ShieldCheck } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { Link, useLocation } from "wouter";
 
 type SelectedFeature = { ulpin: string; properties: Record<string, unknown> };
 
 const layerOptions: Array<{ key: keyof CesiumLayerFlags; label: string; color: string }> = [
-  { key: "parcels", label: "Parcel edges", color: "#2ad4d9" },
-  { key: "buildings", label: "Building volumes", color: "#7de1aa" },
-  { key: "utilities", label: "Underground utilities", color: "#eba760" },
-  { key: "terrain", label: "Terrain contour", color: "#d8e2de" },
+  { key: "parcels", label: "Surface footprint references", color: "#2ad4d9" },
+  { key: "buildings", label: "Detected building envelopes", color: "#7de1aa" },
+  { key: "utilities", label: "Subsurface evidence", color: "#eba760" },
+  { key: "terrain", label: "Terrain context", color: "#d8e2de" },
+];
+
+type VerticalLayerId = "surface" | "envelope" | "unit" | "rights" | "subsurface";
+
+const verticalLayers: Array<{ id: VerticalLayerId; order: string; label: string; shortLabel: string; description: string; evidence: string }> = [
+  { id: "surface", order: "01", label: "Source footprint", shortLabel: "Surface", description: "Live PostGIS geometry selected from an attributed source layer.", evidence: "Live geometry" },
+  { id: "envelope", order: "02", label: "Building envelope", shortLabel: "Envelope", description: "Detected building extent; elevation remains unapproved until an authority source is attached.", evidence: "Height required" },
+  { id: "unit", order: "03", label: "Floor & unit", shortLabel: "Floor / unit", description: "Vertical unit boundaries require an approved floor plan and registered ULPIN record.", evidence: "Plan required" },
+  { id: "rights", order: "04", label: "Air & vertical rights", shortLabel: "Rights", description: "Rights volumes are displayed only from an explicit authority-linked record.", evidence: "Record required" },
+  { id: "subsurface", order: "05", label: "Subsurface assets", shortLabel: "Subsurface", description: "Utility or underground layers require surveyed source evidence and depth metadata.", evidence: "Survey required" },
 ];
 
 export default function SpatialWorkspace() {
@@ -21,6 +31,7 @@ export default function SpatialWorkspace() {
   const [layers, setLayers] = useState<CesiumLayerFlags>({ parcels: true, buildings: true, utilities: true, terrain: true });
   const [command, setCommand] = useState<MapCommand>({ kind: "focus-site", nonce: Date.now() });
   const [selected, setSelected] = useState<SelectedFeature | null>(null);
+  const [verticalLayer, setVerticalLayer] = useState<VerticalLayerId>("surface");
   const searchResult = trpc.postgis.areaSearch.useQuery({ query: siteQuery });
 
   const selectedName = typeof selected?.properties.name === "string" ? selected.properties.name : "Live building volume";
@@ -28,8 +39,14 @@ export default function SpatialWorkspace() {
   const selectedHeight = typeof selected?.properties.approvedHeightMetres === "number" ? `${selected.properties.approvedHeightMetres} m approved` : "Height awaiting authority approval";
   const selectedUlpIn = selected?.ulpin ?? "Select a live footprint";
   const activeLayerCount = Object.values(layers).filter(Boolean).length;
+  const activeVerticalLayer = verticalLayers.find(layer => layer.id === verticalLayer) ?? verticalLayers[0];
   const issueCommand = (kind: Exclude<MapCommand, null>["kind"]) => setCommand({ kind, nonce: Date.now() });
   const onFeatureSelect = useCallback((feature: SelectedFeature) => setSelected(feature), []);
+
+  const activateVerticalLayer = (layer: VerticalLayerId) => {
+    setVerticalLayer(layer);
+    if (layer === "surface" || layer === "envelope") issueCommand("inspect-footprint");
+  };
 
   const submitSearch = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -61,14 +78,22 @@ export default function SpatialWorkspace() {
             <div className="spatial-stage-heading"><p>Source-backed building structure</p><h1>{searchResult.isLoading ? "Finding verified 3D geometry…" : (searchResult.data?.buildingCount ?? 0) > 0 ? searchResult.data?.siteLabel : `No verified 3D visual for “${siteQuery}”`}</h1><span><CircleDot size={13} /> {(searchResult.data?.buildingCount ?? 0) > 0 ? `${searchResult.data?.buildingCount} matched PostGIS footprints · camera focused on source geometry` : "Try a mapped site, ULPIN, parcel, or building record"} <b>·</b> EPSG:4326</span></div>
             <div className="spatial-stage-actions"><button type="button" onClick={() => issueCommand("fullscreen")} aria-label="Expand 3D map"><Maximize2 size={17} /></button><button type="button" onClick={() => issueCommand("inspect-footprint")} aria-label="Inspect live footprint"><ScanSearch size={17} /></button></div>
             <div className="spatial-map-controls"><button type="button" onClick={() => issueCommand("zoom-in")} aria-label="Zoom in"><Plus size={17} /></button><button type="button" onClick={() => issueCommand("zoom-out")} aria-label="Zoom out"><Minus size={17} /></button><button type="button" onClick={() => issueCommand("north")} aria-label="Reset north">N</button></div>
+            <div className="spatial-order-panel" aria-label="Ordered vertical cadastre review layers">
+              <div className="spatial-order-panel-heading"><span><Box size={13} /> Ordered vertical review</span><b>{activeVerticalLayer.order} / 05</b></div>
+              <div className="spatial-order-list">
+                {verticalLayers.map(layer => <button key={layer.id} type="button" className={verticalLayer === layer.id ? "active" : ""} onClick={() => activateVerticalLayer(layer.id)} aria-pressed={verticalLayer === layer.id}>
+                  <strong>{layer.order}</strong><span><b>{layer.shortLabel}</b><small>{layer.evidence}</small></span>
+                </button>)}
+              </div>
+            </div>
             <div className="spatial-selection-chip"><i /> {selected ? `Selected ${selected.ulpin}` : (searchResult.data?.buildingCount ?? 0) > 0 ? `${searchResult.data?.buildingCount} live building layers` : "No source-backed footprint returned"} <b>{searchResult.data?.totalFootprintAreaSquareMetres.toLocaleString() ?? "0"} m²</b></div>
             <div className="spatial-stage-footer"><span>50 m</span><span>LIVE POSTGIS · individual footprints only</span></div>
           </section>
 
           <aside className="spatial-dossier">
-            <div className="spatial-dossier-card"><div className="spatial-dossier-title"><div><p>Structure inspector</p><h2>{selected ? selectedName : "Source-backed 3D preview"}</h2></div><button type="button" onClick={() => issueCommand("inspect-footprint")} aria-label="Inspect a building footprint"><ScanSearch size={16} /></button></div><div className="spatial-volume-preview"><i /><i /><i /><i /></div><div className="spatial-dossier-state"><span>{selected ? "Selected source record" : (searchResult.data?.buildingCount ?? 0) > 0 ? "Select a building on the live map" : "No verified visual is available"}</span><strong>{selected ? selectedUlpIn : (searchResult.data?.buildingCount ?? 0) > 0 ? `${searchResult.data?.buildingCount} individual building polygons` : "Search another mapped location"}</strong></div><dl><div><dt>Footprint area</dt><dd>{selected ? selectedArea : `${searchResult.data?.totalFootprintAreaSquareMetres.toLocaleString() ?? "0"} m²`}</dd></div><div><dt>3D height</dt><dd>{selected ? selectedHeight : `${searchResult.data?.approvedHeightCount ?? 0} approved`}</dd></div><div><dt>Ownership</dt><dd>{selected?.properties.ownershipLinked ? "Authority-linked" : "No inferred ownership"}</dd></div></dl>{selected && <button className="spatial-correct-button" type="button" onClick={() => setLocation(`/?editor=${encodeURIComponent(selected.ulpin)}`)}>Review source record</button>}</div>
+            <div className="spatial-dossier-card"><div className="spatial-dossier-title"><div><p>Structure inspector</p><h2>{selected ? selectedName : "Source-backed 3D preview"}</h2></div><button type="button" onClick={() => issueCommand("inspect-footprint")} aria-label="Inspect a building footprint"><ScanSearch size={16} /></button></div><div className="spatial-vertical-profile" aria-label="Ordered vertical review profile">{verticalLayers.map(layer => <button type="button" className={`${verticalLayer === layer.id ? "active" : ""} ${layer.id === "surface" ? "live" : "pending"}`} key={layer.id} onClick={() => activateVerticalLayer(layer.id)}><span>{layer.order}</span><b>{layer.shortLabel}</b><i /></button>)}</div><div className="spatial-dossier-state"><span>{activeVerticalLayer.label} · {activeVerticalLayer.evidence}</span><strong>{activeVerticalLayer.description}</strong></div><dl><div><dt>Footprint area</dt><dd>{selected ? selectedArea : `${searchResult.data?.totalFootprintAreaSquareMetres.toLocaleString() ?? "0"} m²`}</dd></div><div><dt>3D height</dt><dd>{selected ? selectedHeight : `${searchResult.data?.approvedHeightCount ?? 0} approved`}</dd></div><div><dt>Ownership</dt><dd>{selected?.properties.ownershipLinked ? "Authority-linked" : "No inferred ownership"}</dd></div></dl>{selected && <button className="spatial-correct-button" type="button" onClick={() => setLocation(`/?editor=${encodeURIComponent(selected.ulpin)}`)}>Review source record</button>}</div>
             <div className="spatial-dossier-card spatial-layer-panel"><div className="spatial-dossier-title"><div><p>Spatial layers</p><h2>{activeLayerCount} of 4 active</h2></div><Layers3 size={17} /></div>{layerOptions.map(layer => <label key={layer.key}><span style={{ background: layer.color }} /><b>{layer.label}</b><input type="checkbox" checked={layers[layer.key]} onChange={() => setLayers(current => ({ ...current, [layer.key]: !current[layer.key] }))} /><i /></label>)}</div>
-            <div className="spatial-source-note"><ShieldCheck size={15} /><span>Microsoft ML footprints remain individual open-data detections. No campus boundary or ownership is inferred.</span></div>
+            <div className="spatial-source-note"><ShieldAlert size={15} /><span>Only the source-footprint layer is presently populated from live public geometry. Building height, floors, rights, utilities, ownership, and cadastral status require separate authority evidence.</span></div>
           </aside>
         </div>
       </section>

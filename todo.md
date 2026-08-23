@@ -65,3 +65,8 @@
 - [x] Capture independently verifiable before-and-after camera data for a true-mobile Cesium zoom or reset action after the second screenshot integration.
 - [x] Fix operational 3D-review routes so an empty home search uses the verified Amity reference fallback instead of navigating with an empty `site` query.
 - [ ] Verify the visible Operator account control opens its authority-access workspace through a normal browser click or touch interaction.
+- [x] Rework the live Cesium workspace into a strictly ordered vertical-cadastre model with clear surface, building, floor/unit, air-right, and subsurface review layers inspired by the supplied reference screenshots.
+- [x] Add evidence-safe expanded live 3D structure controls and an ordered vertical-profile inspector without fabricating approved heights, legal floors, ownership, or cadastral records.
+- [x] Add and validate additional source-backed public building reference areas only where official/open geometry and provenance can be retained; otherwise show an explicit data-unavailable state.
+- [x] Verify desktop and mobile Cesium workspace controls, ordered layer visibility, source labels, and no-inference safeguards after the 3D workspace upgrade.
+- [x] Interactively verify the upgraded true-mobile workspace using an ordered review control, a spatial-layer toggle, and a Cesium map control while preserving source labels and no-inference safeguards.
