@@ -44,6 +44,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, ty
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { CesiumSpatialViewer, type MapCommand } from "@/components/CesiumSpatialViewer";
+import { startLogin } from "@/const";
 
 type LayerKey = "parcels" | "buildings" | "utilities" | "terrain";
 
@@ -225,6 +226,29 @@ export default function Home() {
     const features = geometryQuery.data?.features ?? [];
     return Math.round(features.reduce((sum, feature) => sum + (typeof feature.properties.footprintAreaSquareMetres === "number" ? feature.properties.footprintAreaSquareMetres : 0), 0) * 100) / 100;
   }, [geometryQuery.data]);
+  const canSaveAuthorityRecord = authQuery.data?.role === "admin";
+  const requestAuthoritySignIn = () => {
+    if (!selectedLiveFeature) return;
+    if (canSaveAuthorityRecord) {
+      saveFootprintCorrection();
+      return;
+    }
+    if (authQuery.data) {
+      toast.error("Administrator access is required", { description: "This account is signed in but does not have the administrator role required to approve geometry, height, or ownership evidence." });
+      return;
+    }
+    window.sessionStorage.setItem("ulpin:resume-authority-editor", selectedLiveFeature.ulpin);
+    toast.message("Opening secure administrator sign-in", { description: "You will return to this footprint correction form after signing in." });
+    window.setTimeout(() => startLogin(), 150);
+  };
+  useEffect(() => {
+    const resumeUlpin = window.sessionStorage.getItem("ulpin:resume-authority-editor");
+    if (!resumeUlpin || !authQuery.data) return;
+    window.sessionStorage.removeItem("ulpin:resume-authority-editor");
+    const url = new URL(window.location.href);
+    url.searchParams.set("editor", resumeUlpin);
+    window.history.replaceState({}, "", `${url.pathname}${url.search}`);
+  }, [authQuery.data]);
   const editableVertices = useMemo(() => getEditablePolygonVertices(editorForm.geometry), [editorForm.geometry]);
   const displayedLayerCount = areaSearch.data ? areaSearch.data.buildingCount : liveFootprintCount;
   const displayedSiteArea = areaSearch.data ? areaSearch.data.totalFootprintAreaSquareMetres : selectedSiteArea;
@@ -685,7 +709,7 @@ export default function Home() {
             <div className="editor-grid"><label>Approved height (metres)<input value={editorForm.approvedHeightMetres} inputMode="decimal" onChange={event => setEditorForm(current => ({ ...current, approvedHeightMetres: event.target.value }))} placeholder="e.g. 18.5" /></label><label>Height approval source<input value={editorForm.heightSource} onChange={event => setEditorForm(current => ({ ...current, heightSource: event.target.value }))} placeholder="Survey / approved drawing reference" /></label><label>Parcel reference<input value={editorForm.parcelReference} onChange={event => setEditorForm(current => ({ ...current, parcelReference: event.target.value }))} placeholder="Parcel ID" /></label><label>3D ULPIN record<input value={editorForm.ulpinRecord} onChange={event => setEditorForm(current => ({ ...current, ulpinRecord: event.target.value }))} placeholder="Verified ULPIN" /></label><label>Owner / rights-holder<input value={editorForm.ownerName} onChange={event => setEditorForm(current => ({ ...current, ownerName: event.target.value }))} placeholder="Verified record name" /></label><label>Ownership basis<input value={editorForm.ownershipBasis} onChange={event => setEditorForm(current => ({ ...current, ownershipBasis: event.target.value }))} placeholder="Registry reference" /></label><label>Rights summary<input value={editorForm.rightsSummary} onChange={event => setEditorForm(current => ({ ...current, rightsSummary: event.target.value }))} placeholder="Recorded rights or restrictions" /></label><label>Source reference<input value={editorForm.sourceReference} onChange={event => setEditorForm(current => ({ ...current, sourceReference: event.target.value }))} placeholder="Registry, order, or deed reference" /></label><label>Authority audit identity<input value="Server records the signed-in administrator" readOnly aria-label="Server records the signed-in administrator identity" /></label><label>Revision note<input value={editorForm.editNote} onChange={event => setEditorForm(current => ({ ...current, editNote: event.target.value }))} placeholder="Why this correction is approved" /></label></div>
             {editableVertices.length > 0 ? <section className="vertex-editor"><div><p className="section-kicker">Assisted vertex correction</p><strong>Edit longitude and latitude values; the closing polygon vertex is maintained automatically.</strong></div><button type="button" className="text-action" onClick={() => setEditorForm(current => ({ ...current, geometry: sourceGeometry }))}>Reset to source</button><div className="vertex-grid">{editableVertices.map((vertex, index) => <div key={index}><span>V{index + 1}</span><input aria-label={`Vertex ${index + 1} longitude`} value={vertex[0]} inputMode="decimal" onChange={event => setEditorForm(current => ({ ...current, geometry: replacePolygonVertex(current.geometry, index, 0, event.target.value) }))} /><input aria-label={`Vertex ${index + 1} latitude`} value={vertex[1]} inputMode="decimal" onChange={event => setEditorForm(current => ({ ...current, geometry: replacePolygonVertex(current.geometry, index, 1, event.target.value) }))} /></div>)}</div></section> : <p className="editor-note">This feature uses a MultiPolygon or a non-standard geometry. Use the reviewed GeoJSON editor below.</p>}
             <label className="geometry-editor">Reviewed GeoJSON geometry<textarea value={editorForm.geometry} onChange={event => setEditorForm(current => ({ ...current, geometry: event.target.value }))} spellCheck={false} /></label>
-            <div className="editor-actions"><span>Source record: <code>{selectedLiveFeature.ulpin}</code></span><button className="primary-button" type="button" disabled={footprintUpdate.isPending || authQuery.data?.role !== "admin"} onClick={saveFootprintCorrection}>{footprintUpdate.isPending ? <><Loader2 className="spin-icon" size={16} /> Saving revision…</> : authQuery.data?.role !== "admin" ? "Administrator sign-in required" : <><Check size={16} /> Save approved correction</>}</button></div>
+            <div className="editor-actions"><span>Source record: <code>{selectedLiveFeature.ulpin}</code></span><button className="primary-button" type="button" disabled={footprintUpdate.isPending} onClick={requestAuthoritySignIn}>{footprintUpdate.isPending ? <><Loader2 className="spin-icon" size={16} /> Saving revision…</> : !authQuery.data ? <><ShieldCheck size={16} /> Sign in as administrator</> : !canSaveAuthorityRecord ? "Administrator role required" : <><Check size={16} /> Save approved correction</>}</button></div>
           </motion.div>
         </div>
       )}
