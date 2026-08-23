@@ -43,6 +43,7 @@ import {
 import { useMemo, useRef, useState, type ChangeEvent, type DragEvent, type FormEvent } from "react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
+import { CesiumSpatialViewer, type MapCommand } from "@/components/CesiumSpatialViewer";
 
 type LayerKey = "parcels" | "buildings" | "utilities" | "terrain";
 
@@ -158,9 +159,13 @@ export default function Home() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [volumeLoading, setVolumeLoading] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [workspaceOpen, setWorkspaceOpen] = useState<string | null>(null);
+  const [mapCommand, setMapCommand] = useState<MapCommand>(null);
+  const [selectedLiveFeature, setSelectedLiveFeature] = useState<{ ulpin: string; properties: Record<string, unknown> } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const aiSearch = trpc.cadastre.search.useMutation();
   const cadastreUpload = trpc.cadastre.upload.useMutation();
+  const trpcUtils = trpc.useUtils();
   const [layersOn, setLayersOn] = useState<Record<LayerKey, boolean>>({
     parcels: true,
     buildings: true,
@@ -169,6 +174,12 @@ export default function Home() {
   });
 
   const activeLayerCount = useMemo(() => Object.values(layersOn).filter(Boolean).length, [layersOn]);
+  const liveProperty = selectedLiveFeature?.properties;
+  const liveFeatureName = typeof liveProperty?.name === "string" ? liveProperty.name : "Selected PostGIS footprint";
+  const liveFeatureSource = typeof liveProperty?.source === "string" ? liveProperty.source : "Neon PostGIS";
+  const liveFeatureLicense = typeof liveProperty?.sourceLicense === "string" ? liveProperty.sourceLicense : "Source metadata unavailable";
+  const liveFeatureConfidence = typeof liveProperty?.confidence === "number" ? `${Math.round(liveProperty.confidence * 100)}%` : "Not supplied";
+  const liveFeatureDistance = typeof liveProperty?.centroidDistanceMetres === "number" ? `${liveProperty.centroidDistanceMetres} m from campus reference` : "Coordinate reference available";
 
   const selectNav = (label: string) => {
     setActiveNav(label);
@@ -177,8 +188,10 @@ export default function Home() {
       setUploadOpen(true);
       return;
     }
-    if (label !== "Mission control") toast(`${label} selected`, { description: "This demonstration keeps the command center context in view." });
+    if (label !== "Mission control") setWorkspaceOpen(label);
   };
+
+  const issueMapCommand = (kind: Exclude<MapCommand, null>["kind"]) => setMapCommand({ kind, nonce: Date.now() });
 
   const selectFloor = (floor: number) => {
     setActiveFloor(floor);
@@ -232,7 +245,12 @@ export default function Home() {
       cadastreUpload.mutate({ category: uploadCategory, fileName: stagedFile.name, mimeType: stagedFile.type || "application/octet-stream", dataBase64: encoded }, {
         onSuccess: (response) => {
           setUploadProgress(100);
-          if (response.stored) toast.success("Evidence file validated", { description: `${stagedFile.name} is ready for the processing queue.` });
+          if (response.stored) {
+            void trpcUtils.postgis.geojson.invalidate();
+            const importedGeometryCount = response.spatialImport?.imported ?? 0;
+            const spatialNote = importedGeometryCount > 0 ? ` ${importedGeometryCount} geometry feature(s) are live on the map.` : "";
+            toast.success("Evidence file validated", { description: `${stagedFile.name} is ready for the processing queue.${spatialNote}` });
+          }
         },
         onError: () => {
           setUploadProgress(0);
@@ -285,7 +303,7 @@ export default function Home() {
             <span className="pulse-dot" />
             <div><strong>CORS link stable</strong><small>± 1.8 cm accuracy</small></div>
           </div>
-          <button className="account-row" type="button" onClick={() => toast("Account preferences", { description: "Settings are available in the full implementation." })}>
+          <button className="account-row" type="button" onClick={() => setWorkspaceOpen("Operator account")}>
             <div className="avatar">AR</div>
             <div><strong>Arjun Rao</strong><small>Authority operator</small></div>
             <MoreHorizontal size={18} />
@@ -299,7 +317,7 @@ export default function Home() {
           <div className="crumbs"><span>Operations</span><ChevronRight size={14} /><strong>South Bengaluru pilot</strong><ChevronDown size={14} /></div>
           <div className="top-actions">
             <button className="search-button ai-search-trigger" type="button" onClick={() => setSearchOpen(true)}><BrainCircuit size={17} /><span>Ask ULPIN intelligence</span><kbd>⌘ K</kbd></button>
-            <button className="icon-button" type="button" aria-label="Open settings" onClick={() => toast("Workspace settings", { description: "Layer and coordinate preferences are coming next." })}><Settings2 size={18} /></button>
+            <button className="icon-button" type="button" aria-label="Open settings" onClick={() => setWorkspaceOpen("Workspace settings")}><Settings2 size={18} /></button>
             <button className="icon-button upload-top-trigger" type="button" aria-label="Upload spatial evidence" onClick={() => setUploadOpen(true)}><FileUp size={18} /></button>
             <button className="primary-button compact" type="button" onClick={() => setGeneratorOpen(true)}><Plus size={17} /> Generate ULPIN</button>
           </div>
@@ -324,55 +342,29 @@ export default function Home() {
 
           <section className="operations-grid">
             <motion.article className={`map-card ${volumeLoading ? "volume-loading" : ""}`} {...panelMotion} transition={{ duration: 0.42, delay: 0.08 }}>
-              <div className="map-image" />
+              <CesiumSpatialViewer command={mapCommand} layers={layersOn} onFeatureSelect={(feature) => { setSelectedLiveFeature(feature); toast.success(`Selected ${feature.ulpin}`, { description: "Live PostGIS footprint metadata loaded into the property inspector." }); setDetailOpen(true); }} />
               <div className="map-grid" />
               <div className="map-vignette" />
 
               <div className="map-header">
                 <div>
                   <p className="section-kicker">Live 3D model</p>
-                  <h2>Koramangala Sector 5</h2>
-                  <div className="coordinates"><CircleDot size={13} /> 12.9352° N <span>·</span> 77.6245° E <span>·</span> EPSG:4326</div>
+                  <h2>Amity University Patna</h2>
+                  <div className="coordinates"><CircleDot size={13} /> 25.6124° N <span>·</span> 85.0548° E <span>·</span> EPSG:4326</div>
                 </div>
                 <div className="map-header-actions">
-                  <button className="icon-button dark" type="button" onClick={() => toast("Fullscreen model", { description: "The full Cesium workspace opens in the implementation build." })} aria-label="Expand map"><Maximize2 size={17} /></button>
-                  <button className="icon-button dark" type="button" onClick={() => toast("Map layers", { description: `${activeLayerCount} active layers in the current view.` })} aria-label="Map settings"><Settings2 size={17} /></button>
+                  <button className="icon-button dark" type="button" onClick={() => issueMapCommand("fullscreen")} aria-label="Expand live Cesium map"><Maximize2 size={17} /></button>
+                  <button className="icon-button dark" type="button" onClick={() => setWorkspaceOpen("Spatial layers")} aria-label="Open map layers"><Settings2 size={17} /></button>
                 </div>
               </div>
 
               <div className="map-control-stack">
-                <button type="button" onClick={() => toast("Zoom in", { description: "Map zoom adjusted." })}>+</button>
-                <button type="button" onClick={() => toast("Zoom out", { description: "Map zoom adjusted." })}>−</button>
-                <button type="button" onClick={() => toast("North reset", { description: "Map orientation reset to north." })}><span className="north-mark">N</span></button>
+                <button type="button" onClick={() => issueMapCommand("zoom-in")} aria-label="Zoom in">+</button>
+                <button type="button" onClick={() => issueMapCommand("zoom-out")} aria-label="Zoom out">−</button>
+                <button type="button" onClick={() => issueMapCommand("north")} aria-label="Reset map to north"><span className="north-mark">N</span></button>
               </div>
 
-              <div className="property-tag"><span className="status-dot cyan" /> SELECTED VOLUME <strong>B12 · FLOOR {activeFloor}</strong></div>
-
-              <div className="building-scene" aria-label="Selected building volume model" aria-busy={volumeLoading}>
-                <div className="ground-plane" />
-                <div className="tower-shadow" />
-                <div className="tower">
-                  {towerFloors.map((floor) => (
-                    <button
-                      className={`tower-floor ${activeFloor === floor ? "selected" : ""}`}
-                      style={{ bottom: `${(floor - 1) * 21 + 28}px` }}
-                      type="button"
-                      onClick={() => selectFloor(floor)}
-                      aria-label={`Select floor ${floor}`}
-                      key={floor}
-                    >
-                      <span className="floor-glow" />
-                      <em>{floor}</em>
-                      <span className="floor-tooltip">Floor {floor}<small>{floor === 4 ? "Unit 4C · verified" : "Click to inspect volume"}</small></span>
-                    </button>
-                  ))}
-                  <div className="tower-roof" />
-                </div>
-                <div className="tower-side" />
-                <div className="underground-lines"><i /><i /><i /></div>
-                <div className="map-pin pin-one"><span />B12</div>
-                <div className="map-pin pin-two"><span />P-04</div>
-              </div>
+              <div className="property-tag live-property-tag"><span className="status-dot cyan" /> LIVE POSTGIS REFERENCE <strong>Amity University Patna · OSM</strong></div>
 
               {volumeLoading && <motion.div className="volume-sync-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}><Loader2 size={17} /><span>Synchronizing selected volume</span><i /></motion.div>}
 
@@ -384,15 +376,15 @@ export default function Home() {
 
             <aside className="inspector-column">
               <motion.article className="inspector-card" {...panelMotion} transition={{ duration: 0.42, delay: 0.13 }}>
-                <div className="card-title-row"><div><p className="section-kicker">Property inspector</p><h2>Block B12</h2></div><button className="icon-button ghost" type="button" aria-label="Open inspector"><PanelRightOpen size={17} /></button></div>
+                <div className="card-title-row"><div><p className="section-kicker">Property inspector</p><h2>{selectedLiveFeature ? "Live footprint" : "Block B12"}</h2></div><button className="icon-button ghost" type="button" aria-label="Open inspector" onClick={() => setDetailOpen(true)}><PanelRightOpen size={17} /></button></div>
                 <div className="inspector-visual"><div className="visual-floor floor-top" /><div className="visual-floor floor-mid" /><div className="visual-floor floor-active"><span>F{activeFloor}</span></div><div className="visual-floor floor-low" /><i /></div>
-                <div className="inspector-main"><div><p>Active vertical parcel</p><strong>Unit 4C · Floor {activeFloor}</strong></div><SmallBadge tone="green"><Check size={12} /> verified</SmallBadge></div>
+                <div className="inspector-main"><div><p>{selectedLiveFeature ? "Live detected building" : "Active vertical parcel"}</p><strong>{selectedLiveFeature ? liveFeatureName : `Unit 4C · Floor ${activeFloor}`}</strong></div><SmallBadge tone={selectedLiveFeature ? "cyan" : "green"}>{selectedLiveFeature ? <><Building2 size={12} /> source traced</> : <><Check size={12} /> verified</>}</SmallBadge></div>
                 <div className="data-list">
-                  <div><span>3D ULPIN</span><code>KA-29-105-0421-B12-F{String(activeFloor).padStart(2, "0")}-021</code></div>
-                  <div><span>Volume</span><strong>486.2 m³</strong></div>
-                  <div><span>Elevation</span><strong>+{activeFloor * 3.2 - 0.1} m → +{activeFloor * 3.2 + 3.0} m</strong></div>
+                  <div><span>{selectedLiveFeature ? "Source record" : "3D ULPIN"}</span><code>{selectedLiveFeature ? selectedLiveFeature.ulpin : `KA-29-105-0421-B12-F${String(activeFloor).padStart(2, "0")}-021`}</code></div>
+                  <div><span>{selectedLiveFeature ? "Dataset" : "Volume"}</span><strong>{selectedLiveFeature ? liveFeatureSource : "486.2 m³"}</strong></div>
+                  <div><span>{selectedLiveFeature ? "Confidence" : "Elevation"}</span><strong>{selectedLiveFeature ? liveFeatureConfidence : `+${activeFloor * 3.2 - 0.1} m → +${activeFloor * 3.2 + 3.0} m`}</strong></div>
                 </div>
-                <button className="secondary-button" type="button" onClick={() => setDetailOpen(true)}>Review volume profile <ArrowUpRight size={16} /></button>
+                <button className="secondary-button" type="button" onClick={() => setDetailOpen(true)}>{selectedLiveFeature ? "View source metadata" : "Review volume profile"} <ArrowUpRight size={16} /></button>
               </motion.article>
 
               <motion.article className="layer-card" {...panelMotion} transition={{ duration: 0.42, delay: 0.18 }}>
@@ -413,7 +405,7 @@ export default function Home() {
 
           <section className="lower-grid">
             <motion.article className="activity-card" {...panelMotion} transition={{ duration: 0.42, delay: 0.22 }}>
-              <div className="card-title-row"><div><p className="section-kicker">Validation stream</p><h2>Today’s spatial decisions</h2></div><button className="text-action" type="button" onClick={() => toast("Activity archive", { description: "The audit trail is maintained per volume in the full system." })}>View audit trail <ArrowUpRight size={15} /></button></div>
+              <div className="card-title-row"><div><p className="section-kicker">Validation stream</p><h2>Today’s spatial decisions</h2></div><button className="text-action" type="button" onClick={() => setWorkspaceOpen("Audit trail")}>View audit trail <ArrowUpRight size={15} /></button></div>
               <div className="activity-list">
                 <div className="activity-row"><span className="activity-icon green"><ShieldCheck size={16} /></span><div><strong>Block B12 passed topology validation</strong><p>12 volumes checked · no overlaps or containment errors</p></div><time>08:26</time></div>
                 <div className="activity-row"><span className="activity-icon cyan"><FileUp size={16} /></span><div><strong>New LiDAR point cloud received</strong><p>Sector 5 west · 22.4 million classified points</p></div><time>08:11</time></div>
@@ -424,7 +416,7 @@ export default function Home() {
             <motion.article className="pipeline-card" {...panelMotion} transition={{ duration: 0.42, delay: 0.27 }}>
               <img src="/manus-storage/ulpin-underground-utilities_6d8a64d1.png" alt="Underground utility mapping visualization" />
               <div className="pipeline-shade" />
-              <div className="pipeline-content"><p className="section-kicker">Next in line</p><h2>Resolve the depth conflict before issuing 12 parking volumes.</h2><button className="primary-button warm" type="button" onClick={() => toast("Conflict workspace queued", { description: "The U-223 utility intersection has been added to your review queue." })}>Open conflict workspace <ChevronRight size={16} /></button></div>
+              <div className="pipeline-content"><p className="section-kicker">Next in line</p><h2>Resolve the depth conflict before issuing 12 parking volumes.</h2><button className="primary-button warm" type="button" onClick={() => setWorkspaceOpen("Conflict workspace")}>Open conflict workspace <ChevronRight size={16} /></button></div>
             </motion.article>
           </section>
 
@@ -497,6 +489,7 @@ export default function Home() {
             {stagedFile && <div className="upload-file-row"><div className="file-type-icon">{uploadCategory === "geojson" ? <FileJson size={17} /> : <FileText size={17} />}</div><div><strong>{stagedFile.name}</strong><span>{uploadCategory === "geojson" ? "Parcel layer · structure and feature count will be checked" : "Floor plan · format and georeference readiness will be checked"}</span></div><button type="button" onClick={() => { setStagedFile(null); cadastreUpload.reset(); setUploadProgress(0); }}><X size={16} /></button></div>}
             {(cadastreUpload.isPending || uploadProgress > 0) && <div className="upload-progress-wrap"><div><span>{cadastreUpload.isPending ? "Server validation & storage in progress" : cadastreUpload.data?.stored ? "Evidence stored" : "Validation complete"}</span><strong>{cadastreUpload.isPending ? "Working" : `${uploadProgress}%`}</strong></div><div className="upload-progress"><i className={cadastreUpload.isPending ? "server-indeterminate" : ""} style={{ width: `${uploadProgress}%` }} /></div></div>}
             {cadastreUpload.data && <div className={`validation-report ${cadastreUpload.data.validation.accepted ? "accepted" : "rejected"}`}><div className="validation-heading">{cadastreUpload.data.validation.accepted ? <CheckCircle2 size={18} /> : <AlertTriangle size={18} />}<div><strong>{cadastreUpload.data.validation.accepted ? "Validation feedback" : "File needs attention"}</strong><span>Readiness score {cadastreUpload.data.validation.score}/100</span></div></div><div className="validation-checks">{cadastreUpload.data.validation.checks.map(check => <span className={check.state} key={check.label}><i />{check.label}</span>)}</div><p>{cadastreUpload.data.validation.findings.join(" ")}</p></div>}
+            {cadastreUpload.data?.extraction && <div className="extraction-report"><div><BrainCircuit size={17} /><strong>AI evidence extraction</strong><SmallBadge tone="cyan">{cadastreUpload.data.extraction.confidence}% confidence</SmallBadge></div><p>{cadastreUpload.data.extraction.summary}</p><div className="extraction-grid"><span>Footprints <b>{cadastreUpload.data.extraction.footprintCount}</b></span><span>Floors <b>{cadastreUpload.data.extraction.detectedFloorCount ?? "—"}</b></span><span>Units <b>{cadastreUpload.data.extraction.unitLabels.length}</b></span><span>Map status <b>{cadastreUpload.data.extraction.needsGeoreference ? "georeference needed" : `${cadastreUpload.data.spatialImport?.imported ?? 0} imported`}</b></span></div>{cadastreUpload.data.extraction.needsGeoreference && <div className="georeference-note"><MapPinned size={13} /><span>{cadastreUpload.data.extraction.normalizedFootprint.length >= 3 ? "Footprint derived in plan coordinates. Add ground-control points before publishing to PostGIS." : "No reliable exterior footprint found. Upload a clearer plan or add the boundary during georeferencing."}</span></div>}</div>}
             <button className="primary-button upload-submit" type="button" onClick={beginUpload} disabled={cadastreUpload.isPending}>{cadastreUpload.isPending ? <><Loader2 className="spin-icon" size={16} /> Validating evidence…</> : <><Check size={16} /> Validate & add to queue</>}</button>
           </motion.div>
         </div>
@@ -506,11 +499,23 @@ export default function Home() {
         <div className="modal-shell property-detail-shell" role="dialog" aria-modal="true" aria-labelledby="property-detail-title">
           <motion.div className="property-detail-dialog" initial={{ opacity: 0, scale: 0.97, y: 14 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.22 }}>
             <button className="icon-button modal-close" type="button" aria-label="Close property information" onClick={() => setDetailOpen(false)}><X size={18} /></button>
-            <div className="detail-hero"><div><p className="eyebrow cyan-text">Detailed property information</p><h2 id="property-detail-title">Unit 4C · Block B12</h2><p>Registered vertical parcel on Floor {activeFloor} within Koramangala Sector 5.</p></div><SmallBadge tone="green"><Check size={12} /> topology verified</SmallBadge></div>
-            <div className="detail-ulpin"><span>3D ULPIN</span><code>KA-29-105-0421-B12-F{String(activeFloor).padStart(2, "0")}-021</code><span className="detail-score">98.7% topology health</span></div>
-            <div className="detail-metrics"><div><span>Footprint</span><strong>152.4 m²</strong></div><div><span>Volume</span><strong>486.2 m³</strong></div><div><span>Elevation band</span><strong>+{activeFloor * 3.2 - 0.1} → +{activeFloor * 3.2 + 3.0} m</strong></div></div>
-            <div className="detail-columns"><section><p className="section-kicker">Registered rights</p><h3>Residential ownership</h3><ul><li>Exclusive possession of Unit 4C</li><li>Shared circulation and service easements</li><li>One assigned parking-right reference</li></ul></section><section><p className="section-kicker">Evidence bundle</p><h3>Source confidence</h3><ul><li><Check size={14} /> LiDAR classified · 2026.06</li><li><Check size={14} /> Approved floor plan · v3</li><li><Check size={14} /> GNSS / CORS aligned</li></ul></section></div>
-            <div className="detail-validation"><ShieldCheck size={18} /><div><strong>Topology validation passed</strong><span>No parcel overlaps, containment failures, or CRS deviations detected in the current review cycle.</span></div><button type="button" onClick={() => toast("Audit record queued", { description: "The validation history is available in the complete registry workflow." })}>View audit</button></div>
+            <div className="detail-hero"><div><p className="eyebrow cyan-text">{selectedLiveFeature ? "Live footprint source metadata" : "Detailed property information"}</p><h2 id="property-detail-title">{selectedLiveFeature ? liveFeatureName : "Unit 4C · Block B12"}</h2><p>{selectedLiveFeature ? "Individual open building footprint selected from the live Neon PostGIS layer; no campus boundary has been inferred." : `Registered vertical parcel on Floor ${activeFloor} within Koramangala Sector 5.`}</p></div><SmallBadge tone={selectedLiveFeature ? "cyan" : "green"}>{selectedLiveFeature ? <><Building2 size={12} /> detected footprint</> : <><Check size={12} /> topology verified</>}</SmallBadge></div>
+            <div className="detail-ulpin"><span>{selectedLiveFeature ? "Source record" : "3D ULPIN"}</span><code>{selectedLiveFeature ? selectedLiveFeature.ulpin : `KA-29-105-0421-B12-F${String(activeFloor).padStart(2, "0")}-021`}</code><span className="detail-score">{selectedLiveFeature ? liveFeatureConfidence : "98.7% topology health"}</span></div>
+            <div className="detail-metrics"><div><span>{selectedLiveFeature ? "Dataset" : "Footprint"}</span><strong>{selectedLiveFeature ? liveFeatureSource : "152.4 m²"}</strong></div><div><span>{selectedLiveFeature ? "Licence" : "Volume"}</span><strong>{selectedLiveFeature ? liveFeatureLicense : "486.2 m³"}</strong></div><div><span>{selectedLiveFeature ? "Spatial proximity" : "Elevation band"}</span><strong>{selectedLiveFeature ? liveFeatureDistance : `+${activeFloor * 3.2 - 0.1} → +${activeFloor * 3.2 + 3.0} m`}</strong></div></div>
+            <div className="detail-columns"><section><p className="section-kicker">{selectedLiveFeature ? "Dataset scope" : "Registered rights"}</p><h3>{selectedLiveFeature ? "Individual footprint only" : "Residential ownership"}</h3><ul>{selectedLiveFeature ? <><li>No campus boundary inferred</li><li>Selected from an 180 m location radius</li><li>Rendered as a flat plan footprint only</li></> : <><li>Exclusive possession of Unit 4C</li><li>Shared circulation and service easements</li><li>One assigned parking-right reference</li></>}</ul></section><section><p className="section-kicker">{selectedLiveFeature ? "Traceability" : "Evidence bundle"}</p><h3>{selectedLiveFeature ? "Reusable source record" : "Source confidence"}</h3><ul>{selectedLiveFeature ? <><li><Check size={14} /> Microsoft Global ML Building Footprints</li><li><Check size={14} /> CDLA Permissive 2.0 attribution</li><li><Check size={14} /> Stored in live Neon PostGIS</li></> : <><li><Check size={14} /> LiDAR classified · 2026.06</li><li><Check size={14} /> Approved floor plan · v3</li><li><Check size={14} /> GNSS / CORS aligned</li></>}</ul></section></div>
+            <div className="detail-validation"><ShieldCheck size={18} /><div><strong>{selectedLiveFeature ? "Source metadata preserved" : "Topology validation passed"}</strong><span>{selectedLiveFeature ? "The selected building footprint remains attributed to its Microsoft open-data source and is not treated as a cadastral parcel or campus boundary." : "No parcel overlaps, containment failures, or CRS deviations detected in the current review cycle."}</span></div><button type="button" onClick={() => setWorkspaceOpen(selectedLiveFeature ? "Spatial layers" : "Audit trail")}>{selectedLiveFeature ? "Layers" : "View audit"}</button></div>
+          </motion.div>
+        </div>
+      )}
+
+      {workspaceOpen && (
+        <div className="modal-shell workspace-shell" role="dialog" aria-modal="true" aria-labelledby="workspace-title">
+          <motion.div className="workspace-dialog" initial={{ opacity: 0, scale: 0.97, y: 14 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.2 }}>
+            <button className="icon-button modal-close" type="button" aria-label="Close workspace" onClick={() => setWorkspaceOpen(null)}><X size={18} /></button>
+            <p className="eyebrow cyan-text">{workspaceOpen === "Audit trail" ? "Cadastral audit workspace" : "Operational workspace"}</p>
+            <h2 id="workspace-title">{workspaceOpen}</h2>
+            <p>{workspaceOpen === "3D workspace" ? "The live Cesium workspace is connected to the PostGIS geometry layer and refreshes automatically. Use the map controls to navigate the field model." : workspaceOpen === "Parcels" ? "Parcel records can be found through natural-language ULPIN search or spatial selection in the live map." : workspaceOpen === "Buildings" ? "Building volumes and floor-plan evidence are available through the AI-assisted ingestion workflow." : workspaceOpen === "Property volumes" ? "Select a live geometry or a building floor to inspect its vertical property information." : workspaceOpen === "ULPIN registry" ? "Search by ULPIN, building, unit, floor, rights, or validation status from the intelligence command bar." : workspaceOpen === "Processing queue" ? "New uploads appear here after validation, AI metadata extraction, and spatial import." : workspaceOpen === "Conflict workspace" ? "The selected utility-depth review is ready for cadastral resolution and audit assignment." : workspaceOpen === "Spatial layers" ? `${activeLayerCount} layers are active. Use the layer switches in the property inspector to adjust the display.` : "Review your command-desk preferences and continue to the relevant cadastral workflow."}</p>
+            <div className="workspace-actions"><button className="secondary-button" type="button" onClick={() => setWorkspaceOpen(null)}>Return to command desk</button>{workspaceOpen === "3D workspace" && <button className="primary-button" type="button" onClick={() => { setWorkspaceOpen(null); issueMapCommand("fullscreen"); }}>Open live map <Maximize2 size={16} /></button>}{workspaceOpen === "Parcels" || workspaceOpen === "ULPIN registry" ? <button className="primary-button" type="button" onClick={() => { setWorkspaceOpen(null); setSearchOpen(true); }}>Search records <Search size={16} /></button> : null}{workspaceOpen === "Buildings" || workspaceOpen === "Processing queue" ? <button className="primary-button" type="button" onClick={() => { setWorkspaceOpen(null); setUploadOpen(true); }}>Add evidence <FileUp size={16} /></button> : null}</div>
           </motion.div>
         </div>
       )}

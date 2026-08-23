@@ -7,3 +7,22 @@
 - [x] Verify the new workflows on desktop and mobile before delivery.
 - [x] Connect AI search to persisted ULPIN/property records while retaining the LLM rationale layer.
 - [x] Replace simulated upload percentage updates with real browser read progress and server-state-driven validation/storage feedback.
+- [x] Repair all command-rail and dashboard action buttons so each opens a usable corresponding workspace.
+- [x] Add a Cesium 3D viewer with an adapter for live PostGIS geometry and visible spatial layer controls.
+- [x] Extend GeoJSON and floor-plan processing with AI-assisted building footprint and floor-metadata extraction.
+- [x] Verify the repaired controls and new map/upload workflows on desktop and touch-sized layouts.
+- [x] Wire the spatial-layer controls to the Cesium/PostGIS data source and verify real geometry rendering.
+- [x] Add a floor-plan footprint derivation and georeferencing workflow before mapping floor-plan geometry.
+- [ ] Run and record interactive desktop and touch verification of all repaired controls, Cesium controls, and evidence workflows.
+- [x] Synchronize the current verified project code to the connected GitHub repository.
+- [x] Source and validate reusable geospatial geometry for the Amity University Patna campus.
+- [x] Import the verified campus location reference into Neon PostGIS with building-layer metadata and OSM attribution.
+- [x] Verify the imported Amity University Patna reference renders in the live Cesium viewer.
+- [x] Superseded by the user’s instruction to avoid creating or assuming a campus boundary.
+- [x] Superseded by the user’s instruction to avoid creating or assuming a campus boundary.
+- [x] Superseded by the user’s instruction to avoid creating or assuming a campus boundary.
+- [x] Stream the official Microsoft Global ML Building Footprints shard and select only detected footprints near the verified Amity University Patna location.
+- [x] Import the selected individual detected footprints into Neon PostGIS with CDLA Permissive 2.0 attribution, without generating a campus boundary.
+- [x] Verify the individual Microsoft building footprints render in Cesium with source metadata.
+- [x] Make imported Microsoft footprint polygons selectable in Cesium and show their live source metadata in the inspector.
+- [x] Record an end-to-end browser verification of footprint selection, metadata display, and map visibility.

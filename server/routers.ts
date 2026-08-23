@@ -2,11 +2,13 @@ import { z } from "zod";
 import { COOKIE_NAME } from "@shared/const";
 import { fallbackCadastreSearch, mergeAiSearchResponse, validateCadastreUpload } from "./cadastreService";
 import { createEvidenceFile, ensureCadastreSeedData, getCadastreRecords } from "./db";
+import { extractEvidenceMetadata } from "./evidenceExtraction";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { invokeLLM } from "./_core/llm";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
-import { storagePut } from "./storage";
+import { getPostgisFeatureCollection, upsertPostgisGeoJsonFeatures } from "./postgis";
+import { storageGetSignedUrl, storagePut } from "./storage";
 
 const aiSearchInput = z.object({
   query: z.string().trim().min(3, "Ask a little more specifically.").max(280, "Keep the query under 280 characters."),
@@ -32,6 +34,9 @@ export const appRouter = router({
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
     }),
+  }),
+  postgis: router({
+    geojson: publicProcedure.query(async () => getPostgisFeatureCollection()),
   }),
   cadastre: router({
     search: publicProcedure.input(aiSearchInput).mutation(async ({ input }) => {
@@ -87,6 +92,18 @@ export const appRouter = router({
       const buffer = Buffer.from(input.dataBase64, "base64");
       const keyPrefix = input.category === "geojson" ? "cadastre/geojson" : "cadastre/floor-plans";
       const stored = await storagePut(`${keyPrefix}/${Date.now()}-${safeFileName(input.fileName)}`, buffer, input.mimeType);
+      const signedUrl = await storageGetSignedUrl(stored.key);
+      let extraction = null;
+      let spatialImport = { imported: 0, skipped: 0 };
+      try {
+        extraction = await extractEvidenceMetadata({ category: input.category, dataBase64: input.dataBase64, mimeType: input.mimeType, signedUrl });
+        if (input.category === "geojson") {
+          const parsed = JSON.parse(buffer.toString("utf8"));
+          spatialImport = await upsertPostgisGeoJsonFeatures(parsed);
+        }
+      } catch (error) {
+        console.warn("[Cadastre upload] AI extraction or PostGIS geometry import could not complete.", error);
+      }
       const persisted = await createEvidenceFile({
         name: input.fileName,
         category: input.category,
@@ -100,6 +117,8 @@ export const appRouter = router({
         stored: true,
         persisted,
         validation,
+        extraction,
+        spatialImport,
         file: { key: stored.key, url: stored.url, name: input.fileName, category: input.category },
       };
     }),
