@@ -258,6 +258,7 @@ export default function Home() {
   };
   const requestAuthoritySignIn = () => {
     if (!selectedLiveFeature) return;
+    if (!validateAuthorityRevisionNote()) return;
     if (canSaveAuthorityRecord) {
       saveFootprintCorrection();
       return;
