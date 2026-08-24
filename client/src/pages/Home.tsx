@@ -46,6 +46,7 @@ import { trpc } from "@/lib/trpc";
 import { CesiumSpatialViewer, type MapCommand } from "@/components/CesiumSpatialViewer";
 import { startLogin } from "@/const";
 import { REVISION_NOTE_MINIMUM_LENGTH, validateRevisionNote } from "../../../shared/authorityEditValidation";
+import { getEditablePolygonVertices, replacePolygonVertex } from "../../../shared/footprintGeometryEditing";
 import { useLocation } from "wouter";
 
 type LayerKey = "parcels" | "buildings" | "utilities" | "terrain";
@@ -77,33 +78,6 @@ const panelMotion = {
   initial: { opacity: 0, y: 12 },
   animate: { opacity: 1, y: 0 },
 };
-
-function getEditablePolygonVertices(geometryText: string): Array<[number, number]> {
-  try {
-    const geometry = JSON.parse(geometryText) as { type?: string; coordinates?: unknown };
-    if (geometry.type !== "Polygon" || !Array.isArray(geometry.coordinates) || !Array.isArray(geometry.coordinates[0])) return [];
-    const ring = geometry.coordinates[0] as unknown[];
-    return ring.slice(0, -1).filter((vertex): vertex is [number, number] => Array.isArray(vertex) && typeof vertex[0] === "number" && typeof vertex[1] === "number");
-  } catch {
-    return [];
-  }
-}
-
-function replacePolygonVertex(geometryText: string, vertexIndex: number, axis: 0 | 1, value: string) {
-  const numericValue = Number(value);
-  if (!Number.isFinite(numericValue)) return geometryText;
-  try {
-    const geometry = JSON.parse(geometryText) as { type?: string; coordinates?: unknown };
-    if (geometry.type !== "Polygon" || !Array.isArray(geometry.coordinates) || !Array.isArray(geometry.coordinates[0])) return geometryText;
-    const ring = geometry.coordinates[0] as number[][];
-    if (!Array.isArray(ring[vertexIndex]) || ring.length < 4) return geometryText;
-    ring[vertexIndex][axis] = numericValue;
-    if (vertexIndex === 0) ring[ring.length - 1] = [...ring[0]];
-    return JSON.stringify(geometry, null, 2);
-  } catch {
-    return geometryText;
-  }
-}
 
 function BrandMark({ className = "" }: { className?: string }) {
   return (
