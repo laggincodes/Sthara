@@ -8,7 +8,15 @@ describe("KUSUM SURESH ENCLAVE Bihar RERA evidence", () => {
     expect(evidence.statedAuthorityFacts.sanctionedFloorsSourceValue).toBe(
       "G+4"
     );
-    expect(evidence.statedAuthorityFacts.officialHeightMetres).toBe(14.9);
+    expect(evidence.statedAuthorityFacts).not.toHaveProperty(
+      "officialHeightMetres"
+    );
+    expect(evidence.unverifiedReportedValues.buildingHeightMetres.value).toBe(
+      14.9
+    );
+    expect(evidence.unverifiedReportedValues.buildingHeightMetres.status).toBe(
+      "unverified_not_displayed_as_an_sih_demo_fact"
+    );
     expect(evidence.endpointReference.sourceLabel).toContain("End point");
   });
 

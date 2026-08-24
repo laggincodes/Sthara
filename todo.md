@@ -157,3 +157,4 @@
 - [ ] Retain all Level 3 floor-by-floor and vertical ULPIN locks unless approved vertical-property evidence is supplied after the footprint match.
 - [ ] Test, checkpoint, and synchronize the GCP-derived evidence workflow and any validated Level 2 result.
 - [x] Inspect the supplied official Bihar RERA QR-code record for KUSUM SURESH ENCLAVE and compare only its explicit published facts with the existing authority audit.
+- [x] Revise the KUSUM SURESH ENCLAVE SIH demo so the 14.90 m value is unverified and all GCP, GeoJSON, footprint, Level 2, and Level 3 outputs remain locked until authoritative evidence is supplied.

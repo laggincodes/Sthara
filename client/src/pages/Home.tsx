@@ -1306,8 +1306,8 @@ export default function Home() {
                   <h2>{kusumSureshEnclave.displayLabel}</h2>
                 </div>
                 <EvidenceLockBadge
-                  state="verified"
-                  detail="Authority record retrieved"
+                  state="source-cited"
+                  detail="Explicit RERA attributes only; height and geometry remain locked"
                 />
               </div>
               <div className="rera-metric-grid">
@@ -1322,14 +1322,9 @@ export default function Home() {
                   <small>Source value preserved · five storeys explained</small>
                 </div>
                 <div>
-                  <span>Authority height</span>
-                  <strong>
-                    {kusumSureshEnclave.statedAuthorityFacts.officialHeightMetres.toFixed(
-                      2
-                    )}{" "}
-                    m
-                  </strong>
-                  <small>Verified record field · geometry match required</small>
+                  <span>Building height</span>
+                  <strong>Not verified</strong>
+                  <small>Authority-issued metre height required</small>
                 </div>
                 <div>
                   <span>Coverage area</span>
@@ -1369,7 +1364,7 @@ export default function Home() {
               <div className="rera-plan-review">
                 <div className="rera-plan-review-heading">
                   <EvidenceLockBadge
-                    state="verified"
+                    state="source-cited"
                     detail="Sanctioned plan reviewed"
                   />
                   <b>Plan-space footprint reviewed</b>
@@ -1382,7 +1377,8 @@ export default function Home() {
                 <p className="rera-plan-review-limit">
                   No WGS84 grid, control point, or benchmark is present. The
                   outline remains plan-space only—not a PostGIS polygon or
-                  Cesium extrusion target.
+                  Cesium extrusion target. Independent GCPs and an
+                  authority-issued height source are still required.
                 </p>
               </div>
               <div className="rera-lock-summary">
@@ -1397,15 +1393,11 @@ export default function Home() {
                 {Object.entries(kusumSureshEnclave.activeLocks).map(
                   ([key, detail]) => (
                     <div key={key}>
-                      <EvidenceLockBadge
-                        state={
-                          key === "cesiumExtrusion" ? "verified" : "locked"
-                        }
-                      />
+                      <EvidenceLockBadge state={"locked"} />
                       <span>
                         <b>
                           {key === "cesiumExtrusion"
-                            ? "Authority height · geometry pending"
+                            ? "Height & extrusion"
                             : key === "officialFootprintGeometry"
                               ? "Footprint geometry"
                               : key === "floorByFloorModel"
