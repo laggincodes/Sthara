@@ -113,6 +113,8 @@ describe("dashboard usability controls", () => {
     expect(registrySource).toContain("Favorite folder / category");
     expect(registrySource).toContain("Browser-local organization only");
     expect(registrySource).toContain("All folders");
+    expect(registrySource).toContain("Unfiled favorites");
+    expect(registrySource).toContain('favoriteFolderFilter === ""');
     expect(registrySource).toContain("assignFavoriteFolder");
   });
 

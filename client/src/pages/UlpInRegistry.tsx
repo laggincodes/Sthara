@@ -185,9 +185,13 @@ export default function UlpInRegistry() {
               String(feature.properties.ulpin ?? "")
             ) &&
             (favoriteFolderFilter === "all" ||
-              personalFavoriteFolders[
-                String(feature.properties.ulpin ?? "")
-              ] === favoriteFolderFilter));
+              (favoriteFolderFilter === ""
+                ? !personalFavoriteFolders[
+                    String(feature.properties.ulpin ?? "")
+                  ]
+                : personalFavoriteFolders[
+                    String(feature.properties.ulpin ?? "")
+                  ] === favoriteFolderFilter)));
         return matchesSearch && matchesFilter;
       })
       .sort((left, right) => {
