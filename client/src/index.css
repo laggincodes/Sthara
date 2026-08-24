@@ -6006,3 +6006,132 @@ input:focus-visible {
     font-size: 6.5px;
   }
 }
+.home-mission-rail {
+  display: grid;
+  grid-template-columns: minmax(190px, 0.9fr) repeat(4, minmax(140px, 1fr));
+  gap: 8px;
+  margin: -8px 0 15px;
+  padding: 9px;
+  background: linear-gradient(
+    105deg,
+    rgba(18, 46, 51, 0.82),
+    rgba(8, 20, 26, 0.94)
+  );
+  border: 1px solid rgba(42, 212, 217, 0.18);
+  border-radius: 12px;
+}
+.home-mission-rail-intro {
+  padding: 8px 10px;
+}
+.home-mission-rail-intro .section-kicker {
+  padding: 0 0 5px;
+}
+.home-mission-rail-intro strong {
+  display: block;
+  color: #d4efeb;
+  font:
+    500 11px/1.42 "Space Grotesk",
+    sans-serif;
+}
+.home-mission-rail button {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  padding: 10px;
+  color: #8de5df;
+  background: rgba(255, 255, 255, 0.024);
+  border: 1px solid rgba(191, 235, 229, 0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    transform 160ms var(--ease-out),
+    background 160ms var(--ease-out),
+    border-color 160ms var(--ease-out);
+}
+.home-mission-rail button:hover {
+  background: rgba(42, 212, 217, 0.1);
+  border-color: rgba(86, 229, 224, 0.32);
+  transform: translateY(-2px);
+}
+.home-mission-rail button:active {
+  transform: scale(0.97);
+}
+.home-mission-rail button > span {
+  min-width: 0;
+}
+.home-mission-rail button b,
+.home-mission-rail button small {
+  display: block;
+}
+.home-mission-rail button b {
+  overflow: hidden;
+  color: #dff8f5;
+  font:
+    500 9px "IBM Plex Mono",
+    monospace;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.home-mission-rail button small {
+  margin-top: 4px;
+  color: #809b96;
+  font-size: 8px;
+  line-height: 1.25;
+}
+.home-mission-rail button > svg:last-child {
+  color: #5adbd8;
+}
+.home-spatial-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.hero-secondary-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 10px;
+  color: #d4ece8;
+  background: rgba(7, 19, 23, 0.56);
+  border: 1px solid rgba(203, 244, 239, 0.22);
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 9px;
+}
+.hero-secondary-action:hover {
+  color: #ecfffc;
+  background: rgba(42, 212, 217, 0.12);
+  border-color: rgba(97, 227, 228, 0.45);
+}
+@media (max-width: 900px) {
+  .home-mission-rail {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .home-mission-rail-intro {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 660px) {
+  .home-mission-rail {
+    grid-template-columns: 1fr;
+    gap: 6px;
+    padding: 7px;
+  }
+  .home-mission-rail-intro {
+    padding: 8px;
+  }
+  .home-mission-rail button {
+    padding: 9px;
+  }
+  .home-spatial-hero-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .home-spatial-hero-actions > button {
+    justify-content: center;
+  }
+}
