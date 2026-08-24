@@ -4662,3 +4662,110 @@ input:focus-visible {
     grid-template-columns: 1fr;
   }
 }
+.area-autocomplete {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+.area-autocomplete input {
+  width: 100%;
+}
+.area-autocomplete-menu {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 7px);
+  right: 0;
+  left: 0;
+  display: grid;
+  gap: 4px;
+  padding: 6px;
+  background: rgba(7, 17, 22, 0.98);
+  border: 1px solid rgba(42, 212, 217, 0.28);
+  border-radius: 8px;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.32);
+}
+.area-autocomplete-menu button {
+  padding: 8px;
+  color: #d3ebe7;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid transparent;
+  border-radius: 5px;
+  text-align: left;
+  cursor: pointer;
+}
+.area-autocomplete-menu button:hover {
+  background: rgba(42, 212, 217, 0.1);
+  border-color: rgba(42, 212, 217, 0.28);
+}
+.area-autocomplete-menu strong,
+.area-autocomplete-menu small {
+  display: block;
+}
+.area-autocomplete-menu strong {
+  font-size: 9px;
+}
+.area-autocomplete-menu small {
+  margin-top: 3px;
+  color: #83a09b;
+  font-size: 8px;
+  line-height: 1.3;
+}
+.map-evidence-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 9px;
+  color: #89a7a1;
+  font:
+    8px "IBM Plex Mono",
+    monospace;
+}
+.map-evidence-filter select {
+  max-width: 190px;
+  padding: 6px 26px 6px 8px;
+  color: #dff6f1;
+  background: #102326;
+  border: 1px solid rgba(42, 212, 217, 0.25);
+  border-radius: 5px;
+  font: inherit;
+}
+.evidence-pdf-export {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 7px 9px;
+  color: #d8f7f2;
+  background: rgba(42, 212, 217, 0.08);
+  border: 1px solid rgba(42, 212, 217, 0.25);
+  border-radius: 6px;
+  cursor: pointer;
+  font:
+    8px "IBM Plex Mono",
+    monospace;
+}
+.evidence-pdf-export:hover {
+  background: rgba(42, 212, 217, 0.17);
+}
+.evidence-pdf-export:active {
+  transform: scale(0.97);
+}
+@media (max-width: 780px) {
+  .area-search-controls {
+    position: relative;
+  }
+  .map-evidence-filter {
+    flex-wrap: wrap;
+  }
+  .map-evidence-filter select {
+    flex: 1;
+    max-width: none;
+  }
+  .area-autocomplete-menu {
+    position: fixed;
+    top: auto;
+    right: 14px;
+    left: 14px;
+    margin-top: 4px;
+  }
+}

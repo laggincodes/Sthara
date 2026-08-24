@@ -133,3 +133,7 @@
 - [x] Extend the place-search interface with guarded AI-assisted source lookup that reports supported live footprint facts and explicit unavailable/locked metrics for unverified campus buildings.
 - [x] Create and validate a reusable skill for source-safe campus evidence intake, dashboard presentation, and lock enforcement.
 - [x] Test the evidence-lock badges, JSON evidence rendering, and guarded search on desktop and true mobile; checkpoint and synchronize the implementation.
+- [x] Add evidence-status filter controls that change the visibility of live map footprints based only on their real evidence state.
+- [x] Add a client-side SIH PDF export for the JSON-backed Academic Block-4 dossier, including only shown facts, citations, availability limitations, and lock conditions.
+- [x] Add source-safe autocomplete suggestions for IIT Patna institutional records and known source-backed IIT search routes without suggesting unsupported building facts.
+- [x] Test the map filter, PDF export, and autocomplete on desktop and true mobile; checkpoint and synchronize the implementation.
