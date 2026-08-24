@@ -93,3 +93,7 @@
 - [x] Update the workspace status and Three.js inspector so each visual state clearly reports its current evidence level and the precise record needed to unlock the next level.
 - [x] Validate Level 1 public-footprint, Level 2 approved-height, and Level 3 authority-pending states without implying unavailable floor/BIM data.
 - [ ] Validate the three-level UI against a real authority-approved height record, confirming Level 2 renders an extrusion without implying official floor-plan/BIM data.
+- [x] Review the referenced BhuMap demo and document reusable 3D map, property-inspection, and cadastral-workflow patterns without copying its code, branding, or protected assets.
+- [x] Adapt compatible BhuMap-inspired 3D workflow patterns into original ULPIN-VPM controls while retaining source and authority-evidence safeguards.
+- [x] Validate the adapted 3D workflow controls on desktop and touch layouts.
+- [x] Interactively test the adapted property action dock at a true touch/mobile viewport, including focus, evidence intake, and operator access controls.
