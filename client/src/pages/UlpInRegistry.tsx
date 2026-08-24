@@ -15,6 +15,7 @@ import {
   ScanSearch,
   Search,
   ShieldCheck,
+  Star,
   Tag,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -27,11 +28,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-type RecordFilter = "all" | "area-available" | "area-unavailable";
+type RecordFilter = "all" | "area-available" | "area-unavailable" | "favorites";
 type RecordSort = "name-asc" | "name-desc" | "area-desc" | "area-asc";
 type SourceRecord = { properties: Record<string, unknown> };
 type PersonalAnnotation = { note: string; tags: string[] };
 const PERSONAL_ANNOTATIONS_STORAGE_KEY = "ulpin-vpm-personal-annotations-v1";
+const PERSONAL_FAVORITES_STORAGE_KEY = "ulpin-vpm-personal-favorites-v1";
 
 function footprintArea(feature: { properties: Record<string, unknown> }) {
   return typeof feature.properties.footprintAreaSquareMetres === "number"
@@ -62,6 +64,18 @@ function readPersonalAnnotations(): Record<string, PersonalAnnotation> {
   }
 }
 
+function readPersonalFavorites() {
+  try {
+    const stored = window.localStorage.getItem(PERSONAL_FAVORITES_STORAGE_KEY);
+    const parsed = stored ? JSON.parse(stored) : [];
+    return Array.isArray(parsed)
+      ? parsed.filter((value): value is string => typeof value === "string")
+      : [];
+  } catch {
+    return [];
+  }
+}
+
 export default function UlpInRegistry() {
   const [, setLocation] = useLocation();
   const sharedRecordId =
@@ -76,6 +90,9 @@ export default function UlpInRegistry() {
   const [personalAnnotations, setPersonalAnnotations] = useState<
     Record<string, PersonalAnnotation>
   >(readPersonalAnnotations);
+  const [personalFavorites, setPersonalFavorites] = useState<string[]>(
+    readPersonalFavorites
+  );
   const [noteDraft, setNoteDraft] = useState("");
   const [tagDraft, setTagDraft] = useState("");
   const [shareState, setShareState] = useState<"idle" | "copied">("idle");
@@ -121,7 +138,9 @@ export default function UlpInRegistry() {
         const matchesFilter =
           recordFilter === "all" ||
           (recordFilter === "area-available" && area !== null) ||
-          (recordFilter === "area-unavailable" && area === null);
+          (recordFilter === "area-unavailable" && area === null) ||
+          (recordFilter === "favorites" &&
+            personalFavorites.includes(String(feature.properties.ulpin ?? "")));
         return matchesSearch && matchesFilter;
       })
       .sort((left, right) => {
@@ -137,7 +156,7 @@ export default function UlpInRegistry() {
         if (recordSort === "area-asc") return leftArea - rightArea;
         return leftName.localeCompare(rightName);
       });
-  }, [query, recordFilter, recordSort, records]);
+  }, [personalFavorites, query, recordFilter, recordSort, records]);
   const visibleRecords = showAll
     ? filteredRecords
     : filteredRecords.slice(0, 8);
@@ -147,6 +166,20 @@ export default function UlpInRegistry() {
     setLocation(
       `/workspace?segment=buildings&site=${encodeURIComponent(ulpin)}`
     );
+  };
+  const toggleFavorite = (record: SourceRecord) => {
+    const recordId = recordText(record.properties.ulpin, "");
+    if (!recordId) return;
+    setPersonalFavorites(current => {
+      const next = current.includes(recordId)
+        ? current.filter(candidate => candidate !== recordId)
+        : [...current, recordId];
+      window.localStorage.setItem(
+        PERSONAL_FAVORITES_STORAGE_KEY,
+        JSON.stringify(next)
+      );
+      return next;
+    });
   };
   const exportFilteredRecords = () => {
     if (!filteredRecords.length) return;
@@ -404,6 +437,9 @@ export default function UlpInRegistry() {
                       aria-label="Filter ULPIN source records"
                     >
                       <option value="all">All records</option>
+                      <option value="favorites">
+                        Favorites ({personalFavorites.length})
+                      </option>
                       <option value="area-available">Area available</option>
                       <option value="area-unavailable">Area unavailable</option>
                     </select>
@@ -464,6 +500,8 @@ export default function UlpInRegistry() {
                     "number"
                       ? `${feature.properties.footprintAreaSquareMetres.toLocaleString()} m²`
                       : "Area unavailable";
+                  const recordId = String(feature.properties.ulpin ?? "");
+                  const isFavorite = personalFavorites.includes(recordId);
                   return (
                     <div
                       className="registry-table-row"
@@ -484,6 +522,27 @@ export default function UlpInRegistry() {
                         <i /> Public footprint only
                       </span>
                       <span className="registry-row-actions">
+                        <button
+                          type="button"
+                          className={isFavorite ? "is-favorite" : ""}
+                          onClick={() => toggleFavorite(feature)}
+                          title={
+                            isFavorite
+                              ? "Remove browser-local favorite"
+                              : "Save browser-local favorite"
+                          }
+                          aria-label={
+                            isFavorite
+                              ? `Remove ${name} from favorites`
+                              : `Add ${name} to favorites`
+                          }
+                        >
+                          <Star
+                            size={14}
+                            fill={isFavorite ? "currentColor" : "none"}
+                          />
+                          Favorite
+                        </button>
                         <button
                           type="button"
                           onClick={() => focusRecordOnMap(feature)}

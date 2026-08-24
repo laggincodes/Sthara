@@ -79,4 +79,22 @@ describe("dashboard usability controls", () => {
     expect(registrySource).toContain("/ulpin-registry?record=");
     expect(registrySource).toContain("handledSharedRecordRef");
   });
+
+  it("labels Cesium distance and area tools as visual approximations rather than survey evidence", () => {
+    expect(cesiumViewerSource).toContain("Visual measure");
+    expect(cesiumViewerSource).toContain("Approx. distance");
+    expect(cesiumViewerSource).toContain("Approx. area");
+    expect(cesiumViewerSource).toContain(
+      "Visual approximation only · not a GNSS, survey, or cadastral"
+    );
+    expect(cesiumViewerSource).toContain("measurement");
+    expect(cesiumViewerSource).toContain("clearMeasurement");
+  });
+
+  it("keeps Registry favorites browser-local and source-record scoped", () => {
+    expect(registrySource).toContain("PERSONAL_FAVORITES_STORAGE_KEY");
+    expect(registrySource).toContain("Favorites ({personalFavorites.length})");
+    expect(registrySource).toContain("Save browser-local favorite");
+    expect(registrySource).toContain("favorites");
+  });
 });

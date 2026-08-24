@@ -210,3 +210,7 @@
 - [x] Add Registry summary statistics for total source records, total available footprint area, and browser-local custom tag usage.
 - [x] Add a Details-modal share action that copies a direct source-record link with clear non-issued status.
 - [x] Add regression coverage and desktop/mobile validation for basemap, 3D view, statistics, and share-link workflows.
+- [x] Add a Cesium distance/area measurement mode labelled as an approximate visual aid rather than survey or cadastral evidence.
+- [x] Add browser-local favorites for ULPIN source records, with quick-access filtering that preserves their non-issued status.
+- [x] Add a persistent low-light appearance toggle for the dashboard.
+- [x] Add regression coverage and desktop/mobile validation for measurement, favorites, and appearance-mode workflows.

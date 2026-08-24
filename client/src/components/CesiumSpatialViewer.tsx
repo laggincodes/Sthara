@@ -6,6 +6,7 @@ import {
 } from "@shared/evidenceMapFilter";
 import type {
   Cartesian2 as CesiumCartesian2,
+  Cartesian3 as CesiumCartesian3,
   Entity as CesiumEntity,
   GeoJsonDataSource as CesiumGeoJsonDataSource,
   Viewer as CesiumViewer,
@@ -113,6 +114,7 @@ export function CesiumSpatialViewer({
     );
   }
   const {
+    Cartographic,
     Cartesian2,
     Cartesian3,
     Color,
@@ -120,6 +122,7 @@ export function CesiumSpatialViewer({
     ConstantProperty,
     defined,
     EllipsoidTerrainProvider,
+    EllipsoidGeodesic,
     Entity,
     GeoJsonDataSource,
     HeadingPitchRange,
@@ -129,6 +132,7 @@ export function CesiumSpatialViewer({
     PointGraphics,
     PolygonGraphics,
     PolygonHierarchy,
+    PolylineGraphics,
     ScreenSpaceEventType,
     Viewer,
   } = cesiumRuntime;
@@ -145,6 +149,9 @@ export function CesiumSpatialViewer({
   const syntheticDemoDataSourceRef = useRef<CesiumGeoJsonDataSource | null>(
     null
   );
+  const measurementEntitiesRef = useRef<CesiumEntity[]>([]);
+  const measurementPointsRef = useRef<CesiumCartesian3[]>([]);
+  const measurementModeRef = useRef<"off" | "distance" | "area">("off");
   const [viewerReady, setViewerReady] = useState(false);
   const [viewerState, setViewerState] = useState<
     "initializing" | "ready" | "error"
@@ -163,6 +170,12 @@ export function CesiumSpatialViewer({
   const [cameraView, setCameraView] = useState<"perspective" | "plan">(
     "perspective"
   );
+  const [measurementMode, setMeasurementMode] = useState<
+    "off" | "distance" | "area"
+  >("off");
+  const [measurementSummary, setMeasurementSummary] = useState<string | null>(
+    null
+  );
   const osmBuildingsEnabled = Boolean(
     import.meta.env.VITE_CESIUM_ION_ACCESS_TOKEN
   );
@@ -178,6 +191,28 @@ export function CesiumSpatialViewer({
     setViewerState("initializing");
     setViewerRetryKey(current => current + 1);
   };
+
+  const clearMeasurement = () => {
+    const viewer = viewerRef.current;
+    if (viewer) {
+      measurementEntitiesRef.current.forEach(entity =>
+        viewer.entities.remove(entity)
+      );
+      viewer.scene.requestRender();
+    }
+    measurementEntitiesRef.current = [];
+    measurementPointsRef.current = [];
+    setMeasurementSummary(null);
+  };
+
+  const toggleMeasurementMode = (nextMode: "distance" | "area") => {
+    clearMeasurement();
+    setMeasurementMode(current => (current === nextMode ? "off" : nextMode));
+  };
+
+  useEffect(() => {
+    measurementModeRef.current = measurementMode;
+  }, [measurementMode]);
 
   useEffect(() => {
     if (!containerRef.current || viewerRef.current) return;
@@ -233,8 +268,142 @@ export function CesiumSpatialViewer({
         Color.fromCssColorString("#e9ffff")
       );
     };
+    const removeMeasurementEntities = () => {
+      measurementEntitiesRef.current.forEach(entity =>
+        viewer.entities.remove(entity)
+      );
+      measurementEntitiesRef.current = [];
+    };
+    const metresBetween = (left: CesiumCartesian3, right: CesiumCartesian3) => {
+      const start = Cartographic.fromCartesian(left);
+      const end = Cartographic.fromCartesian(right);
+      return new EllipsoidGeodesic(start, end).surfaceDistance;
+    };
+    const approximateArea = (points: CesiumCartesian3[]) => {
+      if (points.length < 3) return 0;
+      const coordinates = points.map(point =>
+        Cartographic.fromCartesian(point)
+      );
+      const averageLatitude =
+        coordinates.reduce((sum, point) => sum + point.latitude, 0) /
+        coordinates.length;
+      const radius = 6_371_008.8;
+      const projected = coordinates.map(point => ({
+        x: point.longitude * Math.cos(averageLatitude) * radius,
+        y: point.latitude * radius,
+      }));
+      let doubledArea = 0;
+      projected.forEach((point, index) => {
+        const next = projected[(index + 1) % projected.length];
+        doubledArea += point.x * next.y - next.x * point.y;
+      });
+      return Math.abs(doubledArea) / 2;
+    };
+    const renderMeasurement = (
+      points: CesiumCartesian3[],
+      mode: "distance" | "area"
+    ) => {
+      removeMeasurementEntities();
+      points.forEach((point, index) => {
+        measurementEntitiesRef.current.push(
+          viewer.entities.add(
+            new Entity({
+              name: `Visual measurement point ${index + 1}`,
+              position: point,
+              point: new PointGraphics({
+                pixelSize: 10,
+                color: Color.fromCssColorString("#ffdc77"),
+                outlineColor: Color.fromCssColorString("#261b06"),
+                outlineWidth: 2,
+              }),
+              label: new LabelGraphics({
+                text: `M${index + 1}`,
+                font: "600 11px sans-serif",
+                fillColor: Color.fromCssColorString("#fff4cb"),
+                outlineColor: Color.fromCssColorString("#261b06"),
+                outlineWidth: 3,
+                pixelOffset: new Cartesian2(0, -18),
+              }),
+            })
+          )
+        );
+      });
+      if (points.length > 1) {
+        measurementEntitiesRef.current.push(
+          viewer.entities.add(
+            new Entity({
+              name: "Visual measurement path",
+              polyline: new PolylineGraphics({
+                positions: points,
+                width: 3,
+                material: new ColorMaterialProperty(
+                  Color.fromCssColorString("#ffdc77").withAlpha(0.92)
+                ),
+              }),
+            })
+          )
+        );
+      }
+      if (mode === "area" && points.length > 2) {
+        measurementEntitiesRef.current.push(
+          viewer.entities.add(
+            new Entity({
+              name: "Approximate visual area",
+              polygon: new PolygonGraphics({
+                hierarchy: new PolygonHierarchy(points),
+                material: new ColorMaterialProperty(
+                  Color.fromCssColorString("#ffdc77").withAlpha(0.18)
+                ),
+                outline: new ConstantProperty(true),
+                outlineColor: new ConstantProperty(
+                  Color.fromCssColorString("#fff4cb")
+                ),
+              }),
+            })
+          )
+        );
+      }
+      const totalDistance = points
+        .slice(1)
+        .reduce(
+          (sum, point, index) => sum + metresBetween(points[index], point),
+          0
+        );
+      if (mode === "distance" && points.length === 2) {
+        setMeasurementSummary(
+          `Approx. distance · ${totalDistance.toLocaleString(undefined, { maximumFractionDigits: 1 })} m`
+        );
+      } else if (mode === "area" && points.length > 2) {
+        setMeasurementSummary(
+          `Approx. area · ${approximateArea(points).toLocaleString(undefined, { maximumFractionDigits: 1 })} m² · perimeter ${totalDistance.toLocaleString(undefined, { maximumFractionDigits: 1 })} m`
+        );
+      } else {
+        setMeasurementSummary(
+          `${points.length} point${points.length === 1 ? "" : "s"} selected · ${mode === "area" ? "choose 3+ points" : "choose 2 points"}`
+        );
+      }
+      viewer.scene.requestRender();
+    };
     viewer.screenSpaceEventHandler.setInputAction(
       (movement: { position: CesiumCartesian2 }) => {
+        const activeMeasurementMode = measurementModeRef.current;
+        if (activeMeasurementMode !== "off") {
+          const position =
+            viewer.scene.pickPosition(movement.position) ??
+            viewer.camera.pickEllipsoid(
+              movement.position,
+              viewer.scene.globe.ellipsoid
+            );
+          if (!position) return;
+          const currentPoints = measurementPointsRef.current;
+          const nextPoints =
+            activeMeasurementMode === "distance" && currentPoints.length >= 2
+              ? [position]
+              : [...currentPoints, position];
+          measurementPointsRef.current = nextPoints;
+          renderMeasurement(nextPoints, activeMeasurementMode);
+          return;
+        }
         const picked = viewer.scene.pick(movement.position);
         const entity =
           defined(picked) && picked.id && typeof picked.id === "object"
@@ -870,6 +1039,32 @@ export function CesiumSpatialViewer({
               </button>
             </div>
           </section>
+          <section>
+            <span>Visual measure</span>
+            <div>
+              <button
+                type="button"
+                className={measurementMode === "distance" ? "active" : ""}
+                onClick={() => toggleMeasurementMode("distance")}
+              >
+                Distance
+              </button>
+              <button
+                type="button"
+                className={measurementMode === "area" ? "active" : ""}
+                onClick={() => toggleMeasurementMode("area")}
+              >
+                Area
+              </button>
+              <button
+                type="button"
+                disabled={!measurementSummary}
+                onClick={clearMeasurement}
+              >
+                Clear
+              </button>
+            </div>
+          </section>
         </div>
       )}
       <div className="cesium-status">
@@ -938,6 +1133,15 @@ export function CesiumSpatialViewer({
             <em>{focusSummary.areaLabel}</em>
             <i>Source record · not issued</i>
           </footer>
+        </div>
+      )}
+      {measurementMode !== "off" && (
+        <div className="cesium-measurement-summary" role="status">
+          <b>{measurementSummary ?? "Select points on the map to begin"}</b>
+          <span>
+            Visual approximation only · not a GNSS, survey, or cadastral
+            measurement
+          </span>
         </div>
       )}
     </div>

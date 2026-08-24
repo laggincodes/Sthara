@@ -35,6 +35,21 @@
   --radius: 14px;
   --nav-width: 250px;
 }
+:root:not(.dark) {
+  --background: #e7f1ef;
+  --foreground: #0d252a;
+  --card: #f5fbfa;
+  --card-foreground: #0d252a;
+  --border: rgba(14, 62, 66, 0.2);
+}
+:root:not(.dark) body {
+  background: #e7f1ef;
+}
+:root:not(.dark) .app-shell,
+:root:not(.dark) .workspace,
+:root:not(.dark) .registry-workspace {
+  filter: brightness(1.12) saturate(0.85);
+}
 
 * {
   box-sizing: border-box;
@@ -7073,5 +7088,45 @@ input:focus-visible {
     color: #d7f2ee;
     background: rgba(124, 155, 255, 0.13);
     border: 1px solid rgba(142, 171, 255, 0.38);
+  }
+}
+.cesium-measurement-summary {
+  position: absolute;
+  z-index: 10;
+  bottom: 82px;
+  left: 16px;
+  display: grid;
+  max-width: min(390px, calc(100% - 32px));
+  gap: 3px;
+  padding: 9px 10px;
+  color: #fff5cc;
+  background: rgba(43, 31, 8, 0.92);
+  border: 1px solid rgba(255, 220, 119, 0.55);
+  border-radius: 7px;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.28);
+  pointer-events: none;
+}
+.cesium-measurement-summary b {
+  font:
+    600 10px "Space Grotesk",
+    sans-serif;
+}
+.cesium-measurement-summary span {
+  color: #e5c980;
+  font:
+    7px "IBM Plex Mono",
+    monospace;
+  line-height: 1.35;
+}
+.registry-row-actions button.is-favorite {
+  color: #ffe199;
+  background: rgba(255, 206, 91, 0.13);
+  border-color: rgba(255, 206, 91, 0.38);
+}
+@media (max-width: 660px) {
+  .cesium-measurement-summary {
+    bottom: 58px;
+    left: 10px;
+    max-width: calc(100% - 20px);
   }
 }

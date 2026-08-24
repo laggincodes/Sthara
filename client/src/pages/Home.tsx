@@ -27,6 +27,7 @@ import {
   MapPinned,
   Maximize2,
   Menu,
+  Moon,
   MoreHorizontal,
   PanelRightOpen,
   Play,
@@ -36,6 +37,7 @@ import {
   Settings2,
   ShieldCheck,
   Sparkles,
+  Sun,
   Users,
   UploadCloud,
   X,
@@ -76,6 +78,7 @@ import {
 } from "../../../shared/evidenceMapFilter";
 import { filterIitPatnaAutocomplete } from "../../../shared/iitPatnaAutocomplete";
 import { useLocation } from "wouter";
+import { useTheme } from "@/contexts/ThemeContext";
 
 type LayerKey = "parcels" | "buildings" | "utilities" | "terrain";
 
@@ -199,6 +202,7 @@ function NavGroup({
 
 export default function Home() {
   const [, setLocation] = useLocation();
+  const { theme, toggleTheme } = useTheme();
   const [activeNav, setActiveNav] = useState("Mission control");
   const [activeFloor, setActiveFloor] = useState(4);
   const [isNavOpen, setIsNavOpen] = useState(false);
@@ -964,6 +968,23 @@ export default function Home() {
               <BrainCircuit size={17} />
               <span>Ask ULPIN intelligence</span>
               <kbd>⌘ K</kbd>
+            </button>
+            <button
+              className="icon-button"
+              type="button"
+              aria-label={
+                theme === "dark"
+                  ? "Switch to daylight appearance"
+                  : "Enable low-light dark mode"
+              }
+              title={
+                theme === "dark"
+                  ? "Switch to daylight appearance"
+                  : "Enable low-light dark mode"
+              }
+              onClick={toggleTheme}
+            >
+              {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
             </button>
             <button
               className="icon-button"
