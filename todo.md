@@ -124,3 +124,7 @@
 - [ ] Retrieve and independently validate the user-provided official IIT Patna Annual Report 2015–16 PDF at /images/pdf/IIT_Patna_Annual_Report%202015_16_English.pdf for Academic Block-4’s G+3 and 6,667.73 m² entry.
 - [ ] Update the Academic Block-4 evidence panel from source-cited to independently validated institutional evidence if the official PDF confirms the stated text, without assigning a surveyed height, GIS footprint, or ULPIN.
 - [ ] Re-test the refined Academic Block-4 evidence panel, source-aware facts, and preserved 3D/ULPIN locks on desktop and true mobile.
+- [x] Export a SIH-ready Academic Block-4 institutional evidence package in clean JSON and Markdown with explicit source availability and evidence limits.
+- [x] Summarize verification status for every IIT Patna institutional record currently displayed in the dashboard, without expanding claims to unshown buildings.
+- [x] Draft the SIH methodology describing evidence tiers and the locks for unverified height, GIS geometry, floor-plan/BIM, and vertical ULPIN metadata.
+- [ ] Validate the exports, checkpoint the submission package, and synchronize it to GitHub.

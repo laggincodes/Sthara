@@ -1,0 +1,66 @@
+{
+  "packageVersion": "1.0",
+  "preparedOn": "2026-08-24",
+  "institution": "Indian Institute of Technology Patna",
+  "scope": "Institution-level evidence only. This package does not create a parcel, legal owner, cadastral ULPIN, GIS polygon, or individual live-footprint match.",
+  "academicBlock4": {
+    "displayLabel": "Academic Block-4",
+    "evidenceTier": "source_cited_official_record_not_independently_retrievable",
+    "statedInstitutionalFacts": {
+      "storeys": "G+3 stated",
+      "totalFloorAreaSquareMetres": 6667.73,
+      "areaDescription": "Total floor area stated, not footprint area"
+    },
+    "officialSourceCitations": [
+      {
+        "label": "IIT Patna IWD Academic Area",
+        "url": "https://www.iitp.ac.in/iwd/index.php/academic-area",
+        "availabilityAtValidation": "Returned IIT Patna 404 page on 2026-08-24"
+      },
+      {
+        "label": "IIT Patna Annual Report 2015–16 — page 18 cited by user",
+        "url": "https://www.iitp.ac.in/images/pdf/IIT_Patna_Annual_Report%202015_16_English.pdf",
+        "availabilityAtValidation": "Returned IIT Patna 404 page on 2026-08-24"
+      },
+      {
+        "label": "IIT Patna Annual Reports index",
+        "url": "https://www.iitp.ac.in/administration/annual-reports",
+        "availabilityAtValidation": "Accessible; lists the 2015–16 English annual report publication"
+      }
+    ],
+    "independentValidationStatus": "The stated values have not been independently reread from a retrievable report page in this environment. They remain source-cited, not independently document-verified.",
+    "notEstablished": [
+      "An exact match to any Microsoft Global ML Building Footprint detection",
+      "An IIT Patna cadastral or surveyed GIS polygon",
+      "A surveyed building height in metres",
+      "An approved floor-plan or BIM file",
+      "A legal parcel, owner, cadastral ULPIN, or vertical ULPIN"
+    ],
+    "activeLocks": {
+      "cesiumMetreHeightExtrusion": "Locked pending a verified surveyed or authority-approved height in metres tied to an exact footprint.",
+      "floorByFloorModel": "Locked pending an official floor plan or BIM tied to the exact building and a verified footprint match.",
+      "verticalUlpIn": "Locked pending an approved vertical-property registration and the required Level 3 evidence."
+    }
+  },
+  "otherIitPatnaDashboardRecords": [
+    {
+      "displayLabel": "Boys' hostel building",
+      "evidenceTier": "independently_verified_institution_context",
+      "statedInstitutionalFacts": {
+        "storeys": "8 storeys",
+        "builtUpAreaSquareMetres": 28849,
+        "areaDescription": "Institution-level built-up area"
+      },
+      "source": "https://www.iitp.ac.in/hostels",
+      "geometryStatus": "Not matched to an individual live source footprint; not a height, parcel, owner, or ULPIN record."
+    },
+    {
+      "displayLabel": "IIT Patna reference-area live source footprints",
+      "evidenceTier": "level_1_public_footprint_only",
+      "count": 4,
+      "source": "Microsoft Global ML Building Footprints; individual public detections retained with source provenance",
+      "geometryStatus": "Live PostGIS geometry is available, but the detections are not assigned to named IIT buildings, campus boundaries, heights, floors, parcels, owners, or ULPINs."
+    }
+  ],
+  "coverageStatement": "No other named IIT Patna building records are currently displayed in the dashboard. The package therefore makes no verification claim for other Academic Blocks, administrative buildings, workshops, food court, quarters, hospital, gymkhana, bungalow, or G+6 residential building."
+}
