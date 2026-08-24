@@ -127,4 +127,4 @@
 - [x] Export a SIH-ready Academic Block-4 institutional evidence package in clean JSON and Markdown with explicit source availability and evidence limits.
 - [x] Summarize verification status for every IIT Patna institutional record currently displayed in the dashboard, without expanding claims to unshown buildings.
 - [x] Draft the SIH methodology describing evidence tiers and the locks for unverified height, GIS geometry, floor-plan/BIM, and vertical ULPIN metadata.
-- [ ] Validate the exports, checkpoint the submission package, and synchronize it to GitHub.
+- [x] Validate the exports, checkpoint the submission package, and synchronize it to GitHub.
