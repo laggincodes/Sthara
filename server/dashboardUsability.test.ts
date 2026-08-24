@@ -61,4 +61,22 @@ describe("dashboard usability controls", () => {
     expect(registrySource).toContain("not an official record");
     expect(registrySource).toContain("ulpin-vpm-personal-annotations-v1");
   });
+
+  it("provides satellite and street visual context plus dedicated perspective and plan-style 3D controls", () => {
+    expect(cesiumViewerSource).toContain("Basemap · visual context");
+    expect(cesiumViewerSource).toContain("Satellite");
+    expect(cesiumViewerSource).toContain("Street");
+    expect(cesiumViewerSource).toContain("Perspective");
+    expect(cesiumViewerSource).toContain("Plan view");
+    expect(cesiumViewerSource).toContain("visual context only");
+  });
+
+  it("summarizes source records and browser-local tags while providing direct non-issued record links", () => {
+    expect(registrySource).toContain("Total source records");
+    expect(registrySource).toContain("Total available footprint area");
+    expect(registrySource).toContain("Personal custom tags");
+    expect(registrySource).toContain("Copy direct link");
+    expect(registrySource).toContain("/ulpin-registry?record=");
+    expect(registrySource).toContain("handledSharedRecordRef");
+  });
 });

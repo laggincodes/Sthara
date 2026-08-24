@@ -3,6 +3,7 @@ import {
   ArrowDownAZ,
   ArrowUpAZ,
   ArrowLeft,
+  Clipboard,
   Database,
   Download,
   FileSearch,
@@ -16,7 +17,7 @@ import {
   ShieldCheck,
   Tag,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import {
   Dialog,
@@ -63,6 +64,8 @@ function readPersonalAnnotations(): Record<string, PersonalAnnotation> {
 
 export default function UlpInRegistry() {
   const [, setLocation] = useLocation();
+  const sharedRecordId =
+    new URLSearchParams(window.location.search).get("record") ?? "";
   const [query, setQuery] = useState("");
   const [recordFilter, setRecordFilter] = useState<RecordFilter>("all");
   const [recordSort, setRecordSort] = useState<RecordSort>("name-asc");
@@ -75,8 +78,26 @@ export default function UlpInRegistry() {
   >(readPersonalAnnotations);
   const [noteDraft, setNoteDraft] = useState("");
   const [tagDraft, setTagDraft] = useState("");
+  const [shareState, setShareState] = useState<"idle" | "copied">("idle");
+  const handledSharedRecordRef = useRef("");
   const geometry = trpc.postgis.geojson.useQuery();
   const records = geometry.data?.features ?? [];
+  const totalAvailableArea = useMemo(
+    () =>
+      records.reduce((sum, record) => sum + (footprintArea(record) ?? 0), 0),
+    [records]
+  );
+  const tagSummary = useMemo(() => {
+    const counts = new Map<string, number>();
+    Object.values(personalAnnotations).forEach(annotation => {
+      annotation.tags.forEach(tag =>
+        counts.set(tag, (counts.get(tag) ?? 0) + 1)
+      );
+    });
+    return Array.from(counts.entries()).sort(
+      (left, right) => right[1] - left[1]
+    );
+  }, [personalAnnotations]);
   const recordCountLabel = geometry.isLoading
     ? "Loading live source records…"
     : `${records.length} source-attributed footprints available for discovery`;
@@ -243,6 +264,41 @@ export default function UlpInRegistry() {
       `ulpin-source-record-${recordId.replaceAll(/[^a-z0-9_-]+/gi, "-")}.pdf`
     );
   };
+  const copyRecordLink = async () => {
+    if (!selectedRecordId) return;
+    const directLink = `${window.location.origin}/ulpin-registry?record=${encodeURIComponent(selectedRecordId)}`;
+    try {
+      await navigator.clipboard.writeText(directLink);
+    } catch {
+      const fallback = document.createElement("textarea");
+      fallback.value = directLink;
+      fallback.setAttribute("readonly", "");
+      fallback.style.position = "fixed";
+      fallback.style.opacity = "0";
+      document.body.appendChild(fallback);
+      fallback.select();
+      document.execCommand("copy");
+      fallback.remove();
+    }
+    setShareState("copied");
+    window.setTimeout(() => setShareState("idle"), 1800);
+  };
+
+  useEffect(() => {
+    if (
+      !sharedRecordId ||
+      selectedRecordId === sharedRecordId ||
+      handledSharedRecordRef.current === sharedRecordId
+    )
+      return;
+    const sharedRecord = records.find(
+      record => String(record.properties.ulpin ?? "") === sharedRecordId
+    );
+    if (sharedRecord) {
+      handledSharedRecordRef.current = sharedRecordId;
+      openRecordDetails(sharedRecord);
+    }
+  }, [records, selectedRecordId, sharedRecordId]);
 
   return (
     <main className="registry-workspace">
@@ -287,6 +343,37 @@ export default function UlpInRegistry() {
 
         <div className="registry-layout">
           <section className="registry-records">
+            <div
+              className="registry-summary-panel"
+              aria-label="Registry summary"
+            >
+              <article>
+                <span>Total source records</span>
+                <strong>{records.length.toLocaleString()}</strong>
+                <small>Traceability records · not issued ULPINs</small>
+              </article>
+              <article>
+                <span>Total available footprint area</span>
+                <strong>{totalAvailableArea.toLocaleString()} m²</strong>
+                <small>Sum of source-provided footprint areas only</small>
+              </article>
+              <article>
+                <span>Personal custom tags</span>
+                <strong>{tagSummary.length}</strong>
+                <small>Browser-local · non-authoritative</small>
+                <div>
+                  {tagSummary.length ? (
+                    tagSummary.slice(0, 4).map(([tag, count]) => (
+                      <i key={tag}>
+                        {tag} <b>×{count}</b>
+                      </i>
+                    ))
+                  ) : (
+                    <i>No custom tags yet</i>
+                  )}
+                </div>
+              </article>
+            </div>
             <div className="registry-records-heading">
               <div>
                 <p>Live source records</p>
@@ -620,6 +707,14 @@ export default function UlpInRegistry() {
               }}
             >
               <Download size={14} /> Download detail PDF
+            </button>
+            <button
+              type="button"
+              className="registry-detail-share"
+              onClick={() => void copyRecordLink()}
+            >
+              <Clipboard size={14} />
+              {shareState === "copied" ? "Link copied" : "Copy direct link"}
             </button>
             <span>
               <Info size={13} /> Issuance remains evidence-gated

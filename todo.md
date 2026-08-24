@@ -205,3 +205,8 @@
 - [x] Export an individual source-record detail report as a formatted PDF while preserving evidence-status safeguards.
 - [x] Add locally stored, non-authoritative personal notes and tags to the ULPIN source-record Details modal.
 - [x] Add regression coverage and desktop/mobile validation for selected geometry, individual PDF export, and personal annotations.
+- [x] Add a Cesium basemap switcher for satellite and street-map visual context without changing source-record evidence status.
+- [x] Enhance the Cesium 3D viewing presentation and camera controls for clearer selected-geometry context.
+- [x] Add Registry summary statistics for total source records, total available footprint area, and browser-local custom tag usage.
+- [x] Add a Details-modal share action that copies a direct source-record link with clear non-issued status.
+- [x] Add regression coverage and desktop/mobile validation for basemap, 3D view, statistics, and share-link workflows.

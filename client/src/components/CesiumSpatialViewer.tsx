@@ -125,6 +125,7 @@ export function CesiumSpatialViewer({
     HeadingPitchRange,
     Ion,
     LabelGraphics,
+    OpenStreetMapImageryProvider,
     PointGraphics,
     PolygonGraphics,
     PolygonHierarchy,
@@ -139,6 +140,7 @@ export function CesiumSpatialViewer({
     destroy?: () => void;
   } | null>(null);
   const imageryLayerRef = useRef<{ show: boolean } | null>(null);
+  const streetImageryLayerRef = useRef<{ show: boolean } | null>(null);
   const authorityMarkerRef = useRef<CesiumEntity | null>(null);
   const syntheticDemoDataSourceRef = useRef<CesiumGeoJsonDataSource | null>(
     null
@@ -154,6 +156,13 @@ export function CesiumSpatialViewer({
   const [imageryState, setImageryState] = useState<
     "loading" | "ready" | "unavailable"
   >("loading");
+  const [streetState, setStreetState] = useState<
+    "loading" | "ready" | "unavailable"
+  >("loading");
+  const [basemap, setBasemap] = useState<"satellite" | "street">("satellite");
+  const [cameraView, setCameraView] = useState<"perspective" | "plan">(
+    "perspective"
+  );
   const osmBuildingsEnabled = Boolean(
     import.meta.env.VITE_CESIUM_ION_ACCESS_TOKEN
   );
@@ -310,6 +319,21 @@ export function CesiumSpatialViewer({
     } else {
       setImageryState("unavailable");
     }
+    try {
+      const streetProvider = new OpenStreetMapImageryProvider({
+        url: "https://tile.openstreetmap.org/",
+      });
+      const streetLayer =
+        viewer.imageryLayers.addImageryProvider(streetProvider);
+      streetLayer.alpha = 0.94;
+      streetLayer.show = false;
+      streetImageryLayerRef.current = streetLayer;
+      setStreetState("ready");
+      viewer.scene.requestRender();
+    } catch (error) {
+      setStreetState("unavailable");
+      console.warn("[Cesium] Optional street-map layer unavailable", error);
+    }
     if (osmBuildingsEnabled) {
       void Promise.resolve(cesiumRuntime).then(
         async ({ createOsmBuildingsAsync }) => {
@@ -337,6 +361,7 @@ export function CesiumSpatialViewer({
       cancelled = true;
       osmBuildingsRef.current = null;
       imageryLayerRef.current = null;
+      streetImageryLayerRef.current = null;
       viewer.destroy();
       viewerRef.current = null;
       setViewerReady(false);
@@ -351,11 +376,39 @@ export function CesiumSpatialViewer({
   }, [layers.buildings]);
 
   useEffect(() => {
-    const imageryLayer = imageryLayerRef.current;
-    if (!imageryLayer) return;
-    imageryLayer.show = layers.terrain;
+    const satelliteLayer = imageryLayerRef.current;
+    const streetLayer = streetImageryLayerRef.current;
+    if (satelliteLayer)
+      satelliteLayer.show = layers.terrain && basemap === "satellite";
+    if (streetLayer) streetLayer.show = layers.terrain && basemap === "street";
     viewerRef.current?.scene.requestRender();
-  }, [layers.terrain]);
+  }, [basemap, layers.terrain, imageryState, streetState]);
+
+  const setMapView = (nextView: "perspective" | "plan") => {
+    const viewer = viewerRef.current;
+    if (!viewer) return;
+    const target = dataSourceRef.current;
+    setCameraView(nextView);
+    if (target) {
+      void viewer.flyTo(target, {
+        duration: 0.55,
+        offset:
+          nextView === "perspective"
+            ? new HeadingPitchRange(0.34, -0.72, 210)
+            : new HeadingPitchRange(0, -1.5, 420),
+      });
+      return;
+    }
+    viewer.camera.flyTo({
+      destination: Cartesian3.fromDegrees(85.054779, 25.6124294, 900),
+      orientation: {
+        heading: nextView === "perspective" ? 0.34 : 0,
+        pitch: nextView === "perspective" ? -0.72 : -1.5,
+        roll: 0,
+      },
+      duration: 0.55,
+    });
+  };
 
   useEffect(() => {
     const viewer = viewerRef.current;
@@ -772,6 +825,53 @@ export function CesiumSpatialViewer({
           </button>
         </div>
       )}
+      {viewerState === "ready" && (
+        <div
+          className="cesium-context-controls"
+          aria-label="Map context controls"
+        >
+          <section>
+            <span>Basemap · visual context</span>
+            <div>
+              <button
+                type="button"
+                className={basemap === "satellite" ? "active" : ""}
+                disabled={imageryState !== "ready"}
+                onClick={() => setBasemap("satellite")}
+              >
+                Satellite
+              </button>
+              <button
+                type="button"
+                className={basemap === "street" ? "active" : ""}
+                disabled={streetState !== "ready"}
+                onClick={() => setBasemap("street")}
+              >
+                Street
+              </button>
+            </div>
+          </section>
+          <section>
+            <span>3D camera</span>
+            <div>
+              <button
+                type="button"
+                className={cameraView === "perspective" ? "active" : ""}
+                onClick={() => setMapView("perspective")}
+              >
+                Perspective
+              </button>
+              <button
+                type="button"
+                className={cameraView === "plan" ? "active" : ""}
+                onClick={() => setMapView("plan")}
+              >
+                Plan view
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
       <div className="cesium-status">
         <i
           className={
@@ -785,7 +885,7 @@ export function CesiumSpatialViewer({
           : geometryQuery.isFetching
             ? "Refreshing PostGIS"
             : geometryQuery.data
-              ? `${geometryQuery.data.features.filter(feature => layers[featureLayer(feature.properties)] && matchesMapEvidenceFilter(feature.properties, evidenceFilter) && (!focusUlpins || focusUlpins.includes(feature.properties.ulpin))).length} visible / ${geometryQuery.data.features.length} live${osmBuildingsEnabled ? (imageryState === "ready" ? " · imagery + OSM 3D context" : imageryState === "loading" ? " · loading visual context" : " · OSM 3D context") : ""}`
+              ? `${geometryQuery.data.features.filter(feature => layers[featureLayer(feature.properties)] && matchesMapEvidenceFilter(feature.properties, evidenceFilter) && (!focusUlpins || focusUlpins.includes(feature.properties.ulpin))).length} visible / ${geometryQuery.data.features.length} live · ${basemap === "street" ? "street" : "satellite"} context${osmBuildingsEnabled ? (imageryState === "ready" ? " + OSM 3D context" : imageryState === "loading" ? " · loading visual context" : "") : ""}`
               : "Connecting to PostGIS"}
       </div>
       {osmBuildingsEnabled && (
@@ -799,9 +899,11 @@ export function CesiumSpatialViewer({
             OpenStreetMap contributors
           </a>{" "}
           ·{" "}
-          {imageryState === "ready"
-            ? "Cesium World Imagery + OSM buildings"
-            : "OSM buildings"}{" "}
+          {basemap === "street"
+            ? "OpenStreetMap street tiles"
+            : imageryState === "ready"
+              ? "Cesium World Imagery + OSM buildings"
+              : "OSM buildings"}{" "}
           · visual context only
         </div>
       )}

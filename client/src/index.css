@@ -2796,7 +2796,7 @@ input:focus-visible {
     #08151a;
 }
 .spatial-model-stage .cesium-spatial-viewer {
-  z-index: 1;
+  z-index: auto;
 }
 .spatial-stage-grid,
 .spatial-stage-vignette {
@@ -2896,6 +2896,10 @@ input:focus-visible {
   background: rgba(5, 15, 18, 0.78);
   border: 1px solid rgba(204, 237, 232, 0.16);
   border-radius: 7px;
+}
+.spatial-model-stage .cesium-context-controls {
+  top: 116px;
+  left: 70px;
 }
 .spatial-map-controls button {
   display: grid;
@@ -6927,5 +6931,147 @@ input:focus-visible {
     color: #e1fffa;
     background: rgba(42, 212, 217, 0.11);
     border: 1px solid rgba(42, 212, 217, 0.36);
+  }
+}
+.cesium-context-controls {
+  position: absolute;
+  z-index: 9;
+  top: 16px;
+  left: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  max-width: min(460px, calc(100% - 32px));
+}
+.cesium-context-controls section {
+  padding: 7px;
+  background: rgba(7, 23, 28, 0.94);
+  border: 1px solid rgba(141, 213, 207, 0.21);
+  border-radius: 7px;
+  box-shadow: 0 9px 24px rgba(0, 0, 0, 0.28);
+}
+.cesium-context-controls section > span {
+  display: block;
+  margin-bottom: 5px;
+  color: #90bdb6;
+  font:
+    600 7px "IBM Plex Mono",
+    monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.cesium-context-controls section > div {
+  display: flex;
+  gap: 4px;
+}
+.cesium-context-controls button {
+  padding: 5px 7px;
+  color: #a9c9c2;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(195, 233, 227, 0.13);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 8px;
+}
+.cesium-context-controls button:hover:not(:disabled),
+.cesium-context-controls button.active {
+  color: #032329;
+  background: #6de0d7;
+  border-color: #6de0d7;
+}
+.cesium-context-controls button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+.registry-summary-panel {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.registry-summary-panel article {
+  display: flex;
+  flex-direction: column;
+  min-height: 105px;
+  padding: 11px;
+  background: linear-gradient(
+    135deg,
+    rgba(42, 212, 217, 0.08),
+    rgba(14, 33, 38, 0.54)
+  );
+  border: 1px solid rgba(42, 212, 217, 0.18);
+  border-radius: 7px;
+}
+.registry-summary-panel article > span {
+  color: #9ab9b3;
+  font:
+    600 7px "IBM Plex Mono",
+    monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.registry-summary-panel article > strong {
+  margin-top: 6px;
+  color: #effffb;
+  font:
+    600 17px "Space Grotesk",
+    sans-serif;
+}
+.registry-summary-panel article > small {
+  margin-top: 3px;
+  color: #82a69f;
+  font-size: 8px;
+  line-height: 1.35;
+}
+.registry-summary-panel article > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: auto;
+  padding-top: 7px;
+}
+.registry-summary-panel article i {
+  color: #7fe3da;
+  font:
+    7px "IBM Plex Mono",
+    monospace;
+  font-style: normal;
+}
+.registry-summary-panel article i b {
+  color: #e5fffb;
+}
+.registry-detail-actions .registry-detail-share {
+  color: #d7f2ee;
+  background: rgba(124, 155, 255, 0.13);
+  border: 1px solid rgba(142, 171, 255, 0.38);
+}
+@media (max-width: 660px) {
+  .cesium-context-controls {
+    top: 10px;
+    left: 10px;
+    max-width: calc(100% - 20px);
+  }
+  .spatial-model-stage .cesium-context-controls {
+    top: 116px;
+    left: 58px;
+    max-width: calc(100% - 68px);
+  }
+  .cesium-context-controls section {
+    padding: 5px;
+  }
+  .cesium-context-controls button {
+    padding: 4px 5px;
+    font-size: 7px;
+  }
+  .registry-summary-panel {
+    grid-template-columns: 1fr;
+  }
+  .registry-summary-panel article {
+    min-height: 0;
+  }
+  .registry-detail-actions .registry-detail-share {
+    color: #d7f2ee;
+    background: rgba(124, 155, 255, 0.13);
+    border: 1px solid rgba(142, 171, 255, 0.38);
   }
 }
