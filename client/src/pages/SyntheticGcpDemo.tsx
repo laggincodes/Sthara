@@ -7,6 +7,7 @@ import {
   MapPinned,
   RotateCcw,
   ShieldAlert,
+  X,
 } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useLocation } from "wouter";
@@ -16,6 +17,7 @@ import {
   type MapCommand,
 } from "@/components/CesiumSpatialViewer";
 import { trpc } from "@/lib/trpc";
+import reraEvidence from "../../../submission/kusum-suresh-enclave-rera-evidence.json";
 
 const DEMO_LAYERS: CesiumLayerFlags = {
   parcels: true,
@@ -28,6 +30,14 @@ export default function SyntheticGcpDemo() {
   const [, setLocation] = useLocation();
   const demo = trpc.postgis.syntheticGcpDemo.useQuery();
   const [command, setCommand] = useState<MapCommand>(null);
+  const [viewMode, setViewMode] = useState<"2d" | "3d">(() =>
+    new URLSearchParams(window.location.search).get("view") === "2d"
+      ? "2d"
+      : "3d"
+  );
+  const [inspectorOpen, setInspectorOpen] = useState(
+    () => new URLSearchParams(window.location.search).get("inspect") === "rera"
+  );
   const issueCommand = useCallback((kind: NonNullable<MapCommand>["kind"]) => {
     setCommand({ kind, nonce: Date.now() });
   }, []);
@@ -49,6 +59,7 @@ export default function SyntheticGcpDemo() {
   }
 
   const feature = demo.data.geoJson.features[0];
+  const rera = reraEvidence.kusumSureshEnclave;
   return (
     <main className="synthetic-demo-workspace">
       <header className="synthetic-demo-topbar">
@@ -95,15 +106,116 @@ export default function SyntheticGcpDemo() {
               command={command}
               layers={DEMO_LAYERS}
               syntheticDemoFeature={feature}
+              syntheticDemoView={viewMode}
+              onSyntheticDemoSelect={() => setInspectorOpen(true)}
             />
+            <div className="synthetic-demo-map-badge" role="status">
+              <FlaskConical size={15} />
+              <span>
+                <b>DEMO / NON-AUTHORITATIVE</b>
+                <small>Synthetic GCP geometry · never a parcel boundary</small>
+              </span>
+            </div>
+            {inspectorOpen && (
+              <aside
+                className="synthetic-demo-map-inspector"
+                aria-label="RERA authority attributes"
+              >
+                <div className="synthetic-demo-map-inspector-heading">
+                  <span>
+                    <ShieldAlert size={16} /> Separate RERA authority record
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setInspectorOpen(false)}
+                    aria-label="Close RERA inspector"
+                  >
+                    <X size={15} />
+                  </button>
+                </div>
+                <strong>{rera.displayLabel}</strong>
+                <p>
+                  These are separately sourced RERA attributes. They do not
+                  validate the synthetic geometry currently selected.
+                </p>
+                <dl>
+                  <div>
+                    <dt>Plot / Mauza</dt>
+                    <dd>
+                      {rera.projectLocation.khesraPlot} ·{" "}
+                      {rera.projectLocation.mauza}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Circle / District</dt>
+                    <dd>{rera.projectLocation.anchal} · Patna</dd>
+                  </div>
+                  <div>
+                    <dt>Sanctioned floors</dt>
+                    <dd>
+                      {rera.statedAuthorityFacts.sanctionedFloorsSourceValue}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Land area</dt>
+                    <dd>
+                      {rera.statedAuthorityFacts.totalLandAreaSquareMetres.toLocaleString()}{" "}
+                      m²
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Covered area</dt>
+                    <dd>
+                      {rera.statedAuthorityFacts.coverageAreaSquareMetres.toLocaleString()}{" "}
+                      m²
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Built-up area</dt>
+                    <dd>
+                      {rera.statedAuthorityFacts.totalBuiltupAreaSquareMetres.toLocaleString()}{" "}
+                      m²
+                    </dd>
+                  </div>
+                </dl>
+                <small>
+                  Height, footprint, ownership, and vertical ULPIN remain locked
+                  pending independent authority evidence.
+                </small>
+              </aside>
+            )}
             <div className="synthetic-demo-map-actions">
+              <div
+                className="synthetic-demo-view-toggle"
+                aria-label="Synthetic geometry display"
+              >
+                <button
+                  type="button"
+                  aria-pressed={viewMode === "2d"}
+                  onClick={() => setViewMode("2d")}
+                >
+                  2D plan
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={viewMode === "3d"}
+                  onClick={() => setViewMode("3d")}
+                >
+                  3D prototype
+                </button>
+              </div>
               <button
                 type="button"
                 onClick={() => issueCommand("focus-synthetic-demo")}
               >
-                <RotateCcw size={14} /> Reset demo view
+                <RotateCcw size={14} /> Reset {viewMode === "3d" ? "3D" : "2D"}{" "}
+                view
               </button>
-              <small>Synthetic visual extrusion: 12 m test value only</small>
+              <small>
+                {viewMode === "3d"
+                  ? "12 m synthetic visual test only"
+                  : "Plan-style synthetic outline only"}
+              </small>
             </div>
           </div>
 

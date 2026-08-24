@@ -60,6 +60,8 @@ export function CesiumSpatialViewer({
   evidenceFilter = "all",
   authorityReference,
   syntheticDemoFeature,
+  syntheticDemoView = "3d",
+  onSyntheticDemoSelect,
   focusUlpins,
   onFeatureSelect,
 }: {
@@ -77,6 +79,8 @@ export function CesiumSpatialViewer({
     properties: Record<string, unknown>;
     geometry: { type: "Polygon"; coordinates: number[][][] };
   };
+  syntheticDemoView?: "2d" | "3d";
+  onSyntheticDemoSelect?: () => void;
   focusUlpins?: string[];
   onFeatureSelect?: (feature: {
     ulpin: string;
@@ -156,6 +160,17 @@ export function CesiumSpatialViewer({
           defined(picked) && picked.id && typeof picked.id === "object"
             ? (picked.id as Entity)
             : undefined;
+        const syntheticProperties = (entity?.properties?.getValue?.() ??
+          {}) as Record<string, unknown>;
+        if (entity && syntheticProperties.demoNonAuthoritative === true) {
+          viewer.selectedEntity = entity;
+          onSyntheticDemoSelect?.();
+          void viewer.flyTo(entity, {
+            duration: 0.35,
+            offset: new HeadingPitchRange(0.52, -0.42, 96),
+          });
+          return;
+        }
         const ulpin = entity?.properties?.ulpin?.getValue?.();
         if (!entity || typeof ulpin !== "string") return;
         const selectedEntity = entity;
@@ -424,14 +439,16 @@ export function CesiumSpatialViewer({
               ? properties.syntheticDemoExtrusionMetres
               : 0;
           entity.polygon.material = new ColorMaterialProperty(
-            Color.fromCssColorString("#f29c52").withAlpha(0.64)
+            Color.fromCssColorString("#f29c52").withAlpha(
+              syntheticDemoView === "3d" ? 0.64 : 0.82
+            )
           );
           entity.polygon.outline = new ConstantProperty(true);
           entity.polygon.outlineColor = new ConstantProperty(
             Color.fromCssColorString("#fff5ca")
           );
           entity.polygon.height = new ConstantProperty(0);
-          if (visualHeight > 0) {
+          if (visualHeight > 0 && syntheticDemoView === "3d") {
             entity.polygon.extrudedHeight = new ConstantProperty(visualHeight);
           }
         }
@@ -454,7 +471,10 @@ export function CesiumSpatialViewer({
             18
           ),
           label: new LabelGraphics({
-            text: "DEMO VOLUME\nNOT A BUILDING",
+            text:
+              syntheticDemoView === "3d"
+                ? "DEMO VOLUME\nNOT A BUILDING"
+                : "DEMO PLAN\nNOT A CADASTRAL BOUNDARY",
             font: "600 12px sans-serif",
             fillColor: Color.fromCssColorString("#fff5ca"),
             outlineColor: Color.fromCssColorString("#3f210d"),
@@ -479,7 +499,7 @@ export function CesiumSpatialViewer({
     return () => {
       cancelled = true;
     };
-  }, [syntheticDemoFeature, viewerReady]);
+  }, [syntheticDemoFeature, syntheticDemoView, viewerReady]);
 
   useEffect(() => {
     const viewer = viewerRef.current;
@@ -584,7 +604,8 @@ export function CesiumSpatialViewer({
       )}
       {syntheticDemoFeature && (
         <div className="cesium-synthetic-warning">
-          DEMO / NON-AUTHORITATIVE · synthetic geometry · no PostGIS write
+          <b>DEMO / NON-AUTHORITATIVE</b>
+          <span>Synthetic GCP geometry · not cadastral · no PostGIS write</span>
         </div>
       )}
     </div>

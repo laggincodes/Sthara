@@ -181,3 +181,7 @@
 - [x] Verify desktop/mobile 3D visual quality and DEMO/NON-AUTHORITATIVE safety labelling; checkpoint and synchronize the refinement.
 - [x] Enhance the Dept. of Land Resources · 3D ULPIN-VPM home page with clearer project messaging, stronger visual hierarchy, and polished links into the live spatial workflows.
 - [x] Verify the enhanced home page on desktop and mobile, preserve evidence-safe statements and working controls, then checkpoint and synchronize to GitHub.
+- [x] Add a synthetic-demo 3D model inspector that displays only separately sourced RERA attributes and explicitly states that the visible geometry is synthetic/non-authoritative.
+- [x] Add a synthetic-demo map control that switches between 2D plan-style geometry and the clearly labelled 3D prototype volume without implying a cadastral boundary.
+- [x] Add a prominent persistent DEMO / NON-AUTHORITATIVE overlay whenever synthetic GCP geometry is visible.
+- [x] Add regression coverage and desktop/mobile interaction verification for synthetic model inspection, 2D/3D switching, and retained evidence locks; checkpoint and synchronize.
