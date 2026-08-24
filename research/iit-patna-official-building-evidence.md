@@ -49,6 +49,8 @@ The project user supplied the current IIT Patna IWD Academic Area URL, `https://
 
 At the time of validation, the supplied IWD page and the current annual-report asset path each returned a 404 response, so the project could not independently re-read the claimed page text or page 18. The workspace therefore presents the values as **source-cited institution context**, links to the accessible official Annual Reports index, and explicitly states that the cited asset locations are currently unavailable. It does not assign these values to a Microsoft detection, an exact campus-plan position, a GIS polygon, a metre height, a legal parcel, an owner, or a ULPIN.
 
+The subsequently supplied alternate official asset path, `https://www.iitp.ac.in/images/pdf/IIT_Patna_Annual_Report%202015_16_English.pdf`, was also checked on 24 August 2026 and returned the IIT Patna website’s 404 page. The evidence status therefore remains **source-cited**, not independently verified from a retrievable report page. No further retrieval attempt is required unless IIT Patna restores a document asset or a copy of the original page is supplied.
+
 The separate Academic Block-4 evidence gate now makes the remaining requirements explicit: a verified block-to-footprint match, a surveyed height in metres for Cesium extrusion, and an official floor plan/BIM for floor-by-floor modelling and vertical ULPIN review.
 
 ## References
