@@ -624,15 +624,19 @@ export default function Home() {
       return;
     }
     if (label === "Parcels" || label === "ULPIN registry") {
-      setSearchQuery(
-        label === "Parcels" ? "Find parcel records" : "Find a 3D ULPIN record"
-      );
-      setSearchOpen(true);
+      if (label === "Parcels") {
+        setLocation(
+          `/workspace?segment=parcels&site=${encodeURIComponent(resolvedWorkspaceSite)}`
+        );
+      } else {
+        setSearchQuery("Find a 3D ULPIN record");
+        setSearchOpen(true);
+      }
       return;
     }
     if (label === "Buildings" || label === "Property volumes") {
       setLocation(
-        `/workspace?site=${encodeURIComponent(resolvedWorkspaceSite)}`
+        `/workspace?segment=buildings&site=${encodeURIComponent(resolvedWorkspaceSite)}`
       );
       return;
     }

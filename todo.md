@@ -159,3 +159,7 @@
 - [x] Inspect the supplied official Bihar RERA QR-code record for KUSUM SURESH ENCLAVE and compare only its explicit published facts with the existing authority audit.
 - [x] Revise the KUSUM SURESH ENCLAVE SIH demo so the 14.90 m value is unverified and all GCP, GeoJSON, footprint, Level 2, and Level 3 outputs remain locked until authoritative evidence is supplied.
 - [x] Replace the simulated 3D ULPIN issuance control with an evidence-eligibility gate so the SIH demo cannot imply an unregistered vertical ULPIN was created.
+- [x] Make the Parcels sidebar entry open a source-aware parcel/footprint exploration view with live records, provenance, and explicit unavailable states for unverified cadastral fields.
+- [x] Make the Buildings sidebar entry open a source-aware building-place exploration view that routes colleges, institutions, universities, restaurants, and other queries to live 3D geometry only when matched.
+- [x] Show geometry-backed footprint counts and areas for matched places while marking length, width, height, floors, ownership, parcel status, and ULPIN as unavailable unless separately evidenced.
+- [x] Add regression coverage and desktop/mobile verification for Parcels and Buildings navigation, matched-source results, and unmatched-place locks; checkpoint and synchronize the update.
