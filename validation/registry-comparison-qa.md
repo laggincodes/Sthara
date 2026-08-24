@@ -5,3 +5,4 @@
 - The direct Registry route renders the search, filter, export, and two-record comparison controls in a single mobile column. It waits for the live public source feed before listing records.
 - No validation image was read from the user-uploaded screenshot that they asked not to revisit.
 - The comparison remains source-context only; it does not issue a ULPIN or infer geometry, history, ownership, height, or legal status.
+- Public-domain spot check on 2026-08-24 confirmed that the published dashboard rendered the Cesium canvas and map controls without a `ReferenceError: Cesium is not defined`; the browser console was empty at review time.
