@@ -1,5 +1,6 @@
 import { CesiumSpatialViewer, type CesiumLayerFlags, type MapCommand } from "@/components/CesiumSpatialViewer";
 import { ThreeBuildingPreview, type ThreePreviewFeature } from "@/components/ThreeBuildingPreview";
+import { resolveBuildingEvidenceLevel } from "@/lib/buildingEvidenceLevel";
 import { trpc } from "@/lib/trpc";
 import { ArrowLeft, Box, Building2, CircleDot, Database, Layers3, Maximize2, Minus, Plus, ScanSearch, Settings2, ShieldAlert, ShieldCheck } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
@@ -22,6 +23,14 @@ const verticalLayers: Array<{ id: VerticalLayerId; order: string; label: string;
   { id: "unit", order: "03", label: "Floor & unit", shortLabel: "Floor / unit", description: "Vertical unit boundaries require an approved floor plan and registered ULPIN record.", evidence: "Plan required" },
   { id: "rights", order: "04", label: "Air & vertical rights", shortLabel: "Rights", description: "Rights volumes are displayed only from an explicit authority-linked record.", evidence: "Record required" },
   { id: "subsurface", order: "05", label: "Subsurface assets", shortLabel: "Subsurface", description: "Utility or underground layers require surveyed source evidence and depth metadata.", evidence: "Survey required" },
+];
+
+type EvidenceLevel = 1 | 2 | 3;
+
+const evidenceLevels: Array<{ level: EvidenceLevel; title: string; source: string; next: string; verticalLayer: VerticalLayerId }> = [
+  { level: 1, title: "Building outline", source: "OSM / public footprint", next: "Verified building-height record", verticalLayer: "surface" },
+  { level: 2, title: "Extruded 3D building", source: "Verified building height", next: "Official floor plan or BIM", verticalLayer: "envelope" },
+  { level: 3, title: "Vertical ULPIN model", source: "Official floor plan / BIM", next: "Vertical ULPIN registration", verticalLayer: "unit" },
 ];
 
 const sourceBackedSearchSuggestions = [
@@ -58,12 +67,19 @@ export default function SpatialWorkspace() {
     const feature = liveGeometry.data?.features.find(candidate => preferredUlpins.includes(candidate.properties.ulpin));
     return feature ? { ulpin: feature.properties.ulpin, geometry: feature.geometry, properties: feature.properties } : null;
   }, [liveGeometry.data, searchResult.data?.matchedUlpins, selected]);
+  const evidenceState = resolveBuildingEvidenceLevel(previewFeature?.properties);
+  const { hasOfficialFloorPlan, level: activeEvidenceLevel } = evidenceState;
+  const activeEvidence = evidenceLevels[activeEvidenceLevel - 1];
   const issueCommand = (kind: Exclude<MapCommand, null>["kind"]) => setCommand({ kind, nonce: Date.now() });
   const onFeatureSelect = useCallback((feature: SelectedFeature) => setSelected(feature), []);
 
   const activateVerticalLayer = (layer: VerticalLayerId) => {
     setVerticalLayer(layer);
     if (layer === "surface" || layer === "envelope") issueCommand("inspect-footprint");
+  };
+  const activateEvidenceLevel = (level: typeof evidenceLevels[number]) => {
+    setVerticalLayer(level.verticalLayer);
+    issueCommand(level.level === 1 ? "inspect-footprint" : "focus-site");
   };
 
   const submitSearch = (event: React.FormEvent<HTMLFormElement>) => {
@@ -107,20 +123,21 @@ export default function SpatialWorkspace() {
             <div className="spatial-stage-heading"><p>Source-backed building structure</p><h1>{resolveBuilding.isPending || searchResult.isLoading ? "Finding verified 3D geometry…" : (searchResult.data?.buildingCount ?? 0) > 0 ? searchResult.data?.siteLabel : `No verified 3D visual for “${siteQuery}”`}</h1><span><CircleDot size={13} /> {(searchResult.data?.buildingCount ?? 0) > 0 ? `${searchResult.data?.buildingCount} matched PostGIS footprints · camera focused on source geometry` : "Try a mapped site, ULPIN, parcel, or building record"} <b>·</b> EPSG:4326</span>{resolutionNote && <small className="spatial-resolution-note">{resolutionNote}</small>}</div>
             <div className="spatial-stage-actions"><button type="button" onClick={() => issueCommand("fullscreen")} aria-label="Expand 3D map"><Maximize2 size={17} /></button><button type="button" onClick={() => issueCommand("inspect-footprint")} aria-label="Inspect live footprint"><ScanSearch size={17} /></button></div>
             <div className="spatial-map-controls"><button type="button" onClick={() => issueCommand("zoom-in")} aria-label="Zoom in"><Plus size={17} /></button><button type="button" onClick={() => issueCommand("zoom-out")} aria-label="Zoom out"><Minus size={17} /></button><button type="button" onClick={() => issueCommand("north")} aria-label="Reset north">N</button></div>
-            <div className="spatial-order-panel" aria-label="Ordered vertical cadastre review layers">
-              <div className="spatial-order-panel-heading"><span><Box size={13} /> Ordered vertical review</span><b>{activeVerticalLayer.order} / 05</b></div>
+            <div className="spatial-order-panel spatial-evidence-panel" aria-label="Three-level building evidence model">
+              <div className="spatial-order-panel-heading"><span><Box size={13} /> Building evidence levels</span><b>LEVEL {activeEvidenceLevel} / 03</b></div>
               <div className="spatial-order-list">
-                {verticalLayers.map(layer => <button key={layer.id} type="button" className={verticalLayer === layer.id ? "active" : ""} onClick={() => activateVerticalLayer(layer.id)} aria-pressed={verticalLayer === layer.id}>
-                  <strong>{layer.order}</strong><span><b>{layer.shortLabel}</b><small>{layer.evidence}</small></span>
+                {evidenceLevels.map(level => <button key={level.level} type="button" className={activeEvidenceLevel === level.level ? "active" : activeEvidenceLevel > level.level ? "complete" : "pending"} onClick={() => activateEvidenceLevel(level)} aria-pressed={activeEvidenceLevel === level.level}>
+                  <strong>0{level.level}</strong><span><b>{level.title}</b><small>{activeEvidenceLevel === level.level ? `Active · ${level.source}` : activeEvidenceLevel > level.level ? `Complete · ${level.source}` : `Locked · ${level.next}`}</small></span>
                 </button>)}
               </div>
+              <small className="spatial-evidence-next">Next evidence: <b>{activeEvidenceLevel === 3 ? "vertical ULPIN registration record" : activeEvidence.next}</b></small>
             </div>
             <div className="spatial-selection-chip"><i /> {selected ? `Selected ${selected.ulpin}` : (searchResult.data?.buildingCount ?? 0) > 0 ? `${searchResult.data?.buildingCount} live building layers` : "No source-backed footprint returned"} <b>{searchResult.data?.totalFootprintAreaSquareMetres.toLocaleString() ?? "0"} m²</b></div>
             <div className="spatial-stage-footer"><span>50 m</span><span>LIVE POSTGIS · individual footprints only</span></div>
           </section>
 
           <aside className="spatial-dossier">
-            <div className="spatial-dossier-card"><div className="spatial-dossier-title"><div><p>Structure inspector</p><h2>{selected ? selectedName : "Source-backed 3D preview"}</h2></div><button type="button" onClick={() => issueCommand("inspect-footprint")} aria-label="Inspect a building footprint"><ScanSearch size={16} /></button></div><ThreeBuildingPreview feature={previewFeature} /><div className="spatial-vertical-profile" aria-label="Ordered vertical review profile">{verticalLayers.map(layer => <button type="button" className={`${verticalLayer === layer.id ? "active" : ""} ${layer.id === "surface" ? "live" : "pending"}`} key={layer.id} onClick={() => activateVerticalLayer(layer.id)}><span>{layer.order}</span><b>{layer.shortLabel}</b><i /></button>)}</div><div className="spatial-dossier-state"><span>{activeVerticalLayer.label} · {activeVerticalLayer.evidence}</span><strong>{activeVerticalLayer.description}</strong></div><dl><div><dt>Footprint area</dt><dd>{selected ? selectedArea : `${searchResult.data?.totalFootprintAreaSquareMetres.toLocaleString() ?? "0"} m²`}</dd></div><div><dt>3D height</dt><dd>{selected ? selectedHeight : `${searchResult.data?.approvedHeightCount ?? 0} approved`}</dd></div><div><dt>Ownership</dt><dd>{selected?.properties.ownershipLinked ? "Authority-linked" : "No inferred ownership"}</dd></div></dl>{selected && <button className="spatial-correct-button" type="button" onClick={() => setLocation(`/?editor=${encodeURIComponent(selected.ulpin)}`)}>Review source record</button>}</div>
+            <div className="spatial-dossier-card"><div className="spatial-dossier-title"><div><p>Structure inspector</p><h2>{selected ? selectedName : "Source-backed 3D preview"}</h2></div><button type="button" onClick={() => issueCommand("inspect-footprint")} aria-label="Inspect a building footprint"><ScanSearch size={16} /></button></div><ThreeBuildingPreview feature={previewFeature} /><div className="spatial-vertical-profile" aria-label="Ordered vertical review profile">{verticalLayers.map(layer => <button type="button" className={`${verticalLayer === layer.id ? "active" : ""} ${layer.id === "surface" ? "live" : "pending"}`} key={layer.id} onClick={() => activateVerticalLayer(layer.id)}><span>{layer.order}</span><b>{layer.shortLabel}</b><i /></button>)}</div><div className="spatial-dossier-state"><span>Level {activeEvidenceLevel} · {activeEvidence.source}</span><strong>{activeEvidenceLevel === 1 ? "Public footprint visual only. Add a verified building-height record to unlock the extruded building." : activeEvidenceLevel === 2 ? "Verified height unlocks the building extrusion. Add an official floor plan or BIM to unlock floor-by-floor geometry." : "Official floor-plan/BIM evidence supports a floor-by-floor model and vertical ULPIN review."}</strong></div><dl><div><dt>Footprint area</dt><dd>{selected ? selectedArea : `${searchResult.data?.totalFootprintAreaSquareMetres.toLocaleString() ?? "0"} m²`}</dd></div><div><dt>3D height</dt><dd>{selected ? selectedHeight : `${searchResult.data?.approvedHeightCount ?? 0} approved`}</dd></div><div><dt>Floor plan / BIM</dt><dd>{hasOfficialFloorPlan ? "Official evidence" : "Not attached"}</dd></div><div><dt>Ownership</dt><dd>{selected?.properties.ownershipLinked ? "Authority-linked" : "No inferred ownership"}</dd></div></dl>{selected && <button className="spatial-correct-button" type="button" onClick={() => setLocation(`/?editor=${encodeURIComponent(selected.ulpin)}`)}>Review source record</button>}</div>
             <div className="spatial-dossier-card spatial-layer-panel"><div className="spatial-dossier-title"><div><p>Spatial layers</p><h2>{activeLayerCount} of 4 active</h2></div><Layers3 size={17} /></div>{layerOptions.map(layer => <label key={layer.key}><span style={{ background: layer.color }} /><b>{layer.label}</b><input type="checkbox" checked={layers[layer.key]} onChange={() => setLayers(current => ({ ...current, [layer.key]: !current[layer.key] }))} /><i /></label>)}</div>
             <div className="spatial-source-note"><ShieldAlert size={15} /><span><strong>{osmBuildingsReady ? "OSM 3D context available" : "Source-footprint mode"}</strong><span className="source-note-muted">{osmBuildingsReady ? "OpenStreetMap-derived 3D buildings provide visual context around the selected place." : "Only the source-footprint layer is presently populated from live public geometry."} <b>They are not cadastral evidence.</b></span><span className="source-note-muted">Building height, floors, rights, utilities, ownership, and cadastral status require separate authority evidence.</span></span></div>
           </aside>

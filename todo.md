@@ -89,3 +89,7 @@
 - [x] Improve the IIT Patna matched-search presentation with a source-safe building-structure diagram and explicit authority-pending floor/height evidence state.
 - [x] Validate IIT Patna, authority-pending, and unknown-place visual states on desktop and touch layouts after the presentation improvement.
 - [x] Re-test the post-improvement workspace with an unknown or unmapped query on desktop and touch layouts, confirming no geometry/model state remains clear alongside the OSM context and structure-diagram UI.
+- [x] Formalize the user-defined three-level evidence model: Level 1 public footprint, Level 2 verified height extrusion, and Level 3 official floor-plan/BIM vertical ULPIN model.
+- [x] Update the workspace status and Three.js inspector so each visual state clearly reports its current evidence level and the precise record needed to unlock the next level.
+- [x] Validate Level 1 public-footprint, Level 2 approved-height, and Level 3 authority-pending states without implying unavailable floor/BIM data.
+- [ ] Validate the three-level UI against a real authority-approved height record, confirming Level 2 renders an extrusion without implying official floor-plan/BIM data.
