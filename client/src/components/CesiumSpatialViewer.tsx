@@ -31,7 +31,8 @@ export type MapCommand = {
     | "north"
     | "fullscreen"
     | "inspect-footprint"
-    | "focus-site";
+    | "focus-site"
+    | "focus-authority-reference";
   nonce: number;
 } | null;
 export type CesiumLayerFlags = {
@@ -56,12 +57,19 @@ export function CesiumSpatialViewer({
   command,
   layers,
   evidenceFilter = "all",
+  authorityReference,
   focusUlpins,
   onFeatureSelect,
 }: {
   command: MapCommand;
   layers: CesiumLayerFlags;
   evidenceFilter?: MapEvidenceFilter;
+  authorityReference?: {
+    latitude: number;
+    longitude: number;
+    label: string;
+    detail: string;
+  };
   focusUlpins?: string[];
   onFeatureSelect?: (feature: {
     ulpin: string;
@@ -76,6 +84,7 @@ export function CesiumSpatialViewer({
     destroy?: () => void;
   } | null>(null);
   const imageryLayerRef = useRef<{ show: boolean } | null>(null);
+  const authorityMarkerRef = useRef<Entity | null>(null);
   const [viewerReady, setViewerReady] = useState(false);
   const [imageryState, setImageryState] = useState<
     "loading" | "ready" | "unavailable"
@@ -235,6 +244,43 @@ export function CesiumSpatialViewer({
 
   useEffect(() => {
     const viewer = viewerRef.current;
+    if (!viewer) return;
+    if (authorityMarkerRef.current) {
+      viewer.entities.remove(authorityMarkerRef.current);
+      authorityMarkerRef.current = null;
+    }
+    if (!authorityReference) return;
+    const entity = viewer.entities.add(
+      new Entity({
+        name: authorityReference.label,
+        position: Cartesian3.fromDegrees(
+          authorityReference.longitude,
+          authorityReference.latitude,
+          10
+        ),
+        point: new PointGraphics({
+          pixelSize: 12,
+          color: Color.fromCssColorString("#eba760"),
+          outlineColor: Color.fromCssColorString("#fff2cf"),
+          outlineWidth: 2,
+        }),
+        label: new LabelGraphics({
+          text: authorityReference.label,
+          font: "600 12px sans-serif",
+          fillColor: Color.fromCssColorString("#fff2cf"),
+          outlineColor: Color.fromCssColorString("#321f0d"),
+          outlineWidth: 3,
+          pixelOffset: new Cartesian2(0, -22),
+        }),
+        description: authorityReference.detail,
+      })
+    );
+    authorityMarkerRef.current = entity;
+    viewer.scene.requestRender();
+  }, [authorityReference, viewerReady]);
+
+  useEffect(() => {
+    const viewer = viewerRef.current;
     const collection = geometryQuery.data;
     if (!viewer || !collection || !viewerReady) return;
     const filteredCollection = {
@@ -356,6 +402,15 @@ export function CesiumSpatialViewer({
           new HeadingPitchRange(0.22, -1.12, 980)
         );
       }
+    }
+    if (
+      command.kind === "focus-authority-reference" &&
+      authorityMarkerRef.current
+    ) {
+      void viewer.flyTo(authorityMarkerRef.current, {
+        duration: 0.7,
+        offset: new HeadingPitchRange(0.2, -0.9, 540),
+      });
     }
     if (command.kind === "fullscreen")
       void containerRef.current?.requestFullscreen?.();
