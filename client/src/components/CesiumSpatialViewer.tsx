@@ -32,7 +32,8 @@ export type MapCommand = {
     | "fullscreen"
     | "inspect-footprint"
     | "focus-site"
-    | "focus-authority-reference";
+    | "focus-authority-reference"
+    | "focus-synthetic-demo";
   nonce: number;
 } | null;
 export type CesiumLayerFlags = {
@@ -58,6 +59,7 @@ export function CesiumSpatialViewer({
   layers,
   evidenceFilter = "all",
   authorityReference,
+  syntheticDemoFeature,
   focusUlpins,
   onFeatureSelect,
 }: {
@@ -69,6 +71,11 @@ export function CesiumSpatialViewer({
     longitude: number;
     label: string;
     detail: string;
+  };
+  syntheticDemoFeature?: {
+    type: "Feature";
+    properties: Record<string, unknown>;
+    geometry: { type: "Polygon"; coordinates: number[][][] };
   };
   focusUlpins?: string[];
   onFeatureSelect?: (feature: {
@@ -85,6 +92,7 @@ export function CesiumSpatialViewer({
   } | null>(null);
   const imageryLayerRef = useRef<{ show: boolean } | null>(null);
   const authorityMarkerRef = useRef<Entity | null>(null);
+  const syntheticDemoDataSourceRef = useRef<GeoJsonDataSource | null>(null);
   const [viewerReady, setViewerReady] = useState(false);
   const [imageryState, setImageryState] = useState<
     "loading" | "ready" | "unavailable"
@@ -355,7 +363,7 @@ export function CesiumSpatialViewer({
       });
       dataSourceRef.current = dataSource;
       await viewer.dataSources.add(dataSource);
-      if (filteredCollection.features.length > 0) {
+      if (filteredCollection.features.length > 0 && !syntheticDemoFeature) {
         if (focusUlpins?.length) {
           await viewer.flyTo(dataSource, {
             duration: 0.7,
@@ -378,7 +386,70 @@ export function CesiumSpatialViewer({
     return () => {
       cancelled = true;
     };
-  }, [geometryQuery.data, layers, viewerReady, focusUlpins, evidenceFilter]);
+  }, [
+    geometryQuery.data,
+    layers,
+    viewerReady,
+    focusUlpins,
+    evidenceFilter,
+    syntheticDemoFeature,
+  ]);
+
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    if (!viewer || !viewerReady) return;
+    if (syntheticDemoDataSourceRef.current) {
+      viewer.dataSources.remove(syntheticDemoDataSourceRef.current, true);
+      syntheticDemoDataSourceRef.current = null;
+    }
+    if (!syntheticDemoFeature) return;
+    let cancelled = false;
+    const renderSyntheticDemo = async () => {
+      const dataSource = await GeoJsonDataSource.load(syntheticDemoFeature, {
+        clampToGround: false,
+        fill: Color.fromCssColorString("#ff9f43").withAlpha(0.28),
+        stroke: Color.fromCssColorString("#fff0b3"),
+        strokeWidth: 3,
+      });
+      if (cancelled) return;
+      dataSource.entities.values.forEach(entity => {
+        const properties = (entity.properties?.getValue?.() ?? {}) as Record<
+          string,
+          unknown
+        >;
+        entity.name = "DEMO · NON-AUTHORITATIVE geometry";
+        if (entity.polygon && properties.demoNonAuthoritative === true) {
+          const visualHeight =
+            typeof properties.syntheticDemoExtrusionMetres === "number"
+              ? properties.syntheticDemoExtrusionMetres
+              : 0;
+          entity.polygon.material = new ColorMaterialProperty(
+            Color.fromCssColorString("#ff9f43").withAlpha(0.46)
+          );
+          entity.polygon.outline = new ConstantProperty(true);
+          entity.polygon.outlineColor = new ConstantProperty(
+            Color.fromCssColorString("#fff0b3")
+          );
+          entity.polygon.height = new ConstantProperty(1);
+          if (visualHeight > 0) {
+            entity.polygon.extrudedHeight = new ConstantProperty(visualHeight);
+          }
+        }
+      });
+      syntheticDemoDataSourceRef.current = dataSource;
+      await viewer.dataSources.add(dataSource);
+      void viewer.flyTo(dataSource, {
+        duration: 0.65,
+        offset: new HeadingPitchRange(0.22, -0.92, 240),
+      });
+    };
+    void renderSyntheticDemo().catch(error =>
+      console.error("[Cesium] Failed to render synthetic demo geometry", error)
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [syntheticDemoFeature, viewerReady]);
 
   useEffect(() => {
     const viewer = viewerRef.current;
@@ -410,6 +481,15 @@ export function CesiumSpatialViewer({
       void viewer.flyTo(authorityMarkerRef.current, {
         duration: 0.7,
         offset: new HeadingPitchRange(0.2, -0.9, 540),
+      });
+    }
+    if (
+      command.kind === "focus-synthetic-demo" &&
+      syntheticDemoDataSourceRef.current
+    ) {
+      void viewer.flyTo(syntheticDemoDataSourceRef.current, {
+        duration: 0.65,
+        offset: new HeadingPitchRange(0.22, -0.92, 240),
       });
     }
     if (command.kind === "fullscreen")
@@ -470,6 +550,11 @@ export function CesiumSpatialViewer({
       {geometryQuery.error && (
         <div className="cesium-error">
           Live geometry unavailable. The connection will retry automatically.
+        </div>
+      )}
+      {syntheticDemoFeature && (
+        <div className="cesium-synthetic-warning">
+          DEMO / NON-AUTHORITATIVE · synthetic geometry · no PostGIS write
         </div>
       )}
     </div>

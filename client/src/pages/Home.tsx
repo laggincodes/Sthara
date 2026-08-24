@@ -20,6 +20,7 @@ import {
   FileUp,
   FileJson,
   FileText,
+  FlaskConical,
   Grid3X3,
   Layers3,
   Loader2,
@@ -1375,6 +1376,13 @@ export default function Home() {
                 onClick={() => issueMapCommand("focus-authority-reference")}
               >
                 <MapPinned size={13} /> Focus RERA endpoint reference
+              </button>
+              <button
+                className="rera-focus-button rera-demo-button"
+                type="button"
+                onClick={() => setLocation("/synthetic-gcp-demo")}
+              >
+                <FlaskConical size={13} /> Open synthetic GCP demo
               </button>
               <div className="rera-plan-review">
                 <div className="rera-plan-review-heading">

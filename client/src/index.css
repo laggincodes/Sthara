@@ -5703,3 +5703,306 @@ input:focus-visible {
     min-height: 0;
   }
 }
+.synthetic-demo-workspace {
+  min-height: 100vh;
+  color: #dff2ee;
+  background:
+    radial-gradient(
+      circle at 84% 6%,
+      rgba(226, 126, 52, 0.16),
+      transparent 30%
+    ),
+    #071116;
+}
+.synthetic-demo-loading {
+  display: grid;
+  place-content: center;
+  gap: 12px;
+  color: #e9b773;
+  font:
+    500 15px "Space Grotesk",
+    sans-serif;
+}
+.synthetic-demo-topbar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  min-height: 66px;
+  padding: 0 clamp(20px, 4vw, 54px);
+  border-bottom: 1px solid rgba(218, 235, 229, 0.1);
+}
+.synthetic-demo-topbar > div,
+.synthetic-demo-topbar button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.synthetic-demo-topbar > div {
+  justify-self: center;
+  color: #e6c38e;
+  font:
+    9px "IBM Plex Mono",
+    monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.synthetic-demo-topbar button {
+  width: fit-content;
+  padding: 8px 10px;
+  color: #d9e9e5;
+  background: rgba(245, 171, 84, 0.07);
+  border: 1px solid rgba(245, 171, 84, 0.24);
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 9px;
+}
+.synthetic-demo-topbar button:last-child {
+  justify-self: end;
+}
+.synthetic-demo-content {
+  width: min(1160px, calc(100% - 52px));
+  margin: 0 auto;
+  padding: 54px 0 70px;
+}
+.synthetic-demo-hero {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 32px;
+}
+.synthetic-demo-hero p,
+.synthetic-demo-result-heading p {
+  margin: 0;
+  color: #f6bf78;
+  font:
+    8px "IBM Plex Mono",
+    monospace;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+.synthetic-demo-hero h1 {
+  max-width: 620px;
+  margin: 8px 0 11px;
+  color: #f8eee2;
+  font:
+    600 clamp(35px, 5vw, 58px) / 0.98 "Space Grotesk",
+    sans-serif;
+}
+.synthetic-demo-hero > div:first-child > span {
+  display: block;
+  max-width: 700px;
+  color: #9cb2ad;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.synthetic-demo-lock,
+.synthetic-demo-persistence,
+.synthetic-demo-footnote {
+  display: flex;
+  gap: 10px;
+  padding: 13px;
+  color: #f5c886;
+  background: rgba(120, 67, 19, 0.16);
+  border: 1px solid rgba(244, 171, 84, 0.32);
+  border-radius: 9px;
+}
+.synthetic-demo-lock {
+  min-width: 275px;
+}
+.synthetic-demo-lock b,
+.synthetic-demo-lock small,
+.synthetic-demo-persistence b,
+.synthetic-demo-persistence small {
+  display: block;
+}
+.synthetic-demo-lock b,
+.synthetic-demo-persistence b {
+  font-size: 10px;
+}
+.synthetic-demo-lock small,
+.synthetic-demo-persistence small {
+  margin-top: 4px;
+  color: #b7aa98;
+  font-size: 8px;
+  line-height: 1.45;
+}
+.synthetic-demo-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(280px, 0.72fr);
+  gap: 14px;
+  margin-top: 34px;
+}
+.synthetic-demo-map-card,
+.synthetic-demo-results {
+  overflow: hidden;
+  background: rgba(10, 25, 30, 0.9);
+  border: 1px solid rgba(235, 189, 123, 0.2);
+  border-radius: 12px;
+}
+.synthetic-demo-map-card .cesium-spatial-viewer {
+  height: 480px;
+}
+.synthetic-demo-map-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(82, 43, 16, 0.25);
+}
+.synthetic-demo-map-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 9px;
+  color: #ffe4b9;
+  background: rgba(244, 171, 84, 0.13);
+  border: 1px solid rgba(244, 171, 84, 0.35);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 9px;
+}
+.synthetic-demo-map-actions small {
+  color: #b7a48d;
+  font-size: 8px;
+  text-align: right;
+}
+.synthetic-demo-results {
+  padding: 18px;
+}
+.synthetic-demo-result-heading b {
+  display: block;
+  margin-top: 7px;
+  color: #edf8f5;
+  font:
+    600 20px/1.1 "Space Grotesk",
+    sans-serif;
+}
+.synthetic-demo-results dl {
+  display: grid;
+  gap: 8px;
+  margin: 19px 0;
+}
+.synthetic-demo-results dl div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(223, 242, 238, 0.09);
+}
+.synthetic-demo-results dt {
+  color: #90a8a2;
+  font-size: 9px;
+}
+.synthetic-demo-results dd {
+  margin: 0;
+  color: #f4d09a;
+  font:
+    9px "IBM Plex Mono",
+    monospace;
+  text-align: right;
+}
+.synthetic-demo-persistence {
+  margin-top: 17px;
+}
+.synthetic-demo-lock-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 17px;
+  color: #aab7b2;
+  font-size: 9px;
+}
+.synthetic-demo-lock-list div {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.synthetic-demo-lock-list svg {
+  color: #ecb36c;
+}
+.synthetic-demo-footnote {
+  align-items: flex-start;
+  margin-top: 14px;
+}
+.synthetic-demo-footnote p {
+  margin: 0;
+  color: #c6b8a6;
+  font-size: 10px;
+  line-height: 1.5;
+}
+.cesium-synthetic-warning {
+  position: absolute;
+  right: 12px;
+  bottom: 32px;
+  z-index: 4;
+  padding: 6px 8px;
+  color: #fff0d2;
+  background: rgba(83, 40, 10, 0.88);
+  border: 1px solid rgba(255, 184, 96, 0.66);
+  border-radius: 5px;
+  font:
+    7px "IBM Plex Mono",
+    monospace;
+  letter-spacing: 0.06em;
+}
+@media (max-width: 760px) {
+  .synthetic-demo-topbar {
+    grid-template-columns: auto 1fr auto;
+    min-height: 56px;
+    padding: 0 12px;
+  }
+  .synthetic-demo-topbar > div {
+    justify-self: center;
+    font-size: 0;
+  }
+  .synthetic-demo-topbar > div svg {
+    width: 16px;
+    height: 16px;
+  }
+  .synthetic-demo-topbar button {
+    padding: 7px;
+    font-size: 0;
+  }
+  .synthetic-demo-topbar button svg {
+    width: 15px;
+    height: 15px;
+  }
+  .synthetic-demo-content {
+    width: min(100% - 26px, 560px);
+    padding: 32px 0 48px;
+  }
+  .synthetic-demo-hero {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .synthetic-demo-hero h1 {
+    font-size: 35px;
+  }
+  .synthetic-demo-lock {
+    min-width: 0;
+  }
+  .synthetic-demo-grid {
+    grid-template-columns: 1fr;
+    margin-top: 24px;
+  }
+  .synthetic-demo-map-card .cesium-spatial-viewer {
+    height: 390px;
+  }
+  .synthetic-demo-map-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .synthetic-demo-map-actions button {
+    justify-content: center;
+  }
+  .synthetic-demo-map-actions small {
+    text-align: left;
+  }
+  .cesium-synthetic-warning {
+    right: 8px;
+    bottom: 28px;
+    max-width: 220px;
+    font-size: 6.5px;
+  }
+}
