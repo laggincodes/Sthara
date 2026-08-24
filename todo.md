@@ -141,3 +141,7 @@
 - [x] Add the RERA-backed G+4, 14.90 m, area, and sanctioned-plan evidence as a distinct authority test record without treating the labelled endpoint coordinate as a footprint polygon.
 - [x] Unlock only the verified-height evidence state after a defensible source-footprint match; otherwise retain the Cesium extrusion and vertical ULPIN geometry locks.
 - [x] Validate the RERA authority evidence and all retained locks on desktop and true mobile; checkpoint and synchronize the implementation.
+- [ ] Locate and retrieve any official Bihar RERA sanctioned building/layout plan document for KUSUM SURESH ENCLAVE from the project record’s document section.
+- [ ] Inspect the actual sanctioned-plan material for a defensible closed building footprint or sanctioned geometry, without deriving a polygon from the endpoint coordinate or document-list text alone.
+- [ ] Match and import a plan-supported footprint only if the plan can be georeferenced or unambiguously reconciled to licensed source geometry; otherwise retain all footprint/extrusion locks.
+- [ ] Document the sanctioned-plan retrieval outcome, validate any permissible update, checkpoint, and synchronize it to GitHub.

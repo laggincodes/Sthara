@@ -25,3 +25,11 @@ The record contains links to land and supporting records, including mutation-cor
 ## Evidence decision
 
 The project record can populate a distinct **authority-backed, geometry-pending test record**. It provides source-cited floors, height, coverage, and project/plot context. It does **not** approve a live Cesium extrusion unless the record is matched to a sourced or sanctioned building footprint. It also does not meet Level 3 because a reviewed official floor plan/BIM tied to an exact footprint and an approved vertical-property record have not been established.
+
+## Sanctioned-plan retrieval investigation
+
+The user requested retrieval of the KUSUM SURESH ENCLAVE sanctioned building/layout plan from the official RERA document section. The browser was able to extract the project record but returned an abbreviated document table showing land-record links; the page subsequently closed the browser connection. Text extraction of the same official URL also ended before the full document table. Therefore, a document-list label alone has not been used as footprint evidence.
+
+For document-path discovery only, the related—but distinct—official RERA record `RERAP125201800396-3` was reviewed. It exposes its own project documents under the official path format `https://rera.bihar.gov.in/All_Document/RERAP125201800396RERAP125201800396-3<document-name>.pdf`. This establishes a filename convention but supplies **no geometry, fact, or plan evidence** for KUSUM SURESH ENCLAVE. Only the `-5` project-specific official files may be retrieved or assessed for the current record.
+
+On 24 August 2026, the project-specific candidate `RERAP125201800396RERAP125201800396-5SanctionedBuildingPlan.pdf` was attempted through three non-invasive retrieval methods. The RERA host returned TLS/connection-closed failures through direct retrieval, no extractable document content through text retrieval, and `ERR_CONNECTION_CLOSED` in the browser. No plan PDF or image was obtained, and no candidate filename was treated as proof that the file exists. The dashboard therefore continues to show the RERA endpoint as a reference marker only, with footprint, extrusion, floor-model, and vertical ULPIN locks retained.
