@@ -1011,9 +1011,70 @@ export default function Home() {
             </div>
             <div className="sync-card">
               <Check size={15} />
-              <span>All sources synchronized</span>
-              <small>08:32 IST</small>
+              <span>Evidence-aware workspace</span>
+              <small>live source checks</small>
             </div>
+          </section>
+
+          <section
+            className="home-mission-rail"
+            aria-label="3D ULPIN-VPM workflow"
+          >
+            <div className="home-mission-rail-intro">
+              <p className="section-kicker">One accountable workflow</p>
+              <strong>
+                Move from spatial context to property review without crossing
+                the evidence line.
+              </strong>
+            </div>
+            <button
+              type="button"
+              onClick={() =>
+                setLocation(
+                  `/workspace?site=${encodeURIComponent(resolvedWorkspaceSite)}`
+                )
+              }
+            >
+              <MapPinned size={17} />
+              <span>
+                <b>01 · Context</b>
+                <small>Explore source-linked 3D geometry</small>
+              </span>
+              <ArrowUpRight size={15} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setLocation("/workspace?segment=parcels")}
+            >
+              <Box size={17} />
+              <span>
+                <b>02 · Footprints</b>
+                <small>Review public source geometry</small>
+              </span>
+              <ArrowUpRight size={15} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setLocation("/property-volumes")}
+            >
+              <Layers3 size={17} />
+              <span>
+                <b>03 · Evidence</b>
+                <small>Check the Level 1–3 volume gates</small>
+              </span>
+              <ArrowUpRight size={15} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setLocation("/ulpin-registry")}
+            >
+              <ShieldCheck size={17} />
+              <span>
+                <b>04 · Registry</b>
+                <small>Review issuance eligibility</small>
+              </span>
+              <ArrowUpRight size={15} />
+            </button>
           </section>
 
           <section
@@ -1044,17 +1105,26 @@ export default function Home() {
                 clouds, floor plans, GNSS/CORS control, and DEM/DSM data into
                 auditable 3D property records.
               </p>
-              <button
-                className="primary-button"
-                type="button"
-                onClick={() =>
-                  setLocation(
-                    `/workspace?site=${encodeURIComponent(resolvedWorkspaceSite)}`
-                  )
-                }
-              >
-                Open live 3D workspace <ArrowUpRight size={16} />
-              </button>
+              <div className="home-spatial-hero-actions">
+                <button
+                  className="primary-button"
+                  type="button"
+                  onClick={() =>
+                    setLocation(
+                      `/workspace?site=${encodeURIComponent(resolvedWorkspaceSite)}`
+                    )
+                  }
+                >
+                  Open live 3D workspace <ArrowUpRight size={16} />
+                </button>
+                <button
+                  className="hero-secondary-action"
+                  type="button"
+                  onClick={() => setLocation("/property-volumes")}
+                >
+                  Review evidence gates <Layers3 size={15} />
+                </button>
+              </div>
             </div>
             <div className="home-spatial-hero-metrics">
               <span>

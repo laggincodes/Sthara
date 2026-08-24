@@ -179,3 +179,5 @@
 - [x] Add regression tests for synthetic-data labelling, transform validity, no-persistence behavior, and retained evidence locks; validate, checkpoint, and synchronize.
 - [x] Refine the synthetic GCP Cesium presentation with prototype-only camera framing, material treatment, ground contact, and label hierarchy without adding architectural or authority claims.
 - [x] Verify desktop/mobile 3D visual quality and DEMO/NON-AUTHORITATIVE safety labelling; checkpoint and synchronize the refinement.
+- [x] Enhance the Dept. of Land Resources · 3D ULPIN-VPM home page with clearer project messaging, stronger visual hierarchy, and polished links into the live spatial workflows.
+- [x] Verify the enhanced home page on desktop and mobile, preserve evidence-safe statements and working controls, then checkpoint and synchronize to GitHub.

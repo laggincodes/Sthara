@@ -46,6 +46,17 @@ describe("Parcels and Buildings explorer navigation", () => {
     expect(registrySource).toContain("Issued vertical ULPINs");
   });
 
+  it("keeps the home-page operational journey linked to the four evidence-safe workflows", () => {
+    expect(homePageSource).toContain("One accountable workflow");
+    expect(homePageSource).toContain("01 · Context");
+    expect(homePageSource).toContain("02 · Footprints");
+    expect(homePageSource).toContain("03 · Evidence");
+    expect(homePageSource).toContain("04 · Registry");
+    expect(homePageSource).toContain("/workspace?segment=parcels");
+    expect(homePageSource).toContain('setLocation("/property-volumes")');
+    expect(homePageSource).toContain('setLocation("/ulpin-registry")');
+  });
+
   it("keeps the registry action as an eligibility review rather than unverified issuance", () => {
     expect(registrySource).toContain("Review eligibility");
     expect(registrySource).toContain("Issuance locked");
