@@ -185,3 +185,4 @@
 - [x] Add a synthetic-demo map control that switches between 2D plan-style geometry and the clearly labelled 3D prototype volume without implying a cadastral boundary.
 - [x] Add a prominent persistent DEMO / NON-AUTHORITATIVE overlay whenever synthetic GCP geometry is visible.
 - [x] Add regression coverage and desktop/mobile interaction verification for synthetic model inspection, 2D/3D switching, and retained evidence locks; checkpoint and synchronize.
+- [x] Verify the implemented 3D ULPIN-VPM demonstration against the stated DoLR project objectives, clearly distinguishing delivered prototype capabilities from authority-evidence-dependent production functions; confirm GitHub synchronization.
