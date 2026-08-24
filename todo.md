@@ -167,3 +167,8 @@
 - [x] Improve the ULPIN registry workspace so it clearly distinguishes source records from issued vertical ULPINs and offers useful, evidence-safe discovery actions.
 - [x] Review the Generate ULPIN flow end to end and ensure it visibly remains an evidence-eligibility gate rather than implying issuance without validated Level 3 evidence.
 - [x] Validate desktop/mobile navigation for all four controls, add regression coverage, checkpoint, and synchronize the refinement.
+- [x] Investigate public, official Bihar BhuNaksha access for selected cadastral parcel boundaries and Plot Info, preserving an unavailable state where the portal cannot expose a specific record.
+- [x] Investigate public, official BiharBhumi access for non-sensitive Jamabandi/LPC or land-record references, without exposing or asserting private ownership data.
+- [x] Investigate public Patna Municipal Corporation AutoMAP evidence for approved-plan or plot-GIS references and identify whether a specific approved footprint can be lawfully retrieved.
+- [x] Investigate Survey of India CORS public reference material and document that coordinates/control points must come from an authorized survey workflow rather than generated estimates.
+- [x] Integrate only retrieved authority-source links, metadata, and defensible records; test, checkpoint, and synchronize any evidence-backed update.

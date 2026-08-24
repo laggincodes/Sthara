@@ -18,6 +18,10 @@ const registrySource = readFileSync(
   resolve(process.cwd(), "client/src/pages/UlpInRegistry.tsx"),
   "utf8"
 );
+const officialSourceAudit = readFileSync(
+  resolve(process.cwd(), "research/official-bihar-data-sources-audit.md"),
+  "utf8"
+);
 
 describe("Parcels and Buildings explorer navigation", () => {
   it("routes sidebar selections into their distinct source-aware explorer segments", () => {
@@ -50,5 +54,20 @@ describe("Parcels and Buildings explorer navigation", () => {
     );
     expect(homePageSource).toContain('get("issue") === "eligibility"');
     expect(homePageSource).toContain("3D ULPIN issuance locked");
+  });
+
+  it("shows official data-access routes without claiming an unavailable Digha Plot 808 parcel record", () => {
+    expect(propertyVolumesSource).toContain("officialDataRoutes");
+    expect(propertyVolumesSource).toContain(
+      "BhuNaksha · Digha cadastral workflow"
+    );
+    expect(propertyVolumesSource).toContain(
+      "Plot 808 returned no visible result during review"
+    );
+    expect(propertyVolumesSource).toContain(
+      "No parcel boundary, holder, area, or ULPIN imported."
+    );
+    expect(officialSourceAudit).toContain("Patna Rural");
+    expect(officialSourceAudit).toContain("remained in a loading state");
   });
 });
