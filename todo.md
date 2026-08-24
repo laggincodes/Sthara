@@ -193,3 +193,4 @@
 - [x] Create a downloadable, Git-excluded non-secret `.env` template that documents the project environment-variable names with safe placeholders.
 - [x] Prepare a secure Vercel deployment handoff: identify required environment variables, document managed-platform dependencies, and assess serverless compatibility without exposing secrets.
 - [ ] Fix the published-site `ReferenceError: Cesium is not defined` failure and validate the deployed 3D map runtime.
+- [x] Create a detailed Hindi SIH project-guide PDF covering workflow, real-world applications, architecture, stack, APIs, source references, differentiators, safeguards, and jury Q&A.

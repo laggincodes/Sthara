@@ -1,0 +1,15 @@
+{
+  "task_kind": "new-document",
+  "output": "pdf",
+  "signals": [],
+  "hard_constraints": [
+    "Hindi-first explanatory report with English technical terms",
+    "Professional SIH hackathon documentation",
+    "Evidence-safe distinction between prototype capabilities and authority-issued records"
+  ],
+  "content_features": {
+    "code_blocks": 0,
+    "defined_terms": 18,
+    "portrait_images": 0
+  }
+}
