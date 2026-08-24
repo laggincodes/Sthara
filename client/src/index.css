@@ -4220,6 +4220,125 @@ input:focus-visible {
 .spatial-dossier .spatial-source-note {
   margin-top: 0;
 }
+.explorer-segment-card {
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(42, 212, 217, 0.2);
+  background:
+    linear-gradient(145deg, rgba(24, 52, 60, 0.48), rgba(12, 24, 30, 0.94)),
+    #0d171d;
+}
+.explorer-segment-card::after {
+  content: "";
+  position: absolute;
+  right: -70px;
+  top: -84px;
+  width: 210px;
+  height: 210px;
+  border: 1px solid rgba(42, 212, 217, 0.15);
+  border-radius: 50%;
+  box-shadow: 0 0 0 34px rgba(42, 212, 217, 0.025);
+  pointer-events: none;
+}
+.explorer-segment-card > * {
+  position: relative;
+  z-index: 1;
+}
+.explorer-segment-card .spatial-dossier-title > svg {
+  color: #73e7e6;
+}
+.explorer-segment-copy {
+  margin: 10px 0 13px;
+  color: #a4bab6;
+  font-size: 10px;
+  line-height: 1.5;
+}
+.explorer-segment-card dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  margin: 0 0 11px;
+}
+.explorer-segment-card dl div {
+  min-width: 0;
+  padding: 8px;
+  background: rgba(4, 13, 17, 0.38);
+  border: 1px solid rgba(204, 237, 232, 0.09);
+  border-radius: 7px;
+}
+.explorer-segment-card dt {
+  color: #809692;
+  font:
+    8px "IBM Plex Mono",
+    monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.explorer-segment-card dd {
+  margin: 4px 0 0;
+  overflow: hidden;
+  color: #e4f5f2;
+  font:
+    600 12px "Space Grotesk",
+    sans-serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.explorer-segment-card .spatial-institution-lock {
+  margin-top: 0;
+}
+.explorer-record-list {
+  display: grid;
+  gap: 5px;
+  margin-top: 12px;
+}
+.explorer-record-list > b {
+  color: #d6ece8;
+  font-size: 10px;
+}
+.explorer-record-list button {
+  display: grid;
+  gap: 3px;
+  width: 100%;
+  padding: 8px 9px;
+  color: #dff2ef;
+  background: rgba(8, 20, 25, 0.56);
+  border: 1px solid rgba(204, 237, 232, 0.1);
+  border-radius: 7px;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    transform 160ms ease,
+    background 160ms ease,
+    border-color 160ms ease;
+}
+.explorer-record-list button:hover {
+  background: rgba(27, 89, 96, 0.32);
+  border-color: rgba(42, 212, 217, 0.42);
+  transform: translateX(2px);
+}
+.explorer-record-list button:active {
+  transform: scale(0.98);
+}
+.explorer-record-list button span {
+  overflow: hidden;
+  font-size: 10px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.explorer-record-list button small,
+.explorer-empty-records {
+  color: #8fa7a2;
+  font:
+    8.5px "IBM Plex Mono",
+    monospace;
+}
+@media (max-width: 620px) {
+  .explorer-segment-card dl {
+    grid-template-columns: 1fr;
+  }
+}
 .spatial-evidence-panel .spatial-order-list button.complete {
   opacity: 0.74;
 }
