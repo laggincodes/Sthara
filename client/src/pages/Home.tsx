@@ -16,6 +16,7 @@ import {
   ChevronRight,
   CircleDot,
   Database,
+  FileDown,
   FileUp,
   FileJson,
   FileText,
@@ -67,6 +68,12 @@ import {
   replacePolygonVertex,
 } from "../../../shared/footprintGeometryEditing";
 import academicBlock4Evidence from "../../../submission/academic-block-4-institutional-evidence.json";
+import { buildAcademicBlock4PdfLines } from "../../../shared/academicBlock4PdfContent";
+import {
+  getMapEvidenceFilterLabel,
+  type MapEvidenceFilter,
+} from "../../../shared/evidenceMapFilter";
+import { filterIitPatnaAutocomplete } from "../../../shared/iitPatnaAutocomplete";
 import { useLocation } from "wouter";
 
 type LayerKey = "parcels" | "buildings" | "utilities" | "terrain";
@@ -220,6 +227,9 @@ export default function Home() {
   const [placeSearchRationale, setPlaceSearchRationale] = useState<
     string | null
   >(null);
+  const [evidenceFilter, setEvidenceFilter] =
+    useState<MapEvidenceFilter>("all");
+  const [autocompleteOpen, setAutocompleteOpen] = useState(false);
   const resolvedWorkspaceSite =
     areaSearchQuery.trim() || "Amity University Patna";
   const [sourceGeometry, setSourceGeometry] = useState("");
@@ -408,6 +418,10 @@ export default function Home() {
     areaSearch.data && areaSearch.data.buildingCount > 0
   );
   const academicBlock4 = academicBlock4Evidence.academicBlock4;
+  const autocompleteSuggestions = useMemo(
+    () => filterIitPatnaAutocomplete(areaSearchQuery),
+    [areaSearchQuery]
+  );
   useEffect(() => {
     if (!areaSearch.data || areaSearch.data.query !== areaSearchRequest) return;
     setMapCommand({ kind: "focus-site", nonce: Date.now() });
@@ -654,6 +668,68 @@ export default function Home() {
         },
       }
     );
+  };
+
+  const selectAutocompleteSuggestion = (query: string) => {
+    setAreaSearchQuery(query);
+    setAutocompleteOpen(false);
+    const nextRequest = query.trim();
+    if (!nextRequest) return;
+    setPlaceSearchRationale(null);
+    resolvePlace.mutate(
+      { query: nextRequest },
+      {
+        onSuccess: result => {
+          setAreaSearchRequest(result.resolvedQuery);
+          setPlaceSearchRationale(result.rationale);
+          setLocation(
+            `/workspace?site=${encodeURIComponent(result.resolvedQuery)}`
+          );
+        },
+        onError: () => {
+          setAreaSearchRequest(nextRequest);
+          setPlaceSearchRationale(
+            "AI routing is unavailable; only the live source-backed layer was searched."
+          );
+        },
+      }
+    );
+  };
+
+  const exportAcademicBlock4Pdf = async () => {
+    const { jsPDF } = await import("jspdf");
+    const pdf = new jsPDF({ unit: "pt", format: "a4" });
+    const lines = buildAcademicBlock4PdfLines(academicBlock4);
+    let cursorY = 52;
+    const addWrapped = (text: string, size = 10, emphasis = false) => {
+      pdf.setFont("helvetica", emphasis ? "bold" : "normal");
+      pdf.setFontSize(size);
+      const wrapped = pdf.splitTextToSize(text, 500);
+      pdf.text(wrapped, 48, cursorY);
+      cursorY += wrapped.length * (size + 4) + 8;
+    };
+    const addSection = (title: string, values: string[]) => {
+      addWrapped(title, 13, true);
+      values.forEach(value => addWrapped(value));
+      cursorY += 4;
+    };
+    addWrapped("3D ULPIN-VPM · SIH evidence export", 9, true);
+    addWrapped(academicBlock4.displayLabel, 20, true);
+    addWrapped(
+      "Institution-level, source-cited context only. This document does not create a GIS footprint, surveyed height, parcel, owner, cadastral ULPIN, or vertical ULPIN."
+    );
+    addSection("Displayed facts", lines.factLines);
+    addSection("Source citations", lines.citationLines);
+    addSection("Active evidence locks", lines.lockLines);
+    addWrapped(
+      "Generated from the dashboard’s Academic Block-4 JSON evidence package. Values are preserved exactly as displayed with their source-availability limitation.",
+      8
+    );
+    pdf.save("sih-academic-block-4-evidence.pdf");
+    toast.success("SIH evidence PDF downloaded", {
+      description:
+        "The export includes displayed facts, citations, source limitations, and active locks.",
+    });
   };
 
   const selectFloor = (floor: number) => {
@@ -981,11 +1057,45 @@ export default function Home() {
             </div>
             <form className="area-search-controls" onSubmit={submitAreaSearch}>
               <BrainCircuit size={17} />
-              <input
-                value={areaSearchQuery}
-                onChange={event => setAreaSearchQuery(event.target.value)}
-                placeholder="AI lookup: IIT Patna, college, restaurant, park…"
-              />
+              <div className="area-autocomplete">
+                <input
+                  value={areaSearchQuery}
+                  onChange={event => {
+                    setAreaSearchQuery(event.target.value);
+                    setAutocompleteOpen(true);
+                  }}
+                  onFocus={() => setAutocompleteOpen(true)}
+                  onBlur={() =>
+                    window.setTimeout(() => setAutocompleteOpen(false), 140)
+                  }
+                  placeholder="AI lookup: IIT Patna, college, restaurant, park…"
+                  aria-autocomplete="list"
+                  aria-expanded={
+                    autocompleteOpen && autocompleteSuggestions.length > 0
+                  }
+                />
+                {autocompleteOpen && autocompleteSuggestions.length > 0 && (
+                  <div
+                    className="area-autocomplete-menu"
+                    role="listbox"
+                    aria-label="IIT Patna source-aware suggestions"
+                  >
+                    {autocompleteSuggestions.map(suggestion => (
+                      <button
+                        key={suggestion.label}
+                        type="button"
+                        onMouseDown={event => event.preventDefault()}
+                        onClick={() =>
+                          selectAutocompleteSuggestion(suggestion.query)
+                        }
+                      >
+                        <strong>{suggestion.label}</strong>
+                        <small>{suggestion.detail}</small>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <button
                 className="primary-button compact"
                 type="submit"
@@ -1000,6 +1110,31 @@ export default function Home() {
                 )}
               </button>
             </form>
+            <label className="map-evidence-filter">
+              <span>Map evidence filter</span>
+              <select
+                value={evidenceFilter}
+                onChange={event =>
+                  setEvidenceFilter(event.target.value as MapEvidenceFilter)
+                }
+              >
+                <option value="all">All live footprints</option>
+                <option value="public-footprint">Public footprint only</option>
+                <option value="height-verified">
+                  Verified-height extrusion
+                </option>
+              </select>
+              <EvidenceLockBadge
+                state={
+                  evidenceFilter === "height-verified"
+                    ? "verified"
+                    : evidenceFilter === "public-footprint"
+                      ? "public-footprint"
+                      : "source-cited"
+                }
+                detail={getMapEvidenceFilterLabel(evidenceFilter)}
+              />
+            </label>
             <div className="area-search-meta">
               <span>
                 <Building2 size={13} /> {displayedLayerCount} matching building
@@ -1068,6 +1203,13 @@ export default function Home() {
                   detail={academicBlock4.independentValidationStatus}
                 />
               </div>
+              <button
+                className="evidence-pdf-export"
+                type="button"
+                onClick={() => void exportAcademicBlock4Pdf()}
+              >
+                <FileDown size={14} /> Download SIH PDF
+              </button>
               <div className="evidence-metric-grid">
                 <div>
                   <span>Storeys</span>
@@ -1181,6 +1323,7 @@ export default function Home() {
               <CesiumSpatialViewer
                 command={mapCommand}
                 layers={layersOn}
+                evidenceFilter={evidenceFilter}
                 focusUlpins={areaSearch.data?.matchedUlpins}
                 onFeatureSelect={onMapFeatureSelect}
               />
