@@ -6,6 +6,23 @@
       "publisher": "Bihar Real Estate Regulatory Authority",
       "recordId": "RERAP125201800396-5",
       "recordUrl": "https://rera.bihar.gov.in/Filanprint.aspx?id=RERAP125201800396-5",
+      "qrCodeRecordUrl": "https://rera.bihar.gov.in/QRCODE.aspx?id=RERAP125201800396-5",
+      "qrCodeReview": {
+        "reviewedOn": "2026-08-24",
+        "corroborates": [
+          "Project name and G+4 approved-residential description",
+          "New Mithila Colony, Digha, Patna location and Plot 808 P",
+          "Mauza Digha and Patna Sadar administrative context",
+          "One sanctioned building/wing",
+          "Land, covered, and total built-up measures",
+          "Endpoint-only coordinate label"
+        ],
+        "doesNotIndependentlyCorroborate": [
+          "The 14.90 m building-height value because the rendered Height of Building field is blank",
+          "A closed footprint, parcel boundary, or EPSG:4326 coordinate schedule",
+          "Survey control points or vertical-property registration"
+        ]
+      },
       "validatedOn": "2026-08-24"
     },
     "projectLocation": {
