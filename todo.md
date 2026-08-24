@@ -214,3 +214,7 @@
 - [x] Add browser-local favorites for ULPIN source records, with quick-access filtering that preserves their non-issued status.
 - [x] Add a persistent low-light appearance toggle for the dashboard.
 - [x] Add regression coverage and desktop/mobile validation for measurement, favorites, and appearance-mode workflows.
+- [x] Repair overlapping Cesium stage heading and map-control overlays, and increase readable spacing between workspace text and actions.
+- [x] Add an evidence-safe side-by-side comparison workspace for up to two selected ULPIN source records with coordinated map focus actions.
+- [x] Extend browser-local favorites with custom folders/categories and favorite-folder filtering.
+- [x] Add regression coverage and desktop/mobile validation for the layout, comparison, and favorite-folder workflows.

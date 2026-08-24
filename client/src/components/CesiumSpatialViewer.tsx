@@ -41,6 +41,7 @@ type FocusSummary = {
   name: string;
   ulpin: string;
   areaLabel: string;
+  comparisonCount?: number;
 };
 
 function featureLayer(
@@ -694,11 +695,12 @@ export function CesiumSpatialViewer({
       await viewer.dataSources.add(dataSource);
       if (filteredCollection.features.length > 0 && !syntheticDemoFeature) {
         if (focusUlpins?.length) {
-          const focusedEntity = dataSource.entities.values.find(entity => {
+          const focusedEntities = dataSource.entities.values.filter(entity => {
             const properties = (entity.properties?.getValue?.() ??
               {}) as Record<string, unknown>;
             return focusUlpins.includes(String(properties.ulpin ?? ""));
           });
+          const focusedEntity = focusedEntities[0];
           if (focusedEntity) {
             const properties = (focusedEntity.properties?.getValue?.() ??
               {}) as Record<string, unknown>;
@@ -710,26 +712,31 @@ export function CesiumSpatialViewer({
               typeof properties.footprintAreaSquareMetres === "number"
                 ? `${properties.footprintAreaSquareMetres.toLocaleString()} m²`
                 : "Area unavailable";
-            if (focusedEntity.polygon) {
-              focusedEntity.polygon.material = new ColorMaterialProperty(
-                Color.fromCssColorString("#73fff1").withAlpha(0.78)
-              );
-              focusedEntity.polygon.outlineColor = new ConstantProperty(
-                Color.fromCssColorString("#fff3b0")
-              );
-              focusedEntity.polygon.outlineWidth = new ConstantProperty(3);
-            }
-            if (focusedEntity.point) {
-              focusedEntity.point.pixelSize = new ConstantProperty(18);
-              focusedEntity.point.color = new ConstantProperty(
-                Color.fromCssColorString("#fff3b0")
-              );
-            }
+            focusedEntities.forEach((entity, index) => {
+              const comparisonColor = index === 0 ? "#73fff1" : "#b48cff";
+              const outlineColor = index === 0 ? "#fff3b0" : "#f2dcff";
+              if (entity.polygon) {
+                entity.polygon.material = new ColorMaterialProperty(
+                  Color.fromCssColorString(comparisonColor).withAlpha(0.78)
+                );
+                entity.polygon.outlineColor = new ConstantProperty(
+                  Color.fromCssColorString(outlineColor)
+                );
+                entity.polygon.outlineWidth = new ConstantProperty(3);
+              }
+              if (entity.point) {
+                entity.point.pixelSize = new ConstantProperty(18);
+                entity.point.color = new ConstantProperty(
+                  Color.fromCssColorString(outlineColor)
+                );
+              }
+            });
             viewer.selectedEntity = focusedEntity;
             setFocusSummary({
               name,
               ulpin: String(properties.ulpin ?? "Source record"),
               areaLabel: area,
+              comparisonCount: focusedEntities.length,
             });
           } else {
             setFocusSummary(null);
@@ -1126,12 +1133,20 @@ export function CesiumSpatialViewer({
       )}
       {focusSummary && !syntheticDemoFeature && (
         <div className="cesium-focus-popup" role="status">
-          <span>Focused source geometry</span>
+          <span>
+            {focusSummary.comparisonCount === 2
+              ? "Combined source-record comparison"
+              : "Focused source geometry"}
+          </span>
           <b>{focusSummary.name}</b>
           <small>{focusSummary.ulpin}</small>
           <footer>
             <em>{focusSummary.areaLabel}</em>
-            <i>Source record · not issued</i>
+            <i>
+              {focusSummary.comparisonCount === 2
+                ? "2 source records · not issued"
+                : "Source record · not issued"}
+            </i>
           </footer>
         </div>
       )}

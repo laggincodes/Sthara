@@ -4,10 +4,12 @@ import {
   ArrowUpAZ,
   ArrowLeft,
   Clipboard,
+  Columns2,
   Database,
   Download,
   FileSearch,
   Filter,
+  Folder,
   History,
   Info,
   LockKeyhole,
@@ -34,6 +36,8 @@ type SourceRecord = { properties: Record<string, unknown> };
 type PersonalAnnotation = { note: string; tags: string[] };
 const PERSONAL_ANNOTATIONS_STORAGE_KEY = "ulpin-vpm-personal-annotations-v1";
 const PERSONAL_FAVORITES_STORAGE_KEY = "ulpin-vpm-personal-favorites-v1";
+const PERSONAL_FAVORITE_FOLDERS_STORAGE_KEY =
+  "ulpin-vpm-personal-favorite-folders-v1";
 
 function footprintArea(feature: { properties: Record<string, unknown> }) {
   return typeof feature.properties.footprintAreaSquareMetres === "number"
@@ -76,6 +80,24 @@ function readPersonalFavorites() {
   }
 }
 
+function readPersonalFavoriteFolders(): Record<string, string> {
+  try {
+    const stored = window.localStorage.getItem(
+      PERSONAL_FAVORITE_FOLDERS_STORAGE_KEY
+    );
+    const parsed = stored ? JSON.parse(stored) : {};
+    return parsed && typeof parsed === "object"
+      ? (Object.fromEntries(
+          Object.entries(parsed).filter(
+            ([, value]) => typeof value === "string"
+          )
+        ) as Record<string, string>)
+      : {};
+  } catch {
+    return {};
+  }
+}
+
 export default function UlpInRegistry() {
   const [, setLocation] = useLocation();
   const sharedRecordId =
@@ -92,6 +114,14 @@ export default function UlpInRegistry() {
   >(readPersonalAnnotations);
   const [personalFavorites, setPersonalFavorites] = useState<string[]>(
     readPersonalFavorites
+  );
+  const [personalFavoriteFolders, setPersonalFavoriteFolders] = useState<
+    Record<string, string>
+  >(readPersonalFavoriteFolders);
+  const [favoriteFolderFilter, setFavoriteFolderFilter] = useState("all");
+  const [favoriteFolderDraft, setFavoriteFolderDraft] = useState("");
+  const [comparisonRecords, setComparisonRecords] = useState<SourceRecord[]>(
+    []
   );
   const [noteDraft, setNoteDraft] = useState("");
   const [tagDraft, setTagDraft] = useState("");
@@ -115,6 +145,17 @@ export default function UlpInRegistry() {
       (left, right) => right[1] - left[1]
     );
   }, [personalAnnotations]);
+  const favoriteFolderNames = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          Object.values(personalFavoriteFolders)
+            .map(folder => folder.trim())
+            .filter(Boolean)
+        )
+      ).sort((left, right) => left.localeCompare(right)),
+    [personalFavoriteFolders]
+  );
   const recordCountLabel = geometry.isLoading
     ? "Loading live source records…"
     : `${records.length} source-attributed footprints available for discovery`;
@@ -140,7 +181,13 @@ export default function UlpInRegistry() {
           (recordFilter === "area-available" && area !== null) ||
           (recordFilter === "area-unavailable" && area === null) ||
           (recordFilter === "favorites" &&
-            personalFavorites.includes(String(feature.properties.ulpin ?? "")));
+            personalFavorites.includes(
+              String(feature.properties.ulpin ?? "")
+            ) &&
+            (favoriteFolderFilter === "all" ||
+              personalFavoriteFolders[
+                String(feature.properties.ulpin ?? "")
+              ] === favoriteFolderFilter));
         return matchesSearch && matchesFilter;
       })
       .sort((left, right) => {
@@ -156,7 +203,15 @@ export default function UlpInRegistry() {
         if (recordSort === "area-asc") return leftArea - rightArea;
         return leftName.localeCompare(rightName);
       });
-  }, [personalFavorites, query, recordFilter, recordSort, records]);
+  }, [
+    favoriteFolderFilter,
+    personalFavoriteFolders,
+    personalFavorites,
+    query,
+    recordFilter,
+    recordSort,
+    records,
+  ]);
   const visibleRecords = showAll
     ? filteredRecords
     : filteredRecords.slice(0, 8);
@@ -180,6 +235,44 @@ export default function UlpInRegistry() {
       );
       return next;
     });
+  };
+  const assignFavoriteFolder = (recordId: string, folder: string) => {
+    if (!recordId) return;
+    setPersonalFavoriteFolders(current => {
+      const next = { ...current };
+      if (folder.trim()) next[recordId] = folder.trim();
+      else delete next[recordId];
+      window.localStorage.setItem(
+        PERSONAL_FAVORITE_FOLDERS_STORAGE_KEY,
+        JSON.stringify(next)
+      );
+      return next;
+    });
+  };
+  const toggleComparisonRecord = (record: SourceRecord) => {
+    const recordId = recordText(record.properties.ulpin, "");
+    if (!recordId) return;
+    setComparisonRecords(current => {
+      const exists = current.some(
+        candidate => recordText(candidate.properties.ulpin, "") === recordId
+      );
+      if (exists)
+        return current.filter(
+          candidate => recordText(candidate.properties.ulpin, "") !== recordId
+        );
+      return [...current.slice(-1), record];
+    });
+  };
+  const openComparisonMap = () => {
+    if (comparisonRecords.length !== 2) return;
+    const identifiers = comparisonRecords
+      .map(record => recordText(record.properties.ulpin, ""))
+      .filter(Boolean);
+    if (identifiers.length === 2) {
+      setLocation(
+        `/workspace?segment=buildings&compare=${encodeURIComponent(identifiers.join(","))}`
+      );
+    }
   };
   const exportFilteredRecords = () => {
     if (!filteredRecords.length) return;
@@ -444,6 +537,27 @@ export default function UlpInRegistry() {
                       <option value="area-unavailable">Area unavailable</option>
                     </select>
                   </label>
+                  {recordFilter === "favorites" && (
+                    <label className="registry-select-control">
+                      <Folder size={13} />
+                      <select
+                        value={favoriteFolderFilter}
+                        onChange={event => {
+                          setFavoriteFolderFilter(event.target.value);
+                          setShowAll(false);
+                        }}
+                        aria-label="Filter favorite source records by folder"
+                      >
+                        <option value="all">All folders</option>
+                        <option value="">Unfiled favorites</option>
+                        {favoriteFolderNames.map(folder => (
+                          <option key={folder} value={folder}>
+                            {folder}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
                   <label className="registry-select-control">
                     {recordSort === "name-desc" ? (
                       <ArrowDownAZ size={13} />
@@ -474,6 +588,60 @@ export default function UlpInRegistry() {
                 </button>
               </div>
             </div>
+            <section className="registry-comparison-bar" aria-live="polite">
+              <div>
+                <Columns2 size={15} />
+                <span>
+                  <b>Compare source records</b>
+                  <small>
+                    Select up to two public-footprint records. The comparison
+                    does not issue a ULPIN or infer missing evidence.
+                  </small>
+                </span>
+              </div>
+              <div>
+                <span>{comparisonRecords.length}/2 selected</span>
+                <button
+                  type="button"
+                  disabled={comparisonRecords.length !== 2}
+                  onClick={openComparisonMap}
+                >
+                  <MapPinned size={13} /> Open combined map
+                </button>
+                <button
+                  type="button"
+                  disabled={!comparisonRecords.length}
+                  onClick={() => setComparisonRecords([])}
+                >
+                  Clear
+                </button>
+              </div>
+              {comparisonRecords.length > 0 && (
+                <ol>
+                  {comparisonRecords.map(record => {
+                    const recordId = recordText(record.properties.ulpin, "");
+                    return (
+                      <li key={recordId}>
+                        <span>
+                          <b>
+                            {recordText(
+                              record.properties.name,
+                              "Source record"
+                            )}
+                          </b>
+                          <small>{recordId}</small>
+                        </span>
+                        <em>
+                          {footprintArea(record)?.toLocaleString() ??
+                            "Area unavailable"}
+                          {footprintArea(record) !== null ? " m²" : ""}
+                        </em>
+                      </li>
+                    );
+                  })}
+                </ol>
+              )}
+            </section>
             <div
               className="registry-table"
               role="table"
@@ -502,6 +670,10 @@ export default function UlpInRegistry() {
                       : "Area unavailable";
                   const recordId = String(feature.properties.ulpin ?? "");
                   const isFavorite = personalFavorites.includes(recordId);
+                  const isCompared = comparisonRecords.some(
+                    record =>
+                      recordText(record.properties.ulpin, "") === recordId
+                  );
                   return (
                     <div
                       className="registry-table-row"
@@ -522,6 +694,23 @@ export default function UlpInRegistry() {
                         <i /> Public footprint only
                       </span>
                       <span className="registry-row-actions">
+                        <button
+                          type="button"
+                          className={isCompared ? "is-compared" : ""}
+                          onClick={() => toggleComparisonRecord(feature)}
+                          title={
+                            isCompared
+                              ? "Remove from comparison"
+                              : "Select for two-record comparison"
+                          }
+                          aria-label={
+                            isCompared
+                              ? `Remove ${name} from comparison`
+                              : `Compare ${name}`
+                          }
+                        >
+                          <Columns2 size={14} /> Compare
+                        </button>
                         <button
                           type="button"
                           className={isFavorite ? "is-favorite" : ""}
@@ -748,6 +937,58 @@ export default function UlpInRegistry() {
                 maxLength={1200}
               />
             </label>
+          </section>
+          <section className="registry-favorite-folder-panel">
+            <p>
+              <Folder size={14} /> Favorite folder / category
+            </p>
+            <small>
+              Browser-local organization only. A folder does not change this
+              source record’s evidence, legal, or issuance status.
+            </small>
+            {selectedRecord && personalFavorites.includes(selectedRecordId) ? (
+              <div>
+                <select
+                  value={personalFavoriteFolders[selectedRecordId] ?? ""}
+                  onChange={event =>
+                    assignFavoriteFolder(selectedRecordId, event.target.value)
+                  }
+                  aria-label="Assign favorite folder"
+                >
+                  <option value="">Unfiled favorite</option>
+                  {favoriteFolderNames.map(folder => (
+                    <option key={folder} value={folder}>
+                      {folder}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  value={favoriteFolderDraft}
+                  onChange={event => setFavoriteFolderDraft(event.target.value)}
+                  placeholder="Create or assign a folder"
+                  aria-label="Create or assign a favorite folder"
+                  maxLength={48}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const folder = favoriteFolderDraft.trim();
+                    if (!folder) return;
+                    assignFavoriteFolder(selectedRecordId, folder);
+                    setFavoriteFolderDraft("");
+                  }}
+                >
+                  Save folder
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => selectedRecord && toggleFavorite(selectedRecord)}
+              >
+                <Star size={13} /> Add as browser-local favorite first
+              </button>
+            )}
           </section>
           <div className="registry-detail-actions">
             <button

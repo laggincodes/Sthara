@@ -658,7 +658,7 @@ input:focus-visible {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  padding: 19px 20px;
+  padding: 22px 24px;
 }
 .map-header .section-kicker {
   padding: 0 0 5px;
@@ -690,13 +690,24 @@ input:focus-visible {
 }
 .map-header-actions {
   display: flex;
+  gap: 9px;
+}
+.map-card .cesium-context-controls {
+  top: 112px;
+  left: 62px;
+  max-width: calc(100% - 82px);
+}
+.map-card .cesium-context-controls section {
+  padding: 8px;
+}
+.map-card .cesium-context-controls section > div {
   gap: 6px;
 }
 .map-control-stack {
   position: absolute;
   z-index: 5;
-  top: 127px;
-  left: 20px;
+  top: 116px;
+  left: 24px;
   display: grid;
   overflow: hidden;
   background: rgba(7, 15, 19, 0.7);
@@ -7123,10 +7134,288 @@ input:focus-visible {
   background: rgba(255, 206, 91, 0.13);
   border-color: rgba(255, 206, 91, 0.38);
 }
+.registry-row-actions button.is-compared {
+  color: #bcddff;
+  background: rgba(115, 180, 255, 0.14);
+  border-color: rgba(115, 180, 255, 0.4);
+}
+.registry-comparison-bar {
+  display: grid;
+  gap: 12px;
+  margin: 14px 0 16px;
+  padding: 13px;
+  background: linear-gradient(
+    120deg,
+    rgba(74, 139, 231, 0.12),
+    rgba(13, 34, 44, 0.72)
+  );
+  border: 1px solid rgba(132, 190, 255, 0.28);
+  border-radius: 9px;
+}
+.registry-comparison-bar > div {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.registry-comparison-bar > div:first-child > svg {
+  color: #8dcbff;
+  flex: 0 0 auto;
+}
+.registry-comparison-bar > div:first-child span {
+  display: grid;
+  gap: 3px;
+}
+.registry-comparison-bar b {
+  color: #e8f6ff;
+  font-size: 11px;
+}
+.registry-comparison-bar small {
+  color: #9bbbc8;
+  font-size: 8px;
+  line-height: 1.45;
+}
+.registry-comparison-bar > div:nth-child(2) {
+  flex-wrap: wrap;
+  padding-top: 2px;
+}
+.registry-comparison-bar > div:nth-child(2) > span {
+  min-width: 68px;
+  color: #b7d6ed;
+  font:
+    8px "IBM Plex Mono",
+    monospace;
+}
+.registry-comparison-bar button,
+.registry-favorite-folder-panel button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 31px;
+  padding: 7px 10px;
+  color: #dceefb;
+  background: rgba(128, 186, 255, 0.1);
+  border: 1px solid rgba(128, 186, 255, 0.28);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 9px;
+}
+.registry-comparison-bar button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.registry-comparison-bar ol {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.registry-comparison-bar li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px;
+  background: rgba(5, 15, 22, 0.35);
+  border: 1px solid rgba(145, 204, 255, 0.15);
+  border-radius: 6px;
+}
+.registry-comparison-bar li span {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.registry-comparison-bar li b,
+.registry-comparison-bar li small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.registry-comparison-bar li em {
+  align-self: center;
+  color: #c3ecce;
+  font:
+    8px "IBM Plex Mono",
+    monospace;
+  font-style: normal;
+  white-space: nowrap;
+}
+.registry-favorite-folder-panel {
+  display: grid;
+  gap: 9px;
+  padding: 12px;
+  background: rgba(255, 207, 103, 0.05);
+  border: 1px solid rgba(255, 207, 103, 0.2);
+  border-radius: 8px;
+}
+.registry-favorite-folder-panel p {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  color: #ffe5a6;
+  font-size: 10px;
+}
+.registry-favorite-folder-panel small {
+  color: #bcae85;
+  font-size: 8px;
+  line-height: 1.45;
+}
+.registry-favorite-folder-panel > div {
+  display: grid;
+  grid-template-columns: minmax(100px, 0.7fr) minmax(140px, 1fr) auto;
+  gap: 8px;
+}
+.registry-favorite-folder-panel select,
+.registry-favorite-folder-panel input {
+  min-width: 0;
+  min-height: 32px;
+  padding: 0 9px;
+  color: #dcefed;
+  background: rgba(8, 22, 27, 0.78);
+  border: 1px solid rgba(220, 237, 234, 0.16);
+  border-radius: 6px;
+  font-size: 9px;
+}
+.spatial-comparison-panel {
+  display: grid;
+  gap: 10px;
+  margin: 0 14px 14px;
+  padding: 11px;
+  background: rgba(5, 18, 25, 0.92);
+  border: 1px solid rgba(135, 201, 255, 0.32);
+}
+.spatial-comparison-panel > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 9px;
+}
+.spatial-comparison-panel > header > span {
+  color: #d8f2ff;
+  font:
+    700 9px "IBM Plex Mono",
+    monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.spatial-comparison-panel button {
+  min-height: 29px;
+  padding: 6px 9px;
+  color: #cde9fa;
+  background: rgba(130, 189, 240, 0.13);
+  border: 1px solid rgba(130, 189, 240, 0.32);
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 8px;
+}
+.spatial-comparison-panel > div {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 9px;
+}
+.spatial-comparison-panel article {
+  min-width: 0;
+  padding: 10px;
+  background: rgba(63, 116, 154, 0.1);
+  border: 1px solid rgba(147, 203, 246, 0.2);
+}
+.spatial-comparison-panel article > span {
+  display: block;
+  margin-bottom: 5px;
+  color: #a2d7ff;
+  font:
+    7px "IBM Plex Mono",
+    monospace;
+  text-transform: uppercase;
+}
+.spatial-comparison-panel h2 {
+  margin: 0 0 3px;
+  overflow: hidden;
+  color: #edf9ff;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.spatial-comparison-panel article > small {
+  display: block;
+  margin-bottom: 8px;
+  overflow: hidden;
+  color: #86a9ba;
+  font:
+    7px "IBM Plex Mono",
+    monospace;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.spatial-comparison-panel dl {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+}
+.spatial-comparison-panel dl div {
+  display: grid;
+  gap: 2px;
+}
+.spatial-comparison-panel dt {
+  color: #8fb4c7;
+  font-size: 7px;
+}
+.spatial-comparison-panel dd {
+  margin: 0;
+  color: #d9edf5;
+  font-size: 8px;
+  line-height: 1.35;
+}
+.spatial-comparison-panel > p {
+  margin: 0;
+  color: #aac3ce;
+  font-size: 9px;
+  line-height: 1.45;
+}
 @media (max-width: 660px) {
+  .spatial-stage-heading span {
+    max-width: calc(100vw - 32px);
+    flex-wrap: wrap;
+    line-height: 1.45;
+  }
+  .map-card .cesium-context-controls {
+    top: 126px;
+    left: 12px;
+    max-width: calc(100% - 24px);
+  }
+  .map-card .cesium-context-controls section {
+    padding: 6px;
+  }
+  .map-card .cesium-context-controls section > div {
+    gap: 4px;
+  }
+  .map-header {
+    gap: 14px;
+    padding: 20px 16px;
+  }
   .cesium-measurement-summary {
     bottom: 58px;
     left: 10px;
     max-width: calc(100% - 20px);
+  }
+  .registry-comparison-bar {
+    gap: 10px;
+    margin: 12px 0;
+    padding: 11px;
+  }
+  .registry-comparison-bar ol {
+    grid-template-columns: 1fr;
+  }
+  .registry-favorite-folder-panel > div {
+    grid-template-columns: 1fr;
+  }
+  .spatial-comparison-panel {
+    margin: 0 10px 10px;
+  }
+  .spatial-comparison-panel > div {
+    grid-template-columns: 1fr;
   }
 }

@@ -149,6 +149,11 @@ export default function SpatialWorkspace() {
   const search = useSearch();
   const queryParameters = new URLSearchParams(search);
   const requestedSite = queryParameters.get("site") ?? "Amity University Patna";
+  const comparisonUlpins = (queryParameters.get("compare") ?? "")
+    .split(",")
+    .map(value => value.trim())
+    .filter(Boolean)
+    .slice(0, 2);
   const explorerSegment = getPlaceExplorerSegment(
     queryParameters.get("segment")
   );
@@ -205,6 +210,27 @@ export default function SpatialWorkspace() {
     verticalLayers[0];
   const osmBuildingsReady = Boolean(
     import.meta.env.VITE_CESIUM_ION_ACCESS_TOKEN
+  );
+  const activeMapUlpins =
+    comparisonUlpins.length > 0
+      ? comparisonUlpins
+      : (searchResult.data?.matchedUlpins ?? []);
+  const comparisonSourceRecords = useMemo(
+    () =>
+      comparisonUlpins
+        .map(ulpin =>
+          liveGeometry.data?.features.find(
+            feature => feature.properties.ulpin === ulpin
+          )
+        )
+        .filter(
+          (
+            feature
+          ): feature is NonNullable<
+            typeof liveGeometry.data
+          >["features"][number] => Boolean(feature)
+        ),
+    [comparisonUlpins, liveGeometry.data]
   );
   const previewFeature = useMemo<ThreePreviewFeature | null>(() => {
     const preferredUlpins = selected
@@ -401,7 +427,7 @@ export default function SpatialWorkspace() {
             <CesiumSpatialViewer
               command={command}
               layers={layers}
-              focusUlpins={searchResult.data?.matchedUlpins}
+              focusUlpins={activeMapUlpins}
               onFeatureSelect={onFeatureSelect}
             />
             <div className="spatial-stage-grid" />
@@ -409,17 +435,21 @@ export default function SpatialWorkspace() {
             <div className="spatial-stage-heading">
               <p>{explorer.stageLabel}</p>
               <h1>
-                {resolveBuilding.isPending || searchResult.isLoading
-                  ? "Finding source-backed geometry…"
-                  : (searchResult.data?.buildingCount ?? 0) > 0
-                    ? searchResult.data?.siteLabel
-                    : explorer.noResultLabel}
+                {comparisonUlpins.length === 2
+                  ? "Comparing two source-record geometries"
+                  : resolveBuilding.isPending || searchResult.isLoading
+                    ? "Finding source-backed geometry…"
+                    : (searchResult.data?.buildingCount ?? 0) > 0
+                      ? searchResult.data?.siteLabel
+                      : explorer.noResultLabel}
               </h1>
               <span>
                 <CircleDot size={13} />{" "}
-                {(searchResult.data?.buildingCount ?? 0) > 0
-                  ? `${searchResult.data?.buildingCount} matched PostGIS footprints · camera focused on source geometry`
-                  : "Try a mapped site, ULPIN, or source-backed building record"}{" "}
+                {comparisonUlpins.length === 2
+                  ? "2 source records selected · combined camera extent · not issued ULPINs"
+                  : (searchResult.data?.buildingCount ?? 0) > 0
+                    ? `${searchResult.data?.buildingCount} matched PostGIS footprints · camera focused on source geometry`
+                    : "Try a mapped site, ULPIN, or source-backed building record"}{" "}
                 <b>·</b> EPSG:4326
               </span>
               {resolutionNote && (
@@ -636,6 +666,71 @@ export default function SpatialWorkspace() {
                 )}
               </div>
             </div>
+            {comparisonUlpins.length === 2 && (
+              <section
+                className="spatial-comparison-panel"
+                aria-label="Side-by-side source record comparison"
+              >
+                <header>
+                  <span>Side-by-side source record comparison</span>
+                  <button
+                    type="button"
+                    onClick={() => setLocation("/?workspace=ULPIN%20registry")}
+                  >
+                    Back to Registry
+                  </button>
+                </header>
+                {comparisonSourceRecords.length === 2 ? (
+                  <div>
+                    {comparisonSourceRecords.map((record, index) => {
+                      const properties = record.properties;
+                      const name =
+                        typeof properties.name === "string"
+                          ? properties.name
+                          : "Source record";
+                      const sourceId =
+                        typeof properties.ulpin === "string"
+                          ? properties.ulpin
+                          : comparisonUlpins[index];
+                      const area =
+                        typeof properties.footprintAreaSquareMetres === "number"
+                          ? `${properties.footprintAreaSquareMetres.toLocaleString()} m²`
+                          : "Area unavailable";
+                      const provenance =
+                        typeof properties.source === "string"
+                          ? properties.source
+                          : "Source feed provenance not exposed";
+                      return (
+                        <article key={sourceId}>
+                          <span>Record {index + 1} · source context only</span>
+                          <h2>{name}</h2>
+                          <small>{sourceId}</small>
+                          <dl>
+                            <div>
+                              <dt>Footprint area</dt>
+                              <dd>{area}</dd>
+                            </div>
+                            <div>
+                              <dt>Provenance</dt>
+                              <dd>{provenance}</dd>
+                            </div>
+                            <div>
+                              <dt>History / ownership / height</dt>
+                              <dd>Not inferred from this source record</dd>
+                            </div>
+                          </dl>
+                        </article>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p>
+                    Loading the two requested source records. No missing
+                    geometry, history, ownership, height, or ULPIN is inferred.
+                  </p>
+                )}
+              </section>
+            )}
             <div className="spatial-dossier-card">
               <div className="spatial-dossier-title">
                 <div>

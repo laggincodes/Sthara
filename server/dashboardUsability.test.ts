@@ -10,6 +10,14 @@ const registrySource = readFileSync(
   resolve(process.cwd(), "client/src/pages/UlpInRegistry.tsx"),
   "utf8"
 );
+const workspaceSource = readFileSync(
+  resolve(process.cwd(), "client/src/pages/SpatialWorkspace.tsx"),
+  "utf8"
+);
+const dashboardStyles = readFileSync(
+  resolve(process.cwd(), "client/src/index.css"),
+  "utf8"
+);
 
 describe("dashboard usability controls", () => {
   it("provides a visible Cesium loading state and actionable runtime recovery paths", () => {
@@ -41,7 +49,9 @@ describe("dashboard usability controls", () => {
   it("offers focused Cesium navigation and a modal that does not fabricate record history", () => {
     expect(registrySource).toContain("focusRecordOnMap");
     expect(registrySource).toContain("Open focused 3D map");
-    expect(registrySource).toContain("History is not available in this source feed.");
+    expect(registrySource).toContain(
+      "History is not available in this source feed."
+    );
     expect(registrySource).toContain("No revision timeline, ownership history");
     expect(registrySource).toContain("Source-record metadata only.");
   });
@@ -96,5 +106,32 @@ describe("dashboard usability controls", () => {
     expect(registrySource).toContain("Favorites ({personalFavorites.length})");
     expect(registrySource).toContain("Save browser-local favorite");
     expect(registrySource).toContain("favorites");
+  });
+
+  it("organizes browser-local favorites into personal folders without changing source-record authority", () => {
+    expect(registrySource).toContain("PERSONAL_FAVORITE_FOLDERS_STORAGE_KEY");
+    expect(registrySource).toContain("Favorite folder / category");
+    expect(registrySource).toContain("Browser-local organization only");
+    expect(registrySource).toContain("All folders");
+    expect(registrySource).toContain("assignFavoriteFolder");
+  });
+
+  it("limits comparison to two source records and carries both identifiers to combined source context", () => {
+    expect(registrySource).toContain("Compare source records");
+    expect(registrySource).toContain(
+      "Select up to two public-footprint records"
+    );
+    expect(registrySource).toContain("comparisonRecords.length !== 2");
+    expect(registrySource).toContain("/workspace?segment=buildings&compare=");
+    expect(workspaceSource).toContain("activeMapUlpins");
+    expect(workspaceSource).toContain("source record comparison");
+  });
+
+  it("reserves a non-overlapping control zone and keeps small-screen Registry controls usable", () => {
+    expect(dashboardStyles).toContain(".map-card .cesium-context-controls");
+    expect(dashboardStyles).toContain("top: 126px");
+    expect(dashboardStyles).toContain(".registry-comparison-bar");
+    expect(dashboardStyles).toContain(".registry-favorite-folder-panel");
+    expect(dashboardStyles).toContain(".map-header");
   });
 });
