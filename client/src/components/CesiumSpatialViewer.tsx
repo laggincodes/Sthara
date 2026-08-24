@@ -424,23 +424,53 @@ export function CesiumSpatialViewer({
               ? properties.syntheticDemoExtrusionMetres
               : 0;
           entity.polygon.material = new ColorMaterialProperty(
-            Color.fromCssColorString("#ff9f43").withAlpha(0.46)
+            Color.fromCssColorString("#f29c52").withAlpha(0.64)
           );
           entity.polygon.outline = new ConstantProperty(true);
           entity.polygon.outlineColor = new ConstantProperty(
-            Color.fromCssColorString("#fff0b3")
+            Color.fromCssColorString("#fff5ca")
           );
-          entity.polygon.height = new ConstantProperty(1);
+          entity.polygon.height = new ConstantProperty(0);
           if (visualHeight > 0) {
             entity.polygon.extrudedHeight = new ConstantProperty(visualHeight);
           }
         }
       });
+      const ring = syntheticDemoFeature.geometry.coordinates[0];
+      const centre = ring.slice(0, -1).reduce(
+        (totals, coordinate) => ({
+          longitude: totals.longitude + coordinate[0],
+          latitude: totals.latitude + coordinate[1],
+        }),
+        { longitude: 0, latitude: 0 }
+      );
+      const pointCount = Math.max(ring.length - 1, 1);
+      dataSource.entities.add(
+        new Entity({
+          name: "DEMO / NON-AUTHORITATIVE label",
+          position: Cartesian3.fromDegrees(
+            centre.longitude / pointCount,
+            centre.latitude / pointCount,
+            18
+          ),
+          label: new LabelGraphics({
+            text: "DEMO VOLUME\nNOT A BUILDING",
+            font: "600 12px sans-serif",
+            fillColor: Color.fromCssColorString("#fff5ca"),
+            outlineColor: Color.fromCssColorString("#3f210d"),
+            outlineWidth: 4,
+            showBackground: true,
+            backgroundColor:
+              Color.fromCssColorString("#4a260d").withAlpha(0.86),
+            pixelOffset: new Cartesian2(0, -25),
+          }),
+        })
+      );
       syntheticDemoDataSourceRef.current = dataSource;
       await viewer.dataSources.add(dataSource);
       void viewer.flyTo(dataSource, {
         duration: 0.65,
-        offset: new HeadingPitchRange(0.22, -0.92, 240),
+        offset: new HeadingPitchRange(0.52, -0.42, 96),
       });
     };
     void renderSyntheticDemo().catch(error =>
@@ -489,7 +519,7 @@ export function CesiumSpatialViewer({
     ) {
       void viewer.flyTo(syntheticDemoDataSourceRef.current, {
         duration: 0.65,
-        offset: new HeadingPitchRange(0.22, -0.92, 240),
+        offset: new HeadingPitchRange(0.52, -0.42, 96),
       });
     }
     if (command.kind === "fullscreen")

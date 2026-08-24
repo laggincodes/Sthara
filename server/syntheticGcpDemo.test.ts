@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { buildSyntheticGcpDemoResult } from "../shared/syntheticGcpDemo";
+
+const cesiumViewerSource = readFileSync(
+  resolve(process.cwd(), "client/src/components/CesiumSpatialViewer.tsx"),
+  "utf8"
+);
 
 describe("synthetic GCP demo pipeline", () => {
   it("validates the supplied non-collinear prototype controls and creates a closed EPSG:4326 preview ring", () => {
@@ -23,5 +30,10 @@ describe("synthetic GCP demo pipeline", () => {
     expect(properties.coordinateSource).toContain("SYNTHETIC");
     expect(properties.approvedHeightMetres).toBeUndefined();
     expect(properties.activeLocks).toContain("vertical ULPIN");
+  });
+
+  it("keeps the 3D preview visibly labelled as a prototype rather than a building", () => {
+    expect(cesiumViewerSource).toContain("DEMO VOLUME\\nNOT A BUILDING");
+    expect(cesiumViewerSource).toContain("no PostGIS write");
   });
 });

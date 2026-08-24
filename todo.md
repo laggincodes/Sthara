@@ -177,3 +177,5 @@
 - [x] Create a non-persistent plan-to-EPSG:4326 transform and demo GeoJSON payload that tests the handoff contract without writing synthetic geometry to PostGIS.
 - [x] Add a clearly labelled synthetic demo footprint/3D preview that cannot unlock authoritative extrusion, ownership, floor modelling, or vertical ULPIN issuance.
 - [x] Add regression tests for synthetic-data labelling, transform validity, no-persistence behavior, and retained evidence locks; validate, checkpoint, and synchronize.
+- [x] Refine the synthetic GCP Cesium presentation with prototype-only camera framing, material treatment, ground contact, and label hierarchy without adding architectural or authority claims.
+- [x] Verify desktop/mobile 3D visual quality and DEMO/NON-AUTHORITATIVE safety labelling; checkpoint and synchronize the refinement.
