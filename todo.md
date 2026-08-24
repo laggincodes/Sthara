@@ -163,3 +163,7 @@
 - [x] Make the Buildings sidebar entry open a source-aware building-place exploration view that routes colleges, institutions, universities, restaurants, and other queries to live 3D geometry only when matched.
 - [x] Show geometry-backed footprint counts and areas for matched places while marking length, width, height, floors, ownership, parcel status, and ULPIN as unavailable unless separately evidenced.
 - [x] Add regression coverage and desktop/mobile verification for Parcels and Buildings navigation, matched-source results, and unmatched-place locks; checkpoint and synchronize the update.
+- [x] Give Parcels, Buildings, and Property volumes visibly distinct destinations, headings, data lenses, and actions so they do not appear to be the same map page.
+- [x] Improve the ULPIN registry workspace so it clearly distinguishes source records from issued vertical ULPINs and offers useful, evidence-safe discovery actions.
+- [x] Review the Generate ULPIN flow end to end and ensure it visibly remains an evidence-eligibility gate rather than implying issuance without validated Level 3 evidence.
+- [x] Validate desktop/mobile navigation for all four controls, add regression coverage, checkpoint, and synchronize the refinement.
