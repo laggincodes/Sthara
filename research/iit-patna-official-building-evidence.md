@@ -29,6 +29,14 @@ OpenStreetMap returns `way/1368115899` as the named **Indian Institute of Techno
 
 The workspace now shows the independently verified boys' hostel context only for IIT Patna searches. The panel visibly labels the record as **institution-level context only; not matched to an individual source footprint**, and links to the official IIT Patna hostel page. It does not show for the AIIMS Patna workspace. Desktop and 396×857 mobile reviews confirmed that the panel remains readable alongside the Level 1 source-footprint state.
 
+## Follow-up official-source availability check — 24 August 2026
+
+IIT Patna's primary public website continues to link `https://iwd.iitp.ac.in/` as its Institute Works Department, confirming that IWD is an institute-recognized office. The hostname returned a DNS resolution failure from this validation environment. An indexed third-party mirror exposed only navigation and IWD contact details; it did not expose a named-building plan, coordinates, a source-footprint link, or a downloadable authoritative drawing. Its Academic Zone navigation did not return an underlying building schedule.
+
+The mirror remains supporting context only. It is not sufficient to reconcile Academic Block-4—or any other named IIT building—to the four Microsoft source detections, approve a height, or unlock Level 3 floor-by-floor/vertical ULPIN modelling. A direct official IWD PDF, GIS export, BIM, plan, or building-to-map correspondence is still required.
+
+**Application update decision:** no IIT source-footprint attributes, height records, floor counts, or vertical ULPIN records were added during this check.
+
 ## References
 
 [1] [IIT Patna — Hostels](https://www.iitp.ac.in/hostels)
