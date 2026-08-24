@@ -38,7 +38,6 @@ import {
   Users,
   UploadCloud,
   X,
-  Zap,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -203,7 +202,6 @@ export default function Home() {
   const [activeFloor, setActiveFloor] = useState(4);
   const [isNavOpen, setIsNavOpen] = useState(false);
   const [generatorOpen, setGeneratorOpen] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -852,15 +850,12 @@ export default function Home() {
     reader.readAsDataURL(stagedFile);
   };
 
-  const generateUlpIn = () => {
-    setIsGenerating(true);
-    window.setTimeout(() => {
-      setIsGenerating(false);
-      setGeneratorOpen(false);
-      toast.success("3D ULPIN issued", {
-        description: "KA-29-105-0421-B12-F04-021 is ready for review.",
-      });
-    }, 1300);
+  const requestUlpInEligibilityReview = () => {
+    setGeneratorOpen(false);
+    toast.message("3D ULPIN issuance remains locked", {
+      description:
+        "Validated GCPs, an authoritative footprint, approved vertical-property evidence, and registration review are required before an identifier can be issued.",
+    });
   };
 
   return (
@@ -1934,44 +1929,35 @@ export default function Home() {
             <div className="generator-symbol">
               <Sparkles size={22} />
             </div>
-            <p className="eyebrow cyan-text">Standardized volume identity</p>
-            <h2 id="ulpin-generator-title">Issue a 3D ULPIN</h2>
+            <p className="eyebrow cyan-text">Evidence-gated identity review</p>
+            <h2 id="ulpin-generator-title">3D ULPIN issuance locked</h2>
             <p className="generator-copy">
-              The selected parcel volume has cleared CRS, geometry, containment,
-              and uniqueness checks.
+              This SIH demonstration does not create a ULPIN until authoritative
+              geometry, vertical-property evidence, and registration review are
+              complete.
             </p>
             <div className="generator-code">
-              <span>Proposed identifier</span>
-              <code>
-                KA-29-105-0421-B12-F{String(activeFloor).padStart(2, "0")}-021
-              </code>
+              <span>Identifier status</span>
+              <code>Not issued</code>
             </div>
             <div className="generation-checks">
               <span>
-                <Check size={14} /> CRS aligned
+                <AlertTriangle size={14} /> Ground control points required
               </span>
               <span>
-                <Check size={14} /> topology valid
+                <AlertTriangle size={14} /> Authoritative footprint required
               </span>
               <span>
-                <Check size={14} /> volume unique
+                <AlertTriangle size={14} /> Vertical registration evidence
+                required
               </span>
             </div>
             <button
               className="primary-button generator-button"
               type="button"
-              disabled={isGenerating}
-              onClick={generateUlpIn}
+              onClick={requestUlpInEligibilityReview}
             >
-              {isGenerating ? (
-                <>
-                  <span className="button-spinner" /> Generating identity…
-                </>
-              ) : (
-                <>
-                  <Zap size={17} /> Generate & register
-                </>
-              )}
+              <AlertTriangle size={17} /> View evidence requirements
             </button>
           </motion.div>
         </div>
@@ -2431,76 +2417,78 @@ export default function Home() {
                 <h2 id="property-detail-title">
                   {selectedLiveFeature
                     ? liveFeatureName
-                    : "Unit 4C · Block B12"}
+                    : "No authority-verified property selected"}
                 </h2>
                 <p>
                   {selectedLiveFeature
                     ? "Individual open building footprint selected from the live Neon PostGIS layer; no campus boundary has been inferred."
-                    : `Registered vertical parcel on Floor ${activeFloor} within Koramangala Sector 5.`}
+                    : "Select a source-backed footprint to inspect its provenance. This demonstration does not fabricate a ULPIN, ownership, floor, or property-volume record."}
                 </p>
               </div>
-              <SmallBadge tone={selectedLiveFeature ? "cyan" : "green"}>
+              <SmallBadge tone={selectedLiveFeature ? "cyan" : "amber"}>
                 {selectedLiveFeature ? (
                   <>
                     <Building2 size={12} /> detected footprint
                   </>
                 ) : (
                   <>
-                    <Check size={12} /> topology verified
+                    <AlertTriangle size={12} /> evidence pending
                   </>
                 )}
               </SmallBadge>
             </div>
             <div className="detail-ulpin">
-              <span>{selectedLiveFeature ? "Source record" : "3D ULPIN"}</span>
+              <span>
+                {selectedLiveFeature ? "Source record" : "Vertical ULPIN"}
+              </span>
               <code>
-                {selectedLiveFeature
-                  ? selectedLiveFeature.ulpin
-                  : `KA-29-105-0421-B12-F${String(activeFloor).padStart(2, "0")}-021`}
+                {selectedLiveFeature ? selectedLiveFeature.ulpin : "Not issued"}
               </code>
               <span className="detail-score">
                 {selectedLiveFeature
                   ? liveFeatureConfidence
-                  : "98.7% topology health"}
+                  : "Evidence pending"}
               </span>
             </div>
             <div className="detail-metrics">
               <div>
                 <span>
-                  {selectedLiveFeature ? "Footprint area" : "Footprint"}
-                </span>
-                <strong>
-                  {selectedLiveFeature ? liveFootprintArea : "152.4 m²"}
-                </strong>
-              </div>
-              <div>
-                <span>
-                  {selectedLiveFeature ? "Approved 3D height" : "Volume"}
-                </span>
-                <strong>
-                  {selectedLiveFeature ? liveFeatureHeight : "486.2 m³"}
-                </strong>
-              </div>
-              <div>
-                <span>
-                  {selectedLiveFeature ? "Spatial proximity" : "Elevation band"}
-                </span>
-                <strong>
                   {selectedLiveFeature
-                    ? liveFeatureDistance
-                    : `+${activeFloor * 3.2 - 0.1} → +${activeFloor * 3.2 + 3.0} m`}
+                    ? "Footprint area"
+                    : "Footprint geometry"}
+                </span>
+                <strong>
+                  {selectedLiveFeature ? liveFootprintArea : "Not supplied"}
+                </strong>
+              </div>
+              <div>
+                <span>
+                  {selectedLiveFeature
+                    ? "Approved 3D height"
+                    : "Approved height"}
+                </span>
+                <strong>
+                  {selectedLiveFeature ? liveFeatureHeight : "Not supplied"}
+                </strong>
+              </div>
+              <div>
+                <span>
+                  {selectedLiveFeature ? "Spatial proximity" : "Floor / unit"}
+                </span>
+                <strong>
+                  {selectedLiveFeature ? liveFeatureDistance : "Not supplied"}
                 </strong>
               </div>
             </div>
             <div className="detail-columns">
               <section>
                 <p className="section-kicker">
-                  {selectedLiveFeature ? "Dataset scope" : "Registered rights"}
+                  {selectedLiveFeature ? "Dataset scope" : "Rights & ownership"}
                 </p>
                 <h3>
                   {selectedLiveFeature
                     ? "Individual footprint only"
-                    : "Residential ownership"}
+                    : "Not asserted"}
                 </h3>
                 <ul>
                   {selectedLiveFeature ? (
@@ -2511,21 +2499,21 @@ export default function Home() {
                     </>
                   ) : (
                     <>
-                      <li>Exclusive possession of Unit 4C</li>
-                      <li>Shared circulation and service easements</li>
-                      <li>One assigned parking-right reference</li>
+                      <li>No ownership or rights inferred</li>
+                      <li>No parcel boundary or volume asserted</li>
+                      <li>No floor or unit identity issued</li>
                     </>
                   )}
                 </ul>
               </section>
               <section>
                 <p className="section-kicker">
-                  {selectedLiveFeature ? "Traceability" : "Evidence bundle"}
+                  {selectedLiveFeature ? "Traceability" : "Evidence status"}
                 </p>
                 <h3>
                   {selectedLiveFeature
                     ? "Reusable source record"
-                    : "Source confidence"}
+                    : "Requirements pending"}
                 </h3>
                 <ul>
                   {selectedLiveFeature ? (
@@ -2544,13 +2532,14 @@ export default function Home() {
                   ) : (
                     <>
                       <li>
-                        <Check size={14} /> LiDAR classified · 2026.06
+                        <AlertTriangle size={14} /> Independent GCPs required
                       </li>
                       <li>
-                        <Check size={14} /> Approved floor plan · v3
+                        <AlertTriangle size={14} /> Authority footprint required
                       </li>
                       <li>
-                        <Check size={14} /> GNSS / CORS aligned
+                        <AlertTriangle size={14} /> Vertical registration
+                        required
                       </li>
                     </>
                   )}
@@ -2563,12 +2552,12 @@ export default function Home() {
                 <strong>
                   {selectedLiveFeature
                     ? "Source metadata preserved"
-                    : "Topology validation passed"}
+                    : "Evidence validation pending"}
                 </strong>
                 <span>
                   {selectedLiveFeature
                     ? `${typeof selectedOwnership.ownerName === "string" ? `Linked owner: ${selectedOwnership.ownerName}. ` : "No ownership record linked yet. "}The selected building footprint remains attributed to its Microsoft open-data source and is not treated as a cadastral parcel or campus boundary.`
-                    : "No parcel overlaps, containment failures, or CRS deviations detected in the current review cycle."}
+                    : "No source-backed property record is selected. Geometry, height, ownership, and vertical ULPIN status remain unavailable until the required evidence is reviewed."}
                 </span>
               </div>
               <button
@@ -2579,7 +2568,7 @@ export default function Home() {
                     : setWorkspaceOpen("Audit trail")
                 }
               >
-                {selectedLiveFeature ? "Correct & link" : "View audit"}
+                {selectedLiveFeature ? "Correct & link" : "View evidence locks"}
               </button>
             </div>
           </motion.div>
