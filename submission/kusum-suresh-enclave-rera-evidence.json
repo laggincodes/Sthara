@@ -1,7 +1,7 @@
 {
   "kusumSureshEnclave": {
     "displayLabel": "KUSUM SURESH ENCLAVE",
-    "evidenceTier": "authority_backed_height_geometry_pending",
+    "evidenceTier": "authority_backed_attributes_height_and_geometry_pending",
     "authority": {
       "publisher": "Bihar Real Estate Regulatory Authority",
       "recordId": "RERAP125201800396-5",
@@ -34,11 +34,17 @@
     "statedAuthorityFacts": {
       "sanctionedFloorsSourceValue": "G+4",
       "interpretedStoreyCount": 5,
-      "officialHeightMetres": 14.9,
       "coverageAreaSquareMetres": 808.85,
       "totalBuiltupAreaSquareMetres": 3273.85,
       "totalLandAreaSquareMetres": 1313.8,
       "sanctionedBuildingCount": 1
+    },
+    "unverifiedReportedValues": {
+      "buildingHeightMetres": {
+        "value": 14.9,
+        "status": "unverified_not_displayed_as_an_sih_demo_fact",
+        "reason": "The supplied QR-code record renders the Height of Building field blank, and no authority-issued source has been independently confirmed to establish this metre value."
+      }
     },
     "endpointReference": {
       "latitude": 25.63366,
@@ -77,10 +83,10 @@
         "The plan identifies the G+4 project and its local plot/road context."
       ],
       "geometryDecision": "The closed outlines are local plan-space geometry only. No WGS84 grid, coordinate schedule, benchmark, or multiple survey control points were provided for a repeatable transformation into a PostGIS footprint.",
-      "nextRequirement": "Provide survey control/GNSS points, a georeferenced sanctioned plan, or a documented match to an independently licensed source footprint before creating a map polygon or rendering a 14.90 m extrusion."
+      "nextRequirement": "Provide survey control/GNSS points, a georeferenced sanctioned plan, or a documented match to an independently licensed source footprint before creating a map polygon. A separate authority-issued metre-height source is also required before any extrusion."
     },
     "activeLocks": {
-      "cesiumExtrusion": "Height is authority-backed, but no exact building footprint polygon has been matched. No Cesium extrusion is rendered.",
+      "cesiumExtrusion": "No authority-issued metre-height source has been independently confirmed, and no exact building footprint polygon has been matched. No Cesium extrusion is rendered.",
       "officialFootprintGeometry": "The sanctioned sheet has a local closed outline, but it has no WGS84 control and the published coordinate is only an endpoint of the plot.",
       "floorByFloorModel": "The sanctioned G+4 drawing was reviewed, but it is not yet tied to an exact mapped footprint or an approved vertical-property record.",
       "verticalULPIN": "No approved vertical-property registration or reviewed Level 3 floor-plan/BIM evidence has been established."
