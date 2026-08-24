@@ -3,23 +3,46 @@ import {
   ArrowDownAZ,
   ArrowUpAZ,
   ArrowLeft,
+  Database,
+  Download,
   FileSearch,
   Filter,
+  History,
+  Info,
   LockKeyhole,
+  MapPinned,
   ScanSearch,
   Search,
   ShieldCheck,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useLocation } from "wouter";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 type RecordFilter = "all" | "area-available" | "area-unavailable";
 type RecordSort = "name-asc" | "name-desc" | "area-desc" | "area-asc";
+type SourceRecord = { properties: Record<string, unknown> };
 
 function footprintArea(feature: { properties: Record<string, unknown> }) {
   return typeof feature.properties.footprintAreaSquareMetres === "number"
     ? feature.properties.footprintAreaSquareMetres
     : null;
+}
+
+function recordText(value: unknown, fallback = "Not available") {
+  return typeof value === "string" && value.trim().length > 0
+    ? value
+    : fallback;
+}
+
+function csvCell(value: string | number) {
+  return `"${String(value).replaceAll('"', '""')}"`;
 }
 
 export default function UlpInRegistry() {
@@ -28,6 +51,9 @@ export default function UlpInRegistry() {
   const [recordFilter, setRecordFilter] = useState<RecordFilter>("all");
   const [recordSort, setRecordSort] = useState<RecordSort>("name-asc");
   const [showAll, setShowAll] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState<SourceRecord | null>(
+    null
+  );
   const geometry = trpc.postgis.geojson.useQuery();
   const records = geometry.data?.features ?? [];
   const recordCountLabel = geometry.isLoading
@@ -73,6 +99,47 @@ export default function UlpInRegistry() {
   const visibleRecords = showAll
     ? filteredRecords
     : filteredRecords.slice(0, 8);
+  const focusRecordOnMap = (record: SourceRecord) => {
+    const ulpin = recordText(record.properties.ulpin, "");
+    if (!ulpin) return;
+    setLocation(
+      `/workspace?segment=buildings&site=${encodeURIComponent(ulpin)}`
+    );
+  };
+  const exportFilteredRecords = () => {
+    if (!filteredRecords.length) return;
+    const heading = [
+      "Source record ID",
+      "Name",
+      "Footprint area (m²)",
+      "Evidence state",
+      "Source/provenance",
+      "Issued vertical ULPIN",
+      "History status",
+    ];
+    const rows = filteredRecords.map(record => [
+      recordText(record.properties.ulpin),
+      recordText(record.properties.name, "Source-traced footprint"),
+      footprintArea(record) ?? "Area unavailable",
+      "Public footprint only",
+      recordText(record.properties.source),
+      "No — source record only",
+      "Not exposed by current source feed",
+    ]);
+    const csv = [heading, ...rows]
+      .map(row => row.map(csvCell).join(","))
+      .join("\n");
+    const downloadUrl = URL.createObjectURL(
+      new Blob([csv], { type: "text/csv;charset=utf-8" })
+    );
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    link.download = `ulpin-source-records-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(downloadUrl);
+  };
 
   return (
     <main className="registry-workspace">
@@ -171,6 +238,14 @@ export default function UlpInRegistry() {
                     </select>
                   </label>
                 </div>
+                <button
+                  type="button"
+                  className="registry-export"
+                  disabled={!filteredRecords.length}
+                  onClick={exportFilteredRecords}
+                >
+                  <Download size={13} /> Export {filteredRecords.length} CSV
+                </button>
               </div>
             </div>
             <div
@@ -182,7 +257,7 @@ export default function UlpInRegistry() {
                 <span>Source record</span>
                 <span>Footprint area</span>
                 <span>Evidence state</span>
-                <span />
+                <span>Actions</span>
               </div>
               {geometry.isLoading ? (
                 <div className="registry-empty">
@@ -205,24 +280,37 @@ export default function UlpInRegistry() {
                       role="row"
                       key={String(feature.properties.ulpin)}
                     >
-                      <span>
+                      <button
+                        type="button"
+                        className="registry-record-focus"
+                        onClick={() => focusRecordOnMap(feature)}
+                        title="Open the live 3D map focused on this source record"
+                      >
                         <b>{name}</b>
                         <small>{String(feature.properties.ulpin)}</small>
-                      </span>
+                      </button>
                       <span>{area}</span>
                       <span>
                         <i /> Public footprint only
                       </span>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setLocation(
-                            `/workspace?segment=buildings&site=${encodeURIComponent(String(feature.properties.ulpin))}`
-                          )
-                        }
-                      >
-                        <ScanSearch size={14} /> Inspect
-                      </button>
+                      <span className="registry-row-actions">
+                        <button
+                          type="button"
+                          onClick={() => focusRecordOnMap(feature)}
+                          title="Fly to this source geometry"
+                          aria-label={`Open the 3D map for ${name}`}
+                        >
+                          <MapPinned size={14} /> Map
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedRecord(feature)}
+                          title="View source record metadata"
+                          aria-label={`View details for ${name}`}
+                        >
+                          <ScanSearch size={14} /> Details
+                        </button>
+                      </span>
                     </div>
                   );
                 })
@@ -279,6 +367,84 @@ export default function UlpInRegistry() {
           </aside>
         </div>
       </section>
+      <Dialog
+        open={Boolean(selectedRecord)}
+        onOpenChange={open => {
+          if (!open) setSelectedRecord(null);
+        }}
+      >
+        <DialogContent className="registry-detail-dialog">
+          <DialogHeader>
+            <DialogTitle>
+              {recordText(selectedRecord?.properties.name, "Source record")}
+            </DialogTitle>
+            <DialogDescription>
+              Source-record metadata only. This is not an issued vertical ULPIN
+              or a legal ownership record.
+            </DialogDescription>
+          </DialogHeader>
+          <section className="registry-detail-section">
+            <p>
+              <Database size={14} /> Available source metadata
+            </p>
+            <dl>
+              <div>
+                <dt>Source record ID</dt>
+                <dd>{recordText(selectedRecord?.properties.ulpin)}</dd>
+              </div>
+              <div>
+                <dt>Footprint area</dt>
+                <dd>
+                  {selectedRecord && footprintArea(selectedRecord) !== null
+                    ? `${footprintArea(selectedRecord)?.toLocaleString()} m²`
+                    : "Area unavailable"}
+                </dd>
+              </div>
+              <div>
+                <dt>Evidence state</dt>
+                <dd>Public footprint only</dd>
+              </div>
+              <div>
+                <dt>Source / provenance</dt>
+                <dd>{recordText(selectedRecord?.properties.source)}</dd>
+              </div>
+              <div>
+                <dt>Record type</dt>
+                <dd>
+                  {recordText(
+                    selectedRecord?.properties.recordType,
+                    "Source-backed geometry"
+                  )}
+                </dd>
+              </div>
+            </dl>
+          </section>
+          <section className="registry-history-note">
+            <History size={15} />
+            <span>
+              <b>History is not available in this source feed.</b>
+              <small>
+                No revision timeline, ownership history, issue history, or
+                authority audit trail is shown because the current source record
+                does not expose it.
+              </small>
+            </span>
+          </section>
+          <div className="registry-detail-actions">
+            <button
+              type="button"
+              onClick={() => {
+                if (selectedRecord) focusRecordOnMap(selectedRecord);
+              }}
+            >
+              <MapPinned size={14} /> Open focused 3D map
+            </button>
+            <span>
+              <Info size={13} /> Issuance remains evidence-gated
+            </span>
+          </div>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }

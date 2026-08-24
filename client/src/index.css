@@ -6584,3 +6584,180 @@ input:focus-visible {
     max-width: calc(100% - 20px);
   }
 }
+.registry-export {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 6px 8px;
+  color: #b9f0ea;
+  background: rgba(42, 212, 217, 0.08);
+  border: 1px solid rgba(42, 212, 217, 0.23);
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 8px;
+}
+.registry-export:hover:not(:disabled) {
+  color: #eefffc;
+  background: rgba(42, 212, 217, 0.16);
+}
+.registry-export:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+.registry-record-focus {
+  display: block !important;
+  min-width: 0;
+  padding: 0 !important;
+  color: inherit !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  cursor: pointer;
+  text-align: left;
+}
+.registry-record-focus:hover b {
+  color: #88f4eb !important;
+}
+.registry-row-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+}
+.registry-row-actions button {
+  min-width: 0;
+  white-space: nowrap;
+}
+.registry-detail-dialog {
+  max-width: min(580px, calc(100vw - 28px)) !important;
+  max-height: min(720px, calc(100vh - 28px));
+  overflow-y: auto;
+  color: #d6ece7;
+  background: linear-gradient(150deg, #11272d, #071318) !important;
+  border-color: rgba(92, 224, 218, 0.35) !important;
+}
+.registry-detail-dialog [data-slot="dialog-title"] {
+  color: #f0fffb;
+  font-family: "Space Grotesk", sans-serif;
+}
+.registry-detail-dialog [data-slot="dialog-description"] {
+  max-width: 460px;
+  color: #9db9b3;
+  line-height: 1.5;
+}
+.registry-detail-section {
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(195, 233, 227, 0.12);
+  border-radius: 8px;
+}
+.registry-detail-section > p {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 9px;
+  color: #77ded8;
+  font:
+    600 8px "IBM Plex Mono",
+    monospace;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.registry-detail-section dl {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+}
+.registry-detail-section dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(195, 233, 227, 0.08);
+}
+.registry-detail-section dt {
+  color: #8fa9a4;
+  font-size: 9px;
+}
+.registry-detail-section dd {
+  max-width: 62%;
+  margin: 0;
+  color: #e0f6f1;
+  font:
+    8px/1.4 "IBM Plex Mono",
+    monospace;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+.registry-history-note {
+  display: flex;
+  gap: 9px;
+  padding: 10px;
+  color: #f8d7a8;
+  background: rgba(100, 57, 16, 0.2);
+  border: 1px dashed rgba(235, 167, 96, 0.48);
+  border-radius: 7px;
+}
+.registry-history-note > svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+.registry-history-note b,
+.registry-history-note small {
+  display: block;
+}
+.registry-history-note b {
+  font-size: 9px;
+}
+.registry-history-note small {
+  margin-top: 3px;
+  color: #d9bc93;
+  font-size: 8px;
+  line-height: 1.45;
+}
+.registry-detail-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.registry-detail-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  color: #062126;
+  background: #42d7da;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 9px;
+}
+.registry-detail-actions span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #93b4ad;
+  font-size: 8px;
+}
+@media (max-width: 660px) {
+  .registry-row-actions {
+    grid-template-columns: 1fr;
+  }
+  .registry-row-actions button {
+    padding: 5px !important;
+    font-size: 0;
+  }
+  .registry-row-actions button svg {
+    width: 14px;
+    height: 14px;
+  }
+  .registry-detail-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .registry-detail-actions button {
+    justify-content: center;
+  }
+}

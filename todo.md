@@ -197,3 +197,7 @@
 - [x] Add clear loading animation, actionable error state, and retry behavior for the Cesium map runtime.
 - [x] Add dashboard ULPIN record search, evidence-status filters, and sort controls with responsive results.
 - [x] Add regression coverage and desktop/mobile validation for Cesium feedback and ULPIN search/filter controls.
+- [x] Export the current filtered ULPIN source-record results as a safe CSV without fabricating issued-status or history data.
+- [x] Make ULPIN source-record actions open the live Cesium workspace focused on the selected source geometry.
+- [x] Add a detailed ULPIN source-record modal that shows available provenance/metadata and clearly marks unavailable history.
+- [x] Add regression coverage and desktop/mobile validation for the registry export, map-focus, and detail-modal workflows.

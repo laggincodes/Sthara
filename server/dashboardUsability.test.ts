@@ -29,4 +29,20 @@ describe("dashboard usability controls", () => {
     expect(registrySource).toContain("Show all");
     expect(registrySource).toContain("Issued vertical ULPINs");
   });
+
+  it("exports only the filtered source-record result set and keeps issued-status and history fields evidence-safe", () => {
+    expect(registrySource).toContain("exportFilteredRecords");
+    expect(registrySource).toContain("Export {filteredRecords.length} CSV");
+    expect(registrySource).toContain("No — source record only");
+    expect(registrySource).toContain("Not exposed by current source feed");
+    expect(registrySource).toContain("text/csv;charset=utf-8");
+  });
+
+  it("offers focused Cesium navigation and a modal that does not fabricate record history", () => {
+    expect(registrySource).toContain("focusRecordOnMap");
+    expect(registrySource).toContain("Open focused 3D map");
+    expect(registrySource).toContain("History is not available in this source feed.");
+    expect(registrySource).toContain("No revision timeline, ownership history");
+    expect(registrySource).toContain("Source-record metadata only.");
+  });
 });
