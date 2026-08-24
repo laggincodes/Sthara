@@ -4,25 +4,11 @@ import {
   matchesMapEvidenceFilter,
   type MapEvidenceFilter,
 } from "@shared/evidenceMapFilter";
-import "cesium/Build/Cesium/Widgets/widgets.css";
-import {
-  Cartesian2,
-  Cartesian3,
-  Color,
-  ColorMaterialProperty,
-  ConstantProperty,
-  defined,
-  EllipsoidTerrainProvider,
-  Entity,
-  GeoJsonDataSource,
-  HeadingPitchRange,
-  Ion,
-  LabelGraphics,
-  PointGraphics,
-  PolygonGraphics,
-  PolygonHierarchy,
-  ScreenSpaceEventType,
-  Viewer,
+import type {
+  Cartesian2 as CesiumCartesian2,
+  Entity as CesiumEntity,
+  GeoJsonDataSource as CesiumGeoJsonDataSource,
+  Viewer as CesiumViewer,
 } from "cesium";
 import { useEffect, useRef, useState } from "react";
 
@@ -98,16 +84,43 @@ export function CesiumSpatialViewer({
     properties: Record<string, unknown>;
   }) => void;
 }) {
+  const cesiumRuntime = (
+    window as Window & { Cesium?: typeof import("cesium") }
+  ).Cesium;
+  if (!cesiumRuntime) {
+    throw new Error("Cesium runtime failed to load from the configured CDN");
+  }
+  const {
+    Cartesian2,
+    Cartesian3,
+    Color,
+    ColorMaterialProperty,
+    ConstantProperty,
+    defined,
+    EllipsoidTerrainProvider,
+    Entity,
+    GeoJsonDataSource,
+    HeadingPitchRange,
+    Ion,
+    LabelGraphics,
+    PointGraphics,
+    PolygonGraphics,
+    PolygonHierarchy,
+    ScreenSpaceEventType,
+    Viewer,
+  } = cesiumRuntime;
   const containerRef = useRef<HTMLDivElement>(null);
-  const viewerRef = useRef<Viewer | null>(null);
-  const dataSourceRef = useRef<GeoJsonDataSource | null>(null);
+  const viewerRef = useRef<CesiumViewer | null>(null);
+  const dataSourceRef = useRef<CesiumGeoJsonDataSource | null>(null);
   const osmBuildingsRef = useRef<{
     show: boolean;
     destroy?: () => void;
   } | null>(null);
   const imageryLayerRef = useRef<{ show: boolean } | null>(null);
-  const authorityMarkerRef = useRef<Entity | null>(null);
-  const syntheticDemoDataSourceRef = useRef<GeoJsonDataSource | null>(null);
+  const authorityMarkerRef = useRef<CesiumEntity | null>(null);
+  const syntheticDemoDataSourceRef = useRef<CesiumGeoJsonDataSource | null>(
+    null
+  );
   const [viewerReady, setViewerReady] = useState(false);
   const [syntheticHover, setSyntheticHover] = useState(false);
   const [imageryState, setImageryState] = useState<
@@ -147,8 +160,8 @@ export function CesiumSpatialViewer({
     viewer.camera.setView({
       destination: Cartesian3.fromDegrees(77.6245, 12.9352, 2300),
     });
-    let highlightedEntity: Entity | null = null;
-    const restoreFootprintStyle = (entity: Entity | null) => {
+    let highlightedEntity: CesiumEntity | null = null;
+    const restoreFootprintStyle = (entity: CesiumEntity | null) => {
       if (!entity?.polygon) return;
       const properties = (entity.properties?.getValue?.() ?? {}) as Record<
         string,
@@ -166,11 +179,11 @@ export function CesiumSpatialViewer({
       );
     };
     viewer.screenSpaceEventHandler.setInputAction(
-      (movement: { position: Cartesian2 }) => {
+      (movement: { position: CesiumCartesian2 }) => {
         const picked = viewer.scene.pick(movement.position);
         const entity =
           defined(picked) && picked.id && typeof picked.id === "object"
-            ? (picked.id as Entity)
+            ? (picked.id as CesiumEntity)
             : undefined;
         const syntheticProperties = (entity?.properties?.getValue?.() ??
           {}) as Record<string, unknown>;
@@ -208,11 +221,11 @@ export function CesiumSpatialViewer({
       ScreenSpaceEventType.LEFT_CLICK
     );
     viewer.screenSpaceEventHandler.setInputAction(
-      (movement: { endPosition: Cartesian2 }) => {
+      (movement: { endPosition: CesiumCartesian2 }) => {
         const picked = viewer.scene.pick(movement.endPosition);
         const entity =
           defined(picked) && picked.id && typeof picked.id === "object"
-            ? (picked.id as Entity)
+            ? (picked.id as CesiumEntity)
             : undefined;
         const properties = (entity?.properties?.getValue?.() ?? {}) as Record<
           string,
@@ -226,48 +239,52 @@ export function CesiumSpatialViewer({
     setViewerReady(true);
     let cancelled = false;
     if (osmBuildingsEnabled) {
-      void import("cesium").then(async ({ createWorldImageryAsync }) => {
-        if (cancelled || !viewerRef.current) return;
-        try {
-          const imageryProvider = await createWorldImageryAsync();
+      void Promise.resolve(cesiumRuntime).then(
+        async ({ createWorldImageryAsync }) => {
           if (cancelled || !viewerRef.current) return;
-          const imageryLayer =
-            viewer.imageryLayers.addImageryProvider(imageryProvider);
-          imageryLayer.alpha = 0.9;
-          imageryLayerRef.current = imageryLayer;
-          setImageryState("ready");
-          viewer.scene.requestRender();
-        } catch (error) {
-          setImageryState("unavailable");
-          console.warn(
-            "[Cesium] Optional World Imagery layer unavailable",
-            error
-          );
+          try {
+            const imageryProvider = await createWorldImageryAsync();
+            if (cancelled || !viewerRef.current) return;
+            const imageryLayer =
+              viewer.imageryLayers.addImageryProvider(imageryProvider);
+            imageryLayer.alpha = 0.9;
+            imageryLayerRef.current = imageryLayer;
+            setImageryState("ready");
+            viewer.scene.requestRender();
+          } catch (error) {
+            setImageryState("unavailable");
+            console.warn(
+              "[Cesium] Optional World Imagery layer unavailable",
+              error
+            );
+          }
         }
-      });
+      );
     } else {
       setImageryState("unavailable");
     }
     if (osmBuildingsEnabled) {
-      void import("cesium").then(async ({ createOsmBuildingsAsync }) => {
-        if (cancelled || !viewerRef.current) return;
-        try {
-          const osmBuildings = await createOsmBuildingsAsync();
-          if (cancelled || !viewerRef.current) {
-            osmBuildings.destroy?.();
-            return;
+      void Promise.resolve(cesiumRuntime).then(
+        async ({ createOsmBuildingsAsync }) => {
+          if (cancelled || !viewerRef.current) return;
+          try {
+            const osmBuildings = await createOsmBuildingsAsync();
+            if (cancelled || !viewerRef.current) {
+              osmBuildings.destroy?.();
+              return;
+            }
+            osmBuildings.show = true;
+            viewer.scene.primitives.add(osmBuildings);
+            osmBuildingsRef.current = osmBuildings;
+            viewer.scene.requestRender();
+          } catch (error) {
+            console.warn(
+              "[Cesium] Optional OSM Buildings layer unavailable",
+              error
+            );
           }
-          osmBuildings.show = true;
-          viewer.scene.primitives.add(osmBuildings);
-          osmBuildingsRef.current = osmBuildings;
-          viewer.scene.requestRender();
-        } catch (error) {
-          console.warn(
-            "[Cesium] Optional OSM Buildings layer unavailable",
-            error
-          );
         }
-      });
+      );
     }
     return () => {
       cancelled = true;
