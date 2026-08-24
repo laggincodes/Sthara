@@ -137,3 +137,7 @@
 - [x] Add a client-side SIH PDF export for the JSON-backed Academic Block-4 dossier, including only shown facts, citations, availability limitations, and lock conditions.
 - [x] Add source-safe autocomplete suggestions for IIT Patna institutional records and known source-backed IIT search routes without suggesting unsupported building facts.
 - [x] Test the map filter, PDF export, and autocomplete on desktop and true mobile; checkpoint and synchronize the implementation.
+- [x] Validate the supplied official Bihar RERA KUSUM SURESH ENCLAVE record and preserve its exact source fields, citations, and availability status.
+- [x] Add the RERA-backed G+4, 14.90 m, area, and sanctioned-plan evidence as a distinct authority test record without treating the labelled endpoint coordinate as a footprint polygon.
+- [x] Unlock only the verified-height evidence state after a defensible source-footprint match; otherwise retain the Cesium extrusion and vertical ULPIN geometry locks.
+- [x] Validate the RERA authority evidence and all retained locks on desktop and true mobile; checkpoint and synchronize the implementation.

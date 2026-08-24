@@ -68,6 +68,7 @@ import {
   replacePolygonVertex,
 } from "../../../shared/footprintGeometryEditing";
 import academicBlock4Evidence from "../../../submission/academic-block-4-institutional-evidence.json";
+import kusumSureshEnclaveEvidence from "../../../submission/kusum-suresh-enclave-rera-evidence.json";
 import { buildAcademicBlock4PdfLines } from "../../../shared/academicBlock4PdfContent";
 import {
   getMapEvidenceFilterLabel,
@@ -418,6 +419,16 @@ export default function Home() {
     areaSearch.data && areaSearch.data.buildingCount > 0
   );
   const academicBlock4 = academicBlock4Evidence.academicBlock4;
+  const kusumSureshEnclave = kusumSureshEnclaveEvidence.kusumSureshEnclave;
+  const reraEndpointReference = useMemo(
+    () => ({
+      latitude: kusumSureshEnclave.endpointReference.latitude,
+      longitude: kusumSureshEnclave.endpointReference.longitude,
+      label: "Bihar RERA endpoint · KUSUM SURESH ENCLAVE",
+      detail: kusumSureshEnclave.endpointReference.mapUse,
+    }),
+    [kusumSureshEnclave]
+  );
   const autocompleteSuggestions = useMemo(
     () => filterIitPatnaAutocomplete(areaSearchQuery),
     [areaSearchQuery]
@@ -1282,6 +1293,113 @@ export default function Home() {
                 exact footprint match, or a legal property identity.
               </p>
             </motion.article>
+            <motion.article
+              className="evidence-dashboard-card rera-authority-card"
+              {...panelMotion}
+              transition={{ duration: 0.42, delay: 0.14 }}
+            >
+              <div className="card-title-row">
+                <div>
+                  <p className="section-kicker">
+                    Bihar RERA authority test record
+                  </p>
+                  <h2>{kusumSureshEnclave.displayLabel}</h2>
+                </div>
+                <EvidenceLockBadge
+                  state="verified"
+                  detail="Authority record retrieved"
+                />
+              </div>
+              <div className="rera-metric-grid">
+                <div>
+                  <span>Sanctioned floors</span>
+                  <strong>
+                    {
+                      kusumSureshEnclave.statedAuthorityFacts
+                        .sanctionedFloorsSourceValue
+                    }
+                  </strong>
+                  <small>Source value preserved · five storeys explained</small>
+                </div>
+                <div>
+                  <span>Authority height</span>
+                  <strong>
+                    {kusumSureshEnclave.statedAuthorityFacts.officialHeightMetres.toFixed(
+                      2
+                    )}{" "}
+                    m
+                  </strong>
+                  <small>Verified record field · geometry match required</small>
+                </div>
+                <div>
+                  <span>Coverage area</span>
+                  <strong>
+                    {kusumSureshEnclave.statedAuthorityFacts.coverageAreaSquareMetres.toLocaleString()}{" "}
+                    m²
+                  </strong>
+                  <small>Published coverage measure · not a GIS polygon</small>
+                </div>
+                <div>
+                  <span>Plot context</span>
+                  <strong>
+                    {kusumSureshEnclave.projectLocation.khesraPlot}
+                  </strong>
+                  <small>
+                    {kusumSureshEnclave.projectLocation.mauza} ·{" "}
+                    {kusumSureshEnclave.projectLocation.anchal}
+                  </small>
+                </div>
+              </div>
+              <a
+                className="rera-record-link"
+                href={kusumSureshEnclave.authority.recordUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <FileText size={13} /> Bihar RERA{" "}
+                {kusumSureshEnclave.authority.recordId}
+              </a>
+              <button
+                className="rera-focus-button"
+                type="button"
+                onClick={() => issueMapCommand("focus-authority-reference")}
+              >
+                <MapPinned size={13} /> Focus RERA endpoint reference
+              </button>
+              <div className="rera-lock-summary">
+                <EvidenceLockBadge state="locked" />
+                <p>
+                  The 25.63366, 85.071159 coordinate is labelled as the plot end
+                  point. It is displayed only as a Cesium reference marker—not a
+                  footprint, parcel boundary, or extrusion target.
+                </p>
+              </div>
+              <div className="evidence-lock-list">
+                {Object.entries(kusumSureshEnclave.activeLocks).map(
+                  ([key, detail]) => (
+                    <div key={key}>
+                      <EvidenceLockBadge
+                        state={
+                          key === "cesiumExtrusion" ? "verified" : "locked"
+                        }
+                      />
+                      <span>
+                        <b>
+                          {key === "cesiumExtrusion"
+                            ? "Authority height · geometry pending"
+                            : key === "officialFootprintGeometry"
+                              ? "Footprint geometry"
+                              : key === "floorByFloorModel"
+                                ? "Floor-by-floor model"
+                                : "Vertical ULPIN"}
+                        </b>
+                        <small>{detail}</small>
+                      </span>
+                    </div>
+                  )
+                )}
+              </div>
+            </motion.article>
           </section>
 
           <section className="stats-grid" aria-label="Pilot program metrics">
@@ -1324,6 +1442,7 @@ export default function Home() {
                 command={mapCommand}
                 layers={layersOn}
                 evidenceFilter={evidenceFilter}
+                authorityReference={reraEndpointReference}
                 focusUlpins={areaSearch.data?.matchedUlpins}
                 onFeatureSelect={onMapFeatureSelect}
               />

@@ -1,0 +1,48 @@
+{
+  "kusumSureshEnclave": {
+    "displayLabel": "KUSUM SURESH ENCLAVE",
+    "evidenceTier": "authority_backed_height_geometry_pending",
+    "authority": {
+      "publisher": "Bihar Real Estate Regulatory Authority",
+      "recordId": "RERAP125201800396-5",
+      "recordUrl": "https://rera.bihar.gov.in/Filanprint.aspx?id=RERAP125201800396-5",
+      "validatedOn": "2026-08-24"
+    },
+    "projectLocation": {
+      "address": "New Mithila Colony, Digha, Patna",
+      "khesraPlot": "808 P",
+      "mauza": "Digha",
+      "anchal": "Patna Sadar"
+    },
+    "statedAuthorityFacts": {
+      "sanctionedFloorsSourceValue": "G+4",
+      "interpretedStoreyCount": 5,
+      "officialHeightMetres": 14.9,
+      "coverageAreaSquareMetres": 808.85,
+      "totalBuiltupAreaSquareMetres": 3273.85,
+      "totalLandAreaSquareMetres": 1313.8,
+      "sanctionedBuildingCount": 1
+    },
+    "endpointReference": {
+      "latitude": 25.63366,
+      "longitude": 85.071159,
+      "sourceLabel": "Latitude/Longitude of End point of the plot",
+      "mapUse": "Reference marker only; not a centroid, footprint, or parcel boundary."
+    },
+    "supportingRecordsListedByRera": [
+      "Mutation (Correction-Slip)",
+      "Sale Deed/Khatiyan",
+      "Online copy of Jamabandi",
+      "Land Possession Certificate (LPC)",
+      "Current Revenue Receipt",
+      "Current Non-Encumbrance Certificate",
+      "Development Agreement"
+    ],
+    "activeLocks": {
+      "cesiumExtrusion": "Height is authority-backed, but no exact building footprint polygon has been matched. No Cesium extrusion is rendered.",
+      "officialFootprintGeometry": "The published coordinate is explicitly an endpoint of the plot, not a closed parcel or building polygon.",
+      "floorByFloorModel": "G+4 is preserved as a source value, but no reviewed floor plan/BIM tied to an exact footprint is available.",
+      "verticalULPIN": "No approved vertical-property registration or reviewed Level 3 floor-plan/BIM evidence has been established."
+    }
+  }
+}
