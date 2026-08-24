@@ -37,6 +37,12 @@ The mirror remains supporting context only. It is not sufficient to reconcile Ac
 
 **Application update decision:** no IIT source-footprint attributes, height records, floor counts, or vertical ULPIN records were added during this check.
 
+## Academic Block-4 source request — pending direct-document validation
+
+The newly supplied information identifies two official-source claims for Academic Block-4: the IWD Academic Zone record reportedly states **G+3** and **6,667.73 m²**, while the official Phase-III project document reportedly labels the building on a campus/site plan. This combination can support an institution-level floor-count and campus-plan relationship once the underlying official page and document are directly accessible and reviewed.
+
+The current IIT Patna website confirms IWD as an official institute office, but the IWD hostname remains unavailable from this environment. The official legacy hostname also did not resolve, and the current official notice archive did not expose archived records in its rendered page. No direct document URL, page image, plan coordinates, or map-to-footprint correspondence was retrieved in this validation pass. Accordingly, the application must not yet attach the claimed G+3/6,667.73 m² values to a Microsoft footprint or imply a GIS geometry match. An approved metre height and official floor plan/BIM remain separate requirements for Level 2/Level 3.
+
 ## References
 
 [1] [IIT Patna — Hostels](https://www.iitp.ac.in/hostels)

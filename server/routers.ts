@@ -8,6 +8,7 @@ import { invokeLLM } from "./_core/llm";
 import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, publicProcedure, router } from "./_core/trpc";
 import { confirmedSourceAlias, eligibleSourceAliases, sourceBackedSearchAliases } from "./buildingSearchAliases";
+import { buildPlaceIntelligence } from "./placeIntelligence";
 import { getPostgisFeatureCollection, searchPostgisLayeredArea, updatePostgisFootprint, upsertPostgisGeoJsonFeatures } from "./postgis";
 import { storageGetSignedUrl, storagePut } from "./storage";
 
@@ -63,6 +64,7 @@ export const appRouter = router({
   postgis: router({
     geojson: publicProcedure.query(async () => getPostgisFeatureCollection()),
     areaSearch: publicProcedure.input(layeredAreaSearchInput).query(async ({ input }) => searchPostgisLayeredArea(input.query)),
+    placeFacts: publicProcedure.input(layeredAreaSearchInput).query(async ({ input }) => buildPlaceIntelligence(await searchPostgisLayeredArea(input.query))),
     resolveBuilding: publicProcedure.input(buildingResolutionInput).mutation(async ({ input }) => {
       const direct = await searchPostgisLayeredArea(input.query);
       if (direct.buildingCount > 0) return { ...direct, resolvedQuery: input.query, resolution: "direct-source-match" as const, rationale: "Matched directly against live source-backed geometry." };
