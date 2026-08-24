@@ -56,4 +56,22 @@ describe("synthetic GCP demo pipeline", () => {
       "DEMO PLAN\\nNOT A CADASTRAL BOUNDARY"
     );
   });
+
+  it("keeps hover, ULPIN simulation, and visual-context layers explicitly synthetic and non-issued", () => {
+    expect(cesiumViewerSource).toContain("ScreenSpaceEventType.MOUSE_MOVE");
+    expect(cesiumViewerSource).toContain("SIMULATED DRONE IMAGERY");
+    expect(cesiumViewerSource).toContain("SIMULATED LiDAR POINT");
+    expect(syntheticDemoPageSource).toContain("Simulate 3D ULPIN preview");
+    expect(syntheticDemoPageSource).toContain(
+      "SIMULATION PREVIEW · NOT ISSUED"
+    );
+    expect(syntheticDemoPageSource).toMatch(
+      /No identifier, legal\s+right, or registered 3D ULPIN/
+    );
+    expect(syntheticDemoPageSource).toContain("Simulated drone imagery");
+    expect(syntheticDemoPageSource).toContain("Simulated LiDAR points");
+    expect(syntheticDemoPageSource).toContain('get("simulate") === "ulpin"');
+    expect(syntheticDemoPageSource).toContain('includes("drone")');
+    expect(syntheticDemoPageSource).toContain('includes("lidar")');
+  });
 });

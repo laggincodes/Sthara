@@ -186,3 +186,7 @@
 - [x] Add a prominent persistent DEMO / NON-AUTHORITATIVE overlay whenever synthetic GCP geometry is visible.
 - [x] Add regression coverage and desktop/mobile interaction verification for synthetic model inspection, 2D/3D switching, and retained evidence locks; checkpoint and synchronize.
 - [x] Verify the implemented 3D ULPIN-VPM demonstration against the stated DoLR project objectives, clearly distinguishing delivered prototype capabilities from authority-evidence-dependent production functions; confirm GitHub synchronization.
+- [x] Add a hover-only quick summary for the synthetic demo geometry that reiterates its non-authoritative status before selection.
+- [x] Add a side-panel action that simulates a non-issued 3D ULPIN preview for the selected synthetic prototype without producing or implying an actual ULPIN.
+- [x] Add a synthetic-map layer menu for clearly labelled simulated drone-imagery and LiDAR point-cloud visual context, separate from real source data.
+- [x] Add safety regression coverage and desktop/mobile interaction verification for hover, simulation preview, and simulated layer controls; checkpoint and synchronize.

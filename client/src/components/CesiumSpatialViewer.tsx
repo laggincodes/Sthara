@@ -19,6 +19,8 @@ import {
   Ion,
   LabelGraphics,
   PointGraphics,
+  PolygonGraphics,
+  PolygonHierarchy,
   ScreenSpaceEventType,
   Viewer,
 } from "cesium";
@@ -42,6 +44,10 @@ export type CesiumLayerFlags = {
   utilities: boolean;
   terrain: boolean;
 };
+export type SyntheticVisualLayers = {
+  simulatedDroneImagery: boolean;
+  simulatedLidarPointCloud: boolean;
+};
 
 function featureLayer(
   properties: Record<string, unknown>
@@ -61,6 +67,10 @@ export function CesiumSpatialViewer({
   authorityReference,
   syntheticDemoFeature,
   syntheticDemoView = "3d",
+  syntheticVisualLayers = {
+    simulatedDroneImagery: false,
+    simulatedLidarPointCloud: false,
+  },
   onSyntheticDemoSelect,
   focusUlpins,
   onFeatureSelect,
@@ -80,6 +90,7 @@ export function CesiumSpatialViewer({
     geometry: { type: "Polygon"; coordinates: number[][][] };
   };
   syntheticDemoView?: "2d" | "3d";
+  syntheticVisualLayers?: SyntheticVisualLayers;
   onSyntheticDemoSelect?: () => void;
   focusUlpins?: string[];
   onFeatureSelect?: (feature: {
@@ -98,6 +109,7 @@ export function CesiumSpatialViewer({
   const authorityMarkerRef = useRef<Entity | null>(null);
   const syntheticDemoDataSourceRef = useRef<GeoJsonDataSource | null>(null);
   const [viewerReady, setViewerReady] = useState(false);
+  const [syntheticHover, setSyntheticHover] = useState(false);
   const [imageryState, setImageryState] = useState<
     "loading" | "ready" | "unavailable"
   >("loading");
@@ -194,6 +206,21 @@ export function CesiumSpatialViewer({
         onFeatureSelect?.({ ulpin, properties });
       },
       ScreenSpaceEventType.LEFT_CLICK
+    );
+    viewer.screenSpaceEventHandler.setInputAction(
+      (movement: { endPosition: Cartesian2 }) => {
+        const picked = viewer.scene.pick(movement.endPosition);
+        const entity =
+          defined(picked) && picked.id && typeof picked.id === "object"
+            ? (picked.id as Entity)
+            : undefined;
+        const properties = (entity?.properties?.getValue?.() ?? {}) as Record<
+          string,
+          unknown
+        >;
+        setSyntheticHover(properties.demoNonAuthoritative === true);
+      },
+      ScreenSpaceEventType.MOUSE_MOVE
     );
     viewerRef.current = viewer;
     setViewerReady(true);
@@ -462,6 +489,47 @@ export function CesiumSpatialViewer({
         { longitude: 0, latitude: 0 }
       );
       const pointCount = Math.max(ring.length - 1, 1);
+      const ringPositions = Cartesian3.fromDegreesArray(
+        ring.slice(0, -1).flat()
+      );
+      if (syntheticVisualLayers.simulatedDroneImagery) {
+        dataSource.entities.add(
+          new Entity({
+            name: "SIMULATED DRONE IMAGERY · visual context only",
+            polygon: new PolygonGraphics({
+              hierarchy: new PolygonHierarchy(ringPositions),
+              material: new ColorMaterialProperty(
+                Color.fromCssColorString("#7ce3e0").withAlpha(0.16)
+              ),
+              outline: new ConstantProperty(true),
+              outlineColor: new ConstantProperty(
+                Color.fromCssColorString("#7ce3e0")
+              ),
+              height: new ConstantProperty(0.22),
+            }),
+          })
+        );
+      }
+      if (syntheticVisualLayers.simulatedLidarPointCloud) {
+        ringPositions.forEach((position, index) => {
+          dataSource.entities.add(
+            new Entity({
+              name: "SIMULATED LiDAR POINT · visual context only",
+              position,
+              point: new PointGraphics({
+                pixelSize: 7 + (index % 3),
+                color: new ConstantProperty(
+                  Color.fromCssColorString("#c48bff").withAlpha(0.92)
+                ),
+                outlineColor: new ConstantProperty(
+                  Color.fromCssColorString("#fff2ff")
+                ),
+                outlineWidth: new ConstantProperty(1),
+              }),
+            })
+          );
+        });
+      }
       dataSource.entities.add(
         new Entity({
           name: "DEMO / NON-AUTHORITATIVE label",
@@ -499,7 +567,12 @@ export function CesiumSpatialViewer({
     return () => {
       cancelled = true;
     };
-  }, [syntheticDemoFeature, syntheticDemoView, viewerReady]);
+  }, [
+    syntheticDemoFeature,
+    syntheticDemoView,
+    syntheticVisualLayers,
+    viewerReady,
+  ]);
 
   useEffect(() => {
     const viewer = viewerRef.current;
@@ -606,6 +679,12 @@ export function CesiumSpatialViewer({
         <div className="cesium-synthetic-warning">
           <b>DEMO / NON-AUTHORITATIVE</b>
           <span>Synthetic GCP geometry · not cadastral · no PostGIS write</span>
+        </div>
+      )}
+      {syntheticDemoFeature && syntheticHover && (
+        <div className="cesium-synthetic-hover-summary" role="status">
+          <b>DEMO PROTOTYPE</b>
+          <span>Synthetic geometry · click for separate RERA attributes</span>
         </div>
       )}
     </div>
