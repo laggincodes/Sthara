@@ -8,6 +8,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import PropertyVolumes from "./pages/PropertyVolumes";
 import SpatialWorkspace from "./pages/SpatialWorkspace";
+import SyntheticGcpDemo from "./pages/SyntheticGcpDemo";
 import UlpInRegistry from "./pages/UlpInRegistry";
 
 function Router() {
@@ -18,6 +19,7 @@ function Router() {
       <Route path="/workspace" component={SpatialWorkspace} />
       <Route path="/property-volumes" component={PropertyVolumes} />
       <Route path="/ulpin-registry" component={UlpInRegistry} />
+      <Route path="/synthetic-gcp-demo" component={SyntheticGcpDemo} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

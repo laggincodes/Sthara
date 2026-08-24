@@ -173,3 +173,7 @@
 - [x] Investigate Survey of India CORS public reference material and document that coordinates/control points must come from an authorized survey workflow rather than generated estimates.
 - [x] Integrate only retrieved authority-source links, metadata, and defensible records; test, checkpoint, and synchronize any evidence-backed update.
 - [x] Reconcile the RERA-recorded Plot 808 P, Digha, Patna Sadar, and Halka Patliputra context against BhuNaksha only if the portal returns a specific official Plot Info result; otherwise retain the pending polygon/GCP status.
+- [x] Validate the supplied four-point synthetic GCP dataset only as DEMO/NON-AUTHORITATIVE prototype input, with no survey, cadastral, GNSS, government-data, or legal-right claim.
+- [x] Create a non-persistent plan-to-EPSG:4326 transform and demo GeoJSON payload that tests the handoff contract without writing synthetic geometry to PostGIS.
+- [x] Add a clearly labelled synthetic demo footprint/3D preview that cannot unlock authoritative extrusion, ownership, floor modelling, or vertical ULPIN issuance.
+- [x] Add regression tests for synthetic-data labelling, transform validity, no-persistence behavior, and retained evidence locks; validate, checkpoint, and synchronize.
