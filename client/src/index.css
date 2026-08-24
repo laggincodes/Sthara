@@ -4812,6 +4812,31 @@ input:focus-visible {
 .rera-focus-button:hover {
   background: rgba(235, 167, 96, 0.16);
 }
+.rera-plan-review {
+  margin-top: 10px;
+  padding: 9px;
+  background: rgba(54, 189, 163, 0.055);
+  border: 1px solid rgba(54, 189, 163, 0.2);
+  border-radius: 6px;
+}
+.rera-plan-review-heading {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.rera-plan-review-heading b {
+  color: #c6e7db;
+  font-size: 9px;
+}
+.rera-plan-review p {
+  margin: 7px 0 0;
+  color: #a9b8b1;
+  font-size: 8.5px;
+  line-height: 1.45;
+}
+.rera-plan-review .rera-plan-review-limit {
+  color: #e7c788;
+}
 .rera-lock-summary {
   display: flex;
   align-items: flex-start;

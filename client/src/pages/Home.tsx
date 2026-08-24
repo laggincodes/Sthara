@@ -1366,6 +1366,25 @@ export default function Home() {
               >
                 <MapPinned size={13} /> Focus RERA endpoint reference
               </button>
+              <div className="rera-plan-review">
+                <div className="rera-plan-review-heading">
+                  <EvidenceLockBadge
+                    state="verified"
+                    detail="Sanctioned plan reviewed"
+                  />
+                  <b>Plan-space footprint reviewed</b>
+                </div>
+                <p>
+                  The supplied sanctioned plan contains a local closed site and
+                  building outline, 1:100 metric scale, G+4 floor drawing, and
+                  local road context. The two supplied PDFs are byte-identical.
+                </p>
+                <p className="rera-plan-review-limit">
+                  No WGS84 grid, control point, or benchmark is present. The
+                  outline remains plan-space only—not a PostGIS polygon or
+                  Cesium extrusion target.
+                </p>
+              </div>
               <div className="rera-lock-summary">
                 <EvidenceLockBadge state="locked" />
                 <p>
