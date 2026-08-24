@@ -128,3 +128,8 @@
 - [x] Summarize verification status for every IIT Patna institutional record currently displayed in the dashboard, without expanding claims to unshown buildings.
 - [x] Draft the SIH methodology describing evidence tiers and the locks for unverified height, GIS geometry, floor-plan/BIM, and vertical ULPIN metadata.
 - [x] Validate the exports, checkpoint the submission package, and synchronize it to GitHub.
+- [x] Add a dashboard evidence-lock badge system that distinguishes verified, source-cited, public-footprint-only, and survey-required metrics.
+- [x] Bind the Academic Block-4 SIH JSON evidence package into the frontend so the map dossier dynamically renders its institutional facts, source citations, and locks.
+- [x] Extend the place-search interface with guarded AI-assisted source lookup that reports supported live footprint facts and explicit unavailable/locked metrics for unverified campus buildings.
+- [x] Create and validate a reusable skill for source-safe campus evidence intake, dashboard presentation, and lock enforcement.
+- [x] Test the evidence-lock badges, JSON evidence rendering, and guarded search on desktop and true mobile; checkpoint and synchronize the implementation.
