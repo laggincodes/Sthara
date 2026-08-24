@@ -97,3 +97,11 @@
 - [x] Adapt compatible BhuMap-inspired 3D workflow patterns into original ULPIN-VPM controls while retaining source and authority-evidence safeguards.
 - [x] Validate the adapted 3D workflow controls on desktop and touch layouts.
 - [x] Interactively test the adapted property action dock at a true touch/mobile viewport, including focus, evidence intake, and operator access controls.
+- [ ] Verify the supplied IIT Patna IWD Academic Zone and residential building figures on the official IIT Patna source pages.
+- [ ] Reconcile verified IIT Patna Bihta building names, floor counts, and areas to matching live source geometry without assigning unverified heights or legal parcel/ULPIN status.
+- [ ] Show verified IIT building evidence in the Level 3 inspector only for records that are explicitly reconciled, while preserving Level 2 height evidence as separately authority-gated.
+- [ ] Validate the IIT evidence-aware inspector and map states on desktop and true mobile layouts.
+- [x] Reconcile the current IIT Patna reference-area anchor with the user-supplied Bihta coordinate before linking any official building evidence to source footprints; confirm that both sit within the named OSM university feature while neither identifies a specific official building.
+- [x] Add licensed Cesium imagery and public 3D building context to make the live source-backed map easier to interpret without treating visual context as cadastral evidence.
+- [x] Upgrade the selected-footprint inspector with truthful source, area, evidence-level, and next-evidence information instead of simulated ULPIN, floor/unit, elevation, conflict, or quality records.
+- [x] Validate the enhanced Cesium visual context and inspector on desktop and true mobile layouts, including a safe unmatched-place state.
