@@ -43,6 +43,14 @@ The newly supplied information identifies two official-source claims for Academi
 
 The current IIT Patna website confirms IWD as an official institute office, but the IWD hostname remains unavailable from this environment. The official legacy hostname also did not resolve, and the current official notice archive did not expose archived records in its rendered page. No direct document URL, page image, plan coordinates, or map-to-footprint correspondence was retrieved in this validation pass. Accordingly, the application must not yet attach the claimed G+3/6,667.73 m² values to a Microsoft footprint or imply a GIS geometry match. An approved metre height and official floor plan/BIM remain separate requirements for Level 2/Level 3.
 
+## Source-cited Academic Block-4 record — 24 August 2026
+
+The project user supplied the current IIT Patna IWD Academic Area URL, `https://www.iitp.ac.in/iwd/index.php/academic-area`, and identified the IIT Patna Annual Report 2015–16, page 18, as corroboration. The user reports both identify **Academic Block-4** as a **G+3 storied building** with **6,667.73 m² total floor area**. IIT Patna’s official Annual Reports page independently lists the 2015–16 English report as an institute publication.[6]
+
+At the time of validation, the supplied IWD page and the current annual-report asset path each returned a 404 response, so the project could not independently re-read the claimed page text or page 18. The workspace therefore presents the values as **source-cited institution context**, links to the accessible official Annual Reports index, and explicitly states that the cited asset locations are currently unavailable. It does not assign these values to a Microsoft detection, an exact campus-plan position, a GIS polygon, a metre height, a legal parcel, an owner, or a ULPIN.
+
+The separate Academic Block-4 evidence gate now makes the remaining requirements explicit: a verified block-to-footprint match, a surveyed height in metres for Cesium extrusion, and an official floor plan/BIM for floor-by-floor modelling and vertical ULPIN review.
+
 ## References
 
 [1] [IIT Patna — Hostels](https://www.iitp.ac.in/hostels)
@@ -54,3 +62,5 @@ The current IIT Patna website confirms IWD as an official institute office, but 
 [4] [OpenStreetMap Nominatim — IIT Patna named university feature](https://nominatim.openstreetmap.org/search?format=jsonv2&q=Indian%20Institute%20of%20Technology%20Patna%2C%20Bihta%2C%20Bihar)
 
 [5] [OpenStreetMap Nominatim — user-supplied coordinate](https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=25.5356&lon=84.8513&zoom=18)
+
+[6] [IIT Patna — Annual Reports](https://www.iitp.ac.in/administration/annual-reports)

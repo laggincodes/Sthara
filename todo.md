@@ -113,8 +113,11 @@
 - [x] Validate enhanced IIT Cesium, Academic Block-4 authority-gated state, and editNote feedback on desktop and true mobile layouts.
 - [ ] Verify the newly identified official IIT Patna Academic Zone and Phase-III sources for Academic Block-4’s G+3 floor count, 6,667.73 m² area, and campus-plan label.
 - [ ] Add a source-cited Academic Block-4 institutional evidence state only if the official plan provides a defensible campus-plan linkage, without assigning a Microsoft footprint, GIS polygon, metre height, or ULPIN.
-- [ ] Retain and validate the Level 2 metre-height extrusion and Level 3 vertical ULPIN locks for Academic Block-4 on desktop and mobile after the evidence update.
+- [x] Retain and validate the Level 2 metre-height extrusion and Level 3 vertical ULPIN locks for Academic Block-4 on desktop and mobile after the evidence update.
 - [x] Add source-aware place intelligence that reports only licensed or official footprint area, nearby source-building count, and evidence provenance for supported place searches.
 - [x] Make unsupported college, restaurant, park, garden, and general place searches explicitly report which requested measurements are unavailable rather than inventing length, width, height, floor, or building-count facts.
 - [ ] Integrate the supplied Academic Block-4 G+3 and 6,667.73 m² claims as unlinked institutional/campus-plan evidence only after a direct official source URL or PDF is available for citation.
-- [ ] Validate the place-intelligence facts and Academic Block-4 evidence locks on desktop and true mobile layouts.
+- [x] Validate the place-intelligence facts and Academic Block-4 evidence locks on desktop and true mobile layouts.
+- [ ] Validate https://www.iitp.ac.in/iwd/index.php/academic-area and the IIT Patna Annual Report 2015–16 page-18 reference for Academic Block-4’s G+3 status and 6,667.73 m² total floor area.
+- [ ] Add the validated Academic Block-4 record as IIT institutional/campus-plan evidence only, with direct official citations and no Microsoft-footprint, metre-height, or cadastral ULPIN assignment.
+- [ ] Re-validate Academic Block-4’s Level 2 and Level 3 locks plus the source-aware place facts panel on desktop and true mobile after the official-evidence update.
