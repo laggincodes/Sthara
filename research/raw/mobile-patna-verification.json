@@ -1,0 +1,37 @@
+{
+  "aiims": {
+    "state": {
+      "viewport": [
+        396,
+        857
+      ],
+      "heading": "AIIMS Patna reference area",
+      "focus": " 18 matched PostGIS footprints · camera focused on source geometry · EPSG:4326",
+      "note": "AI routing matched an existing source-backed area: AI routed the request to an existing source-backed area; rendered geometry is live PostGIS data.",
+      "preview": {
+        "x": 28,
+        "y": 664.390625,
+        "width": 340.203125,
+        "height": 188,
+        "top": 664.390625,
+        "right": 368.203125,
+        "bottom": 852.390625,
+        "left": 28
+      }
+    },
+    "image": "/tmp/ulpin-aiims-patna-mobile.png"
+  },
+  "unknown": {
+    "state": {
+      "viewport": [
+        396,
+        857
+      ],
+      "heading": "No verified 3D visual for “Unknown tower in Patna”",
+      "focus": " Try a mapped site, ULPIN, parcel, or building record · EPSG:4326",
+      "note": "No live source-backed building geometry matches this search.",
+      "empty": "No verified 3D building modelSearch a mapped place or select a live source footprint. AI routing cannot create missing geometry."
+    },
+    "image": "/tmp/ulpin-unknown-patna-mobile.png"
+  }
+}

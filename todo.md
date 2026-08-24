@@ -1,0 +1,224 @@
+# Enhancement Tasks
+
+- [x] Upgrade the dashboard foundation for built-in AI-powered natural-language ULPIN and property search.
+- [x] Add an AI search command bar with query suggestions, structured record results, and answer rationale.
+- [x] Enhance volume selection with loading states, hover tooltips, selected-volume motion, and an expanded property-information panel.
+- [x] Build an upload workflow for GeoJSON and floor-plan files with file-type validation, staged progress, and clear validation feedback.
+- [x] Verify the new workflows on desktop and mobile before delivery.
+- [x] Connect AI search to persisted ULPIN/property records while retaining the LLM rationale layer.
+- [x] Replace simulated upload percentage updates with real browser read progress and server-state-driven validation/storage feedback.
+- [x] Repair all command-rail and dashboard action buttons so each opens a usable corresponding workspace.
+- [x] Add a Cesium 3D viewer with an adapter for live PostGIS geometry and visible spatial layer controls.
+- [x] Extend GeoJSON and floor-plan processing with AI-assisted building footprint and floor-metadata extraction.
+- [x] Verify the repaired controls and new map/upload workflows on desktop and touch-sized layouts.
+- [x] Wire the spatial-layer controls to the Cesium/PostGIS data source and verify real geometry rendering.
+- [x] Add a floor-plan footprint derivation and georeferencing workflow before mapping floor-plan geometry.
+- [x] Run and record interactive desktop and touch verification of all repaired controls, Cesium controls, and evidence workflows.
+- [x] Synchronize the current verified project code to the connected GitHub repository.
+- [x] Source and validate reusable geospatial geometry for the Amity University Patna campus.
+- [x] Import the verified campus location reference into Neon PostGIS with building-layer metadata and OSM attribution.
+- [x] Verify the imported Amity University Patna reference renders in the live Cesium viewer.
+- [x] Superseded by the user’s instruction to avoid creating or assuming a campus boundary.
+- [x] Superseded by the user’s instruction to avoid creating or assuming a campus boundary.
+- [x] Superseded by the user’s instruction to avoid creating or assuming a campus boundary.
+- [x] Stream the official Microsoft Global ML Building Footprints shard and select only detected footprints near the verified Amity University Patna location.
+- [x] Import the selected individual detected footprints into Neon PostGIS with CDLA Permissive 2.0 attribution, without generating a campus boundary.
+- [x] Verify the individual Microsoft building footprints render in Cesium with source metadata.
+- [x] Make imported Microsoft footprint polygons selectable in Cesium and show their live source metadata in the inspector.
+- [x] Record an end-to-end browser verification of footprint selection, metadata display, and map visibility.
+- [x] Run true mobile viewport interactions for the command rail, evidence intake, and Cesium controls.
+- [x] Verify mobile footprint selection updates the source-metadata inspector and correct any touch-layout issue found.
+- [x] Create and validate a reusable skill for importing Microsoft building footprints into PostGIS/Cesium with cadastral traceability.
+- [x] Add approved-height storage and render height-based 3D extrusion for imported building footprints in Cesium.
+- [x] Add a manual footprint correction workflow with editable geometry, owner/authority review context, and saved revision metadata.
+- [x] Link imported footprints to persisted parcel and ULPIN ownership records, exposing detailed records on map selection.
+- [x] Build a search-led layered 3D area view that presents the selected site, building layers, footprint area, and situated area details.
+- [x] Verify height-extrusion contract, editing workflow, explicit ownership-record linkage UI, layered search, and responsive behavior before delivery.
+- [ ] Protect approved-height, ownership-link, and correction saves with a server-authorized authority workflow; verify a saved height produces a Cesium extrusion.
+- [ ] Replace raw-only correction with an assisted vertex-edit workflow and verify revision save plus reload persistence.
+- [ ] Create persisted parcel/ULPIN ownership records and explicit footprint links, then show linked ownership details on selection.
+- [x] Replace the hardcoded area focus with a query-driven site/ULPIN/parcel layered-area search result.
+- [ ] Verify an authority-approved height, geometry revision, ownership link, area search, and mobile workflow end to end.
+- [x] Replace the cramped split-view presentation with a full-screen responsive dashboard and full-screen authority data-entry workspace.
+- [x] Preserve the selected footprint in a full-page authority-editor URL so the separate-page action opens the correct record instead of the dashboard default.
+- [x] Re-verify the full-page authority form on desktop and mobile, including the separate-page path and final typecheck/build.
+- [x] Confirm the URL-backed authority editor in a true 390×844 mobile session after live PostGIS data loads, with the selected footprint restored and the full-page form usable.
+- [x] Make the administrator sign-in required control actionable and verify it preserves the selected authority-editor context after sign-in.
+- [x] Verify an authenticated administrator return reopens the same selected footprint in the authority editor and records post-login URL/context evidence.
+- [x] Create a dedicated reference-inspired full-screen Show in 3D workspace with live Cesium layers, inspector, and visible spatial controls.
+- [x] Add a polished 3D visual hero and required-resource overview to the 3D ULPIN-VPM home dashboard.
+- [x] Wire every home-page navigation and resource control to a functional destination or actionable workspace.
+- [x] Verify dedicated 3D navigation and the resource-rich dashboard home on desktop and mobile.
+- [x] Verify every remaining home navigation and resource control individually, replacing any generic placeholder with a specific actionable workspace and recording the destination matrix.
+- [x] Ensure dedicated spatial-workspace return-navigation parameters open the intended home search or evidence workflow instead of an ignored dashboard query.
+- [x] Replace generic settings, operator, audit, conflict, GNSS/CORS, and DEM/DSM workspace placeholders with specific actionable panels or routes.
+- [x] Replace Amity-specific home-page branding with a project-focused 3D ULPIN-VPM introduction, capability overview, and resource narrative.
+- [x] Integrate the user-provided 3D workspace screenshot as the home-page primary visual while preserving its live 3D workspace destination.
+- [x] Verify the project-focused home page and provided-visual treatment on desktop and mobile.
+- [x] Replace the generic live 3D model heading with a clear building-structure visual and source-status presentation.
+- [x] Make place or building searches focus the returned source-backed geometry in the live Cesium scene and report when no verified visual is available.
+- [x] Verify the structure-focused live panel and search-to-3D flow on desktop and mobile.
+- [x] Integrate the second user-provided source-backed building-structure screenshot into the live 3D structure presentation while retaining the interactive Cesium scene.
+- [x] Verify the second screenshot treatment on desktop and mobile without obscuring search, map controls, or source-status information.
+- [x] Explicitly confirm search input, Cesium map controls, and source-status labels remain visible and usable after the second screenshot is integrated.
+- [x] Interactively verify the mobile search input, Show in 3D action, Cesium map controls, and source-status labels after the second screenshot integration.
+- [x] Capture independently verifiable before-and-after camera data for a true-mobile Cesium zoom or reset action after the second screenshot integration.
+- [x] Fix operational 3D-review routes so an empty home search uses the verified Amity reference fallback instead of navigating with an empty `site` query.
+- [x] Verify the visible Operator account control opens its authority-access workspace through a normal browser click or touch interaction.
+- [x] Rework the live Cesium workspace into a strictly ordered vertical-cadastre model with clear surface, building, floor/unit, air-right, and subsurface review layers inspired by the supplied reference screenshots.
+- [x] Add evidence-safe expanded live 3D structure controls and an ordered vertical-profile inspector without fabricating approved heights, legal floors, ownership, or cadastral records.
+- [x] Add and validate additional source-backed public building reference areas only where official/open geometry and provenance can be retained; otherwise show an explicit data-unavailable state.
+- [x] Verify desktop and mobile Cesium workspace controls, ordered layer visibility, source labels, and no-inference safeguards after the 3D workspace upgrade.
+- [x] Interactively verify the upgraded true-mobile workspace using an ordered review control, a spatial-layer toggle, and a Cesium map control while preserving source labels and no-inference safeguards.
+- [ ] Use the official Bihar BhuNaksha and BiharBhumi/Jamabandi workflow to obtain an explicit Amity-adjacent parcel reference, geometry, holder/owner basis, and official ULPIN only if the government records expose them.
+- [ ] Validate the user-supplied Patna → Danapur → Danapur Circle → Mauza 12 candidate path against official BhuNaksha selections and capture the corresponding map sheet and Plot Info only if available.
+- [x] Improve searched-place building visualization with AI-assisted query routing that resolves only to source-backed live footprints and shows an explicit unavailable state for unmatched buildings.
+- [x] Replace the weak searched-building inspector treatment with a clearer footprint-focused 3D diagram and evidence status that does not fabricate height, floor, unit, ownership, or legal cadastral data.
+- [x] Validate Amity building search, matched-footprint camera focus, AI-assisted fallback messaging, inspector clarity, and true-mobile behavior after the enhancement.
+- [x] Add an evidence-safe Three.js searched-building presentation that renders only matched live footprint geometry and uses approved heights only when an authority source is present.
+- [x] Validate the Three.js presentation for matched and unmatched searches on desktop and true-mobile layouts without implying AI detection of unsupported buildings.
+- [x] Re-run a matched Amity search and an unmatched search in a confirmed true-mobile session, recording source focus, inspector, AI-route, and no-model states.
+- [x] Interact with the Three.js source-footprint preview in a confirmed mobile session and record verifiable touch-safe behavior without inventing unsupported building data.
+- [x] Prevent false-positive AI building alias matches by requiring a bounded lexical anchor and confidence threshold before routing to a source-backed area.
+- [x] Identify several real Patna city, college, and university location references with openly licensed or official provenance suitable for source-backed building-footprint search.
+- [x] Import bounded individual public building detections around the verified Patna references without asserting parcel, campus-boundary, ownership, height, or legal-cadastre status.
+- [x] Extend guarded AI-assisted search aliases and Three.js/Cesium focus so approved Patna references resolve only to matching live source geometry.
+- [x] Validate matched and unmatched Patna place searches, source labels, 3D preview, and true-mobile behavior after the data expansion.
+- [x] Prevent authority-edit submissions with a short change note from reaching the API, and show the user the eight-character requirement inline.
+- [x] Assess IIT Patna’s current source geometry and licensed public evidence options for a more meaningful 3D building presentation without inferring height, floors, or architectural form.
+- [x] Improve the IIT Patna matched-search presentation with a source-safe building-structure diagram and explicit authority-pending floor/height evidence state.
+- [x] Validate IIT Patna, authority-pending, and unknown-place visual states on desktop and touch layouts after the presentation improvement.
+- [x] Re-test the post-improvement workspace with an unknown or unmapped query on desktop and touch layouts, confirming no geometry/model state remains clear alongside the OSM context and structure-diagram UI.
+- [x] Formalize the user-defined three-level evidence model: Level 1 public footprint, Level 2 verified height extrusion, and Level 3 official floor-plan/BIM vertical ULPIN model.
+- [x] Update the workspace status and Three.js inspector so each visual state clearly reports its current evidence level and the precise record needed to unlock the next level.
+- [x] Validate Level 1 public-footprint, Level 2 approved-height, and Level 3 authority-pending states without implying unavailable floor/BIM data.
+- [ ] Validate the three-level UI against a real authority-approved height record, confirming Level 2 renders an extrusion without implying official floor-plan/BIM data.
+- [x] Review the referenced BhuMap demo and document reusable 3D map, property-inspection, and cadastral-workflow patterns without copying its code, branding, or protected assets.
+- [x] Adapt compatible BhuMap-inspired 3D workflow patterns into original ULPIN-VPM controls while retaining source and authority-evidence safeguards.
+- [x] Validate the adapted 3D workflow controls on desktop and touch layouts.
+- [x] Interactively test the adapted property action dock at a true touch/mobile viewport, including focus, evidence intake, and operator access controls.
+- [ ] Verify the supplied IIT Patna IWD Academic Zone and residential building figures on the official IIT Patna source pages.
+- [ ] Reconcile verified IIT Patna Bihta building names, floor counts, and areas to matching live source geometry without assigning unverified heights or legal parcel/ULPIN status.
+- [ ] Show verified IIT building evidence in the Level 3 inspector only for records that are explicitly reconciled, while preserving Level 2 height evidence as separately authority-gated.
+- [x] Validate the IIT evidence-aware inspector and map states on desktop and true mobile layouts.
+- [x] Reconcile the current IIT Patna reference-area anchor with the user-supplied Bihta coordinate before linking any official building evidence to source footprints; confirm that both sit within the named OSM university feature while neither identifies a specific official building.
+- [x] Add licensed Cesium imagery and public 3D building context to make the live source-backed map easier to interpret without treating visual context as cadastral evidence.
+- [x] Upgrade the selected-footprint inspector with truthful source, area, evidence-level, and next-evidence information instead of simulated ULPIN, floor/unit, elevation, conflict, or quality records.
+- [x] Validate the enhanced Cesium visual context and inspector on desktop and true mobile layouts, including a safe unmatched-place state.
+- [x] Add an IIT Patna institution-level evidence panel using only the independently verified official hostel-page record, clearly marked as unlinked to individual source footprints.
+- [x] Validate that the IIT evidence panel is visible only for IIT queries and does not assert a geometry, parcel, ULPIN, legal owner, height, or floor-plan/BIM link.
+- [x] Enhance the IIT Patna Cesium building presentation using only licensed imagery, public 3D context, and live source-backed geometry.
+- [x] Confirm Academic Block-4 remains explicitly authority-gated until a verified block-to-footprint match and official floor plan/BIM exist for floor-by-floor or vertical ULPIN visualization.
+- [x] Re-verify dashboard editNote validation so short notes are blocked with inline guidance and never surface as a raw TRPCClientError.
+- [x] Validate enhanced IIT Cesium, Academic Block-4 authority-gated state, and editNote feedback on desktop and true mobile layouts.
+- [ ] Verify the newly identified official IIT Patna Academic Zone and Phase-III sources for Academic Block-4’s G+3 floor count, 6,667.73 m² area, and campus-plan label.
+- [ ] Add a source-cited Academic Block-4 institutional evidence state only if the official plan provides a defensible campus-plan linkage, without assigning a Microsoft footprint, GIS polygon, metre height, or ULPIN.
+- [x] Retain and validate the Level 2 metre-height extrusion and Level 3 vertical ULPIN locks for Academic Block-4 on desktop and mobile after the evidence update.
+- [x] Add source-aware place intelligence that reports only licensed or official footprint area, nearby source-building count, and evidence provenance for supported place searches.
+- [x] Make unsupported college, restaurant, park, garden, and general place searches explicitly report which requested measurements are unavailable rather than inventing length, width, height, floor, or building-count facts.
+- [ ] Integrate the supplied Academic Block-4 G+3 and 6,667.73 m² claims as unlinked institutional/campus-plan evidence only after a direct official source URL or PDF is available for citation.
+- [x] Validate the place-intelligence facts and Academic Block-4 evidence locks on desktop and true mobile layouts.
+- [ ] Validate https://www.iitp.ac.in/iwd/index.php/academic-area and the IIT Patna Annual Report 2015–16 page-18 reference for Academic Block-4’s G+3 status and 6,667.73 m² total floor area.
+- [ ] Add the validated Academic Block-4 record as IIT institutional/campus-plan evidence only, with direct official citations and no Microsoft-footprint, metre-height, or cadastral ULPIN assignment.
+- [ ] Re-validate Academic Block-4’s Level 2 and Level 3 locks plus the source-aware place facts panel on desktop and true mobile after the official-evidence update.
+- [ ] Retrieve and independently validate the user-provided official IIT Patna Annual Report 2015–16 PDF at /images/pdf/IIT_Patna_Annual_Report%202015_16_English.pdf for Academic Block-4’s G+3 and 6,667.73 m² entry.
+- [ ] Update the Academic Block-4 evidence panel from source-cited to independently validated institutional evidence if the official PDF confirms the stated text, without assigning a surveyed height, GIS footprint, or ULPIN.
+- [ ] Re-test the refined Academic Block-4 evidence panel, source-aware facts, and preserved 3D/ULPIN locks on desktop and true mobile.
+- [x] Export a SIH-ready Academic Block-4 institutional evidence package in clean JSON and Markdown with explicit source availability and evidence limits.
+- [x] Summarize verification status for every IIT Patna institutional record currently displayed in the dashboard, without expanding claims to unshown buildings.
+- [x] Draft the SIH methodology describing evidence tiers and the locks for unverified height, GIS geometry, floor-plan/BIM, and vertical ULPIN metadata.
+- [x] Validate the exports, checkpoint the submission package, and synchronize it to GitHub.
+- [x] Add a dashboard evidence-lock badge system that distinguishes verified, source-cited, public-footprint-only, and survey-required metrics.
+- [x] Bind the Academic Block-4 SIH JSON evidence package into the frontend so the map dossier dynamically renders its institutional facts, source citations, and locks.
+- [x] Extend the place-search interface with guarded AI-assisted source lookup that reports supported live footprint facts and explicit unavailable/locked metrics for unverified campus buildings.
+- [x] Create and validate a reusable skill for source-safe campus evidence intake, dashboard presentation, and lock enforcement.
+- [x] Test the evidence-lock badges, JSON evidence rendering, and guarded search on desktop and true mobile; checkpoint and synchronize the implementation.
+- [x] Add evidence-status filter controls that change the visibility of live map footprints based only on their real evidence state.
+- [x] Add a client-side SIH PDF export for the JSON-backed Academic Block-4 dossier, including only shown facts, citations, availability limitations, and lock conditions.
+- [x] Add source-safe autocomplete suggestions for IIT Patna institutional records and known source-backed IIT search routes without suggesting unsupported building facts.
+- [x] Test the map filter, PDF export, and autocomplete on desktop and true mobile; checkpoint and synchronize the implementation.
+- [x] Validate the supplied official Bihar RERA KUSUM SURESH ENCLAVE record and preserve its exact source fields, citations, and availability status.
+- [x] Add the RERA-backed G+4, 14.90 m, area, and sanctioned-plan evidence as a distinct authority test record without treating the labelled endpoint coordinate as a footprint polygon.
+- [x] Unlock only the verified-height evidence state after a defensible source-footprint match; otherwise retain the Cesium extrusion and vertical ULPIN geometry locks.
+- [x] Validate the RERA authority evidence and all retained locks on desktop and true mobile; checkpoint and synchronize the implementation.
+- [ ] Locate and retrieve any official Bihar RERA sanctioned building/layout plan document for KUSUM SURESH ENCLAVE from the project record’s document section.
+- [ ] Inspect the actual sanctioned-plan material for a defensible closed building footprint or sanctioned geometry, without deriving a polygon from the endpoint coordinate or document-list text alone.
+- [ ] Match and import a plan-supported footprint only if the plan can be georeferenced or unambiguously reconciled to licensed source geometry; otherwise retain all footprint/extrusion locks.
+- [x] Document the sanctioned-plan retrieval outcome, validate any permissible update, checkpoint, and synchronize it to GitHub.
+- [x] Extract the attached official RERA sanctioned layout and building-plan PDFs without re-opening the supplied screenshot image.
+- [x] Determine whether the plans contain a defensible closed footprint, dimensions, survey coordinates, or other reproducible georeferencing basis for KUSUM SURESH ENCLAVE.
+- [x] Reconcile any plan-supported footprint with licensed source geometry before enabling the authority-backed 14.90 m Cesium extrusion; otherwise preserve the geometry lock.
+- [x] Retain the floor-by-floor and vertical ULPIN locks unless an exact footprint-linked official floor plan/BIM and approved vertical-property evidence are established.
+- [x] Test, checkpoint, and synchronize any sanctioned-plan-supported evidence update to GitHub.
+- [x] Define and publish the required KUSUM SURESH ENCLAVE GCP schema: plan pixel X/Y, WGS84 latitude/longitude, feature description, source, and survey confidence.
+- [ ] Validate at least three non-collinear user-supplied GCP pairs and reject incomplete, duplicate, or implausible control-point submissions.
+- [ ] Georeference the sanctioned plan to EPSG:4326, derive a reproducible building-footprint GeoJSON, and record the transformation method and residual error.
+- [ ] Reconcile the georeferenced footprint to RERA Plot 808 P before creating the authority-backed 14.90 m Level 2 Cesium extrusion.
+- [ ] Retain all Level 3 floor-by-floor and vertical ULPIN locks unless approved vertical-property evidence is supplied after the footprint match.
+- [ ] Test, checkpoint, and synchronize the GCP-derived evidence workflow and any validated Level 2 result.
+- [x] Inspect the supplied official Bihar RERA QR-code record for KUSUM SURESH ENCLAVE and compare only its explicit published facts with the existing authority audit.
+- [x] Revise the KUSUM SURESH ENCLAVE SIH demo so the 14.90 m value is unverified and all GCP, GeoJSON, footprint, Level 2, and Level 3 outputs remain locked until authoritative evidence is supplied.
+- [x] Replace the simulated 3D ULPIN issuance control with an evidence-eligibility gate so the SIH demo cannot imply an unregistered vertical ULPIN was created.
+- [x] Make the Parcels sidebar entry open a source-aware parcel/footprint exploration view with live records, provenance, and explicit unavailable states for unverified cadastral fields.
+- [x] Make the Buildings sidebar entry open a source-aware building-place exploration view that routes colleges, institutions, universities, restaurants, and other queries to live 3D geometry only when matched.
+- [x] Show geometry-backed footprint counts and areas for matched places while marking length, width, height, floors, ownership, parcel status, and ULPIN as unavailable unless separately evidenced.
+- [x] Add regression coverage and desktop/mobile verification for Parcels and Buildings navigation, matched-source results, and unmatched-place locks; checkpoint and synchronize the update.
+- [x] Give Parcels, Buildings, and Property volumes visibly distinct destinations, headings, data lenses, and actions so they do not appear to be the same map page.
+- [x] Improve the ULPIN registry workspace so it clearly distinguishes source records from issued vertical ULPINs and offers useful, evidence-safe discovery actions.
+- [x] Review the Generate ULPIN flow end to end and ensure it visibly remains an evidence-eligibility gate rather than implying issuance without validated Level 3 evidence.
+- [x] Validate desktop/mobile navigation for all four controls, add regression coverage, checkpoint, and synchronize the refinement.
+- [x] Investigate public, official Bihar BhuNaksha access for selected cadastral parcel boundaries and Plot Info, preserving an unavailable state where the portal cannot expose a specific record.
+- [x] Investigate public, official BiharBhumi access for non-sensitive Jamabandi/LPC or land-record references, without exposing or asserting private ownership data.
+- [x] Investigate public Patna Municipal Corporation AutoMAP evidence for approved-plan or plot-GIS references and identify whether a specific approved footprint can be lawfully retrieved.
+- [x] Investigate Survey of India CORS public reference material and document that coordinates/control points must come from an authorized survey workflow rather than generated estimates.
+- [x] Integrate only retrieved authority-source links, metadata, and defensible records; test, checkpoint, and synchronize any evidence-backed update.
+- [x] Reconcile the RERA-recorded Plot 808 P, Digha, Patna Sadar, and Halka Patliputra context against BhuNaksha only if the portal returns a specific official Plot Info result; otherwise retain the pending polygon/GCP status.
+- [x] Validate the supplied four-point synthetic GCP dataset only as DEMO/NON-AUTHORITATIVE prototype input, with no survey, cadastral, GNSS, government-data, or legal-right claim.
+- [x] Create a non-persistent plan-to-EPSG:4326 transform and demo GeoJSON payload that tests the handoff contract without writing synthetic geometry to PostGIS.
+- [x] Add a clearly labelled synthetic demo footprint/3D preview that cannot unlock authoritative extrusion, ownership, floor modelling, or vertical ULPIN issuance.
+- [x] Add regression tests for synthetic-data labelling, transform validity, no-persistence behavior, and retained evidence locks; validate, checkpoint, and synchronize.
+- [x] Refine the synthetic GCP Cesium presentation with prototype-only camera framing, material treatment, ground contact, and label hierarchy without adding architectural or authority claims.
+- [x] Verify desktop/mobile 3D visual quality and DEMO/NON-AUTHORITATIVE safety labelling; checkpoint and synchronize the refinement.
+- [x] Enhance the Dept. of Land Resources · 3D ULPIN-VPM home page with clearer project messaging, stronger visual hierarchy, and polished links into the live spatial workflows.
+- [x] Verify the enhanced home page on desktop and mobile, preserve evidence-safe statements and working controls, then checkpoint and synchronize to GitHub.
+- [x] Add a synthetic-demo 3D model inspector that displays only separately sourced RERA attributes and explicitly states that the visible geometry is synthetic/non-authoritative.
+- [x] Add a synthetic-demo map control that switches between 2D plan-style geometry and the clearly labelled 3D prototype volume without implying a cadastral boundary.
+- [x] Add a prominent persistent DEMO / NON-AUTHORITATIVE overlay whenever synthetic GCP geometry is visible.
+- [x] Add regression coverage and desktop/mobile interaction verification for synthetic model inspection, 2D/3D switching, and retained evidence locks; checkpoint and synchronize.
+- [x] Verify the implemented 3D ULPIN-VPM demonstration against the stated DoLR project objectives, clearly distinguishing delivered prototype capabilities from authority-evidence-dependent production functions; confirm GitHub synchronization.
+- [x] Add a hover-only quick summary for the synthetic demo geometry that reiterates its non-authoritative status before selection.
+- [x] Add a side-panel action that simulates a non-issued 3D ULPIN preview for the selected synthetic prototype without producing or implying an actual ULPIN.
+- [x] Add a synthetic-map layer menu for clearly labelled simulated drone-imagery and LiDAR point-cloud visual context, separate from real source data.
+- [x] Add safety regression coverage and desktop/mobile interaction verification for hover, simulation preview, and simulated layer controls; checkpoint and synchronize.
+- [x] Create a downloadable, Git-excluded non-secret `.env` template that documents the project environment-variable names with safe placeholders.
+- [x] Prepare a secure Vercel deployment handoff: identify required environment variables, document managed-platform dependencies, and assess serverless compatibility without exposing secrets.
+- [x] Fix the published-site `ReferenceError: Cesium is not defined` failure and validate the deployed 3D map runtime.
+- [x] Create a detailed Hindi SIH project-guide PDF covering workflow, real-world applications, architecture, stack, APIs, source references, differentiators, safeguards, and jury Q&A.
+- [x] Add clear loading animation, actionable error state, and retry behavior for the Cesium map runtime.
+- [x] Add dashboard ULPIN record search, evidence-status filters, and sort controls with responsive results.
+- [x] Add regression coverage and desktop/mobile validation for Cesium feedback and ULPIN search/filter controls.
+- [x] Export the current filtered ULPIN source-record results as a safe CSV without fabricating issued-status or history data.
+- [x] Make ULPIN source-record actions open the live Cesium workspace focused on the selected source geometry.
+- [x] Add a detailed ULPIN source-record modal that shows available provenance/metadata and clearly marks unavailable history.
+- [x] Add regression coverage and desktop/mobile validation for the registry export, map-focus, and detail-modal workflows.
+- [x] Highlight the selected source geometry and show a quick-info popup when a ULPIN source record is opened in the Cesium workspace.
+- [x] Export an individual source-record detail report as a formatted PDF while preserving evidence-status safeguards.
+- [x] Add locally stored, non-authoritative personal notes and tags to the ULPIN source-record Details modal.
+- [x] Add regression coverage and desktop/mobile validation for selected geometry, individual PDF export, and personal annotations.
+- [x] Add a Cesium basemap switcher for satellite and street-map visual context without changing source-record evidence status.
+- [x] Enhance the Cesium 3D viewing presentation and camera controls for clearer selected-geometry context.
+- [x] Add Registry summary statistics for total source records, total available footprint area, and browser-local custom tag usage.
+- [x] Add a Details-modal share action that copies a direct source-record link with clear non-issued status.
+- [x] Add regression coverage and desktop/mobile validation for basemap, 3D view, statistics, and share-link workflows.
+- [x] Add a Cesium distance/area measurement mode labelled as an approximate visual aid rather than survey or cadastral evidence.
+- [x] Add browser-local favorites for ULPIN source records, with quick-access filtering that preserves their non-issued status.
+- [x] Add a persistent low-light appearance toggle for the dashboard.
+- [x] Add regression coverage and desktop/mobile validation for measurement, favorites, and appearance-mode workflows.
+- [x] Repair overlapping Cesium stage heading and map-control overlays, and increase readable spacing between workspace text and actions.
+- [x] Add an evidence-safe side-by-side comparison workspace for up to two selected ULPIN source records with coordinated map focus actions.
+- [x] Extend browser-local favorites with custom folders/categories and favorite-folder filtering.
+- [x] Add regression coverage and desktop/mobile validation for the layout, comparison, and favorite-folder workflows.
+
+- [ ] Add a subtle success animation and toast when a source record is assigned to a browser-local favorite folder.
+- [ ] Separate workspace text panels from the Cesium map while retaining only distance and area measurement overlays on-map, without changing other map behavior.
+- [ ] Add regression coverage and desktop/mobile validation for favorite-folder feedback and the separated workspace layout.

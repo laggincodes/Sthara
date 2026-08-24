@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "1.0",
+  "project": {
+    "name": "KUSUM SURESH ENCLAVE",
+    "reraRecordId": "RERAP125201800396-5",
+    "plotReference": "808 P",
+    "planCoordinateSystem": "sanctioned-plan pixel coordinates",
+    "targetCoordinateReferenceSystem": "EPSG:4326"
+  },
+  "planImageReference": {
+    "sourceFile": "RERAP125201800396RERAP125201800396-5SanctionedLayoutPlan.pdf",
+    "page": 1,
+    "renderedImageWidthPixels": 7193,
+    "renderedImageHeightPixels": 4335,
+    "pixelOrigin": "top-left",
+    "pixelAxes": {
+      "x": "increases to the right",
+      "y": "increases downward"
+    }
+  },
+  "minimumRequirements": {
+    "minimumControlPoints": 3,
+    "nonCollinear": true,
+    "independentSurveySourceRequired": true,
+    "samePlanSheetRequired": true,
+    "acceptableFeatures": [
+      "survey monument",
+      "plot-corner marker",
+      "road-intersection centerline",
+      "permanent utility or boundary marker"
+    ],
+    "unacceptableFeatures": [
+      "approximate visual estimate",
+      "unverified imagery click",
+      "derived RERA endpoint",
+      "corner inferred from a road sketch"
+    ]
+  },
+  "controlPoints": [
+    {
+      "id": "GCP-01",
+      "featureDescription": "Replace with a clearly identifiable surveyed feature visible on the sanctioned plan.",
+      "planPixel": {
+        "x": null,
+        "y": null
+      },
+      "wgs84": {
+        "latitude": null,
+        "longitude": null
+      },
+      "coordinateSource": "Survey/GNSS record reference required",
+      "horizontalAccuracyMetres": null,
+      "surveyDate": null,
+      "notes": "Do not submit estimated coordinates."
+    },
+    {
+      "id": "GCP-02",
+      "featureDescription": "Replace with a second independent, non-collinear surveyed feature.",
+      "planPixel": {
+        "x": null,
+        "y": null
+      },
+      "wgs84": {
+        "latitude": null,
+        "longitude": null
+      },
+      "coordinateSource": "Survey/GNSS record reference required",
+      "horizontalAccuracyMetres": null,
+      "surveyDate": null,
+      "notes": "Keep this feature spatially separated from GCP-01 and GCP-03."
+    },
+    {
+      "id": "GCP-03",
+      "featureDescription": "Replace with a third independent, non-collinear surveyed feature.",
+      "planPixel": {
+        "x": null,
+        "y": null
+      },
+      "wgs84": {
+        "latitude": null,
+        "longitude": null
+      },
+      "coordinateSource": "Survey/GNSS record reference required",
+      "horizontalAccuracyMetres": null,
+      "surveyDate": null,
+      "notes": "A fourth or higher-quality redundant control point is recommended for residual validation."
+    }
+  ],
+  "validationGate": {
+    "status": "awaiting_user_supplied_gcps",
+    "noFootprintGenerated": true,
+    "noCesiumExtrusionEnabled": true,
+    "noVerticalULPINIssued": true
+  }
+}

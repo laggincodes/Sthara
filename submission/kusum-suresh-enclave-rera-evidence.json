@@ -1,0 +1,95 @@
+{
+  "kusumSureshEnclave": {
+    "displayLabel": "KUSUM SURESH ENCLAVE",
+    "evidenceTier": "authority_backed_attributes_height_and_geometry_pending",
+    "authority": {
+      "publisher": "Bihar Real Estate Regulatory Authority",
+      "recordId": "RERAP125201800396-5",
+      "recordUrl": "https://rera.bihar.gov.in/Filanprint.aspx?id=RERAP125201800396-5",
+      "qrCodeRecordUrl": "https://rera.bihar.gov.in/QRCODE.aspx?id=RERAP125201800396-5",
+      "qrCodeReview": {
+        "reviewedOn": "2026-08-24",
+        "corroborates": [
+          "Project name and G+4 approved-residential description",
+          "New Mithila Colony, Digha, Patna location and Plot 808 P",
+          "Mauza Digha and Patna Sadar administrative context",
+          "One sanctioned building/wing",
+          "Land, covered, and total built-up measures",
+          "Endpoint-only coordinate label"
+        ],
+        "doesNotIndependentlyCorroborate": [
+          "The 14.90 m building-height value because the rendered Height of Building field is blank",
+          "A closed footprint, parcel boundary, or EPSG:4326 coordinate schedule",
+          "Survey control points or vertical-property registration"
+        ]
+      },
+      "validatedOn": "2026-08-24"
+    },
+    "projectLocation": {
+      "address": "New Mithila Colony, Digha, Patna",
+      "khesraPlot": "808 P",
+      "mauza": "Digha",
+      "anchal": "Patna Sadar"
+    },
+    "statedAuthorityFacts": {
+      "sanctionedFloorsSourceValue": "G+4",
+      "interpretedStoreyCount": 5,
+      "coverageAreaSquareMetres": 808.85,
+      "totalBuiltupAreaSquareMetres": 3273.85,
+      "totalLandAreaSquareMetres": 1313.8,
+      "sanctionedBuildingCount": 1
+    },
+    "unverifiedReportedValues": {
+      "buildingHeightMetres": {
+        "value": 14.9,
+        "status": "unverified_not_displayed_as_an_sih_demo_fact",
+        "reason": "The supplied QR-code record renders the Height of Building field blank, and no authority-issued source has been independently confirmed to establish this metre value."
+      }
+    },
+    "endpointReference": {
+      "latitude": 25.63366,
+      "longitude": 85.071159,
+      "sourceLabel": "Latitude/Longitude of End point of the plot",
+      "mapUse": "Reference marker only; not a centroid, footprint, or parcel boundary."
+    },
+    "supportingRecordsListedByRera": [
+      "Mutation (Correction-Slip)",
+      "Sale Deed/Khatiyan",
+      "Online copy of Jamabandi",
+      "Land Possession Certificate (LPC)",
+      "Current Revenue Receipt",
+      "Current Non-Encumbrance Certificate",
+      "Development Agreement"
+    ],
+    "sanctionedPlanReview": {
+      "status": "reviewed_local_plan_geometry_not_georeferenced",
+      "reviewedOn": "2026-08-24",
+      "suppliedFiles": [
+        {
+          "fileName": "RERAP125201800396RERAP125201800396-5SanctionedLayoutPlan.pdf",
+          "sha256": "43f03dfe81846d3ca61eba9842d4badb7b08f86a491f97a89f56910e556498b3",
+          "pageCount": 1
+        },
+        {
+          "fileName": "RERAP125201800396RERAP125201800396-5SanctionedbuildingPlan.pdf",
+          "sha256": "43f03dfe81846d3ca61eba9842d4badb7b08f86a491f97a89f56910e556498b3",
+          "pageCount": 1,
+          "relationship": "Byte-identical duplicate of the supplied layout-plan PDF"
+        }
+      ],
+      "planFacts": [
+        "Site plan, ground-floor plan, first-to-fourth-floor plan, elevations, and local dimensional annotations are visible.",
+        "The sheet states a 1:100 scale and that dimensions are in metres.",
+        "The plan identifies the G+4 project and its local plot/road context."
+      ],
+      "geometryDecision": "The closed outlines are local plan-space geometry only. No WGS84 grid, coordinate schedule, benchmark, or multiple survey control points were provided for a repeatable transformation into a PostGIS footprint.",
+      "nextRequirement": "Provide survey control/GNSS points, a georeferenced sanctioned plan, or a documented match to an independently licensed source footprint before creating a map polygon. A separate authority-issued metre-height source is also required before any extrusion."
+    },
+    "activeLocks": {
+      "cesiumExtrusion": "No authority-issued metre-height source has been independently confirmed, and no exact building footprint polygon has been matched. No Cesium extrusion is rendered.",
+      "officialFootprintGeometry": "The sanctioned sheet has a local closed outline, but it has no WGS84 control and the published coordinate is only an endpoint of the plot.",
+      "floorByFloorModel": "The sanctioned G+4 drawing was reviewed, but it is not yet tied to an exact mapped footprint or an approved vertical-property record.",
+      "verticalULPIN": "No approved vertical-property registration or reviewed Level 3 floor-plan/BIM evidence has been established."
+    }
+  }
+}
