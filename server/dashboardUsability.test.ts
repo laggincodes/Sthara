@@ -45,4 +45,20 @@ describe("dashboard usability controls", () => {
     expect(registrySource).toContain("No revision timeline, ownership history");
     expect(registrySource).toContain("Source-record metadata only.");
   });
+
+  it("highlights a focused source geometry and presents its quick-info state separately from issuance", () => {
+    expect(cesiumViewerSource).toContain("Focused source geometry");
+    expect(cesiumViewerSource).toContain("Source record · not issued");
+    expect(cesiumViewerSource).toContain("#73fff1");
+    expect(cesiumViewerSource).toContain("setFocusSummary");
+  });
+
+  it("keeps individual PDF exports and personal annotations clearly non-authoritative", () => {
+    expect(registrySource).toContain("exportRecordPdf");
+    expect(registrySource).toContain("Download detail PDF");
+    expect(registrySource).toContain("Personal browser-local annotation");
+    expect(registrySource).toContain("Stored only in this browser.");
+    expect(registrySource).toContain("not an official record");
+    expect(registrySource).toContain("ulpin-vpm-personal-annotations-v1");
+  });
 });

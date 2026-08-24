@@ -36,6 +36,12 @@ export type SyntheticVisualLayers = {
   simulatedLidarPointCloud: boolean;
 };
 
+type FocusSummary = {
+  name: string;
+  ulpin: string;
+  areaLabel: string;
+};
+
 function featureLayer(
   properties: Record<string, unknown>
 ): keyof CesiumLayerFlags {
@@ -144,6 +150,7 @@ export function CesiumSpatialViewer({
   const [viewerError, setViewerError] = useState<string | null>(null);
   const [viewerRetryKey, setViewerRetryKey] = useState(0);
   const [syntheticHover, setSyntheticHover] = useState(false);
+  const [focusSummary, setFocusSummary] = useState<FocusSummary | null>(null);
   const [imageryState, setImageryState] = useState<
     "loading" | "ready" | "unavailable"
   >("loading");
@@ -465,11 +472,52 @@ export function CesiumSpatialViewer({
       await viewer.dataSources.add(dataSource);
       if (filteredCollection.features.length > 0 && !syntheticDemoFeature) {
         if (focusUlpins?.length) {
+          const focusedEntity = dataSource.entities.values.find(entity => {
+            const properties = (entity.properties?.getValue?.() ??
+              {}) as Record<string, unknown>;
+            return focusUlpins.includes(String(properties.ulpin ?? ""));
+          });
+          if (focusedEntity) {
+            const properties = (focusedEntity.properties?.getValue?.() ??
+              {}) as Record<string, unknown>;
+            const name =
+              typeof properties.name === "string"
+                ? properties.name
+                : String(properties.ulpin ?? "Source record");
+            const area =
+              typeof properties.footprintAreaSquareMetres === "number"
+                ? `${properties.footprintAreaSquareMetres.toLocaleString()} m²`
+                : "Area unavailable";
+            if (focusedEntity.polygon) {
+              focusedEntity.polygon.material = new ColorMaterialProperty(
+                Color.fromCssColorString("#73fff1").withAlpha(0.78)
+              );
+              focusedEntity.polygon.outlineColor = new ConstantProperty(
+                Color.fromCssColorString("#fff3b0")
+              );
+              focusedEntity.polygon.outlineWidth = new ConstantProperty(3);
+            }
+            if (focusedEntity.point) {
+              focusedEntity.point.pixelSize = new ConstantProperty(18);
+              focusedEntity.point.color = new ConstantProperty(
+                Color.fromCssColorString("#fff3b0")
+              );
+            }
+            viewer.selectedEntity = focusedEntity;
+            setFocusSummary({
+              name,
+              ulpin: String(properties.ulpin ?? "Source record"),
+              areaLabel: area,
+            });
+          } else {
+            setFocusSummary(null);
+          }
           await viewer.flyTo(dataSource, {
             duration: 0.7,
             offset: new HeadingPitchRange(0.22, -0.92, 260),
           });
         } else {
+          setFocusSummary(null);
           viewer.camera.lookAt(
             Cartesian3.fromDegrees(85.054779, 25.6124294),
             new HeadingPitchRange(0.22, -1.12, 980)
@@ -777,6 +825,17 @@ export function CesiumSpatialViewer({
         <div className="cesium-synthetic-hover-summary" role="status">
           <b>DEMO PROTOTYPE</b>
           <span>Synthetic geometry · click for separate RERA attributes</span>
+        </div>
+      )}
+      {focusSummary && !syntheticDemoFeature && (
+        <div className="cesium-focus-popup" role="status">
+          <span>Focused source geometry</span>
+          <b>{focusSummary.name}</b>
+          <small>{focusSummary.ulpin}</small>
+          <footer>
+            <em>{focusSummary.areaLabel}</em>
+            <i>Source record · not issued</i>
+          </footer>
         </div>
       )}
     </div>

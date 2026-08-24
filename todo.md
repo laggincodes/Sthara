@@ -201,3 +201,7 @@
 - [x] Make ULPIN source-record actions open the live Cesium workspace focused on the selected source geometry.
 - [x] Add a detailed ULPIN source-record modal that shows available provenance/metadata and clearly marks unavailable history.
 - [x] Add regression coverage and desktop/mobile validation for the registry export, map-focus, and detail-modal workflows.
+- [x] Highlight the selected source geometry and show a quick-info popup when a ULPIN source record is opened in the Cesium workspace.
+- [x] Export an individual source-record detail report as a formatted PDF while preserving evidence-status safeguards.
+- [x] Add locally stored, non-authoritative personal notes and tags to the ULPIN source-record Details modal.
+- [x] Add regression coverage and desktop/mobile validation for selected geometry, individual PDF export, and personal annotations.

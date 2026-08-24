@@ -14,6 +14,7 @@ import {
   ScanSearch,
   Search,
   ShieldCheck,
+  Tag,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useLocation } from "wouter";
@@ -28,6 +29,8 @@ import {
 type RecordFilter = "all" | "area-available" | "area-unavailable";
 type RecordSort = "name-asc" | "name-desc" | "area-desc" | "area-asc";
 type SourceRecord = { properties: Record<string, unknown> };
+type PersonalAnnotation = { note: string; tags: string[] };
+const PERSONAL_ANNOTATIONS_STORAGE_KEY = "ulpin-vpm-personal-annotations-v1";
 
 function footprintArea(feature: { properties: Record<string, unknown> }) {
   return typeof feature.properties.footprintAreaSquareMetres === "number"
@@ -45,6 +48,19 @@ function csvCell(value: string | number) {
   return `"${String(value).replaceAll('"', '""')}"`;
 }
 
+function readPersonalAnnotations(): Record<string, PersonalAnnotation> {
+  try {
+    const stored = window.localStorage.getItem(
+      PERSONAL_ANNOTATIONS_STORAGE_KEY
+    );
+    return stored
+      ? (JSON.parse(stored) as Record<string, PersonalAnnotation>)
+      : {};
+  } catch {
+    return {};
+  }
+}
+
 export default function UlpInRegistry() {
   const [, setLocation] = useLocation();
   const [query, setQuery] = useState("");
@@ -54,6 +70,11 @@ export default function UlpInRegistry() {
   const [selectedRecord, setSelectedRecord] = useState<SourceRecord | null>(
     null
   );
+  const [personalAnnotations, setPersonalAnnotations] = useState<
+    Record<string, PersonalAnnotation>
+  >(readPersonalAnnotations);
+  const [noteDraft, setNoteDraft] = useState("");
+  const [tagDraft, setTagDraft] = useState("");
   const geometry = trpc.postgis.geojson.useQuery();
   const records = geometry.data?.features ?? [];
   const recordCountLabel = geometry.isLoading
@@ -139,6 +160,88 @@ export default function UlpInRegistry() {
     link.click();
     link.remove();
     URL.revokeObjectURL(downloadUrl);
+  };
+  const selectedRecordId = selectedRecord
+    ? recordText(selectedRecord.properties.ulpin, "")
+    : "";
+  const selectedAnnotation = selectedRecordId
+    ? (personalAnnotations[selectedRecordId] ?? { note: "", tags: [] })
+    : { note: "", tags: [] };
+  const updatePersonalAnnotation = (
+    recordId: string,
+    update: Partial<PersonalAnnotation>
+  ) => {
+    if (!recordId) return;
+    setPersonalAnnotations(current => {
+      const next = {
+        ...current,
+        [recordId]: {
+          note: current[recordId]?.note ?? "",
+          tags: current[recordId]?.tags ?? [],
+          ...update,
+        },
+      };
+      window.localStorage.setItem(
+        PERSONAL_ANNOTATIONS_STORAGE_KEY,
+        JSON.stringify(next)
+      );
+      return next;
+    });
+  };
+  const openRecordDetails = (record: SourceRecord) => {
+    const recordId = recordText(record.properties.ulpin, "");
+    setSelectedRecord(record);
+    setNoteDraft(personalAnnotations[recordId]?.note ?? "");
+    setTagDraft("");
+  };
+  const exportRecordPdf = async (record: SourceRecord) => {
+    const { jsPDF } = await import("jspdf");
+    const pdf = new jsPDF({ unit: "pt", format: "a4" });
+    const recordId = recordText(record.properties.ulpin, "Source-record");
+    const annotation = personalAnnotations[recordId];
+    let cursorY = 52;
+    const addWrapped = (text: string, size = 10, emphasis = false) => {
+      pdf.setFont("helvetica", emphasis ? "bold" : "normal");
+      pdf.setFontSize(size);
+      const wrapped = pdf.splitTextToSize(text, 500);
+      pdf.text(wrapped, 48, cursorY);
+      cursorY += wrapped.length * (size + 4) + 8;
+    };
+    const addSection = (title: string, values: string[]) => {
+      addWrapped(title, 13, true);
+      values.forEach(value => addWrapped(value));
+      cursorY += 4;
+    };
+    addWrapped("3D ULPIN-VPM · Source record detail export", 9, true);
+    addWrapped(recordText(record.properties.name, "Source record"), 20, true);
+    addWrapped(
+      "This report documents displayed source-record metadata only. It does not issue a vertical ULPIN or establish ownership, legal boundary, height, floor, survey, or audit history."
+    );
+    addSection("Available source metadata", [
+      `Source record ID: ${recordId}`,
+      `Footprint area: ${footprintArea(record)?.toLocaleString() ?? "Area unavailable"}${footprintArea(record) !== null ? " m²" : ""}`,
+      "Evidence state: Public footprint only",
+      `Source / provenance: ${recordText(record.properties.source)}`,
+      `Record type: ${recordText(record.properties.recordType, "Source-backed geometry")}`,
+    ]);
+    addSection("Evidence boundaries", [
+      "Issued vertical ULPIN: No — source record only.",
+      "History status: Not exposed by the current source feed.",
+      "Ownership, issue history and authority audit trail: Not available unless separately supplied by an authorized source.",
+    ]);
+    if (annotation?.note || annotation?.tags.length) {
+      addSection("Personal browser-local annotation · non-authoritative", [
+        `Tags: ${annotation.tags.join(", ") || "No tags"}`,
+        `Note: ${annotation.note || "No note"}`,
+      ]);
+    }
+    addWrapped(
+      "Generated from the dashboard’s live source-record display. Any personal note or tag is stored locally in this browser and is not an official record.",
+      8
+    );
+    pdf.save(
+      `ulpin-source-record-${recordId.replaceAll(/[^a-z0-9_-]+/gi, "-")}.pdf`
+    );
   };
 
   return (
@@ -304,7 +407,7 @@ export default function UlpInRegistry() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => setSelectedRecord(feature)}
+                          onClick={() => openRecordDetails(feature)}
                           title="View source record metadata"
                           aria-label={`View details for ${name}`}
                         >
@@ -370,7 +473,10 @@ export default function UlpInRegistry() {
       <Dialog
         open={Boolean(selectedRecord)}
         onOpenChange={open => {
-          if (!open) setSelectedRecord(null);
+          if (!open) {
+            setSelectedRecord(null);
+            setTagDraft("");
+          }
         }}
       >
         <DialogContent className="registry-detail-dialog">
@@ -430,6 +536,73 @@ export default function UlpInRegistry() {
               </small>
             </span>
           </section>
+          <section className="registry-annotation-panel">
+            <p>
+              <Tag size={14} /> Personal notes & tags
+            </p>
+            <small>
+              Stored only in this browser. These annotations are not official
+              ULPIN, ownership, survey, or authority records.
+            </small>
+            <div className="registry-tag-list" aria-label="Personal tags">
+              {selectedAnnotation.tags.length ? (
+                selectedAnnotation.tags.map(tag => (
+                  <button
+                    type="button"
+                    key={tag}
+                    onClick={() =>
+                      updatePersonalAnnotation(selectedRecordId, {
+                        tags: selectedAnnotation.tags.filter(
+                          currentTag => currentTag !== tag
+                        ),
+                      })
+                    }
+                    title={`Remove ${tag}`}
+                  >
+                    {tag} ×
+                  </button>
+                ))
+              ) : (
+                <span>No personal tags yet.</span>
+              )}
+            </div>
+            <div className="registry-add-tag">
+              <input
+                value={tagDraft}
+                onChange={event => setTagDraft(event.target.value)}
+                placeholder="Add a personal tag"
+                aria-label="Add a personal tag"
+                maxLength={48}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const tag = tagDraft.trim();
+                  if (!tag || selectedAnnotation.tags.includes(tag)) return;
+                  updatePersonalAnnotation(selectedRecordId, {
+                    tags: [...selectedAnnotation.tags, tag],
+                  });
+                  setTagDraft("");
+                }}
+              >
+                Add tag
+              </button>
+            </div>
+            <label>
+              <span>Personal note</span>
+              <textarea
+                value={noteDraft}
+                onChange={event => setNoteDraft(event.target.value)}
+                onBlur={() =>
+                  updatePersonalAnnotation(selectedRecordId, {
+                    note: noteDraft.trim(),
+                  })
+                }
+                placeholder="Add an observation for your own workspace…"
+                maxLength={1200}
+              />
+            </label>
+          </section>
           <div className="registry-detail-actions">
             <button
               type="button"
@@ -438,6 +611,15 @@ export default function UlpInRegistry() {
               }}
             >
               <MapPinned size={14} /> Open focused 3D map
+            </button>
+            <button
+              type="button"
+              className="registry-detail-pdf"
+              onClick={() => {
+                if (selectedRecord) void exportRecordPdf(selectedRecord);
+              }}
+            >
+              <Download size={14} /> Download detail PDF
             </button>
             <span>
               <Info size={13} /> Issuance remains evidence-gated
