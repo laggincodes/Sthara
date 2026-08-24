@@ -194,3 +194,6 @@
 - [x] Prepare a secure Vercel deployment handoff: identify required environment variables, document managed-platform dependencies, and assess serverless compatibility without exposing secrets.
 - [ ] Fix the published-site `ReferenceError: Cesium is not defined` failure and validate the deployed 3D map runtime.
 - [x] Create a detailed Hindi SIH project-guide PDF covering workflow, real-world applications, architecture, stack, APIs, source references, differentiators, safeguards, and jury Q&A.
+- [x] Add clear loading animation, actionable error state, and retry behavior for the Cesium map runtime.
+- [x] Add dashboard ULPIN record search, evidence-status filters, and sort controls with responsive results.
+- [x] Add regression coverage and desktop/mobile validation for Cesium feedback and ULPIN search/filter controls.

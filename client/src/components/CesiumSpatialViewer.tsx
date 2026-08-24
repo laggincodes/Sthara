@@ -10,6 +10,7 @@ import type {
   GeoJsonDataSource as CesiumGeoJsonDataSource,
   Viewer as CesiumViewer,
 } from "cesium";
+import { AlertTriangle, LoaderCircle, RefreshCw } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 export type MapCommand = {
@@ -88,7 +89,22 @@ export function CesiumSpatialViewer({
     window as Window & { Cesium?: typeof import("cesium") }
   ).Cesium;
   if (!cesiumRuntime) {
-    throw new Error("Cesium runtime failed to load from the configured CDN");
+    return (
+      <div
+        className="cesium-spatial-viewer cesium-runtime-fallback"
+        role="alert"
+      >
+        <AlertTriangle size={20} />
+        <b>3D map runtime is unavailable</b>
+        <span>
+          The Cesium runtime did not load. Check your connection, then reload
+          the page.
+        </span>
+        <button type="button" onClick={() => window.location.reload()}>
+          <RefreshCw size={14} /> Reload 3D map
+        </button>
+      </div>
+    );
   }
   const {
     Cartesian2,
@@ -122,6 +138,11 @@ export function CesiumSpatialViewer({
     null
   );
   const [viewerReady, setViewerReady] = useState(false);
+  const [viewerState, setViewerState] = useState<
+    "initializing" | "ready" | "error"
+  >("initializing");
+  const [viewerError, setViewerError] = useState<string | null>(null);
+  const [viewerRetryKey, setViewerRetryKey] = useState(0);
   const [syntheticHover, setSyntheticHover] = useState(false);
   const [imageryState, setImageryState] = useState<
     "loading" | "ready" | "unavailable"
@@ -133,25 +154,43 @@ export function CesiumSpatialViewer({
     refetchInterval: 20_000,
     retry: 1,
   });
+  const retryViewer = () => {
+    viewerRef.current?.destroy();
+    viewerRef.current = null;
+    setViewerReady(false);
+    setViewerError(null);
+    setViewerState("initializing");
+    setViewerRetryKey(current => current + 1);
+  };
 
   useEffect(() => {
     if (!containerRef.current || viewerRef.current) return;
-    Ion.defaultAccessToken = import.meta.env.VITE_CESIUM_ION_ACCESS_TOKEN || "";
-    const viewer = new Viewer(containerRef.current, {
-      animation: false,
-      baseLayer: false,
-      baseLayerPicker: false,
-      fullscreenButton: false,
-      geocoder: false,
-      homeButton: false,
-      infoBox: false,
-      navigationHelpButton: false,
-      sceneModePicker: false,
-      selectionIndicator: false,
-      timeline: false,
-      terrainProvider: new EllipsoidTerrainProvider(),
-      shouldAnimate: false,
-    });
+    let viewer: CesiumViewer | null = null;
+    try {
+      Ion.defaultAccessToken =
+        import.meta.env.VITE_CESIUM_ION_ACCESS_TOKEN || "";
+      viewer = new Viewer(containerRef.current, {
+        animation: false,
+        baseLayer: false,
+        baseLayerPicker: false,
+        fullscreenButton: false,
+        geocoder: false,
+        homeButton: false,
+        infoBox: false,
+        navigationHelpButton: false,
+        sceneModePicker: false,
+        selectionIndicator: false,
+        timeline: false,
+        terrainProvider: new EllipsoidTerrainProvider(),
+        shouldAnimate: false,
+      });
+    } catch (error) {
+      console.error("[Cesium] Failed to initialize the 3D viewer", error);
+      setViewerError("The 3D scene could not start on this device.");
+      setViewerState("error");
+      return;
+    }
+    if (!viewer) return;
     viewer.scene.backgroundColor = Color.fromCssColorString("#081217");
     viewer.scene.globe.baseColor = Color.fromCssColorString("#162a2c");
     viewer.scene.globe.depthTestAgainstTerrain = false;
@@ -237,6 +276,7 @@ export function CesiumSpatialViewer({
     );
     viewerRef.current = viewer;
     setViewerReady(true);
+    setViewerState("ready");
     let cancelled = false;
     if (osmBuildingsEnabled) {
       void Promise.resolve(cesiumRuntime).then(
@@ -292,8 +332,9 @@ export function CesiumSpatialViewer({
       imageryLayerRef.current = null;
       viewer.destroy();
       viewerRef.current = null;
+      setViewerReady(false);
     };
-  }, [onFeatureSelect, osmBuildingsEnabled]);
+  }, [onFeatureSelect, osmBuildingsEnabled, viewerRetryKey]);
 
   useEffect(() => {
     const osmBuildings = osmBuildingsRef.current;
@@ -662,13 +703,42 @@ export function CesiumSpatialViewer({
       ref={containerRef}
       aria-label="Live PostGIS Cesium map"
     >
+      {viewerState === "initializing" && (
+        <div className="cesium-loader" role="status" aria-live="polite">
+          <LoaderCircle size={18} />
+          <span>
+            <b>Preparing 3D map</b>
+            <small>Loading the Cesium scene and live spatial context…</small>
+          </span>
+        </div>
+      )}
+      {viewerState === "error" && (
+        <div className="cesium-recovery" role="alert">
+          <AlertTriangle size={18} />
+          <span>
+            <b>3D map could not start</b>
+            <small>{viewerError ?? "Try initializing the scene again."}</small>
+          </span>
+          <button type="button" onClick={retryViewer}>
+            <RefreshCw size={13} /> Retry 3D map
+          </button>
+        </div>
+      )}
       <div className="cesium-status">
-        <i className={geometryQuery.isFetching ? "loading" : ""} />
-        {geometryQuery.isFetching
-          ? "Refreshing PostGIS"
-          : geometryQuery.data
-            ? `${geometryQuery.data.features.filter(feature => layers[featureLayer(feature.properties)] && matchesMapEvidenceFilter(feature.properties, evidenceFilter) && (!focusUlpins || focusUlpins.includes(feature.properties.ulpin))).length} visible / ${geometryQuery.data.features.length} live${osmBuildingsEnabled ? (imageryState === "ready" ? " · imagery + OSM 3D context" : imageryState === "loading" ? " · loading visual context" : " · OSM 3D context") : ""}`
-            : "Connecting to PostGIS"}
+        <i
+          className={
+            geometryQuery.isFetching || viewerState === "initializing"
+              ? "loading"
+              : ""
+          }
+        />
+        {viewerState === "initializing"
+          ? "Preparing Cesium"
+          : geometryQuery.isFetching
+            ? "Refreshing PostGIS"
+            : geometryQuery.data
+              ? `${geometryQuery.data.features.filter(feature => layers[featureLayer(feature.properties)] && matchesMapEvidenceFilter(feature.properties, evidenceFilter) && (!focusUlpins || focusUlpins.includes(feature.properties.ulpin))).length} visible / ${geometryQuery.data.features.length} live${osmBuildingsEnabled ? (imageryState === "ready" ? " · imagery + OSM 3D context" : imageryState === "loading" ? " · loading visual context" : " · OSM 3D context") : ""}`
+              : "Connecting to PostGIS"}
       </div>
       {osmBuildingsEnabled && (
         <div className="cesium-osm-attribution">
@@ -689,7 +759,12 @@ export function CesiumSpatialViewer({
       )}
       {geometryQuery.error && (
         <div className="cesium-error">
-          Live geometry unavailable. The connection will retry automatically.
+          <span>
+            Live geometry unavailable. The connection will retry automatically.
+          </span>
+          <button type="button" onClick={() => void geometryQuery.refetch()}>
+            <RefreshCw size={12} /> Retry data
+          </button>
         </div>
       )}
       {syntheticDemoFeature && (
