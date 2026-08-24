@@ -6316,3 +6316,109 @@ input:focus-visible {
     flex: 1;
   }
 }
+.cesium-synthetic-hover-summary {
+  position: absolute;
+  right: 12px;
+  bottom: 46px;
+  z-index: 8;
+  display: grid;
+  gap: 3px;
+  max-width: 220px;
+  padding: 8px 10px;
+  color: #fdf4e5;
+  background: rgba(42, 22, 9, 0.94);
+  border: 1px solid rgba(255, 187, 89, 0.78);
+  border-radius: 7px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+  pointer-events: none;
+}
+.cesium-synthetic-hover-summary b {
+  color: #ffd18a;
+  font:
+    600 7px "IBM Plex Mono",
+    monospace;
+  letter-spacing: 0.09em;
+}
+.cesium-synthetic-hover-summary span {
+  color: #f1ce9e;
+  font-size: 7px;
+  line-height: 1.3;
+}
+.synthetic-demo-ulpin-simulate {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px;
+  color: #fff0d2;
+  background: rgba(219, 133, 35, 0.18);
+  border: 1px solid rgba(255, 194, 104, 0.58);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 8px;
+}
+.synthetic-demo-ulpin-preview {
+  display: grid;
+  gap: 5px;
+  margin-top: 8px;
+  padding: 8px;
+  background: rgba(86, 46, 10, 0.36);
+  border: 1px dashed rgba(255, 191, 91, 0.55);
+  border-radius: 6px;
+}
+.synthetic-demo-ulpin-preview b {
+  color: #ffd28e;
+  font:
+    600 7px "IBM Plex Mono",
+    monospace;
+  letter-spacing: 0.07em;
+}
+.synthetic-demo-ulpin-preview span {
+  color: #efd2aa;
+  font-size: 7.5px;
+  line-height: 1.4;
+}
+.synthetic-demo-layer-menu {
+  display: grid;
+  gap: 5px;
+  min-width: 190px;
+  margin-left: auto;
+  padding: 7px 8px;
+  background: rgba(18, 34, 38, 0.7);
+  border: 1px solid rgba(117, 213, 211, 0.23);
+  border-radius: 6px;
+}
+.synthetic-demo-layer-menu p {
+  margin: 0;
+  color: #6fded9;
+  font:
+    600 7px "IBM Plex Mono",
+    monospace;
+  letter-spacing: 0.06em;
+}
+.synthetic-demo-layer-menu label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #cde7e3;
+  font-size: 8px;
+  cursor: pointer;
+}
+.synthetic-demo-layer-menu input {
+  width: 12px;
+  height: 12px;
+  accent-color: #4ed5d3;
+}
+@media (max-width: 760px) {
+  .cesium-synthetic-hover-summary {
+    right: 9px;
+    bottom: 48px;
+    max-width: 170px;
+  }
+  .synthetic-demo-layer-menu {
+    width: 100%;
+    margin-left: 0;
+  }
+}

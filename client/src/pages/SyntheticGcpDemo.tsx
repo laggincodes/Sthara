@@ -15,6 +15,7 @@ import {
   CesiumSpatialViewer,
   type CesiumLayerFlags,
   type MapCommand,
+  type SyntheticVisualLayers,
 } from "@/components/CesiumSpatialViewer";
 import { trpc } from "@/lib/trpc";
 import reraEvidence from "../../../submission/kusum-suresh-enclave-rera-evidence.json";
@@ -29,14 +30,23 @@ const DEMO_LAYERS: CesiumLayerFlags = {
 export default function SyntheticGcpDemo() {
   const [, setLocation] = useLocation();
   const demo = trpc.postgis.syntheticGcpDemo.useQuery();
+  const demoQuery = new URLSearchParams(window.location.search);
   const [command, setCommand] = useState<MapCommand>(null);
   const [viewMode, setViewMode] = useState<"2d" | "3d">(() =>
-    new URLSearchParams(window.location.search).get("view") === "2d"
-      ? "2d"
-      : "3d"
+    demoQuery.get("view") === "2d" ? "2d" : "3d"
   );
+  const [syntheticVisualLayers, setSyntheticVisualLayers] =
+    useState<SyntheticVisualLayers>({
+      simulatedDroneImagery:
+        demoQuery.get("layers")?.includes("drone") ?? false,
+      simulatedLidarPointCloud:
+        demoQuery.get("layers")?.includes("lidar") ?? false,
+    });
   const [inspectorOpen, setInspectorOpen] = useState(
-    () => new URLSearchParams(window.location.search).get("inspect") === "rera"
+    () => demoQuery.get("inspect") === "rera"
+  );
+  const [ulpinSimulationOpen, setUlpInSimulationOpen] = useState(
+    () => demoQuery.get("simulate") === "ulpin"
   );
   const issueCommand = useCallback((kind: NonNullable<MapCommand>["kind"]) => {
     setCommand({ kind, nonce: Date.now() });
@@ -107,6 +117,7 @@ export default function SyntheticGcpDemo() {
               layers={DEMO_LAYERS}
               syntheticDemoFeature={feature}
               syntheticDemoView={viewMode}
+              syntheticVisualLayers={syntheticVisualLayers}
               onSyntheticDemoSelect={() => setInspectorOpen(true)}
             />
             <div className="synthetic-demo-map-badge" role="status">
@@ -182,6 +193,25 @@ export default function SyntheticGcpDemo() {
                   Height, footprint, ownership, and vertical ULPIN remain locked
                   pending independent authority evidence.
                 </small>
+                <button
+                  className="synthetic-demo-ulpin-simulate"
+                  type="button"
+                  onClick={() => setUlpInSimulationOpen(current => !current)}
+                >
+                  <FlaskConical size={14} />
+                  {ulpinSimulationOpen
+                    ? "Close ULPIN simulation"
+                    : "Simulate 3D ULPIN preview"}
+                </button>
+                {ulpinSimulationOpen && (
+                  <div className="synthetic-demo-ulpin-preview">
+                    <b>SIMULATION PREVIEW · NOT ISSUED</b>
+                    <span>
+                      Demonstrates the workflow state only. No identifier, legal
+                      right, or registered 3D ULPIN has been created.
+                    </span>
+                  </div>
+                )}
               </aside>
             )}
             <div className="synthetic-demo-map-actions">
@@ -216,6 +246,35 @@ export default function SyntheticGcpDemo() {
                   ? "12 m synthetic visual test only"
                   : "Plan-style synthetic outline only"}
               </small>
+              <div className="synthetic-demo-layer-menu">
+                <p>SIMULATED VISUAL CONTEXT ONLY</p>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={syntheticVisualLayers.simulatedDroneImagery}
+                    onChange={event =>
+                      setSyntheticVisualLayers(current => ({
+                        ...current,
+                        simulatedDroneImagery: event.target.checked,
+                      }))
+                    }
+                  />
+                  Simulated drone imagery
+                </label>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={syntheticVisualLayers.simulatedLidarPointCloud}
+                    onChange={event =>
+                      setSyntheticVisualLayers(current => ({
+                        ...current,
+                        simulatedLidarPointCloud: event.target.checked,
+                      }))
+                    }
+                  />
+                  Simulated LiDAR points
+                </label>
+              </div>
             </div>
           </div>
 
