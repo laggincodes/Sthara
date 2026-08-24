@@ -10,6 +10,12 @@ The public selector sequence did reach **Patna** → **Patna Sadar** subdivision
 
 An official Plot Info lookup was attempted for `808` in that selected Digha context. It remained in a loading state and returned no visible plot attributes, geometry, area, holder, or download within the review session. A parcel boundary cannot be retrieved responsibly until the official response returns a specific Plot 808 P record. No BhuNaksha geometry, plot number, owner, or ULPIN was imported.
 
+### Focused RERA-to-BhuNaksha retry
+
+On 24 August 2026, the exact official root address supplied for BhuNaksha (`https://bhunaksha.bihar.gov.in/index.jsp`) was also opened. It loaded the public interface but reset to its default Araria selection and did not preserve a Digha/Plot 808 context or provide a Plot Info result. The versioned workflow was again able to select the Digha context, but the Plot 808 request still did not produce a visible result. Accordingly, the RERA facts — **Plot 808 P**, **Mauza Digha**, **Anchal Patna Sadar**, **Halka Patliputra**, and **District Patna** — are not yet reconciled to a BhuNaksha parcel feature.
+
+The published RERA endpoint remains a reference marker only. It was not used as a polygon vertex, cadastral match, GNSS control point, or GCP.
+
 ## BiharBhumi
 
 The official [BiharBhumi portal](https://biharbhumi.bihar.gov.in/Biharbhumi/) was reached successfully on 24 August 2026. It visibly links to public-facing services including **View Jamabandi Register**, **Online LPC application**, **LPC status**, **Bhu-Manchitra**, **e-Mapi**, and land-record/directory services. The page also distinguishes citizen login and application workflows.
