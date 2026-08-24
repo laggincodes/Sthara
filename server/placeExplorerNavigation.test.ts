@@ -10,6 +10,14 @@ const workspaceSource = readFileSync(
   resolve(process.cwd(), "client/src/pages/SpatialWorkspace.tsx"),
   "utf8"
 );
+const propertyVolumesSource = readFileSync(
+  resolve(process.cwd(), "client/src/pages/PropertyVolumes.tsx"),
+  "utf8"
+);
+const registrySource = readFileSync(
+  resolve(process.cwd(), "client/src/pages/UlpInRegistry.tsx"),
+  "utf8"
+);
 
 describe("Parcels and Buildings explorer navigation", () => {
   it("routes sidebar selections into their distinct source-aware explorer segments", () => {
@@ -23,5 +31,24 @@ describe("Parcels and Buildings explorer navigation", () => {
     expect(workspaceSource).toContain("resolveBuilding.mutate");
     expect(workspaceSource).toContain("PLACE_EXPLORER_UNAVAILABLE_METRICS");
     expect(workspaceSource).toContain("source-backed building record");
+  });
+
+  it("routes Property volumes and ULPIN registry to distinct evidence-first workspaces", () => {
+    expect(homePageSource).toContain('setLocation("/property-volumes")');
+    expect(homePageSource).toContain('setLocation("/ulpin-registry")');
+    expect(propertyVolumesSource).toContain("Vertical-property review");
+    expect(propertyVolumesSource).toContain("No vertical ULPINs issued");
+    expect(registrySource).toContain("Live source records");
+    expect(registrySource).toContain("Issued vertical ULPINs");
+  });
+
+  it("keeps the registry action as an eligibility review rather than unverified issuance", () => {
+    expect(registrySource).toContain("Review eligibility");
+    expect(registrySource).toContain("Issuance locked");
+    expect(registrySource).toMatch(
+      /cannot be converted into legal or\s+vertical ULPINs/
+    );
+    expect(homePageSource).toContain('get("issue") === "eligibility"');
+    expect(homePageSource).toContain("3D ULPIN issuance locked");
   });
 });

@@ -201,7 +201,10 @@ export default function Home() {
   const [activeNav, setActiveNav] = useState("Mission control");
   const [activeFloor, setActiveFloor] = useState(4);
   const [isNavOpen, setIsNavOpen] = useState(false);
-  const [generatorOpen, setGeneratorOpen] = useState(false);
+  const [generatorOpen, setGeneratorOpen] = useState(
+    () =>
+      new URLSearchParams(window.location.search).get("issue") === "eligibility"
+  );
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -276,9 +279,19 @@ export default function Home() {
   });
 
   useEffect(() => {
-    const requestedWorkspace = new URLSearchParams(window.location.search).get(
-      "workspace"
-    );
+    const parameters = new URLSearchParams(window.location.search);
+    const requestedWorkspace = parameters.get("workspace");
+    const requestedIssue = parameters.get("issue");
+    if (requestedIssue === "eligibility") {
+      setGeneratorOpen(true);
+      parameters.delete("issue");
+      window.history.replaceState(
+        {},
+        "",
+        `${window.location.pathname}${parameters.toString() ? `?${parameters.toString()}` : ""}`
+      );
+      return;
+    }
     if (!requestedWorkspace) return;
     if (
       requestedWorkspace === "ULPIN registry" ||
@@ -629,15 +642,18 @@ export default function Home() {
           `/workspace?segment=parcels&site=${encodeURIComponent(resolvedWorkspaceSite)}`
         );
       } else {
-        setSearchQuery("Find a 3D ULPIN record");
-        setSearchOpen(true);
+        setLocation("/ulpin-registry");
       }
       return;
     }
-    if (label === "Buildings" || label === "Property volumes") {
+    if (label === "Buildings") {
       setLocation(
         `/workspace?segment=buildings&site=${encodeURIComponent(resolvedWorkspaceSite)}`
       );
+      return;
+    }
+    if (label === "Property volumes") {
+      setLocation("/property-volumes");
       return;
     }
     if (label === "Data ingestion") {
