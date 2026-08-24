@@ -145,3 +145,8 @@
 - [ ] Inspect the actual sanctioned-plan material for a defensible closed building footprint or sanctioned geometry, without deriving a polygon from the endpoint coordinate or document-list text alone.
 - [ ] Match and import a plan-supported footprint only if the plan can be georeferenced or unambiguously reconciled to licensed source geometry; otherwise retain all footprint/extrusion locks.
 - [x] Document the sanctioned-plan retrieval outcome, validate any permissible update, checkpoint, and synchronize it to GitHub.
+- [x] Extract the attached official RERA sanctioned layout and building-plan PDFs without re-opening the supplied screenshot image.
+- [x] Determine whether the plans contain a defensible closed footprint, dimensions, survey coordinates, or other reproducible georeferencing basis for KUSUM SURESH ENCLAVE.
+- [x] Reconcile any plan-supported footprint with licensed source geometry before enabling the authority-backed 14.90 m Cesium extrusion; otherwise preserve the geometry lock.
+- [x] Retain the floor-by-floor and vertical ULPIN locks unless an exact footprint-linked official floor plan/BIM and approved vertical-property evidence are established.
+- [ ] Test, checkpoint, and synchronize any sanctioned-plan-supported evidence update to GitHub.

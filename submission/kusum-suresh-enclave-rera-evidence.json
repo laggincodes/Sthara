@@ -38,10 +38,34 @@
       "Current Non-Encumbrance Certificate",
       "Development Agreement"
     ],
+    "sanctionedPlanReview": {
+      "status": "reviewed_local_plan_geometry_not_georeferenced",
+      "reviewedOn": "2026-08-24",
+      "suppliedFiles": [
+        {
+          "fileName": "RERAP125201800396RERAP125201800396-5SanctionedLayoutPlan.pdf",
+          "sha256": "43f03dfe81846d3ca61eba9842d4badb7b08f86a491f97a89f56910e556498b3",
+          "pageCount": 1
+        },
+        {
+          "fileName": "RERAP125201800396RERAP125201800396-5SanctionedbuildingPlan.pdf",
+          "sha256": "43f03dfe81846d3ca61eba9842d4badb7b08f86a491f97a89f56910e556498b3",
+          "pageCount": 1,
+          "relationship": "Byte-identical duplicate of the supplied layout-plan PDF"
+        }
+      ],
+      "planFacts": [
+        "Site plan, ground-floor plan, first-to-fourth-floor plan, elevations, and local dimensional annotations are visible.",
+        "The sheet states a 1:100 scale and that dimensions are in metres.",
+        "The plan identifies the G+4 project and its local plot/road context."
+      ],
+      "geometryDecision": "The closed outlines are local plan-space geometry only. No WGS84 grid, coordinate schedule, benchmark, or multiple survey control points were provided for a repeatable transformation into a PostGIS footprint.",
+      "nextRequirement": "Provide survey control/GNSS points, a georeferenced sanctioned plan, or a documented match to an independently licensed source footprint before creating a map polygon or rendering a 14.90 m extrusion."
+    },
     "activeLocks": {
       "cesiumExtrusion": "Height is authority-backed, but no exact building footprint polygon has been matched. No Cesium extrusion is rendered.",
-      "officialFootprintGeometry": "The published coordinate is explicitly an endpoint of the plot, not a closed parcel or building polygon.",
-      "floorByFloorModel": "G+4 is preserved as a source value, but no reviewed floor plan/BIM tied to an exact footprint is available.",
+      "officialFootprintGeometry": "The sanctioned sheet has a local closed outline, but it has no WGS84 control and the published coordinate is only an endpoint of the plot.",
+      "floorByFloorModel": "The sanctioned G+4 drawing was reviewed, but it is not yet tied to an exact mapped footprint or an approved vertical-property record.",
       "verticalULPIN": "No approved vertical-property registration or reviewed Level 3 floor-plan/BIM evidence has been established."
     }
   }
