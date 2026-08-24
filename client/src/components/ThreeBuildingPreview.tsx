@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { resolveBuildingEvidenceLevel } from "@/lib/buildingEvidenceLevel";
 import { useEffect, useMemo, useRef } from "react";
 import "./three-building-preview.css";
 
@@ -98,13 +99,14 @@ function renderSourceFootprint(canvas: HTMLCanvasElement, feature: ThreePreviewF
 
 export function ThreeBuildingPreview({ feature }: { feature: ThreePreviewFeature | null }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const evidence = useMemo(() => feature && typeof feature.properties.approvedHeightMetres === "number" ? `Approved height ${feature.properties.approvedHeightMetres} m` : "Footprint plate only · height awaiting authority approval", [feature]);
-  const approvedFloorCount = feature && typeof feature.properties.approvedFloorCount === "number" && feature.properties.approvedFloorCount > 0 ? Math.floor(feature.properties.approvedFloorCount) : null;
+  const evidenceState = resolveBuildingEvidenceLevel(feature?.properties);
+  const { hasVerifiedHeight, hasOfficialFloorPlan, approvedFloorCount, level: evidenceLevel } = evidenceState;
+  const evidence = useMemo(() => hasOfficialFloorPlan ? `Level 3 · official floor plan/BIM · ${approvedFloorCount} approved floors` : hasVerifiedHeight ? `Level 2 · verified height ${feature?.properties.approvedHeightMetres} m · extruded source footprint` : "Level 1 · public footprint plate · verified height required", [approvedFloorCount, feature?.properties.approvedHeightMetres, hasOfficialFloorPlan, hasVerifiedHeight]);
   useEffect(() => {
     if (!canvasRef.current || !feature) return;
     return renderSourceFootprint(canvasRef.current, feature);
   }, [feature]);
 
   if (!feature) return <div className="three-building-empty"><strong>No verified 3D building model</strong><span>Search a mapped place or select a live source footprint. AI routing cannot create missing geometry.</span></div>;
-  return <div className="three-building-preview-wrap"><div className="three-building-preview"><canvas ref={canvasRef} aria-label={`Interactive 3D source footprint for ${feature.ulpin}`} /><div className="three-building-overlay"><span>THREE.JS · LIVE FOOTPRINT</span><strong>{feature.ulpin}</strong><small>{evidence}</small></div><div className="three-building-drag-hint">Drag to rotate</div></div><div className="three-building-diagram" aria-label="Vertical evidence diagram"><div><p>Vertical review sketch</p><strong>{approvedFloorCount ? `${approvedFloorCount} approved floors` : "Floor diagram locked"}</strong><small>{approvedFloorCount ? "Authority-provided floor count available for review." : "An approved floor plan is required before floor or unit geometry can be drawn."}</small></div><div className="three-building-stack" aria-hidden="true">{(approvedFloorCount ? Array.from({ length: Math.min(approvedFloorCount, 6) }) : Array.from({ length: 4 })).map((_, index) => <i key={index} className={approvedFloorCount ? "approved" : "pending"} />)}</div></div></div>;
+  return <div className="three-building-preview-wrap"><div className="three-building-preview"><canvas ref={canvasRef} aria-label={`Interactive 3D source footprint for ${feature.ulpin}`} /><div className="three-building-overlay"><span>LEVEL {evidenceLevel} · THREE.JS SOURCE VIEW</span><strong>{feature.ulpin}</strong><small>{evidence}</small></div><div className="three-building-drag-hint">Drag to rotate</div></div><div className="three-building-diagram" aria-label="Vertical evidence diagram"><div><p>Evidence progression</p><strong>{hasOfficialFloorPlan ? "Vertical ULPIN ready" : hasVerifiedHeight ? "Floor model locked" : "Height model locked"}</strong><small>{hasOfficialFloorPlan ? "Official floor-plan/BIM evidence is available for vertical ULPIN review." : hasVerifiedHeight ? "Verified building height unlocks the extrusion; an official floor plan/BIM is required for Level 3." : "A verified building-height record is required before this footprint can become an extruded building."}</small></div><div className="three-building-stack" aria-hidden="true">{Array.from({ length: 3 }).map((_, index) => <i key={index} className={index < evidenceLevel ? "approved" : "pending"} />)}</div></div></div>;
 }

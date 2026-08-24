@@ -169,3 +169,9 @@ button:focus-visible, input:focus-visible { outline: 2px solid #2ad4d9; outline-
 .cesium-spatial-viewer .cesium-error { z-index: 7; }
 
 .spatial-dossier .spatial-source-note { margin-top: 0; }
+.spatial-evidence-panel .spatial-order-list button.complete { opacity: .74; }
+.spatial-evidence-panel .spatial-order-list button.complete > strong { color: #8ce9b6; background: rgba(112,217,151,.14); border-color: rgba(112,217,151,.3); }
+.spatial-evidence-panel .spatial-order-list button.pending { opacity: .78; }
+.spatial-evidence-panel .spatial-order-list button.pending > strong { color: #e8b170; background: rgba(235,167,96,.1); border-color: rgba(235,167,96,.26); }
+.spatial-evidence-next { display: block; margin: 8px 9px 10px; color: #829b96; font: 7.5px/1.45 "IBM Plex Mono", monospace; }
+.spatial-evidence-next b { color: #d7efea; font-weight: 500; }
