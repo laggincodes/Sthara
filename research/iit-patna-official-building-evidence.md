@@ -25,6 +25,10 @@ The verified hostel page can support an institution-level statement about a boys
 
 OpenStreetMap returns `way/1368115899` as the named **Indian Institute of Technology Patna** university feature, with a centre at 25.5424381, 84.8516072 and bounds that include the user-supplied 25.5356, 84.8513 point. The current import anchor at 25.54275, 84.853 is therefore a rounded named-university reference, not an unrelated institution. The user-supplied coordinate reverse-geocodes to a State Bank of India point inside the broader named university bounds, so it is useful as a **candidate local campus point** but does not by itself identify an Academic Block, hostel, or official building footprint. [4] [5]
 
+## Workspace display validation
+
+The workspace now shows the independently verified boys' hostel context only for IIT Patna searches. The panel visibly labels the record as **institution-level context only; not matched to an individual source footprint**, and links to the official IIT Patna hostel page. It does not show for the AIIMS Patna workspace. Desktop and 396×857 mobile reviews confirmed that the panel remains readable alongside the Level 1 source-footprint state.
+
 ## References
 
 [1] [IIT Patna — Hostels](https://www.iitp.ac.in/hostels)

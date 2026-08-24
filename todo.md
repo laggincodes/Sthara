@@ -105,3 +105,5 @@
 - [x] Add licensed Cesium imagery and public 3D building context to make the live source-backed map easier to interpret without treating visual context as cadastral evidence.
 - [x] Upgrade the selected-footprint inspector with truthful source, area, evidence-level, and next-evidence information instead of simulated ULPIN, floor/unit, elevation, conflict, or quality records.
 - [x] Validate the enhanced Cesium visual context and inspector on desktop and true mobile layouts, including a safe unmatched-place state.
+- [x] Add an IIT Patna institution-level evidence panel using only the independently verified official hostel-page record, clearly marked as unlinked to individual source footprints.
+- [x] Validate that the IIT evidence panel is visible only for IIT queries and does not assert a geometry, parcel, ULPIN, legal owner, height, or floor-plan/BIM link.
