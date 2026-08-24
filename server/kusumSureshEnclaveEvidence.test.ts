@@ -12,6 +12,17 @@ describe("KUSUM SURESH ENCLAVE Bihar RERA evidence", () => {
     expect(evidence.endpointReference.sourceLabel).toContain("End point");
   });
 
+  it("records the QR-code page as corroboration without treating its blank height field as height evidence", () => {
+    const authority = record.kusumSureshEnclave.authority;
+    expect(authority.qrCodeRecordUrl).toContain("QRCODE.aspx");
+    expect(authority.qrCodeReview.corroborates).toContain(
+      "One sanctioned building/wing"
+    );
+    expect(authority.qrCodeReview.doesNotIndependentlyCorroborate).toContain(
+      "The 14.90 m building-height value because the rendered Height of Building field is blank"
+    );
+  });
+
   it("does not treat the authority record as a matched footprint or issued vertical ULPIN", () => {
     const locks = record.kusumSureshEnclave.activeLocks;
     expect(locks.cesiumExtrusion).toContain("no exact building footprint");
