@@ -149,11 +149,14 @@ export default function SpatialWorkspace() {
   const search = useSearch();
   const queryParameters = new URLSearchParams(search);
   const requestedSite = queryParameters.get("site") ?? "Amity University Patna";
+<<<<<<< HEAD
   const comparisonUlpins = (queryParameters.get("compare") ?? "")
     .split(",")
     .map(value => value.trim())
     .filter(Boolean)
     .slice(0, 2);
+=======
+>>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
   const explorerSegment = getPlaceExplorerSegment(
     queryParameters.get("segment")
   );
@@ -211,6 +214,7 @@ export default function SpatialWorkspace() {
   const osmBuildingsReady = Boolean(
     import.meta.env.VITE_CESIUM_ION_ACCESS_TOKEN
   );
+<<<<<<< HEAD
   const activeMapUlpins =
     comparisonUlpins.length > 0
       ? comparisonUlpins
@@ -232,6 +236,8 @@ export default function SpatialWorkspace() {
         ),
     [comparisonUlpins, liveGeometry.data]
   );
+=======
+>>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
   const previewFeature = useMemo<ThreePreviewFeature | null>(() => {
     const preferredUlpins = selected
       ? [selected.ulpin]
@@ -427,7 +433,11 @@ export default function SpatialWorkspace() {
             <CesiumSpatialViewer
               command={command}
               layers={layers}
+<<<<<<< HEAD
               focusUlpins={activeMapUlpins}
+=======
+              focusUlpins={searchResult.data?.matchedUlpins}
+>>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
               onFeatureSelect={onFeatureSelect}
             />
             <div className="spatial-stage-grid" />
@@ -435,6 +445,7 @@ export default function SpatialWorkspace() {
             <div className="spatial-stage-heading">
               <p>{explorer.stageLabel}</p>
               <h1>
+<<<<<<< HEAD
                 {comparisonUlpins.length === 2
                   ? "Comparing two source-record geometries"
                   : resolveBuilding.isPending || searchResult.isLoading
@@ -450,6 +461,19 @@ export default function SpatialWorkspace() {
                   : (searchResult.data?.buildingCount ?? 0) > 0
                     ? `${searchResult.data?.buildingCount} matched PostGIS footprints · camera focused on source geometry`
                     : "Try a mapped site, ULPIN, or source-backed building record"}{" "}
+=======
+                {resolveBuilding.isPending || searchResult.isLoading
+                  ? "Finding source-backed geometry…"
+                  : (searchResult.data?.buildingCount ?? 0) > 0
+                    ? searchResult.data?.siteLabel
+                    : explorer.noResultLabel}
+              </h1>
+              <span>
+                <CircleDot size={13} />{" "}
+                {(searchResult.data?.buildingCount ?? 0) > 0
+                  ? `${searchResult.data?.buildingCount} matched PostGIS footprints · camera focused on source geometry`
+                  : "Try a mapped site, ULPIN, or source-backed building record"}{" "}
+>>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
                 <b>·</b> EPSG:4326
               </span>
               {resolutionNote && (
@@ -666,6 +690,7 @@ export default function SpatialWorkspace() {
                 )}
               </div>
             </div>
+<<<<<<< HEAD
             {comparisonUlpins.length === 2 && (
               <section
                 className="spatial-comparison-panel"
@@ -731,6 +756,8 @@ export default function SpatialWorkspace() {
                 )}
               </section>
             )}
+=======
+>>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
             <div className="spatial-dossier-card">
               <div className="spatial-dossier-title">
                 <div>

@@ -27,7 +27,10 @@ import {
   MapPinned,
   Maximize2,
   Menu,
+<<<<<<< HEAD
   Moon,
+=======
+>>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
   MoreHorizontal,
   PanelRightOpen,
   Play,
@@ -37,7 +40,10 @@ import {
   Settings2,
   ShieldCheck,
   Sparkles,
+<<<<<<< HEAD
   Sun,
+=======
+>>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
   Users,
   UploadCloud,
   X,
@@ -78,7 +84,10 @@ import {
 } from "../../../shared/evidenceMapFilter";
 import { filterIitPatnaAutocomplete } from "../../../shared/iitPatnaAutocomplete";
 import { useLocation } from "wouter";
+<<<<<<< HEAD
 import { useTheme } from "@/contexts/ThemeContext";
+=======
+>>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
 
 type LayerKey = "parcels" | "buildings" | "utilities" | "terrain";
 
@@ -202,7 +211,10 @@ function NavGroup({
 
 export default function Home() {
   const [, setLocation] = useLocation();
+<<<<<<< HEAD
   const { theme, toggleTheme } = useTheme();
+=======
+>>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
   const [activeNav, setActiveNav] = useState("Mission control");
   const [activeFloor, setActiveFloor] = useState(4);
   const [isNavOpen, setIsNavOpen] = useState(false);
@@ -972,6 +984,7 @@ export default function Home() {
             <button
               className="icon-button"
               type="button"
+<<<<<<< HEAD
               aria-label={
                 theme === "dark"
                   ? "Switch to daylight appearance"
@@ -989,6 +1002,8 @@ export default function Home() {
             <button
               className="icon-button"
               type="button"
+=======
+>>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
               aria-label="Open settings"
               onClick={() => setWorkspaceOpen("Workspace settings")}
             >

@@ -35,6 +35,7 @@
   --radius: 14px;
   --nav-width: 250px;
 }
+<<<<<<< HEAD
 :root:not(.dark) {
   --background: #e7f1ef;
   --foreground: #0d252a;
@@ -50,6 +51,8 @@
 :root:not(.dark) .registry-workspace {
   filter: brightness(1.12) saturate(0.85);
 }
+=======
+>>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
 
 * {
   box-sizing: border-box;
@@ -658,7 +661,11 @@ input:focus-visible {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+<<<<<<< HEAD
   padding: 22px 24px;
+=======
+  padding: 19px 20px;
+>>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
 }
 .map-header .section-kicker {
   padding: 0 0 5px;
@@ -690,6 +697,7 @@ input:focus-visible {
 }
 .map-header-actions {
   display: flex;
+<<<<<<< HEAD
   gap: 9px;
 }
 .map-card .cesium-context-controls {
@@ -701,13 +709,20 @@ input:focus-visible {
   padding: 8px;
 }
 .map-card .cesium-context-controls section > div {
+=======
+>>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
   gap: 6px;
 }
 .map-control-stack {
   position: absolute;
   z-index: 5;
+<<<<<<< HEAD
   top: 116px;
   left: 24px;
+=======
+  top: 127px;
+  left: 20px;
+>>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
   display: grid;
   overflow: hidden;
   background: rgba(7, 15, 19, 0.7);
@@ -2822,7 +2837,11 @@ input:focus-visible {
     #08151a;
 }
 .spatial-model-stage .cesium-spatial-viewer {
+<<<<<<< HEAD
   z-index: auto;
+=======
+  z-index: 1;
+>>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
 }
 .spatial-stage-grid,
 .spatial-stage-vignette {
@@ -2923,10 +2942,13 @@ input:focus-visible {
   border: 1px solid rgba(204, 237, 232, 0.16);
   border-radius: 7px;
 }
+<<<<<<< HEAD
 .spatial-model-stage .cesium-context-controls {
   top: 116px;
   left: 70px;
 }
+=======
+>>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
 .spatial-map-controls button {
   display: grid;
   width: 34px;
@@ -6452,6 +6474,7 @@ input:focus-visible {
     margin-left: 0;
   }
 }
+<<<<<<< HEAD
 .cesium-loader,
 .cesium-recovery,
 .cesium-runtime-fallback {
@@ -7419,3 +7442,5 @@ input:focus-visible {
     grid-template-columns: 1fr;
   }
 }
+=======
+>>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3

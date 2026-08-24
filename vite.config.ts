@@ -5,6 +5,10 @@ import fs from "node:fs";
 import path from "node:path";
 import { defineConfig, type Plugin, type ViteDevServer } from "vite";
 import { vitePluginManusRuntime } from "vite-plugin-manus-runtime";
+<<<<<<< HEAD
+=======
+import cesium from "vite-plugin-cesium";
+>>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
 
 // =============================================================================
 // Manus Debug Collector - Vite Plugin
@@ -56,7 +60,11 @@ function writeToLogFile(source: LogSource, entries: unknown[]) {
   const logPath = path.join(LOG_DIR, `${source}.log`);
 
   // Format entries with timestamps
+<<<<<<< HEAD
   const lines = entries.map(entry => {
+=======
+  const lines = entries.map((entry) => {
+>>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
     const ts = new Date().toISOString();
     return `[${ts}] ${JSON.stringify(entry)}`;
   });
@@ -132,7 +140,11 @@ function vitePluginManusDebugCollector(): Plugin {
         }
 
         let body = "";
+<<<<<<< HEAD
         req.on("data", chunk => {
+=======
+        req.on("data", (chunk) => {
+>>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
           body += chunk.toString();
         });
 
@@ -150,6 +162,7 @@ function vitePluginManusDebugCollector(): Plugin {
   };
 }
 
+<<<<<<< HEAD
 const plugins = [
   react(),
   tailwindcss(),
@@ -157,6 +170,9 @@ const plugins = [
   vitePluginManusRuntime(),
   vitePluginManusDebugCollector(),
 ];
+=======
+const plugins = [react(), tailwindcss(), cesium(), jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector()];
+>>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
 
 export default defineConfig({
   plugins,
@@ -171,7 +187,11 @@ export default defineConfig({
   root: path.resolve(import.meta.dirname, "client"),
   publicDir: path.resolve(import.meta.dirname, "client", "public"),
   build: {
+<<<<<<< HEAD
     outDir: "../dist/public",
+=======
+    outDir: path.resolve(import.meta.dirname, "dist/public"),
+>>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
     emptyOutDir: true,
   },
   server: {
