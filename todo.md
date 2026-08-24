@@ -121,3 +121,6 @@
 - [ ] Validate https://www.iitp.ac.in/iwd/index.php/academic-area and the IIT Patna Annual Report 2015–16 page-18 reference for Academic Block-4’s G+3 status and 6,667.73 m² total floor area.
 - [ ] Add the validated Academic Block-4 record as IIT institutional/campus-plan evidence only, with direct official citations and no Microsoft-footprint, metre-height, or cadastral ULPIN assignment.
 - [ ] Re-validate Academic Block-4’s Level 2 and Level 3 locks plus the source-aware place facts panel on desktop and true mobile after the official-evidence update.
+- [ ] Retrieve and independently validate the user-provided official IIT Patna Annual Report 2015–16 PDF at /images/pdf/IIT_Patna_Annual_Report%202015_16_English.pdf for Academic Block-4’s G+3 and 6,667.73 m² entry.
+- [ ] Update the Academic Block-4 evidence panel from source-cited to independently validated institutional evidence if the official PDF confirms the stated text, without assigning a surveyed height, GIS footprint, or ULPIN.
+- [ ] Re-test the refined Academic Block-4 evidence panel, source-aware facts, and preserved 3D/ULPIN locks on desktop and true mobile.
