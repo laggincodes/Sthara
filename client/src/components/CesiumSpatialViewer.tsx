@@ -76,13 +76,29 @@ export function CesiumSpatialViewer({
     if (viewer.scene.skyAtmosphere) viewer.scene.skyAtmosphere.show = false;
     viewer.scene.skyBox = undefined;
     viewer.camera.setView({ destination: Cartesian3.fromDegrees(77.6245, 12.9352, 2300) });
+    let highlightedEntity: Entity | null = null;
+    const restoreFootprintStyle = (entity: Entity | null) => {
+      if (!entity?.polygon) return;
+      const properties = (entity.properties?.getValue?.() ?? {}) as Record<string, unknown>;
+      const extrusionHeight = getApprovedExtrusionHeight(properties);
+      entity.polygon.material = new ColorMaterialProperty((extrusionHeight ? Color.fromCssColorString("#55dcb4") : Color.fromCssColorString("#2ad4d9")).withAlpha(extrusionHeight ? 0.62 : 0.34));
+      entity.polygon.outlineColor = new ConstantProperty(Color.fromCssColorString("#e9ffff"));
+    };
     viewer.screenSpaceEventHandler.setInputAction((movement: { position: Cartesian2 }) => {
       const picked = viewer.scene.pick(movement.position);
       const entity = defined(picked) && picked.id && typeof picked.id === "object" ? picked.id as Entity : undefined;
       const ulpin = entity?.properties?.ulpin?.getValue?.();
-      if (typeof ulpin !== "string") return;
-      const properties = (entity?.properties?.getValue?.() ?? {}) as Record<string, unknown>;
-      viewer.selectedEntity = entity;
+      if (!entity || typeof ulpin !== "string") return;
+      const selectedEntity = entity;
+      const properties = (selectedEntity.properties?.getValue?.() ?? {}) as Record<string, unknown>;
+      restoreFootprintStyle(highlightedEntity);
+      if (selectedEntity.polygon) {
+        selectedEntity.polygon.material = new ColorMaterialProperty(Color.fromCssColorString("#73fff1").withAlpha(0.78));
+        selectedEntity.polygon.outlineColor = new ConstantProperty(Color.fromCssColorString("#fff3b0"));
+      }
+      highlightedEntity = selectedEntity;
+      viewer.selectedEntity = selectedEntity;
+      void viewer.flyTo(selectedEntity, { duration: 0.45, offset: new HeadingPitchRange(0.32, -0.86, 180) });
       onFeatureSelect?.({ ulpin, properties });
     }, ScreenSpaceEventType.LEFT_CLICK);
     viewerRef.current = viewer;

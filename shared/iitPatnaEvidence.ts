@@ -10,6 +10,13 @@ export const IIT_PATNA_OFFICIAL_CONTEXT = {
       linkage: "Institution-level context only; not matched to an individual source footprint.",
     },
   ],
+  lockedRequests: [
+    {
+      label: "Academic Block-4",
+      requirement: "Verified block-to-footprint match and official floor plan/BIM required.",
+      outcome: "Floor-by-floor model and vertical ULPIN remain locked.",
+    },
+  ],
 } as const;
 
 export function isIitPatnaReference(query: string) {

@@ -107,3 +107,7 @@
 - [x] Validate the enhanced Cesium visual context and inspector on desktop and true mobile layouts, including a safe unmatched-place state.
 - [x] Add an IIT Patna institution-level evidence panel using only the independently verified official hostel-page record, clearly marked as unlinked to individual source footprints.
 - [x] Validate that the IIT evidence panel is visible only for IIT queries and does not assert a geometry, parcel, ULPIN, legal owner, height, or floor-plan/BIM link.
+- [x] Enhance the IIT Patna Cesium building presentation using only licensed imagery, public 3D context, and live source-backed geometry.
+- [x] Confirm Academic Block-4 remains explicitly authority-gated until a verified block-to-footprint match and official floor plan/BIM exist for floor-by-floor or vertical ULPIN visualization.
+- [x] Re-verify dashboard editNote validation so short notes are blocked with inline guidance and never surface as a raw TRPCClientError.
+- [x] Validate enhanced IIT Cesium, Academic Block-4 authority-gated state, and editNote feedback on desktop and true mobile layouts.
