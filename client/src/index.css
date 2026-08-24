@@ -5581,3 +5581,125 @@ input:focus-visible {
     display: none;
   }
 }
+.official-data-panel {
+  margin-top: 14px;
+  padding: 20px;
+  background: linear-gradient(
+    145deg,
+    rgba(20, 42, 48, 0.82),
+    rgba(9, 19, 24, 0.97)
+  );
+  border: 1px solid rgba(42, 212, 217, 0.21);
+  border-radius: 12px;
+}
+.official-data-panel-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+}
+.official-data-panel-heading p {
+  margin: 0;
+  color: #6fdad8;
+  font:
+    8px "IBM Plex Mono",
+    monospace;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.official-data-panel-heading h2 {
+  margin: 7px 0 0;
+  color: #e8f8f5;
+  font:
+    600 20px "Space Grotesk",
+    sans-serif;
+}
+.official-data-panel-heading > small {
+  max-width: 255px;
+  color: #839d97;
+  font:
+    8px/1.5 "IBM Plex Mono",
+    monospace;
+  text-align: right;
+}
+.official-data-route-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 17px;
+}
+.official-data-route-grid article {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 206px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.026);
+  border: 1px solid rgba(198, 235, 230, 0.1);
+  border-radius: 9px;
+}
+.official-data-route-grid article > svg {
+  color: #7fe5e2;
+}
+.official-data-route-grid article > span {
+  margin-top: 12px;
+  color: #80cfc8;
+  font:
+    7.5px "IBM Plex Mono",
+    monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.official-data-route-grid h3 {
+  margin: 5px 0 7px;
+  color: #e2f4f1;
+  font:
+    600 13px/1.25 "Space Grotesk",
+    sans-serif;
+}
+.official-data-route-grid p {
+  margin: 0;
+  color: #91aaa5;
+  font-size: 9px;
+  line-height: 1.48;
+}
+.official-data-route-grid small {
+  margin-top: 8px;
+  color: #e2b875;
+  font-size: 8px;
+  line-height: 1.4;
+}
+.official-data-route-grid a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  width: fit-content;
+  margin-top: auto;
+  padding-top: 12px;
+  color: #84e3df;
+  font-size: 8px;
+  text-decoration: none;
+}
+.official-data-route-grid a:hover {
+  color: #ecffff;
+  text-decoration: underline;
+}
+@media (max-width: 620px) {
+  .official-data-panel {
+    padding: 14px;
+  }
+  .official-data-panel-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .official-data-panel-heading > small {
+    max-width: none;
+    text-align: left;
+  }
+  .official-data-route-grid {
+    grid-template-columns: 1fr;
+  }
+  .official-data-route-grid article {
+    min-height: 0;
+  }
+}

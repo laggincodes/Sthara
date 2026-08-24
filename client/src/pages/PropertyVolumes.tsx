@@ -3,17 +3,61 @@ import {
   ArrowLeft,
   Box,
   CheckCircle2,
+  ExternalLink,
+  FileCheck2,
   Layers3,
+  MapPinned,
   LockKeyhole,
   ScanSearch,
   ShieldCheck,
+  Satellite,
 } from "lucide-react";
 import { useLocation } from "wouter";
+
+const officialDataRoutes = [
+  {
+    title: "BhuNaksha · Digha cadastral workflow",
+    label: "Cadastral-map route",
+    detail:
+      "Patna → Patna Sadar → Patna Rural → Digha (0161) → RS Map 07 → Sheet 00 was publicly selectable. Plot 808 returned no visible result during review.",
+    lock: "No parcel boundary, holder, area, or ULPIN imported.",
+    href: "https://bhunaksha.bihar.gov.in/10/indexmain.jsp",
+    icon: MapPinned,
+  },
+  {
+    title: "BiharBhumi · revenue-service navigation",
+    label: "Revenue-record route",
+    detail:
+      "The official service index exposes Jamabandi, LPC, Bhu-Manchitra, and e-Mapi workflows, including application and status routes.",
+    lock: "No project-specific or private ownership record retrieved.",
+    href: "https://biharbhumi.bihar.gov.in/Biharbhumi/",
+    icon: FileCheck2,
+  },
+  {
+    title: "Patna AutoMAP · approved-plan workflow",
+    label: "Building-approval route",
+    detail:
+      "The official PMC BPAS guidance requires plot details, a registered technical person, secured APZ plan material, supporting documents, and an application workflow.",
+    lock: "No public project approval, plan, height, or footprint retrieved.",
+    href: "https://automap.bihar.gov.in/PATNABPASPORTAL/Home",
+    icon: ShieldCheck,
+  },
+  {
+    title: "Survey of India CORS · GNSS survey workflow",
+    label: "Survey-control route",
+    detail:
+      "Official SOPs cover registration, data downloading, DGNSS/NRTK survey, post-processing, and VRS data workflows.",
+    lock: "No GCP can be generated; authorized survey control is required.",
+    href: "https://surveyofindia.gov.in/pages/continuously-operating-reference-stations-cors-",
+    icon: Satellite,
+  },
+] as const;
 
 export default function PropertyVolumes() {
   const [, setLocation] = useLocation();
   const geometry = trpc.postgis.geojson.useQuery();
   const liveRecords = geometry.data?.features ?? [];
+  const isLoadingRecords = geometry.isLoading;
   const heightApprovedCount = liveRecords.filter(
     feature => typeof feature.properties.approvedHeightMetres === "number"
   ).length;
@@ -62,14 +106,22 @@ export default function PropertyVolumes() {
           <article>
             <ScanSearch size={18} />
             <span>Live source footprints</span>
-            <strong>{liveRecords.length}</strong>
-            <small>Spatial references only</small>
+            <strong>{isLoadingRecords ? "—" : liveRecords.length}</strong>
+            <small>
+              {isLoadingRecords
+                ? "Loading source records"
+                : "Spatial references only"}
+            </small>
           </article>
           <article>
             <Layers3 size={18} />
             <span>Verified-height records</span>
-            <strong>{heightApprovedCount}</strong>
-            <small>Potential Level 2 inputs</small>
+            <strong>{isLoadingRecords ? "—" : heightApprovedCount}</strong>
+            <small>
+              {isLoadingRecords
+                ? "Loading source records"
+                : "Potential Level 2 inputs"}
+            </small>
           </article>
           <article>
             <Box size={18} />
@@ -142,6 +194,39 @@ export default function PropertyVolumes() {
           <button type="button" onClick={() => setLocation("/ulpin-registry")}>
             View ULPIN registry <ArrowLeft size={15} />
           </button>
+        </section>
+
+        <section
+          className="official-data-panel"
+          aria-label="Official authority-data access routes"
+        >
+          <div className="official-data-panel-heading">
+            <div>
+              <p>Authority data access</p>
+              <h2>Verified government workflows, not inferred records.</h2>
+            </div>
+            <small>
+              Retrieved 24 Aug 2026 · Use the official source before any
+              cadastral, approval, or survey claim.
+            </small>
+          </div>
+          <div className="official-data-route-grid">
+            {officialDataRoutes.map(route => {
+              const Icon = route.icon;
+              return (
+                <article key={route.title}>
+                  <Icon size={18} />
+                  <span>{route.label}</span>
+                  <h3>{route.title}</h3>
+                  <p>{route.detail}</p>
+                  <small>{route.lock}</small>
+                  <a href={route.href} target="_blank" rel="noreferrer">
+                    Open official route <ExternalLink size={13} />
+                  </a>
+                </article>
+              );
+            })}
+          </div>
         </section>
       </section>
     </main>
