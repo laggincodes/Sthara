@@ -172,3 +172,4 @@
 - [x] Investigate public Patna Municipal Corporation AutoMAP evidence for approved-plan or plot-GIS references and identify whether a specific approved footprint can be lawfully retrieved.
 - [x] Investigate Survey of India CORS public reference material and document that coordinates/control points must come from an authorized survey workflow rather than generated estimates.
 - [x] Integrate only retrieved authority-source links, metadata, and defensible records; test, checkpoint, and synchronize any evidence-backed update.
+- [x] Reconcile the RERA-recorded Plot 808 P, Digha, Patna Sadar, and Halka Patliputra context against BhuNaksha only if the portal returns a specific official Plot Info result; otherwise retain the pending polygon/GCP status.
