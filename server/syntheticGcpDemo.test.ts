@@ -7,6 +7,10 @@ const cesiumViewerSource = readFileSync(
   resolve(process.cwd(), "client/src/components/CesiumSpatialViewer.tsx"),
   "utf8"
 );
+const syntheticDemoPageSource = readFileSync(
+  resolve(process.cwd(), "client/src/pages/SyntheticGcpDemo.tsx"),
+  "utf8"
+);
 
 describe("synthetic GCP demo pipeline", () => {
   it("validates the supplied non-collinear prototype controls and creates a closed EPSG:4326 preview ring", () => {
@@ -35,5 +39,21 @@ describe("synthetic GCP demo pipeline", () => {
   it("keeps the 3D preview visibly labelled as a prototype rather than a building", () => {
     expect(cesiumViewerSource).toContain("DEMO VOLUME\\nNOT A BUILDING");
     expect(cesiumViewerSource).toContain("no PostGIS write");
+  });
+
+  it("keeps model inspection, 2D/3D switching, and the warning badge within the synthetic-only path", () => {
+    expect(cesiumViewerSource).toContain("onSyntheticDemoSelect?.()");
+    expect(cesiumViewerSource).toContain('syntheticDemoView === "3d"');
+    expect(cesiumViewerSource).toContain("DEMO / NON-AUTHORITATIVE");
+    expect(syntheticDemoPageSource).toContain("Separate RERA authority record");
+    expect(syntheticDemoPageSource).toMatch(
+      /do not\s+validate the synthetic geometry/
+    );
+    expect(syntheticDemoPageSource).toContain("2D plan");
+    expect(syntheticDemoPageSource).toContain("3D prototype");
+    expect(syntheticDemoPageSource).toContain('get("view") === "2d"');
+    expect(cesiumViewerSource).toContain(
+      "DEMO PLAN\\nNOT A CADASTRAL BOUNDARY"
+    );
   });
 });
