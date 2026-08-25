@@ -259,3 +259,9 @@
 - [x] Add a clear property-type color legend next to grouped mock ULPIN records.
 - [x] Make illustrative mock floor levels clickable and show floor-specific mock ownership and rights details.
 - [x] Add regression coverage, validate the interaction and responsive layout, and push the release to the requested GitHub repository.
+
+- [x] Re-verify the latest interactive floor-detail and property-type legend release across code, tests, build, responsive UI, public deployment, and exact GitHub main branch.
+
+- [x] Add a clearly labeled Citizen, Surveyor, and Authority role-simulation control without changing real authorization.
+- [x] Add hover summaries for mock floor-level ownership status before click selection.
+- [x] Add regression coverage and validate the role simulation, floor hover/click behavior, and responsive safeguards.

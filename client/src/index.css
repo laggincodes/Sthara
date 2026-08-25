@@ -8043,3 +8043,98 @@ input:focus-visible {
     font-size: 11px;
   }
 }
+
+.spatial-role-simulation {
+  display: grid;
+  gap: 9px;
+  padding: 12px;
+  background: rgba(114, 227, 223, 0.035);
+  border: 1px solid rgba(114, 227, 223, 0.16);
+  border-radius: 7px;
+}
+.spatial-role-simulation > small {
+  color: #91aaa5;
+  font-size: 9px;
+  line-height: 1.5;
+}
+.spatial-role-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.spatial-role-buttons button {
+  min-height: 28px;
+  padding: 0 10px;
+  color: #9bb7b2;
+  background: rgba(5, 15, 18, 0.42);
+  border: 1px solid rgba(204, 237, 232, 0.13);
+  border-radius: 5px;
+  font:
+    9px "IBM Plex Mono",
+    monospace;
+  cursor: pointer;
+}
+.spatial-role-buttons button.active {
+  color: #062024;
+  background: #72e3df;
+  border-color: #72e3df;
+}
+.spatial-role-status {
+  display: grid;
+  gap: 3px;
+  padding: 9px;
+  background: rgba(5, 15, 18, 0.34);
+  border-left: 2px solid #72e3df;
+}
+.spatial-role-status strong {
+  color: #d9f4ef;
+  font-size: 10px;
+}
+.spatial-role-status span,
+.spatial-role-status em {
+  color: #90aaa4;
+  font-size: 9px;
+  line-height: 1.4;
+  font-style: normal;
+}
+.spatial-role-status em {
+  color: #d6c38b;
+}
+.cesium-mock-floor-hover {
+  position: absolute;
+  top: 92px;
+  right: 16px;
+  z-index: 8;
+  display: grid;
+  gap: 3px;
+  max-width: 220px;
+  padding: 9px 11px;
+  color: #d8efea;
+  background: rgba(4, 16, 20, 0.94);
+  border: 1px solid rgba(114, 227, 223, 0.5);
+  border-radius: 6px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
+  pointer-events: none;
+}
+.cesium-mock-floor-hover span {
+  color: #72e3df;
+  font:
+    8px "IBM Plex Mono",
+    monospace;
+  letter-spacing: 0.08em;
+}
+.cesium-mock-floor-hover b {
+  font-size: 10px;
+}
+.cesium-mock-floor-hover small {
+  color: #a5beba;
+  font-size: 8px;
+  line-height: 1.4;
+}
+@media (max-width: 640px) {
+  .cesium-mock-floor-hover {
+    top: 82px;
+    right: 9px;
+    max-width: 180px;
+  }
+}

@@ -41,6 +41,28 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useSearch } from "wouter";
 
 type SelectedFeature = { ulpin: string; properties: Record<string, unknown> };
+type DemoRole = "citizen" | "surveyor" | "authority";
+
+const demoRoleDetails: Record<
+  DemoRole,
+  { label: string; summary: string; access: string }
+> = {
+  citizen: {
+    label: "Citizen",
+    summary: "Explore published source footprints and demo records.",
+    access: "Public source context · no ownership or rights access",
+  },
+  surveyor: {
+    label: "Surveyor",
+    summary: "Review measurement and evidence-intake workflows.",
+    access: "Survey workflow preview · authority evidence still required",
+  },
+  authority: {
+    label: "Authority",
+    summary: "Review evidence gates and authority-review pathways.",
+    access: "Review pathway preview · real authorization remains separate",
+  },
+};
 
 type MockRecord = {
   id: string;
@@ -210,6 +232,8 @@ export default function SpatialWorkspace() {
   const [selectedMockFloor, setSelectedMockFloor] = useState<number | null>(
     null
   );
+  const [hoveredMockFloor, setHoveredMockFloor] = useState<number | null>(null);
+  const [demoRole, setDemoRole] = useState<DemoRole>("citizen");
   const [sampleAsset, setSampleAsset] = useState<SampleMapAsset | null>(null);
   const [sampleAssetError, setSampleAssetError] = useState<string | null>(null);
   const [sampleUploadProgress, setSampleUploadProgress] = useState<
@@ -638,6 +662,7 @@ export default function SpatialWorkspace() {
                 measurementControlsOnly
                 onFeatureSelect={onFeatureSelect}
                 onMockFloorSelect={setSelectedMockFloor}
+                onMockFloorHover={setHoveredMockFloor}
                 sampleAsset={sampleAsset}
               />
               <div className="spatial-stage-grid" />
@@ -1369,6 +1394,46 @@ export default function SpatialWorkspace() {
                 ? "Grouped by property type"
                 : "Group by property type"}
             </button>
+          </div>
+          <div
+            className="spatial-role-simulation"
+            aria-label="Demo role simulation"
+          >
+            <div className="spatial-rights-heading">
+              <div>
+                <span className="spatial-kicker">Demo access simulation</span>
+                <p>Role-based ULPIN data view</p>
+              </div>
+              <ShieldCheck size={16} />
+            </div>
+            <small>
+              Illustrates role-specific screens only; it does not authenticate
+              users or grant rights.
+            </small>
+            <div
+              className="spatial-role-buttons"
+              role="group"
+              aria-label="Simulated user role"
+            >
+              {(Object.keys(demoRoleDetails) as DemoRole[]).map(role => (
+                <button
+                  type="button"
+                  key={role}
+                  className={demoRole === role ? "active" : ""}
+                  onClick={() => setDemoRole(role)}
+                  aria-pressed={demoRole === role}
+                >
+                  {demoRoleDetails[role].label}
+                </button>
+              ))}
+            </div>
+            <div className="spatial-role-status">
+              <strong>
+                {demoRoleDetails[demoRole].label} view · demo only
+              </strong>
+              <span>{demoRoleDetails[demoRole].summary}</span>
+              <em>{demoRoleDetails[demoRole].access}</em>
+            </div>
           </div>
           <div className="spatial-floor-detail" aria-live="polite">
             <div className="spatial-rights-heading">

@@ -82,6 +82,7 @@ export function CesiumSpatialViewer({
   sourceMapView = "3d",
   mockFloorLevels = 0,
   onMockFloorSelect,
+  onMockFloorHover,
 }: {
   command: MapCommand;
   layers: CesiumLayerFlags;
@@ -110,6 +111,7 @@ export function CesiumSpatialViewer({
   sourceMapView?: "2d" | "3d";
   mockFloorLevels?: number;
   onMockFloorSelect?: (floorLevel: number) => void;
+  onMockFloorHover?: (floorLevel: number | null) => void;
 }) {
   const cesiumRuntime = (
     window as Window & { Cesium?: typeof import("cesium") }
@@ -181,6 +183,7 @@ export function CesiumSpatialViewer({
   const [viewerError, setViewerError] = useState<string | null>(null);
   const [viewerRetryKey, setViewerRetryKey] = useState(0);
   const [syntheticHover, setSyntheticHover] = useState(false);
+  const [mockFloorHover, setMockFloorHover] = useState<number | null>(null);
   const [focusSummary, setFocusSummary] = useState<FocusSummary | null>(null);
   const [imageryState, setImageryState] = useState<
     "loading" | "ready" | "unavailable"
@@ -570,6 +573,11 @@ export function CesiumSpatialViewer({
           defined(picked) && picked.id && typeof picked.id === "object"
             ? (picked.id as CesiumEntity)
             : undefined;
+        const floorMatch = entity?.name?.match(/^DEMO floor level (\d+)$/i);
+        const floorLevel = floorMatch ? Number(floorMatch[1]) : null;
+        onMockFloorHover?.(
+          floorLevel !== null && Number.isFinite(floorLevel) ? floorLevel : null
+        );
         const properties = (entity?.properties?.getValue?.() ?? {}) as Record<
           string,
           unknown
@@ -1314,6 +1322,13 @@ export function CesiumSpatialViewer({
         <div className="cesium-synthetic-hover-summary" role="status">
           <b>DEMO PROTOTYPE</b>
           <span>Synthetic geometry · click for separate RERA attributes</span>
+        </div>
+      )}
+      {mockFloorHover !== null && (
+        <div className="cesium-mock-floor-hover" role="status">
+          <span>DEMO FLOOR {mockFloorHover}</span>
+          <b>Ownership status: mock placeholder</b>
+          <small>Authority record required · click to inspect details</small>
         </div>
       )}
       {focusSummary && !syntheticDemoFeature && (

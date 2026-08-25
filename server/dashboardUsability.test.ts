@@ -173,11 +173,31 @@ describe("dashboard usability controls", () => {
     expect(workspaceSource).toContain("Mock record finder");
   });
 
+  it("provides a clearly labeled role simulation without changing authorization", () => {
+    expect(workspaceSource).toContain("DemoRole");
+    expect(workspaceSource).toContain("Citizen");
+    expect(workspaceSource).toContain("Surveyor");
+    expect(workspaceSource).toContain("Authority");
+    expect(workspaceSource).toContain("role-specific screens only");
+    expect(workspaceSource).toContain("users or grant rights");
+    expect(workspaceSource).toContain("real authorization remains separate");
+  });
+
   it("provides a property-type color legend for grouped mock records", () => {
     expect(workspaceSource).toContain("mockPropertyTypeColors");
     expect(workspaceSource).toContain("spatial-property-type-dot");
     expect(workspaceSource).toContain("Property type legend");
     expect(workspaceSource).toContain("Campus facility");
+  });
+
+  it("shows a hover summary before selecting a mock floor", () => {
+    expect(workspaceSource).toContain("hoveredMockFloor");
+    expect(cesiumViewerSource).toContain(
+      "onMockFloorHover?: (floorLevel: number | null)"
+    );
+    expect(cesiumViewerSource).toContain("cesium-mock-floor-hover");
+    expect(cesiumViewerSource).toContain("Ownership status: mock placeholder");
+    expect(cesiumViewerSource).toContain("click to inspect details");
   });
 
   it("makes mock floor levels interactive with floor-specific rights details", () => {
