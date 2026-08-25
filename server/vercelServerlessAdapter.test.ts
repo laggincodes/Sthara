@@ -15,6 +15,10 @@ describe("Vercel serverless adapter", () => {
 
     expect(serverEntry).not.toContain('from "./vite"');
     expect(serverEntry).not.toContain("startServer");
+    expect(serverEntry).toContain("process.env.CLERK_PUBLISHABLE_KEY");
+    expect(serverEntry).toContain("process.env.CLERK_PUBLISH_KEY");
+    expect(serverEntry).toContain("process.env.VITE_CLERK_PUBLISHABLE_KEY");
+    expect(serverEntry).toContain("publishableKey: clerkPublishableKey");
     expect(localServer).toContain('from "./vite"');
     expect(localServer).toContain('from "./index"');
   });

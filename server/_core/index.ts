@@ -9,10 +9,18 @@ import { createContext } from "./context";
 
 export function createApp() {
   const app = express();
+  const clerkPublishableKey =
+    process.env.CLERK_PUBLISHABLE_KEY ??
+    process.env.CLERK_PUBLISH_KEY ??
+    process.env.VITE_CLERK_PUBLISHABLE_KEY;
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
-  app.use(clerkMiddleware());
+  app.use(
+    clerkMiddleware({
+      publishableKey: clerkPublishableKey,
+    })
+  );
   registerStorageProxy(app);
   app.get("/api/postgis/geojson", async (req, res) => {
     if (!hasValidPostgisApiKey(req.header("authorization"))) {
