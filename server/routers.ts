@@ -278,7 +278,7 @@ export const appRouter = router({
           };
         }
       }),
-    updateFootprint: adminProcedure
+    updateFootprint: authorityProcedure
       .input(footprintUpdateInput)
       .mutation(async ({ input, ctx }) => {
         const result = await updatePostgisFootprint({
