@@ -173,6 +173,24 @@ describe("dashboard usability controls", () => {
     expect(workspaceSource).toContain("Mock record finder");
   });
 
+  it("adds a selected-building mock floor stack without implying an approved floor plan", () => {
+    expect(workspaceSource).toContain("mockFloorLevels={selected ? 4 : 0}");
+    expect(workspaceSource).toContain("4 mock floor levels shown in 3D only");
+    expect(cesiumViewerSource).toContain("mockFloorLevels?: number");
+    expect(cesiumViewerSource).toContain("DEMO floor level");
+    expect(workspaceSource).toContain("not an approved floor plan");
+  });
+
+  it("uses property-type colors and a readable mock-rights evidence panel", () => {
+    expect(workspaceSource).toContain("mockPropertyTypeColors");
+    expect(workspaceSource).toContain("spatial-property-type-dot");
+    expect(workspaceSource).toContain("Prototype data panel");
+    expect(workspaceSource).toContain(
+      "not government ownership or rights records"
+    );
+    expect(workspaceSource).toContain("Mock only · authority record required");
+  });
+
   it("keeps mock identity and rights demonstrations explicitly non-authoritative", () => {
     expect(workspaceSource).toContain("Generate mock 3D ULPIN");
     expect(workspaceSource).toContain("MOCK-3D-");

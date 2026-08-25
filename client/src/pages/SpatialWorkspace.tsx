@@ -52,6 +52,20 @@ type MockRecord = {
   createdAt: number;
 };
 
+const mockPropertyTypeColors: Record<string, string> = {
+  "Multi-storey source building": "#72e3df",
+  "Campus facility": "#b48cff",
+  "Residential apartment": "#f5c66b",
+  "Commercial property": "#7de1aa",
+};
+
+function mockPropertyTypeColor(propertyType: string) {
+  return (
+    mockPropertyTypeColors[propertyType] ??
+    ["#72e3df", "#b48cff", "#f5c66b", "#7de1aa"][propertyType.length % 4]
+  );
+}
+
 const layerOptions: Array<{
   key: keyof CesiumLayerFlags;
   label: string;
@@ -617,6 +631,7 @@ export default function SpatialWorkspace() {
                 layers={layers}
                 focusUlpins={activeMapUlpins}
                 sourceMapView={sourceMapView}
+                mockFloorLevels={selected ? 4 : 0}
                 measurementControlsOnly
                 onFeatureSelect={onFeatureSelect}
                 sampleAsset={sampleAsset}
@@ -673,6 +688,11 @@ export default function SpatialWorkspace() {
                   </button>
                 ))}
               </div>
+              <p className="spatial-demo-floor-note">
+                {selected
+                  ? "4 mock floor levels shown in 3D only · illustrative stack · not an approved floor plan"
+                  : "Select a source footprint to preview mock floor levels in 3D"}
+              </p>
               <div className="spatial-stage-actions">
                 <button
                   type="button"
@@ -1262,7 +1282,15 @@ export default function SpatialWorkspace() {
                           key={group}
                           className="spatial-mock-record-group"
                         >
-                          <b>{group}</b>
+                          <b className="spatial-mock-record-group-label">
+                            <span
+                              className="spatial-property-type-dot"
+                              style={{
+                                background: mockPropertyTypeColor(group),
+                              }}
+                            />
+                            {group}
+                          </b>
                           {records.slice(0, 5).map(record => (
                             <button
                               type="button"
@@ -1274,6 +1302,14 @@ export default function SpatialWorkspace() {
                             >
                               <strong>{record.id}</strong>
                               <span>
+                                <i
+                                  className="spatial-property-type-dot"
+                                  style={{
+                                    background: mockPropertyTypeColor(
+                                      record.propertyType
+                                    ),
+                                  }}
+                                />
                                 {record.propertyName} · {record.ownership}
                               </span>
                             </button>
@@ -1290,6 +1326,14 @@ export default function SpatialWorkspace() {
                       >
                         <strong>{record.id}</strong>
                         <span>
+                          <i
+                            className="spatial-property-type-dot"
+                            style={{
+                              background: mockPropertyTypeColor(
+                                record.propertyType
+                              ),
+                            }}
+                          />
                           {record.propertyName} · {record.ownership}
                         </span>
                       </button>
@@ -1311,7 +1355,17 @@ export default function SpatialWorkspace() {
             className="spatial-mock-rights"
             aria-label="Mock ownership and vertical rights"
           >
-            <p>Mock apartment ownership &amp; vertical rights</p>
+            <div className="spatial-rights-heading">
+              <div>
+                <span className="spatial-kicker">Prototype data panel</span>
+                <p>Mock apartment ownership &amp; vertical rights</p>
+              </div>
+              <ShieldAlert size={16} />
+            </div>
+            <small className="spatial-rights-note">
+              Illustrative fields for the vertical-cadastre concept. These are
+              not government ownership or rights records.
+            </small>
             <dl>
               <div>
                 <dt>Ownership</dt>

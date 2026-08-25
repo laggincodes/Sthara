@@ -250,3 +250,8 @@
 - [x] Add a toggle button to switch the source-record map between 2D and 3D views.
 - [x] Group browser-local mock ULPIN records by building or property type in search results.
 - [x] Add regression coverage and validate the revised layout, map modes, grouping, and responsive behavior.
+
+- [x] Add clearly labeled mock vertical floor levels to the selected building’s 3D preview.
+- [x] Add color-coded property-type indicators to grouped mock ULPIN records.
+- [x] Rewrite and restyle the mock apartment ownership and vertical-rights section for clearer labels, spacing, and demo safeguards.
+- [x] Add regression coverage and validate the new mock layers and responsive presentation.

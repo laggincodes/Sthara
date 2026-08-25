@@ -3401,6 +3401,9 @@ input:focus-visible {
   gap: 5px;
 }
 .spatial-mock-record-group > b {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   padding: 3px 2px;
   color: #72e3df;
   font:
@@ -3432,8 +3435,19 @@ input:focus-visible {
     monospace;
 }
 .spatial-mock-record-list span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
   color: #7e9893;
   font-size: 8px;
+}
+.spatial-property-type-dot {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.07);
 }
 .spatial-group-toggle {
   justify-self: start;
@@ -3453,8 +3467,59 @@ input:focus-visible {
   border-color: #72e3df;
 }
 .spatial-mock-rights {
-  padding-top: 12px;
+  display: grid;
+  gap: 9px;
+  padding-top: 14px;
   border-top: 1px solid rgba(204, 237, 232, 0.1);
+}
+.spatial-rights-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.spatial-rights-heading > svg {
+  flex: 0 0 auto;
+  color: #f5c66b;
+}
+.spatial-rights-heading p {
+  margin-top: 3px;
+  color: #d9eeeb;
+  font-size: 12px;
+}
+.spatial-rights-note {
+  max-width: 560px;
+  color: #829d98;
+  font-size: 9px;
+  line-height: 1.55;
+}
+.spatial-mock-rights dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 2px;
+}
+.spatial-mock-rights dl > div {
+  min-width: 0;
+  padding: 9px;
+  background: rgba(5, 15, 18, 0.36);
+  border: 1px solid rgba(204, 237, 232, 0.1);
+  border-radius: 6px;
+}
+.spatial-mock-rights dt {
+  margin-bottom: 5px;
+  color: #7f9994;
+  font:
+    8px "IBM Plex Mono",
+    monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.spatial-mock-rights dd {
+  max-width: none;
+  color: #c8e1dc;
+  font-size: 10px;
+  line-height: 1.45;
 }
 .spatial-mock-rights p,
 .spatial-sample-upload p {
@@ -7899,5 +7964,15 @@ input:focus-visible {
   }
   .spatial-comparison-panel > div {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .spatial-mock-rights dl {
+    grid-template-columns: 1fr;
+  }
+
+  .spatial-rights-heading p {
+    font-size: 11px;
   }
 }

@@ -80,6 +80,7 @@ export function CesiumSpatialViewer({
   onFeatureSelect,
   sampleAsset,
   sourceMapView = "3d",
+  mockFloorLevels = 0,
 }: {
   command: MapCommand;
   layers: CesiumLayerFlags;
@@ -106,6 +107,7 @@ export function CesiumSpatialViewer({
   }) => void;
   sampleAsset?: SampleMapAsset | null;
   sourceMapView?: "2d" | "3d";
+  mockFloorLevels?: number;
 }) {
   const cesiumRuntime = (
     window as Window & { Cesium?: typeof import("cesium") }
@@ -167,6 +169,7 @@ export function CesiumSpatialViewer({
   );
   const measurementEntitiesRef = useRef<CesiumEntity[]>([]);
   const sampleAssetEntityRef = useRef<CesiumEntity | null>(null);
+  const mockFloorEntitiesRef = useRef<CesiumEntity[]>([]);
   const measurementPointsRef = useRef<CesiumCartesian3[]>([]);
   const measurementModeRef = useRef<"off" | "distance" | "area">("off");
   const [viewerReady, setViewerReady] = useState(false);
@@ -738,6 +741,10 @@ export function CesiumSpatialViewer({
     const renderGeometry = async () => {
       if (dataSourceRef.current)
         viewer.dataSources.remove(dataSourceRef.current, true);
+      mockFloorEntitiesRef.current.forEach(entity =>
+        viewer.entities.remove(entity)
+      );
+      mockFloorEntitiesRef.current = [];
       const dataSource = await GeoJsonDataSource.load(filteredCollection, {
         clampToGround: false,
         fill: Color.fromCssColorString("#2ad4d9").withAlpha(0.24),
@@ -810,6 +817,45 @@ export function CesiumSpatialViewer({
             return focusUlpins.includes(String(properties.ulpin ?? ""));
           });
           const focusedEntity = focusedEntities[0];
+          if (focusedEntity && mockFloorLevels > 0 && focusedEntity.polygon) {
+            const floorCount = Math.min(
+              Math.max(Math.round(mockFloorLevels), 1),
+              12
+            );
+            for (let floorIndex = 0; floorIndex < floorCount; floorIndex += 1) {
+              const floorHeight = 2 + floorIndex * 3.2;
+              const floorEntity = viewer.entities.add(
+                new Entity({
+                  name: `DEMO floor level ${floorIndex + 1}`,
+                  polygon: new PolygonGraphics({
+                    hierarchy: focusedEntity.polygon.hierarchy,
+                    height: floorHeight,
+                    extrudedHeight: floorHeight + 2.6,
+                    material: new ColorMaterialProperty(
+                      Color.fromCssColorString(
+                        floorIndex % 2 === 0 ? "#72e3df" : "#b48cff"
+                      ).withAlpha(0.18)
+                    ),
+                    outline: new ConstantProperty(true),
+                    outlineColor: new ConstantProperty(
+                      Color.fromCssColorString("#fff0b3").withAlpha(0.78)
+                    ),
+                    outlineWidth: 2,
+                  }),
+                  label: new LabelGraphics({
+                    text: `DEMO LEVEL ${floorIndex + 1}`,
+                    font: "600 10px sans-serif",
+                    fillColor: Color.fromCssColorString("#fff5ca"),
+                    outlineColor: Color.fromCssColorString("#132326"),
+                    outlineWidth: 3,
+                    pixelOffset: new Cartesian2(0, -14),
+                    show: floorIndex === floorCount - 1,
+                  }),
+                })
+              );
+              mockFloorEntitiesRef.current.push(floorEntity);
+            }
+          }
           if (focusedEntity) {
             const properties = (focusedEntity.properties?.getValue?.() ??
               {}) as Record<string, unknown>;
@@ -880,6 +926,7 @@ export function CesiumSpatialViewer({
     evidenceFilter,
     syntheticDemoFeature,
     sourceMapView,
+    mockFloorLevels,
   ]);
 
   useEffect(() => {
