@@ -16,7 +16,8 @@ function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
-      <Route path="/" component={Home} />
+      <Route path="/" component={AccessPortal} />
+      <Route path="/overview" component={Home} />
       <Route path="/workspace" component={SpatialWorkspace} />
       <Route path="/property-volumes" component={PropertyVolumes} />
       <Route path="/ulpin-registry" component={UlpInRegistry} />

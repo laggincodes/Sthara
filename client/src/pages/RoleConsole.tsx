@@ -127,8 +127,8 @@ export function AccessPortal() {
             <SignUp fallbackRedirectUrl={safeReturnTo} signInUrl="/access" />
           )}
         </div>
-        <button type="button" onClick={() => setLocation("/")}>
-          Return to public project overview
+        <button type="button" onClick={() => setLocation("/overview")}>
+          View public project overview
         </button>
       </section>
     </main>
@@ -252,7 +252,7 @@ export default function RoleConsole() {
   return (
     <main className="role-console">
       <header className="role-console__header">
-        <button type="button" onClick={() => setLocation("/")}>
+        <button type="button" onClick={() => setLocation("/overview")}>
           3D ULPIN · VPM
         </button>
         <div>

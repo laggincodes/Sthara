@@ -69,7 +69,10 @@ describe("secure role-based cadastral platform foundation", () => {
       "The interface cannot grant permissions."
     );
     expect(roleConsoleSource).not.toContain("Sign up as Authority");
+    expect(appSource).toContain('path="/" component={AccessPortal}');
+    expect(appSource).toContain('path="/overview" component={Home}');
     expect(appSource).toContain('path="/access"');
     expect(appSource).toContain('path="/dashboard"');
+    expect(roleConsoleSource).toContain('setLocation("/overview")');
   });
 });

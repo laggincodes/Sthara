@@ -297,3 +297,6 @@
 - [x] Adapt the existing generic search-driven layer-by-layer visualization so it applies simultaneously to every currently selected search-result footprint.
 - [x] Preserve the current single-footprint and empty-selection behavior while resetting the prior multi-footprint visualization on a new search.
 - [x] Add regression coverage and validate synchronized multi-footprint layers without changing unrelated camera, selection, styling, or Cesium behavior.
+
+- [x] Make the public entry route present the Clerk access portal before the dashboard while retaining protected in-app routes and safe return handling.
+- [ ] Validate unauthenticated and signed-in entry behavior, then synchronize the checked release to Gautam-kumar01/SIH-2026.
