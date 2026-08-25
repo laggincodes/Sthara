@@ -41,3 +41,7 @@ The ready deployment’s browser console then returned no messages, confirming t
 A final rendered browser check displayed the complete Clerk sign-in interface with Google, email, password, continue, and sign-up controls. The same immutable deployment retained a `200 application/json` response from `/api/trpc/auth.me` with `x-clerk-auth-status: signed-out`, which is the expected unauthenticated state. An end-user signed-in redirect to `/dashboard` still requires a real account session and is not inferred from this unauthenticated validation.
 
 The Clerk structural-CSS warning was traced to `.access-portal__clerk .cl-card`, which targets an internal Clerk DOM class. The stylesheet selector was removed. The width and dashboard palette continue to be supplied through the supported `ClerkProvider` appearance `elements.card` configuration. The focused platform and analytics tests, TypeScript check, and production build passed before release.
+
+After synchronizing the selector-removal release to GitHub `main`, the Vercel main-branch alias again rendered the full branded Clerk sign-in interface. Console verification is the remaining production check for the absence of the structural-CSS warning.
+
+The production console check returned no messages. The unsupported structural-CSS warning is resolved, while the branded form remains mounted and visible.
