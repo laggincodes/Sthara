@@ -6,15 +6,33 @@ import {
   validateCadastreUpload,
 } from "./cadastreService";
 import {
+  createAuditLog,
   createEvidenceFile,
+  createIssueReport,
+  createVerificationSubmission,
   ensureCadastreSeedData,
   getCadastreRecords,
+  getPlatformDashboardSummary,
+  getPlatformUsers,
+  getRecentAuditLogs,
+  getUserByOpenId,
+  getVerificationSubmissions,
+  reviewVerificationSubmission,
+  setPlatformUserRole,
 } from "./db";
 import { extractEvidenceMetadata } from "./evidenceExtraction";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { invokeLLM } from "./_core/llm";
 import { systemRouter } from "./_core/systemRouter";
-import { adminProcedure, publicProcedure, router } from "./_core/trpc";
+import {
+  adminProcedure,
+  authorityProcedure,
+  governmentProcedure,
+  protectedProcedure,
+  publicProcedure,
+  router,
+} from "./_core/trpc";
+import { TRPCError } from "@trpc/server";
 import {
   confirmedSourceAlias,
   eligibleSourceAliases,
@@ -84,6 +102,43 @@ const buildingResolutionInput = z.object({
     .max(180),
 });
 
+const issueReportInput = z.object({
+  recordReference: z.string().trim().min(3).max(128),
+  category: z.enum([
+    "footprint",
+    "floor_count",
+    "location",
+    "missing_property",
+    "parcel_boundary",
+  ]),
+  details: z.string().trim().min(12).max(2_000),
+});
+
+const evidenceSubmissionInput = z.object({
+  recordReference: z.string().trim().min(3).max(128),
+  submissionType: z.enum([
+    "geometry",
+    "height",
+    "floor_count",
+    "floor_plan",
+    "survey",
+  ]),
+  sourceUrl: z.string().url().optional(),
+  sourceReference: z.string().trim().min(4).max(320),
+  notes: z.string().trim().min(12).max(3_000),
+});
+
+const reviewSubmissionInput = z.object({
+  id: z.number().int().positive(),
+  status: z.enum(["under_review", "verified", "rejected"]),
+  reviewNote: z.string().trim().min(8).max(3_000),
+});
+
+const assignRoleInput = z.object({
+  openId: z.string().trim().min(3).max(64),
+  role: z.enum(["citizen", "authority", "government_employee", "admin"]),
+});
+
 function safeFileName(fileName: string) {
   return (
     fileName
@@ -96,7 +151,10 @@ function safeFileName(fileName: string) {
 export const appRouter = router({
   system: systemRouter,
   auth: router({
-    me: publicProcedure.query(opts => opts.ctx.user),
+    me: publicProcedure.query(async opts => {
+      if (!opts.ctx.user) return null;
+      return (await getUserByOpenId(opts.ctx.user.openId)) ?? opts.ctx.user;
+    }),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
@@ -222,12 +280,24 @@ export const appRouter = router({
       }),
     updateFootprint: adminProcedure
       .input(footprintUpdateInput)
-      .mutation(async ({ input, ctx }) =>
-        updatePostgisFootprint({
+      .mutation(async ({ input, ctx }) => {
+        const result = await updatePostgisFootprint({
           ...input,
           editorName: ctx.user.name?.trim() || ctx.user.openId,
-        })
-      ),
+        });
+        await createAuditLog({
+          actorOpenId: ctx.user.openId,
+          actorRole: ctx.user.role,
+          action: "authoritative_footprint_updated",
+          entityType: "postgis_footprint",
+          entityId: input.ulpin,
+          newValue: JSON.stringify({
+            hasGeometry: Boolean(input.geometry),
+            approvedHeightMetres: input.approvedHeightMetres ?? null,
+          }),
+        });
+        return result;
+      }),
   }),
   cadastre: router({
     search: publicProcedure.input(aiSearchInput).mutation(async ({ input }) => {
@@ -293,62 +363,130 @@ export const appRouter = router({
         return fallback;
       }
     }),
-    upload: publicProcedure.input(uploadInput).mutation(async ({ input }) => {
-      const validation = validateCadastreUpload(input);
-      if (!validation.accepted) return { stored: false, validation };
-      const buffer = Buffer.from(input.dataBase64, "base64");
-      const keyPrefix =
-        input.category === "geojson"
-          ? "cadastre/geojson"
-          : "cadastre/floor-plans";
-      const stored = await storagePut(
-        `${keyPrefix}/${Date.now()}-${safeFileName(input.fileName)}`,
-        buffer,
-        input.mimeType
-      );
-      const signedUrl = await storageGetSignedUrl(stored.key);
-      let extraction = null;
-      let spatialImport = { imported: 0, skipped: 0 };
-      try {
-        extraction = await extractEvidenceMetadata({
-          category: input.category,
-          dataBase64: input.dataBase64,
-          mimeType: input.mimeType,
-          signedUrl,
-        });
-        if (input.category === "geojson") {
-          const parsed = JSON.parse(buffer.toString("utf8"));
-          spatialImport = await upsertPostgisGeoJsonFeatures(parsed);
-        }
-      } catch (error) {
-        console.warn(
-          "[Cadastre upload] AI extraction or PostGIS geometry import could not complete.",
-          error
+    upload: authorityProcedure
+      .input(uploadInput)
+      .mutation(async ({ input, ctx }) => {
+        const validation = validateCadastreUpload(input);
+        if (!validation.accepted) return { stored: false, validation };
+        const buffer = Buffer.from(input.dataBase64, "base64");
+        const keyPrefix =
+          input.category === "geojson"
+            ? "cadastre/geojson"
+            : "cadastre/floor-plans";
+        const stored = await storagePut(
+          `${keyPrefix}/${Date.now()}-${safeFileName(input.fileName)}`,
+          buffer,
+          input.mimeType
         );
-      }
-      const persisted = await createEvidenceFile({
-        name: input.fileName,
-        category: input.category,
-        mimeType: input.mimeType,
-        storageKey: stored.key,
-        storageUrl: stored.url,
-        validationScore: validation.score,
-        validationSummary: validation.findings.join(" "),
-      });
-      return {
-        stored: true,
-        persisted,
-        validation,
-        extraction,
-        spatialImport,
-        file: {
-          key: stored.key,
-          url: stored.url,
+        const signedUrl = await storageGetSignedUrl(stored.key);
+        let extraction = null;
+        let spatialImport = { imported: 0, skipped: 0 };
+        try {
+          extraction = await extractEvidenceMetadata({
+            category: input.category,
+            dataBase64: input.dataBase64,
+            mimeType: input.mimeType,
+            signedUrl,
+          });
+          if (input.category === "geojson") {
+            const parsed = JSON.parse(buffer.toString("utf8"));
+            spatialImport = await upsertPostgisGeoJsonFeatures(parsed);
+          }
+        } catch (error) {
+          console.warn(
+            "[Cadastre upload] AI extraction or PostGIS geometry import could not complete.",
+            error
+          );
+        }
+        const persisted = await createEvidenceFile({
           name: input.fileName,
           category: input.category,
-        },
-      };
-    }),
+          mimeType: input.mimeType,
+          storageKey: stored.key,
+          storageUrl: stored.url,
+          validationScore: validation.score,
+          validationSummary: validation.findings.join(" "),
+        });
+        await createAuditLog({
+          actorOpenId: ctx.user.openId,
+          actorRole: ctx.user.role,
+          action: "evidence_file_uploaded",
+          entityType: "evidence_file",
+          entityId: stored.key,
+          newValue: JSON.stringify({
+            category: input.category,
+            name: input.fileName,
+          }),
+        });
+        return {
+          stored: true,
+          persisted,
+          validation,
+          extraction,
+          spatialImport,
+          file: {
+            key: stored.key,
+            url: stored.url,
+            name: input.fileName,
+            category: input.category,
+          },
+        };
+      }),
+  }),
+  platform: router({
+    dashboardSummary: protectedProcedure.query(async () =>
+      getPlatformDashboardSummary()
+    ),
+    reportIssue: protectedProcedure
+      .input(issueReportInput)
+      .mutation(async ({ input, ctx }) =>
+        createIssueReport({
+          ...input,
+          reportedBy: ctx.user.openId,
+          actorRole: ctx.user.role,
+        })
+      ),
+    submitEvidence: authorityProcedure
+      .input(evidenceSubmissionInput)
+      .mutation(async ({ input, ctx }) =>
+        createVerificationSubmission({
+          ...input,
+          submittedBy: ctx.user.openId,
+          actorRole: ctx.user.role,
+        })
+      ),
+    verificationQueue: authorityProcedure.query(async () =>
+      getVerificationSubmissions()
+    ),
+    reviewEvidence: authorityProcedure
+      .input(reviewSubmissionInput)
+      .mutation(async ({ input, ctx }) =>
+        reviewVerificationSubmission({
+          ...input,
+          reviewerOpenId: ctx.user.openId,
+          reviewerRole: ctx.user.role,
+        })
+      ),
+    governmentSummary: governmentProcedure.query(async () =>
+      getPlatformDashboardSummary()
+    ),
+    adminUsers: adminProcedure.query(async () => getPlatformUsers()),
+    assignRole: adminProcedure
+      .input(assignRoleInput)
+      .mutation(async ({ input, ctx }) => {
+        if (input.openId === ctx.user.openId) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Administrators cannot change their own role.",
+          });
+        }
+        return setPlatformUserRole({
+          ...input,
+          actorOpenId: ctx.user.openId,
+          actorRole: ctx.user.role,
+        });
+      }),
+    auditLogs: adminProcedure.query(async () => getRecentAuditLogs()),
   }),
 });
 

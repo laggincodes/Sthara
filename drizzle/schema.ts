@@ -1,4 +1,25 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import {
+  int,
+  mysqlEnum,
+  mysqlTable,
+  text,
+  timestamp,
+  varchar,
+} from "drizzle-orm/mysql-core";
+
+export const platformRole = mysqlEnum("role", [
+  "citizen",
+  "authority",
+  "government_employee",
+  "admin",
+]);
+
+export const verificationStatus = mysqlEnum("verificationStatus", [
+  "submitted",
+  "under_review",
+  "verified",
+  "rejected",
+]);
 
 export const users = mysqlTable("users", {
   id: int("id").autoincrement().primaryKey(),
@@ -6,7 +27,7 @@ export const users = mysqlTable("users", {
   name: text("name"),
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
-  role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  role: platformRole.default("citizen").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -39,6 +60,59 @@ export const evidenceFiles = mysqlTable("evidenceFiles", {
   storageUrl: text("storageUrl").notNull(),
   validationScore: int("validationScore").notNull(),
   validationSummary: text("validationSummary").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export const verificationSubmissions = mysqlTable("verificationSubmissions", {
+  id: int("id").autoincrement().primaryKey(),
+  recordReference: varchar("recordReference", { length: 128 }).notNull(),
+  submissionType: mysqlEnum("submissionType", [
+    "geometry",
+    "height",
+    "floor_count",
+    "floor_plan",
+    "survey",
+  ]).notNull(),
+  sourceUrl: text("sourceUrl"),
+  sourceReference: varchar("sourceReference", { length: 320 }).notNull(),
+  notes: text("notes").notNull(),
+  status: verificationStatus.default("submitted").notNull(),
+  submittedBy: varchar("submittedBy", { length: 64 }).notNull(),
+  reviewedBy: varchar("reviewedBy", { length: 64 }),
+  reviewNote: text("reviewNote"),
+  reviewedAt: timestamp("reviewedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export const issueReports = mysqlTable("issueReports", {
+  id: int("id").autoincrement().primaryKey(),
+  recordReference: varchar("recordReference", { length: 128 }).notNull(),
+  category: mysqlEnum("category", [
+    "footprint",
+    "floor_count",
+    "location",
+    "missing_property",
+    "parcel_boundary",
+  ]).notNull(),
+  details: text("details").notNull(),
+  status: mysqlEnum("status", ["submitted", "under_review", "closed"])
+    .default("submitted")
+    .notNull(),
+  reportedBy: varchar("reportedBy", { length: 64 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export const auditLogs = mysqlTable("auditLogs", {
+  id: int("id").autoincrement().primaryKey(),
+  actorOpenId: varchar("actorOpenId", { length: 64 }).notNull(),
+  actorRole: platformRole.notNull(),
+  action: varchar("action", { length: 96 }).notNull(),
+  entityType: varchar("entityType", { length: 96 }).notNull(),
+  entityId: varchar("entityId", { length: 128 }).notNull(),
+  oldValue: text("oldValue"),
+  newValue: text("newValue"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

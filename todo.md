@@ -281,3 +281,9 @@
 - [x] Add selectable OSM 3D building highlighting and a visual-context inspector that distinguishes OSM attributes from source-backed property records.
 - [x] Link source-backed PostGIS property selection to the 3D view without inferring floors, ownership, parcel rights, or issued ULPIN data from OSM Buildings.
 - [x] Add regression coverage, validate the 3D Tiles controls and responsive inspector, then publish and synchronize the enhancement to GitHub.
+
+- [x] Assess the existing Manus OAuth, schema, routes, and authorization boundaries before introducing production RBAC.
+- [x] Extend backend roles to Citizen, Authority, Government Employee, and Administrator with protected API enforcement and no frontend privilege escalation.
+- [x] Add audit-ready, source-aware verification workflow records that keep submitted geometry and evidence non-authoritative until review.
+- [x] Build protected role dashboards that preserve the existing Cesium/PostGIS workspace and separate public, review, aggregate, and admin capabilities.
+- [x] Add role, audit, and protected-route regression coverage; validate responsive behavior and source/evidence safeguards.
