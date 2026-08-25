@@ -63,6 +63,8 @@ describe("secure role-based cadastral platform foundation", () => {
     expect(roleConsoleSource).toContain("<SignIn");
     expect(roleConsoleSource).toContain("<SignUp");
     expect(roleConsoleSource).toContain("Clerk manages identity, passwords");
+    expect(roleConsoleSource).toContain("const safeReturnTo");
+    expect(roleConsoleSource).toContain('fallbackRedirectUrl={safeReturnTo}');
     expect(roleConsoleSource).toContain(
       "The interface cannot grant permissions."
     );

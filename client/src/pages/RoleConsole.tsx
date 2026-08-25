@@ -61,6 +61,11 @@ function formatRole(role: PlatformRole) {
 
 export function AccessPortal() {
   const [, setLocation] = useLocation();
+  const returnTo = new URLSearchParams(window.location.search).get("returnTo");
+  const safeReturnTo =
+    returnTo?.startsWith("/") && !returnTo.startsWith("//")
+      ? returnTo
+      : "/dashboard";
   const [mode, setMode] = useState<"sign-in" | "sign-up">(() =>
     new URLSearchParams(window.location.search).get("mode") === "sign-up"
       ? "sign-up"
@@ -115,11 +120,11 @@ export function AccessPortal() {
         <div className="access-portal__clerk">
           {mode === "sign-in" ? (
             <SignIn
-              fallbackRedirectUrl="/dashboard"
+              fallbackRedirectUrl={safeReturnTo}
               signUpUrl="/access?mode=sign-up"
             />
           ) : (
-            <SignUp fallbackRedirectUrl="/dashboard" signInUrl="/access" />
+            <SignUp fallbackRedirectUrl={safeReturnTo} signInUrl="/access" />
           )}
         </div>
         <button type="button" onClick={() => setLocation("/")}>

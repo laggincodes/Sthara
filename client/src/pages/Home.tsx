@@ -406,11 +406,14 @@ export default function Home() {
       "ulpin:resume-authority-editor",
       selectedLiveFeature.ulpin
     );
-    toast.message("Opening secure administrator sign-in", {
+    toast.message("Opening secure Clerk sign-in", {
       description:
         "You will return to this footprint correction form after signing in.",
     });
-    window.setTimeout(() => startLogin(), 150);
+    window.setTimeout(
+      () => startLogin(`/?editor=${encodeURIComponent(selectedLiveFeature.ulpin)}`),
+      150
+    );
   };
   useEffect(() => {
     const resumeUlpin = window.sessionStorage.getItem(
@@ -3178,15 +3181,15 @@ export default function Home() {
                   </>
                 ) : !authQuery.data ? (
                   <>
-                    <ShieldCheck size={16} /> Sign in as administrator
+                    <ShieldCheck size={16} /> Sign in for Authority review
                   </>
                 ) : !canSaveAuthorityRecord ? (
-                  "Administrator role required"
+                  "Authority or Administrator role required"
                 ) : !revisionNoteValidation.valid ? (
                   `Add ${REVISION_NOTE_MINIMUM_LENGTH}-character note`
                 ) : (
                   <>
-                    <Check size={16} /> Save approved correction
+                    <Check size={16} /> Save reviewed correction
                   </>
                 )}
               </button>
