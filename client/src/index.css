@@ -8100,13 +8100,87 @@ input:focus-visible {
 .spatial-role-status em {
   color: #d6c38b;
 }
+.spatial-role-visibility {
+  display: block;
+  margin: 3px 0 1px;
+  color: #91aaa5;
+  font-size: 8px;
+  line-height: 1.45;
+}
+.spatial-mock-filter-row button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+.spatial-approval-queue {
+  display: grid;
+  gap: 8px;
+  padding: 9px;
+  background: rgba(245, 198, 107, 0.05);
+  border: 1px solid rgba(245, 198, 107, 0.2);
+  border-radius: 6px;
+}
+.spatial-approval-queue > div {
+  display: grid;
+  gap: 2px;
+}
+.spatial-approval-queue > div b {
+  color: #f4dfac;
+  font-size: 10px;
+}
+.spatial-approval-queue > small {
+  color: #a7aaa0;
+  font-size: 8px;
+  line-height: 1.45;
+}
+.spatial-approval-queue section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px;
+  background: rgba(5, 15, 18, 0.35);
+  border: 1px solid rgba(245, 198, 107, 0.1);
+  border-radius: 5px;
+}
+.spatial-approval-queue section > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.spatial-approval-queue strong {
+  color: #f4dfac;
+  font:
+    8px "IBM Plex Mono",
+    monospace;
+}
+.spatial-approval-queue span,
+.spatial-approval-queue em {
+  color: #a3b5af;
+  font-size: 8px;
+  font-style: normal;
+  line-height: 1.35;
+}
+.spatial-approval-queue button {
+  flex: 0 0 auto;
+  min-height: 26px;
+  padding: 0 8px;
+  color: #f4dfac;
+  background: rgba(245, 198, 107, 0.08);
+  border: 1px solid rgba(245, 198, 107, 0.34);
+  border-radius: 4px;
+  font:
+    8px "IBM Plex Mono",
+    monospace;
+  cursor: pointer;
+}
 .cesium-mock-floor-hover {
   position: absolute;
   top: 92px;
   right: 16px;
   z-index: 8;
-  display: grid;
-  gap: 3px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   max-width: 220px;
   padding: 9px 11px;
   color: #d8efea;
@@ -8115,6 +8189,31 @@ input:focus-visible {
   border-radius: 6px;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
   pointer-events: none;
+}
+.cesium-mock-floor-hover > div {
+  display: grid;
+  gap: 3px;
+}
+.cesium-mock-floor-thumbnail {
+  flex: 0 0 auto;
+  width: 52px;
+  height: 38px;
+  background: #0c2428;
+  border: 1px solid rgba(114, 227, 223, 0.36);
+  border-radius: 3px;
+}
+.cesium-mock-floor-thumbnail rect {
+  fill: rgba(8, 36, 40, 0.9);
+  stroke: #72e3df;
+  stroke-width: 1.25;
+}
+.cesium-mock-floor-thumbnail path {
+  fill: none;
+  stroke: #9bd7cb;
+  stroke-width: 1.1;
+}
+.cesium-mock-floor-thumbnail circle {
+  fill: #f5c66b;
 }
 .cesium-mock-floor-hover span {
   color: #72e3df;
@@ -8132,6 +8231,10 @@ input:focus-visible {
   line-height: 1.4;
 }
 @media (max-width: 640px) {
+  .spatial-approval-queue section {
+    align-items: flex-start;
+    flex-direction: column;
+  }
   .cesium-mock-floor-hover {
     top: 82px;
     right: 9px;

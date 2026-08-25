@@ -265,3 +265,8 @@
 - [x] Add a clearly labeled Citizen, Surveyor, and Authority role-simulation control without changing real authorization.
 - [x] Add hover summaries for mock floor-level ownership status before click selection.
 - [x] Add regression coverage and validate the role simulation, floor hover/click behavior, and responsive safeguards.
+
+- [x] Filter mock ULPIN records according to the selected demo role to illustrate role-specific visibility without changing real access control.
+- [x] Add an Authority-only mock notification panel that simulates receiving and reviewing ULPIN approval requests.
+- [x] Add a small clearly labeled mock floor-plan thumbnail to the interactive floor hover tooltip.
+- [x] Add regression coverage and validate the role filtering, Authority panel, tooltip thumbnail, and responsive safeguards.

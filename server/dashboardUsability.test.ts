@@ -183,6 +183,15 @@ describe("dashboard usability controls", () => {
     expect(workspaceSource).toContain("real authorization remains separate");
   });
 
+  it("filters mock ownership visibility by simulated role and exposes Authority-only mock review requests", () => {
+    expect(workspaceSource).toContain("canViewMockOwnership");
+    expect(workspaceSource).toContain("Ownership placeholder hidden");
+    expect(workspaceSource).toContain("Authority demo view");
+    expect(workspaceSource).toContain("mockApprovalRequests");
+    expect(workspaceSource).toContain("Mock ULPIN approval requests");
+    expect(workspaceSource).toContain("no real applicant, approval, or");
+  });
+
   it("provides a property-type color legend for grouped mock records", () => {
     expect(workspaceSource).toContain("mockPropertyTypeColors");
     expect(workspaceSource).toContain("spatial-property-type-dot");
@@ -198,6 +207,10 @@ describe("dashboard usability controls", () => {
     expect(cesiumViewerSource).toContain("cesium-mock-floor-hover");
     expect(cesiumViewerSource).toContain("Ownership status: mock placeholder");
     expect(cesiumViewerSource).toContain("click to inspect details");
+    expect(cesiumViewerSource).toContain(
+      "Illustrative mock floor plan thumbnail"
+    );
+    expect(cesiumViewerSource).toContain("Illustrative plan · not to scale");
   });
 
   it("makes mock floor levels interactive with floor-specific rights details", () => {

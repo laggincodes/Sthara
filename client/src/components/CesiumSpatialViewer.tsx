@@ -1326,9 +1326,25 @@ export function CesiumSpatialViewer({
       )}
       {mockFloorHover !== null && (
         <div className="cesium-mock-floor-hover" role="status">
-          <span>DEMO FLOOR {mockFloorHover}</span>
-          <b>Ownership status: mock placeholder</b>
-          <small>Authority record required · click to inspect details</small>
+          <svg
+            className="cesium-mock-floor-thumbnail"
+            viewBox="0 0 96 64"
+            role="img"
+            aria-label="Illustrative mock floor plan thumbnail"
+          >
+            <title>Illustrative mock floor plan · not to scale</title>
+            <rect x="2" y="2" width="92" height="60" rx="3" />
+            <path d="M11 12h34v20H11zM51 12h34v14H51zM51 32h20v20H51zM75 32h10v20H75zM11 38h34v14H11z" />
+            <path d="M28 12v20M51 19h34M61 32v20M11 45h34" />
+            <circle cx="47" cy="35" r="2.5" />
+          </svg>
+          <div>
+            <span>DEMO FLOOR {mockFloorHover}</span>
+            <b>Ownership status: mock placeholder</b>
+            <small>
+              Illustrative plan · not to scale · click to inspect details
+            </small>
+          </div>
         </div>
       )}
       {focusSummary && !syntheticDemoFeature && (

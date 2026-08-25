@@ -64,6 +64,19 @@ const demoRoleDetails: Record<
   },
 };
 
+const mockApprovalRequests = [
+  {
+    id: "MOCK-REQ-204",
+    label: "Illustrative multi-storey review",
+    submitted: "Demo queue · no real applicant",
+  },
+  {
+    id: "MOCK-REQ-205",
+    label: "Illustrative source-link review",
+    submitted: "Demo queue · no real applicant",
+  },
+] as const;
+
 type MockRecord = {
   id: string;
   sourceRecordId: string;
@@ -234,6 +247,9 @@ export default function SpatialWorkspace() {
   );
   const [hoveredMockFloor, setHoveredMockFloor] = useState<number | null>(null);
   const [demoRole, setDemoRole] = useState<DemoRole>("citizen");
+  const [reviewedMockRequest, setReviewedMockRequest] = useState<string | null>(
+    null
+  );
   const [sampleAsset, setSampleAsset] = useState<SampleMapAsset | null>(null);
   const [sampleAssetError, setSampleAssetError] = useState<string | null>(null);
   const [sampleUploadProgress, setSampleUploadProgress] = useState<
@@ -349,6 +365,7 @@ export default function SpatialWorkspace() {
     };
   }, [sampleAsset]);
 
+  const canViewMockOwnership = demoRole === "authority";
   const filteredMockRecords = useMemo(() => {
     const query = mockRecordQuery.trim().toLowerCase();
     return mockRecords.filter(record => {
@@ -358,7 +375,7 @@ export default function SpatialWorkspace() {
           record.id,
           record.sourceRecordId,
           record.propertyName,
-          record.ownership,
+          ...(canViewMockOwnership ? [record.ownership] : []),
         ]
           .join(" ")
           .toLowerCase()
@@ -366,10 +383,12 @@ export default function SpatialWorkspace() {
       const matchesFilter =
         mockRecordFilter === "all" ||
         (mockRecordFilter === "ulpin" && record.id.startsWith("MOCK-3D-")) ||
-        (mockRecordFilter === "ownership" && record.ownership.length > 0);
+        (mockRecordFilter === "ownership" &&
+          canViewMockOwnership &&
+          record.ownership.length > 0);
       return matchesQuery && matchesFilter;
     });
-  }, [mockRecordFilter, mockRecordQuery, mockRecords]);
+  }, [canViewMockOwnership, mockRecordFilter, mockRecordQuery, mockRecords]);
 
   const groupedMockRecords = useMemo(() => {
     return filteredMockRecords.reduce<Record<string, MockRecord[]>>(
@@ -1293,6 +1312,7 @@ export default function SpatialWorkspace() {
                   key={filter}
                   className={mockRecordFilter === filter ? "active" : ""}
                   onClick={() => setMockRecordFilter(filter)}
+                  disabled={filter === "ownership" && !canViewMockOwnership}
                 >
                   {filter === "all"
                     ? "All"
@@ -1302,6 +1322,11 @@ export default function SpatialWorkspace() {
                 </button>
               ))}
             </div>
+            <small className="spatial-role-visibility" role="status">
+              {canViewMockOwnership
+                ? "Authority demo view: mock ownership placeholders are visible for review."
+                : `${demoRoleDetails[demoRole].label} demo view: mock ownership placeholders are hidden.`}
+            </small>
             <div
               className="spatial-property-type-legend"
               aria-label="Property type legend"
@@ -1354,7 +1379,10 @@ export default function SpatialWorkspace() {
                                     ),
                                   }}
                                 />
-                                {record.propertyName} · {record.ownership}
+                                {record.propertyName} ·{" "}
+                                {canViewMockOwnership
+                                  ? record.ownership
+                                  : "Ownership placeholder hidden"}
                               </span>
                             </button>
                           ))}
@@ -1378,7 +1406,10 @@ export default function SpatialWorkspace() {
                               ),
                             }}
                           />
-                          {record.propertyName} · {record.ownership}
+                          {record.propertyName} ·{" "}
+                          {canViewMockOwnership
+                            ? record.ownership
+                            : "Ownership placeholder hidden"}
                         </span>
                       </button>
                     ))}
@@ -1434,6 +1465,35 @@ export default function SpatialWorkspace() {
               <span>{demoRoleDetails[demoRole].summary}</span>
               <em>{demoRoleDetails[demoRole].access}</em>
             </div>
+            {demoRole === "authority" && (
+              <div className="spatial-approval-queue" aria-live="polite">
+                <div>
+                  <span className="spatial-kicker">Authority demo queue</span>
+                  <b>Mock ULPIN approval requests</b>
+                </div>
+                <small>
+                  Simulated review items only; no real applicant, approval, or
+                  record change is created.
+                </small>
+                {mockApprovalRequests.map(request => (
+                  <section key={request.id}>
+                    <div>
+                      <strong>{request.id}</strong>
+                      <span>{request.label}</span>
+                      <em>{request.submitted}</em>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setReviewedMockRequest(request.id)}
+                    >
+                      {reviewedMockRequest === request.id
+                        ? "Reviewed · demo"
+                        : "Review mock request"}
+                    </button>
+                  </section>
+                ))}
+              </div>
+            )}
           </div>
           <div className="spatial-floor-detail" aria-live="polite">
             <div className="spatial-rights-heading">
