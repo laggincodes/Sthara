@@ -1,8 +1,8 @@
-import { createApp } from "../server/_core/index";
+import { createApp } from "./_server.mjs";
 
 /**
- * Vercel Node serverless entry point. The Express app is shared with the
- * existing managed runtime; Vercel supplies the request-scoped HTTP server.
+ * Vercel Node serverless entry point. `pnpm build` generates the adjacent
+ * module so Vercel's function tracer receives the complete Express runtime.
  */
 const app = createApp();
 

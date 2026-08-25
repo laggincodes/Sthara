@@ -13,4 +13,18 @@ describe("Vercel serverless adapter", () => {
     expect(serverEntry).toContain('await import("./vite")');
     expect(serverEntry).toContain('if (!process.env.VERCEL)');
   });
+
+  it("loads the generated server bundle from the Vercel function entrypoint", () => {
+    const apiEntry = fs.readFileSync(
+      path.resolve(import.meta.dirname, "..", "api", "[...path].ts"),
+      "utf8"
+    );
+    const packageJson = fs.readFileSync(
+      path.resolve(import.meta.dirname, "..", "package.json"),
+      "utf8"
+    );
+
+    expect(apiEntry).toContain('from "./_server.mjs"');
+    expect(packageJson).toContain("--outfile=api/_server.mjs");
+  });
 });
