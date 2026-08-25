@@ -305,9 +305,10 @@
 - [x] Apply the dashboard’s dark visual system and 3D ULPIN-VPM branding to the mounted Clerk sign-in and sign-up components.
 - [x] Restrict dashboard settings to server-assigned Administrator accounts and verify unauthenticated, Citizen, and Authority users cannot access protected settings behavior.
 - [x] Prepare Vercel configuration and a complete environment-variable handoff for this full-stack Clerk/Cesium application, without committing secrets.
-- [ ] Trigger and verify the GitHub-linked Vercel production deployment after the current code is synchronized; deployment parity depends on the required Vercel environment variables and portable storage/AI provider setup.
-- [ ] Disable only Vercel SSO protection for the ready production deployment and verify public access while retaining Clerk, backend RBAC, API authentication, and all evidence safeguards.
-- [ ] Redeploy Vercel production after the user-confirmed environment variables are present, then verify the mounted Clerk form and public entry route.
-- [ ] Diagnose the fresh Vercel bundle for a missing Clerk browser key without exposing or changing the user-provided secret values.
-- [ ] Support the configured public `CLERK_PUBLISH_KEY` alias alongside `VITE_CLERK_PUBLISHABLE_KEY`, then rebuild and verify the public Clerk workspace.
+- [x] Trigger and verify the GitHub-linked Vercel production deployment after the current code is synchronized; deployment parity depends on the required Vercel environment variables and portable storage/AI provider setup.
+- [x] Disable only Vercel SSO protection for the ready production deployment and verify public access while retaining Clerk, backend RBAC, API authentication, and all evidence safeguards.
+- [x] Redeploy Vercel production after the user-confirmed environment variables are present, then verify the mounted Clerk form and public entry route.
+- [x] Diagnose the fresh Vercel bundle for a missing Clerk browser key without exposing or changing the user-provided secret values.
+- [x] Support the configured public `CLERK_PUBLISH_KEY` alias alongside `VITE_CLERK_PUBLISHABLE_KEY`, then rebuild and verify the public Clerk workspace.
 - [ ] Diagnose and correct the reported Vercel Clerk sign-in redirect loop without weakening Clerk, API, role, or evidence safeguards.
+- [x] Remove the unresolved `%VITE_ANALYTICS_ENDPOINT%/umami` client request from the Vercel build without affecting Clerk or application security.
