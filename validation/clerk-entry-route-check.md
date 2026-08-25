@@ -7,3 +7,7 @@
 | Local public-overview route | Selecting **View public project overview** opened the intact dashboard home at `/overview`. |
 
 The entry route now presents Clerk-managed access first. The original public project overview remains available at `/overview`; successful Clerk sign-in retains the existing safe return default to `/dashboard`.
+
+## Production propagation observation
+
+Immediately after publishing checkpoint `5680ff8b`, two cache-busted requests to the production domain still returned the prior dashboard at `/`. The local preview served the corrected Clerk-first entry route. This indicates deployment propagation must be rechecked before treating the production-domain verification as complete.
