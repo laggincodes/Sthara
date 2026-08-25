@@ -312,3 +312,4 @@
 - [x] Support the configured public `CLERK_PUBLISH_KEY` alias alongside `VITE_CLERK_PUBLISHABLE_KEY`, then rebuild and verify the public Clerk workspace.
 - [ ] Diagnose and correct the reported Vercel Clerk sign-in redirect loop without weakening Clerk, API, role, or evidence safeguards.
 - [x] Remove the unresolved `%VITE_ANALYTICS_ENDPOINT%/umami` client request from the Vercel build without affecting Clerk or application security.
+- [ ] Replace the fragile Clerk internal-DOM CSS selector with supported appearance styling and verify the warning no longer appears.

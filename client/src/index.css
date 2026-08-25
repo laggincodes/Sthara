@@ -4936,9 +4936,6 @@ input:focus-visible {
 .access-portal__clerk {
   width: min(100%, 400px);
 }
-.access-portal__clerk .cl-card {
-  width: 100%;
-}
 .role-console {
   padding-bottom: 54px;
 }

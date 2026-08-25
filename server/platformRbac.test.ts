@@ -12,6 +12,7 @@ const routerSource = readProjectFile("server/routers.ts");
 const trpcSource = readProjectFile("server/_core/trpc.ts");
 const roleConsoleSource = readProjectFile("client/src/pages/RoleConsole.tsx");
 const appSource = readProjectFile("client/src/App.tsx");
+const portalStyles = readProjectFile("client/src/index.css");
 
 describe("secure role-based cadastral platform foundation", () => {
   it("defines non-privileged default accounts and explicit privileged platform roles", () => {
@@ -86,5 +87,7 @@ describe("secure role-based cadastral platform foundation", () => {
     expect(homeSource).toContain("/access?returnTo=/overview");
     expect(mainSource).toContain("appearance={clerkAppearance}");
     expect(mainSource).toContain('colorPrimary: "#2ad4d9"');
+    expect(mainSource).toContain('card: "bg-transparent shadow-none border-0 w-full"');
+    expect(portalStyles).not.toContain(".access-portal__clerk .cl-card");
   });
 });
