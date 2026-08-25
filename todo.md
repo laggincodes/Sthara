@@ -151,7 +151,7 @@
 - [x] Retain the floor-by-floor and vertical ULPIN locks unless an exact footprint-linked official floor plan/BIM and approved vertical-property evidence are established.
 - [x] Test, checkpoint, and synchronize any sanctioned-plan-supported evidence update to GitHub.
 - [x] Define and publish the required KUSUM SURESH ENCLAVE GCP schema: plan pixel X/Y, WGS84 latitude/longitude, feature description, source, and survey confidence.
-- [x] Validate at least three non-collinear user-supplied GCP pairs and reject incomplete, duplicate, or implausible control-point submissions.
+- [ ] Validate at least three non-collinear user-supplied GCP pairs and reject incomplete, duplicate, or implausible control-point submissions.
 - [ ] Georeference the sanctioned plan to EPSG:4326, derive a reproducible building-footprint GeoJSON, and record the transformation method and residual error.
 - [ ] Reconcile the georeferenced footprint to RERA Plot 808 P before creating the authority-backed 14.90 m Level 2 Cesium extrusion.
 - [ ] Retain all Level 3 floor-by-floor and vertical ULPIN locks unless approved vertical-property evidence is supplied after the footprint match.

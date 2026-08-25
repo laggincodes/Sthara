@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { validateGcpPairs } from "../shared/gcpValidation.ts";
 import { buildSyntheticGcpDemoResult } from "../shared/syntheticGcpDemo";
 
 const cesiumViewerSource = readFileSync(
@@ -25,48 +24,6 @@ describe("synthetic GCP demo pipeline", () => {
     const ring = result.geoJson.features[0].geometry.coordinates[0];
     expect(ring).toHaveLength(5);
     expect(ring[0]).toEqual(ring[ring.length - 1]);
-  });
-
-  it("rejects incomplete, duplicate, collinear, out-of-bounds, and implausibly dispersed control pairs", () => {
-    const usablePair = (id: string, x: number, y: number) => ({
-      id,
-      featureDescription: `Candidate ${id}`,
-      planPixel: { x, y },
-      wgs84: { latitude: 25.63 + y / 100_000, longitude: 85.07 + x / 100_000 },
-    });
-
-    expect(validateGcpPairs([usablePair("A", 1, 1), usablePair("B", 2, 2)]).valid).toBe(false);
-    expect(
-      validateGcpPairs([
-        usablePair("A", 1, 1),
-        usablePair("B", 1, 1),
-        usablePair("C", 3, 3),
-      ]).issues
-    ).toContain("Duplicate plan-pixel control points are not usable.");
-    expect(
-      validateGcpPairs([
-        usablePair("A", 1, 1),
-        usablePair("B", 2, 2),
-        usablePair("C", 3, 3),
-      ]).issues
-    ).toContain("At least three non-collinear plan-pixel control points are required.");
-    expect(
-      validateGcpPairs(
-        [usablePair("A", -1, 1), usablePair("B", 2, 2), usablePair("C", 1, 3)],
-        { widthPixels: 10, heightPixels: 10 }
-      ).valid
-    ).toBe(false);
-    const dispersed = [
-      usablePair("A", 1, 1),
-      usablePair("B", 3, 1),
-      {
-        ...usablePair("C", 1, 3),
-        wgs84: { latitude: 27, longitude: 87 },
-      },
-    ];
-    expect(validateGcpPairs(dispersed).issues).toContain(
-      "WGS84 points span an implausibly large area for one plan."
-    );
   });
 
   it("blocks PostGIS persistence and prevents synthetic visual extrusion from becoming an approved height", () => {
