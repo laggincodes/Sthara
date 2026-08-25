@@ -160,6 +160,9 @@ const plugins = [
 
 export default defineConfig({
   plugins,
+  // A Clerk publishable key is intentionally browser-visible. This legacy
+  // alias supports the existing Vercel setting; no server secret is exposed.
+  envPrefix: ["VITE_", "CLERK_PUBLISH_KEY"],
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "client", "src"),

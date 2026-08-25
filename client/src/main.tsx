@@ -10,7 +10,11 @@ import App from "./App";
 import { startLogin } from "./const";
 import "./index.css";
 
-const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+// Clerk publishable keys are designed for browser use. Prefer the standard Vite
+// name, while accepting the existing Vercel project alias during migration.
+const publishableKey =
+  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY ??
+  import.meta.env.CLERK_PUBLISH_KEY;
 const queryClient = new QueryClient();
 const clerkAppearance = {
   variables: {

@@ -19,3 +19,5 @@ The local updated entry route retained the secure-access shell and sign-in/creat
 ## Vercel public-access verification
 
 Vercel SSO protection was disabled only after explicit user authorization. Password protection and trusted-IP protections remain disabled as before; the application-owned Clerk, server-side RBAC, API authentication, and evidence safeguards were not changed. The ready production deployment at `sih-2026-bjpc802x4-gautam-kumar01s-projects.vercel.app` now reaches the 3D ULPIN-VPM secure-access shell rather than redirecting to Vercel login. The hosted Clerk component was still mounting in the fresh Vercel snapshot and must be rechecked after its remote script completes.
+
+After the user confirmed the Vercel environment variables and a new GitHub-triggered production deployment (`247c20f6`) reached READY, two fresh checks of `sih-2026-1mrusyr2q-gautam-kumar01s-projects.vercel.app` still showed only the secure-access shell. The next check must inspect Clerk runtime state and Vercel build/runtime configuration rather than treating the variable names alone as confirmation of a browser-visible value.

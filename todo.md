@@ -308,3 +308,5 @@
 - [ ] Trigger and verify the GitHub-linked Vercel production deployment after the current code is synchronized; deployment parity depends on the required Vercel environment variables and portable storage/AI provider setup.
 - [ ] Disable only Vercel SSO protection for the ready production deployment and verify public access while retaining Clerk, backend RBAC, API authentication, and all evidence safeguards.
 - [ ] Redeploy Vercel production after the user-confirmed environment variables are present, then verify the mounted Clerk form and public entry route.
+- [ ] Diagnose the fresh Vercel bundle for a missing Clerk browser key without exposing or changing the user-provided secret values.
+- [ ] Support the configured public `CLERK_PUBLISH_KEY` alias alongside `VITE_CLERK_PUBLISHABLE_KEY`, then rebuild and verify the public Clerk workspace.
