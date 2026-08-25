@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
+import { toast as sonnerToast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -120,6 +121,7 @@ export default function UlpInRegistry() {
   >(readPersonalFavoriteFolders);
   const [favoriteFolderFilter, setFavoriteFolderFilter] = useState("all");
   const [favoriteFolderDraft, setFavoriteFolderDraft] = useState("");
+  const [folderSavePulse, setFolderSavePulse] = useState("");
   const [comparisonRecords, setComparisonRecords] = useState<SourceRecord[]>(
     []
   );
@@ -242,9 +244,10 @@ export default function UlpInRegistry() {
   };
   const assignFavoriteFolder = (recordId: string, folder: string) => {
     if (!recordId) return;
+    const normalizedFolder = folder.trim();
     setPersonalFavoriteFolders(current => {
       const next = { ...current };
-      if (folder.trim()) next[recordId] = folder.trim();
+      if (normalizedFolder) next[recordId] = normalizedFolder;
       else delete next[recordId];
       window.localStorage.setItem(
         PERSONAL_FAVORITE_FOLDERS_STORAGE_KEY,
@@ -252,6 +255,18 @@ export default function UlpInRegistry() {
       );
       return next;
     });
+    setFolderSavePulse(recordId);
+    window.setTimeout(() => setFolderSavePulse(""), 650);
+    sonnerToast.success(
+      normalizedFolder
+        ? "Favorite folder updated"
+        : "Favorite moved to unfiled",
+      {
+        description: normalizedFolder
+          ? `Saved to ${normalizedFolder}. This organization stays local to your browser.`
+          : "The browser-local folder assignment was cleared.",
+      }
+    );
   };
   const toggleComparisonRecord = (record: SourceRecord) => {
     const recordId = recordText(record.properties.ulpin, "");
@@ -942,7 +957,9 @@ export default function UlpInRegistry() {
               />
             </label>
           </section>
-          <section className="registry-favorite-folder-panel">
+          <section
+            className={`registry-favorite-folder-panel${folderSavePulse === selectedRecordId ? " folder-save-success" : ""}`}
+          >
             <p>
               <Folder size={14} /> Favorite folder / category
             </p>

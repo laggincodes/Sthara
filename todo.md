@@ -218,3 +218,11 @@
 - [x] Add an evidence-safe side-by-side comparison workspace for up to two selected ULPIN source records with coordinated map focus actions.
 - [x] Extend browser-local favorites with custom folders/categories and favorite-folder filtering.
 - [x] Add regression coverage and desktop/mobile validation for the layout, comparison, and favorite-folder workflows.
+
+- [x] Add a subtle success animation and toast when a source record is assigned to a browser-local favorite folder.
+- [x] Separate workspace text panels from the Cesium map while retaining only distance and area measurement overlays on-map, without changing other map behavior.
+- [x] Add regression coverage and desktop/mobile validation for favorite-folder feedback and the separated workspace layout.
+
+- [x] Move Spatial Workspace data and explanatory panels below the Cesium map so the map section contains only the map preview and distance/area measurement controls.
+- [x] Add the requested favorite-folder success animation and toast notification without changing existing folder behavior.
+- [x] Validate the separated layout on desktop/mobile, run regression tests/build, and push the validated code to the connected GitHub repository.

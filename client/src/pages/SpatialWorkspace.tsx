@@ -423,190 +423,199 @@ export default function SpatialWorkspace() {
         </header>
 
         <div className="spatial-model-layout">
-          <section className="spatial-model-stage">
-            <CesiumSpatialViewer
-              command={command}
-              layers={layers}
-              focusUlpins={activeMapUlpins}
-              onFeatureSelect={onFeatureSelect}
-            />
-            <div className="spatial-stage-grid" />
-            <div className="spatial-stage-vignette" />
-            <div className="spatial-stage-heading">
-              <p>{explorer.stageLabel}</p>
-              <h1>
-                {comparisonUlpins.length === 2
-                  ? "Comparing two source-record geometries"
-                  : resolveBuilding.isPending || searchResult.isLoading
-                    ? "Finding source-backed geometry…"
-                    : (searchResult.data?.buildingCount ?? 0) > 0
-                      ? searchResult.data?.siteLabel
-                      : explorer.noResultLabel}
-              </h1>
-              <span>
-                <CircleDot size={13} />{" "}
-                {comparisonUlpins.length === 2
-                  ? "2 source records selected · combined camera extent · not issued ULPINs"
-                  : (searchResult.data?.buildingCount ?? 0) > 0
-                    ? `${searchResult.data?.buildingCount} matched PostGIS footprints · camera focused on source geometry`
-                    : "Try a mapped site, ULPIN, or source-backed building record"}{" "}
-                <b>·</b> EPSG:4326
-              </span>
-              {resolutionNote && (
-                <small className="spatial-resolution-note">
-                  {resolutionNote}
-                </small>
-              )}
-            </div>
-            <div className="spatial-stage-actions">
-              <button
-                type="button"
-                onClick={() => issueCommand("fullscreen")}
-                aria-label="Expand 3D map"
-              >
-                <Maximize2 size={17} />
-              </button>
-              <button
-                type="button"
-                onClick={() => issueCommand("inspect-footprint")}
-                aria-label="Inspect live footprint"
-              >
-                <ScanSearch size={17} />
-              </button>
-            </div>
-            <div className="spatial-map-controls">
-              <button
-                type="button"
-                onClick={() => issueCommand("zoom-in")}
-                aria-label="Zoom in"
-              >
-                <Plus size={17} />
-              </button>
-              <button
-                type="button"
-                onClick={() => issueCommand("zoom-out")}
-                aria-label="Zoom out"
-              >
-                <Minus size={17} />
-              </button>
-              <button
-                type="button"
-                onClick={() => issueCommand("north")}
-                aria-label="Reset north"
-              >
-                N
-              </button>
-            </div>
-            <div
-              className="spatial-action-dock"
-              aria-label="Property workflow actions"
+          <div className="spatial-map-column">
+            <section className="spatial-model-stage">
+              <CesiumSpatialViewer
+                command={command}
+                layers={layers}
+                focusUlpins={activeMapUlpins}
+                measurementControlsOnly
+                onFeatureSelect={onFeatureSelect}
+              />
+              <div className="spatial-stage-grid" />
+              <div className="spatial-stage-vignette" />
+            </section>
+
+            <section
+              className="spatial-below-map"
+              aria-label="Map details and actions"
             >
-              <span>Live property workflow</span>
-              <div>
-                <button
-                  type="button"
-                  onClick={() => issueCommand("focus-site")}
-                >
-                  <ScanSearch size={13} /> Focus source
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setLocation(
-                      `/?workspace=Data%20ingestion&site=${encodeURIComponent(siteQuery)}`
-                    )
-                  }
-                >
-                  <Database size={13} /> {nextEvidenceAction}
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setLocation(
-                      selected
-                        ? `/?editor=${encodeURIComponent(selected.ulpin)}`
-                        : "/?workspace=Operator%20access"
-                    )
-                  }
-                >
-                  <ShieldCheck size={13} />{" "}
-                  {selected ? "Authority review" : "Operator access"}
-                </button>
-              </div>
-              <small>
-                {activeEvidenceLevel === 1
-                  ? "No height, floor, or unit data is inferred."
-                  : activeEvidenceLevel === 2
-                    ? "Extrusion is evidence-backed; floor geometry remains locked."
-                    : "Floor-plan/BIM evidence is ready for registered vertical ULPIN review."}
-              </small>
-            </div>
-            <div
-              className="spatial-order-panel spatial-evidence-panel"
-              aria-label="Three-level building evidence model"
-            >
-              <div className="spatial-order-panel-heading">
+              <div className="spatial-stage-heading">
+                <p>{explorer.stageLabel}</p>
+                <h1>
+                  {comparisonUlpins.length === 2
+                    ? "Comparing two source-record geometries"
+                    : resolveBuilding.isPending || searchResult.isLoading
+                      ? "Finding source-backed geometry…"
+                      : (searchResult.data?.buildingCount ?? 0) > 0
+                        ? searchResult.data?.siteLabel
+                        : explorer.noResultLabel}
+                </h1>
                 <span>
-                  <Box size={13} /> Building evidence levels
+                  <CircleDot size={13} />{" "}
+                  {comparisonUlpins.length === 2
+                    ? "2 source records selected · combined camera extent · not issued ULPINs"
+                    : (searchResult.data?.buildingCount ?? 0) > 0
+                      ? `${searchResult.data?.buildingCount} matched PostGIS footprints · camera focused on source geometry`
+                      : "Try a mapped site, ULPIN, or source-backed building record"}{" "}
+                  <b>·</b> EPSG:4326
                 </span>
-                <b>LEVEL {activeEvidenceLevel} / 03</b>
+                {resolutionNote && (
+                  <small className="spatial-resolution-note">
+                    {resolutionNote}
+                  </small>
+                )}
               </div>
-              <div className="spatial-order-list">
-                {evidenceLevels.map(level => (
+              <div className="spatial-stage-actions">
+                <button
+                  type="button"
+                  onClick={() => issueCommand("fullscreen")}
+                  aria-label="Expand 3D map"
+                >
+                  <Maximize2 size={17} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => issueCommand("inspect-footprint")}
+                  aria-label="Inspect live footprint"
+                >
+                  <ScanSearch size={17} />
+                </button>
+              </div>
+              <div className="spatial-map-controls">
+                <button
+                  type="button"
+                  onClick={() => issueCommand("zoom-in")}
+                  aria-label="Zoom in"
+                >
+                  <Plus size={17} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => issueCommand("zoom-out")}
+                  aria-label="Zoom out"
+                >
+                  <Minus size={17} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => issueCommand("north")}
+                  aria-label="Reset north"
+                >
+                  N
+                </button>
+              </div>
+              <div
+                className="spatial-action-dock"
+                aria-label="Property workflow actions"
+              >
+                <span>Live property workflow</span>
+                <div>
                   <button
-                    key={level.level}
                     type="button"
-                    className={
-                      activeEvidenceLevel === level.level
-                        ? "active"
-                        : activeEvidenceLevel > level.level
-                          ? "complete"
-                          : "pending"
-                    }
-                    onClick={() => activateEvidenceLevel(level)}
-                    aria-pressed={activeEvidenceLevel === level.level}
+                    onClick={() => issueCommand("focus-site")}
                   >
-                    <strong>0{level.level}</strong>
-                    <span>
-                      <b>{level.title}</b>
-                      <small>
-                        {activeEvidenceLevel === level.level
-                          ? `Active · ${level.source}`
-                          : activeEvidenceLevel > level.level
-                            ? `Complete · ${level.source}`
-                            : `Locked · ${level.next}`}
-                      </small>
-                    </span>
+                    <ScanSearch size={13} /> Focus source
                   </button>
-                ))}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setLocation(
+                        `/?workspace=Data%20ingestion&site=${encodeURIComponent(siteQuery)}`
+                      )
+                    }
+                  >
+                    <Database size={13} /> {nextEvidenceAction}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setLocation(
+                        selected
+                          ? `/?editor=${encodeURIComponent(selected.ulpin)}`
+                          : "/?workspace=Operator%20access"
+                      )
+                    }
+                  >
+                    <ShieldCheck size={13} />{" "}
+                    {selected ? "Authority review" : "Operator access"}
+                  </button>
+                </div>
+                <small>
+                  {activeEvidenceLevel === 1
+                    ? "No height, floor, or unit data is inferred."
+                    : activeEvidenceLevel === 2
+                      ? "Extrusion is evidence-backed; floor geometry remains locked."
+                      : "Floor-plan/BIM evidence is ready for registered vertical ULPIN review."}
+                </small>
               </div>
-              <small className="spatial-evidence-next">
-                Next evidence:{" "}
+              <div
+                className="spatial-order-panel spatial-evidence-panel"
+                aria-label="Three-level building evidence model"
+              >
+                <div className="spatial-order-panel-heading">
+                  <span>
+                    <Box size={13} /> Building evidence levels
+                  </span>
+                  <b>LEVEL {activeEvidenceLevel} / 03</b>
+                </div>
+                <div className="spatial-order-list">
+                  {evidenceLevels.map(level => (
+                    <button
+                      key={level.level}
+                      type="button"
+                      className={
+                        activeEvidenceLevel === level.level
+                          ? "active"
+                          : activeEvidenceLevel > level.level
+                            ? "complete"
+                            : "pending"
+                      }
+                      onClick={() => activateEvidenceLevel(level)}
+                      aria-pressed={activeEvidenceLevel === level.level}
+                    >
+                      <strong>0{level.level}</strong>
+                      <span>
+                        <b>{level.title}</b>
+                        <small>
+                          {activeEvidenceLevel === level.level
+                            ? `Active · ${level.source}`
+                            : activeEvidenceLevel > level.level
+                              ? `Complete · ${level.source}`
+                              : `Locked · ${level.next}`}
+                        </small>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+                <small className="spatial-evidence-next">
+                  Next evidence:{" "}
+                  <b>
+                    {activeEvidenceLevel === 3
+                      ? "vertical ULPIN registration record"
+                      : activeEvidence.next}
+                  </b>
+                </small>
+              </div>
+              <div className="spatial-selection-chip">
+                <i />{" "}
+                {selected
+                  ? `Selected ${selected.ulpin}`
+                  : (searchResult.data?.buildingCount ?? 0) > 0
+                    ? `${searchResult.data?.buildingCount} live building layers`
+                    : "No source-backed footprint returned"}{" "}
                 <b>
-                  {activeEvidenceLevel === 3
-                    ? "vertical ULPIN registration record"
-                    : activeEvidence.next}
+                  {searchResult.data?.totalFootprintAreaSquareMetres.toLocaleString() ??
+                    "0"}{" "}
+                  m²
                 </b>
-              </small>
-            </div>
-            <div className="spatial-selection-chip">
-              <i />{" "}
-              {selected
-                ? `Selected ${selected.ulpin}`
-                : (searchResult.data?.buildingCount ?? 0) > 0
-                  ? `${searchResult.data?.buildingCount} live building layers`
-                  : "No source-backed footprint returned"}{" "}
-              <b>
-                {searchResult.data?.totalFootprintAreaSquareMetres.toLocaleString() ??
-                  "0"}{" "}
-                m²
-              </b>
-            </div>
-            <div className="spatial-stage-footer">
-              <span>50 m</span>
-              <span>LIVE POSTGIS · individual footprints only</span>
-            </div>
-          </section>
+              </div>
+              <div className="spatial-stage-footer">
+                <span>50 m</span>
+                <span>LIVE POSTGIS · individual footprints only</span>
+              </div>
+            </section>
+          </div>
 
           <aside className="spatial-dossier">
             <div className="spatial-dossier-card explorer-segment-card">

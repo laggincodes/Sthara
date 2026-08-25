@@ -66,6 +66,7 @@ export function CesiumSpatialViewer({
     simulatedDroneImagery: false,
     simulatedLidarPointCloud: false,
   },
+  measurementControlsOnly = false,
   onSyntheticDemoSelect,
   focusUlpins,
   onFeatureSelect,
@@ -86,6 +87,7 @@ export function CesiumSpatialViewer({
   };
   syntheticDemoView?: "2d" | "3d";
   syntheticVisualLayers?: SyntheticVisualLayers;
+  measurementControlsOnly?: boolean;
   onSyntheticDemoSelect?: () => void;
   focusUlpins?: string[];
   onFeatureSelect?: (feature: {
@@ -1006,46 +1008,50 @@ export function CesiumSpatialViewer({
           className="cesium-context-controls"
           aria-label="Map context controls"
         >
-          <section>
-            <span>Basemap · visual context</span>
-            <div>
-              <button
-                type="button"
-                className={basemap === "satellite" ? "active" : ""}
-                disabled={imageryState !== "ready"}
-                onClick={() => setBasemap("satellite")}
-              >
-                Satellite
-              </button>
-              <button
-                type="button"
-                className={basemap === "street" ? "active" : ""}
-                disabled={streetState !== "ready"}
-                onClick={() => setBasemap("street")}
-              >
-                Street
-              </button>
-            </div>
-          </section>
-          <section>
-            <span>3D camera</span>
-            <div>
-              <button
-                type="button"
-                className={cameraView === "perspective" ? "active" : ""}
-                onClick={() => setMapView("perspective")}
-              >
-                Perspective
-              </button>
-              <button
-                type="button"
-                className={cameraView === "plan" ? "active" : ""}
-                onClick={() => setMapView("plan")}
-              >
-                Plan view
-              </button>
-            </div>
-          </section>
+          {!measurementControlsOnly && (
+            <section>
+              <span>Basemap · visual context</span>
+              <div>
+                <button
+                  type="button"
+                  className={basemap === "satellite" ? "active" : ""}
+                  disabled={imageryState !== "ready"}
+                  onClick={() => setBasemap("satellite")}
+                >
+                  Satellite
+                </button>
+                <button
+                  type="button"
+                  className={basemap === "street" ? "active" : ""}
+                  disabled={streetState !== "ready"}
+                  onClick={() => setBasemap("street")}
+                >
+                  Street
+                </button>
+              </div>
+            </section>
+          )}
+          {!measurementControlsOnly && (
+            <section>
+              <span>3D camera</span>
+              <div>
+                <button
+                  type="button"
+                  className={cameraView === "perspective" ? "active" : ""}
+                  onClick={() => setMapView("perspective")}
+                >
+                  Perspective
+                </button>
+                <button
+                  type="button"
+                  className={cameraView === "plan" ? "active" : ""}
+                  onClick={() => setMapView("plan")}
+                >
+                  Plan view
+                </button>
+              </div>
+            </section>
+          )}
           <section>
             <span>Visual measure</span>
             <div>
