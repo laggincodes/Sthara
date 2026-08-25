@@ -3,8 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { startLogin } from "@/const";
 import { trpc } from "@/lib/trpc";
+import { SignIn, SignUp } from "@clerk/react";
 import {
   ArrowRight,
   Building2,
@@ -61,10 +61,11 @@ function formatRole(role: PlatformRole) {
 
 export function AccessPortal() {
   const [, setLocation] = useLocation();
-  const beginSecureSignIn = () => {
-    window.sessionStorage.setItem("ulpin:post-login-path", "/dashboard");
-    startLogin();
-  };
+  const [mode, setMode] = useState<"sign-in" | "sign-up">(() =>
+    new URLSearchParams(window.location.search).get("mode") === "sign-up"
+      ? "sign-up"
+      : "sign-in"
+  );
 
   return (
     <main className="access-portal">
@@ -87,15 +88,40 @@ export function AccessPortal() {
       <section className="access-portal__card" aria-labelledby="access-title">
         <UserRoundCheck size={24} />
         <span>ACCOUNT ACCESS</span>
-        <h2 id="access-title">Sign in securely</h2>
+        <h2 id="access-title">
+          {mode === "sign-in" ? "Sign in securely" : "Create a secure account"}
+        </h2>
         <p>
-          This deployment uses its configured secure identity provider. New
-          accounts enter as Citizens until an Administrator assigns a different
-          role.
+          Clerk manages identity, passwords, recovery, and session security.
+          New accounts enter as Citizens until an Administrator assigns a
+          different role on the server.
         </p>
-        <Button type="button" onClick={beginSecureSignIn}>
-          Continue to secure sign-in <ArrowRight size={15} />
-        </Button>
+        <div className="access-portal__mode" role="group" aria-label="Account access mode">
+          <button
+            type="button"
+            className={mode === "sign-in" ? "is-active" : undefined}
+            onClick={() => setMode("sign-in")}
+          >
+            Sign in
+          </button>
+          <button
+            type="button"
+            className={mode === "sign-up" ? "is-active" : undefined}
+            onClick={() => setMode("sign-up")}
+          >
+            Create account
+          </button>
+        </div>
+        <div className="access-portal__clerk">
+          {mode === "sign-in" ? (
+            <SignIn
+              fallbackRedirectUrl="/dashboard"
+              signUpUrl="/access?mode=sign-up"
+            />
+          ) : (
+            <SignUp fallbackRedirectUrl="/dashboard" signInUrl="/access" />
+          )}
+        </div>
         <button type="button" onClick={() => setLocation("/")}>
           Return to public project overview
         </button>
@@ -517,17 +543,18 @@ export default function RoleConsole() {
               <h2>Backend-enforced account assignment</h2>
               <div className="role-console__user-list">
                 {adminUsers.data?.map(account => (
-                  <div key={account.openId}>
+                  <div key={account.clerkUserId}>
                     <span>{account.name || "Unnamed account"}</span>
-                    <small>{account.openId}</small>
+                    <small>{account.clerkUserId}</small>
                     <select
                       value={account.role}
                       disabled={
-                        account.openId === user.openId || assignRole.isPending
+                        account.clerkUserId === user.clerkUserId ||
+                        assignRole.isPending
                       }
                       onChange={event =>
                         assignRole.mutate({
-                          openId: account.openId,
+                          clerkUserId: account.clerkUserId,
                           role: event.target.value as PlatformRole,
                         })
                       }

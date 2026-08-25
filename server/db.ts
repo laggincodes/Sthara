@@ -13,9 +13,16 @@ import {
   INITIAL_CADASTRE_RECORDS,
   type CadastreRecord,
 } from "@shared/cadastre";
-import { ENV } from "./_core/env";
 
 let _db: ReturnType<typeof drizzle> | null = null;
+
+function isBootstrapAdministrator(clerkUserId: string) {
+  const bootstrapIds = (process.env.CLERK_BOOTSTRAP_ADMIN_USER_IDS ?? "")
+    .split(",")
+    .map(value => value.trim())
+    .filter(Boolean);
+  return bootstrapIds.includes(clerkUserId);
+}
 
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
@@ -30,10 +37,12 @@ export async function getDb() {
 }
 
 export async function upsertUser(user: InsertUser): Promise<void> {
-  if (!user.openId) throw new Error("User openId is required for upsert");
+  if (!user.clerkUserId) {
+    throw new Error("Clerk user ID is required for upsert");
+  }
   const db = await getDb();
   if (!db) return;
-  const values: InsertUser = { openId: user.openId };
+  const values: InsertUser = { clerkUserId: user.clerkUserId };
   const updateSet: Record<string, unknown> = {};
   (["name", "email", "loginMethod"] as const).forEach(field => {
     if (user[field] !== undefined) {
@@ -42,7 +51,7 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     }
   });
   values.role =
-    user.role ?? (user.openId === ENV.ownerOpenId ? "admin" : "citizen");
+    user.role ?? (isBootstrapAdministrator(user.clerkUserId) ? "admin" : "citizen");
   updateSet.role = values.role;
   values.lastSignedIn = user.lastSignedIn ?? new Date();
   updateSet.lastSignedIn = values.lastSignedIn;
@@ -52,13 +61,13 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     .onDuplicateKeyUpdate({ set: updateSet });
 }
 
-export async function getUserByOpenId(openId: string) {
+export async function getUserByClerkUserId(clerkUserId: string) {
   const db = await getDb();
   if (!db) return undefined;
   const result = await db
     .select()
     .from(users)
-    .where(eq(users.openId, openId))
+    .where(eq(users.clerkUserId, clerkUserId))
     .limit(1);
   return result[0];
 }
@@ -133,7 +142,7 @@ export type PlatformRole =
   | "admin";
 
 export async function createAuditLog(input: {
-  actorOpenId: string;
+  actorClerkUserId: string;
   actorRole: PlatformRole;
   action: string;
   entityType: string;
@@ -152,7 +161,7 @@ export async function getPlatformUsers() {
   if (!db) return [];
   return db
     .select({
-      openId: users.openId,
+      clerkUserId: users.clerkUserId,
       name: users.name,
       email: users.email,
       role: users.role,
@@ -164,25 +173,25 @@ export async function getPlatformUsers() {
 }
 
 export async function setPlatformUserRole(input: {
-  openId: string;
+  clerkUserId: string;
   role: PlatformRole;
-  actorOpenId: string;
+  actorClerkUserId: string;
   actorRole: PlatformRole;
 }) {
   const db = await getDb();
   if (!db) throw new Error("Platform database is unavailable.");
-  const existing = await getUserByOpenId(input.openId);
+  const existing = await getUserByClerkUserId(input.clerkUserId);
   if (!existing) throw new Error("The requested user was not found.");
   await db
     .update(users)
     .set({ role: input.role })
-    .where(eq(users.openId, input.openId));
+    .where(eq(users.clerkUserId, input.clerkUserId));
   await createAuditLog({
-    actorOpenId: input.actorOpenId,
+    actorClerkUserId: input.actorClerkUserId,
     actorRole: input.actorRole,
     action: "role_assigned",
     entityType: "user",
-    entityId: input.openId,
+    entityId: input.clerkUserId,
     oldValue: existing.role,
     newValue: input.role,
   });
@@ -198,7 +207,7 @@ export async function createIssueReport(input: {
     | "missing_property"
     | "parcel_boundary";
   details: string;
-  reportedBy: string;
+  reportedByClerkUserId: string;
   actorRole: PlatformRole;
 }) {
   const db = await getDb();
@@ -207,11 +216,11 @@ export async function createIssueReport(input: {
     recordReference: input.recordReference,
     category: input.category,
     details: input.details,
-    reportedBy: input.reportedBy,
+    reportedByClerkUserId: input.reportedByClerkUserId,
   });
   const id = String(result[0].insertId);
   await createAuditLog({
-    actorOpenId: input.reportedBy,
+    actorClerkUserId: input.reportedByClerkUserId,
     actorRole: input.actorRole,
     action: "issue_report_submitted",
     entityType: "issue_report",
@@ -235,7 +244,7 @@ export async function createVerificationSubmission(input: {
   sourceUrl?: string;
   sourceReference: string;
   notes: string;
-  submittedBy: string;
+  submittedByClerkUserId: string;
   actorRole: PlatformRole;
 }) {
   const db = await getDb();
@@ -246,11 +255,11 @@ export async function createVerificationSubmission(input: {
     sourceUrl: input.sourceUrl ?? null,
     sourceReference: input.sourceReference,
     notes: input.notes,
-    submittedBy: input.submittedBy,
+    submittedByClerkUserId: input.submittedByClerkUserId,
   });
   const id = String(result[0].insertId);
   await createAuditLog({
-    actorOpenId: input.submittedBy,
+    actorClerkUserId: input.submittedByClerkUserId,
     actorRole: input.actorRole,
     action: "evidence_submitted",
     entityType: "verification_submission",
@@ -277,7 +286,7 @@ export async function reviewVerificationSubmission(input: {
   id: number;
   status: "under_review" | "verified" | "rejected";
   reviewNote: string;
-  reviewerOpenId: string;
+  reviewerClerkUserId: string;
   reviewerRole: PlatformRole;
 }) {
   const db = await getDb();
@@ -293,12 +302,12 @@ export async function reviewVerificationSubmission(input: {
     .set({
       status: input.status,
       reviewNote: input.reviewNote,
-      reviewedBy: input.reviewerOpenId,
+      reviewedByClerkUserId: input.reviewerClerkUserId,
       reviewedAt: new Date(),
     })
     .where(eq(verificationSubmissions.id, input.id));
   await createAuditLog({
-    actorOpenId: input.reviewerOpenId,
+    actorClerkUserId: input.reviewerClerkUserId,
     actorRole: input.reviewerRole,
     action: "evidence_reviewed",
     entityType: "verification_submission",

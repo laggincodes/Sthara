@@ -59,14 +59,15 @@ describe("secure role-based cadastral platform foundation", () => {
   });
 
   it("uses the configured secure identity flow rather than implementing an unsafe frontend role selector", () => {
-    expect(roleConsoleSource).toContain("Continue to secure sign-in");
-    expect(roleConsoleSource).toContain("startLogin()");
+    expect(roleConsoleSource).toContain('from "@clerk/react"');
+    expect(roleConsoleSource).toContain("<SignIn");
+    expect(roleConsoleSource).toContain("<SignUp");
+    expect(roleConsoleSource).toContain("Clerk manages identity, passwords");
     expect(roleConsoleSource).toContain(
       "The interface cannot grant permissions."
     );
     expect(roleConsoleSource).not.toContain("Sign up as Authority");
-    expect(roleConsoleSource).toContain("ulpin:post-login-path");
-    expect(appSource).toContain("PostLoginRedirect");
-    expect(appSource).toContain('setLocation("/dashboard")');
+    expect(appSource).toContain('path="/access"');
+    expect(appSource).toContain('path="/dashboard"');
   });
 });

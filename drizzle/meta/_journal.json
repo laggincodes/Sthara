@@ -15,6 +15,13 @@
       "when": 1787662769379,
       "tag": "0001_cloudy_angel",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1787666547379,
+      "tag": "0002_needy_golden_guardian",
+      "breakpoints": true
     }
   ]
 }

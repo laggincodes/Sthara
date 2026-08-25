@@ -23,7 +23,7 @@ export const verificationStatus = mysqlEnum("verificationStatus", [
 
 export const users = mysqlTable("users", {
   id: int("id").autoincrement().primaryKey(),
-  openId: varchar("openId", { length: 64 }).notNull().unique(),
+  clerkUserId: varchar("clerkUserId", { length: 96 }).notNull().unique(),
   name: text("name"),
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
@@ -77,8 +77,10 @@ export const verificationSubmissions = mysqlTable("verificationSubmissions", {
   sourceReference: varchar("sourceReference", { length: 320 }).notNull(),
   notes: text("notes").notNull(),
   status: verificationStatus.default("submitted").notNull(),
-  submittedBy: varchar("submittedBy", { length: 64 }).notNull(),
-  reviewedBy: varchar("reviewedBy", { length: 64 }),
+  submittedByClerkUserId: varchar("submittedByClerkUserId", {
+    length: 96,
+  }).notNull(),
+  reviewedByClerkUserId: varchar("reviewedByClerkUserId", { length: 96 }),
   reviewNote: text("reviewNote"),
   reviewedAt: timestamp("reviewedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -99,14 +101,16 @@ export const issueReports = mysqlTable("issueReports", {
   status: mysqlEnum("status", ["submitted", "under_review", "closed"])
     .default("submitted")
     .notNull(),
-  reportedBy: varchar("reportedBy", { length: 64 }).notNull(),
+  reportedByClerkUserId: varchar("reportedByClerkUserId", {
+    length: 96,
+  }).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
 export const auditLogs = mysqlTable("auditLogs", {
   id: int("id").autoincrement().primaryKey(),
-  actorOpenId: varchar("actorOpenId", { length: 64 }).notNull(),
+  actorClerkUserId: varchar("actorClerkUserId", { length: 96 }).notNull(),
   actorRole: platformRole.notNull(),
   action: varchar("action", { length: 96 }).notNull(),
   entityType: varchar("entityType", { length: 96 }).notNull(),

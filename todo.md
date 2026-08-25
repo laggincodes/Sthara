@@ -287,3 +287,9 @@
 - [x] Add audit-ready, source-aware verification workflow records that keep submitted geometry and evidence non-authoritative until review.
 - [x] Build protected role dashboards that preserve the existing Cesium/PostGIS workspace and separate public, review, aggregate, and admin capabilities.
 - [x] Add role, audit, and protected-route regression coverage; validate responsive behavior and source/evidence safeguards.
+
+- [x] Enable Clerk guidance and configure Clerk-only credentials without storing passwords in the application database.
+- [x] Replace the existing app identity path with Clerk session verification and persist Clerk user IDs in the application users table.
+- [x] Preserve server-assigned Citizen, Authority, Government Employee, and Administrator roles, verification records, property associations, and audit links against Clerk user IDs.
+- [x] Replace the access portal with Clerk-hosted sign-in/sign-up flows and validate Clerk-backed protected dashboards.
+- [x] Add migration/regression coverage, validate production build, and publish the Clerk identity migration.

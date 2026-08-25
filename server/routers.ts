@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { COOKIE_NAME } from "@shared/const";
 import {
   fallbackCadastreSearch,
   mergeAiSearchResponse,
@@ -15,13 +14,12 @@ import {
   getPlatformDashboardSummary,
   getPlatformUsers,
   getRecentAuditLogs,
-  getUserByOpenId,
+  getUserByClerkUserId,
   getVerificationSubmissions,
   reviewVerificationSubmission,
   setPlatformUserRole,
 } from "./db";
 import { extractEvidenceMetadata } from "./evidenceExtraction";
-import { getSessionCookieOptions } from "./_core/cookies";
 import { invokeLLM } from "./_core/llm";
 import { systemRouter } from "./_core/systemRouter";
 import {
@@ -135,7 +133,7 @@ const reviewSubmissionInput = z.object({
 });
 
 const assignRoleInput = z.object({
-  openId: z.string().trim().min(3).max(64),
+  clerkUserId: z.string().trim().min(3).max(96),
   role: z.enum(["citizen", "authority", "government_employee", "admin"]),
 });
 
@@ -153,13 +151,11 @@ export const appRouter = router({
   auth: router({
     me: publicProcedure.query(async opts => {
       if (!opts.ctx.user) return null;
-      return (await getUserByOpenId(opts.ctx.user.openId)) ?? opts.ctx.user;
+      return (
+        (await getUserByClerkUserId(opts.ctx.user.clerkUserId)) ?? opts.ctx.user
+      );
     }),
-    logout: publicProcedure.mutation(({ ctx }) => {
-      const cookieOptions = getSessionCookieOptions(ctx.req);
-      ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
-      return { success: true } as const;
-    }),
+    logout: publicProcedure.mutation(() => ({ success: true } as const)),
   }),
   postgis: router({
     geojson: publicProcedure.query(async () => getPostgisFeatureCollection()),
@@ -283,10 +279,10 @@ export const appRouter = router({
       .mutation(async ({ input, ctx }) => {
         const result = await updatePostgisFootprint({
           ...input,
-          editorName: ctx.user.name?.trim() || ctx.user.openId,
+          editorName: ctx.user.name?.trim() || ctx.user.clerkUserId,
         });
         await createAuditLog({
-          actorOpenId: ctx.user.openId,
+          actorClerkUserId: ctx.user.clerkUserId,
           actorRole: ctx.user.role,
           action: "authoritative_footprint_updated",
           entityType: "postgis_footprint",
@@ -408,7 +404,7 @@ export const appRouter = router({
           validationSummary: validation.findings.join(" "),
         });
         await createAuditLog({
-          actorOpenId: ctx.user.openId,
+          actorClerkUserId: ctx.user.clerkUserId,
           actorRole: ctx.user.role,
           action: "evidence_file_uploaded",
           entityType: "evidence_file",
@@ -442,7 +438,7 @@ export const appRouter = router({
       .mutation(async ({ input, ctx }) =>
         createIssueReport({
           ...input,
-          reportedBy: ctx.user.openId,
+          reportedByClerkUserId: ctx.user.clerkUserId,
           actorRole: ctx.user.role,
         })
       ),
@@ -451,7 +447,7 @@ export const appRouter = router({
       .mutation(async ({ input, ctx }) =>
         createVerificationSubmission({
           ...input,
-          submittedBy: ctx.user.openId,
+          submittedByClerkUserId: ctx.user.clerkUserId,
           actorRole: ctx.user.role,
         })
       ),
@@ -463,7 +459,7 @@ export const appRouter = router({
       .mutation(async ({ input, ctx }) =>
         reviewVerificationSubmission({
           ...input,
-          reviewerOpenId: ctx.user.openId,
+          reviewerClerkUserId: ctx.user.clerkUserId,
           reviewerRole: ctx.user.role,
         })
       ),
@@ -474,7 +470,7 @@ export const appRouter = router({
     assignRole: adminProcedure
       .input(assignRoleInput)
       .mutation(async ({ input, ctx }) => {
-        if (input.openId === ctx.user.openId) {
+        if (input.clerkUserId === ctx.user.clerkUserId) {
           throw new TRPCError({
             code: "BAD_REQUEST",
             message: "Administrators cannot change their own role.",
@@ -482,7 +478,7 @@ export const appRouter = router({
         }
         return setPlatformUserRole({
           ...input,
-          actorOpenId: ctx.user.openId,
+          actorClerkUserId: ctx.user.clerkUserId,
           actorRole: ctx.user.role,
         });
       }),
