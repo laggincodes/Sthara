@@ -4939,6 +4939,48 @@ input:focus-visible {
 .role-console {
   padding-bottom: 54px;
 }
+.role-console--profile-unavailable {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: clamp(24px, 6vw, 72px);
+}
+.role-console__profile-unavailable {
+  display: grid;
+  gap: 14px;
+  width: min(100%, 620px);
+  padding: clamp(26px, 5vw, 46px);
+  color: #eafff9;
+  background: rgba(9, 26, 31, 0.92);
+  border: 1px solid rgba(121, 231, 223, 0.32);
+  border-radius: 16px;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.34);
+}
+.role-console__profile-unavailable > svg,
+.role-console__profile-unavailable > span {
+  color: #7de8df;
+}
+.role-console__profile-unavailable > span {
+  font: 600 9px "IBM Plex Mono", monospace;
+  letter-spacing: 0.11em;
+}
+.role-console__profile-unavailable h1 {
+  margin: 0;
+  font: 600 clamp(30px, 4vw, 48px) / 1 "Space Grotesk", sans-serif;
+  letter-spacing: -0.04em;
+}
+.role-console__profile-unavailable p {
+  margin: 0;
+  color: #a9c9c4;
+  font-size: 14px;
+  line-height: 1.65;
+}
+.role-console__profile-unavailable > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 6px;
+}
 .role-console__header {
   display: flex;
   justify-content: space-between;

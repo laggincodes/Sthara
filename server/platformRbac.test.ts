@@ -20,7 +20,7 @@ describe("secure role-based cadastral platform foundation", () => {
     expect(schemaSource).toContain('"authority"');
     expect(schemaSource).toContain('"government_employee"');
     expect(schemaSource).toContain('"admin"');
-    expect(schemaSource).toContain('platformRole.default("citizen")');
+    expect(schemaSource).toContain('platformRole("role").default("citizen")');
   });
 
   it("keeps privilege checks in backend procedures instead of trusting role-console UI", () => {

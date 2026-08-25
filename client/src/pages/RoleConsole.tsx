@@ -135,8 +135,41 @@ export function AccessPortal() {
   );
 }
 
+function ApplicationProfileUnavailable({
+  onRetry,
+  onSignOut,
+}: {
+  onRetry: () => void;
+  onSignOut: () => void;
+}) {
+  return (
+    <main className="role-console role-console--profile-unavailable">
+      <section className="role-console__profile-unavailable" aria-labelledby="profile-unavailable-title">
+        <ShieldCheck size={28} />
+        <span>SECURE SESSION CONFIRMED</span>
+        <h1 id="profile-unavailable-title">Preparing your platform profile</h1>
+        <p>
+          Your Clerk sign-in remains valid, but the server could not load the
+          application profile and backend-assigned role required for this
+          dashboard. The app will not send you back through sign-in or grant a
+          client-side role.
+        </p>
+        <div>
+          <Button type="button" onClick={onRetry}>
+            Retry profile connection
+          </Button>
+          <Button type="button" variant="outline" onClick={onSignOut}>
+            <LogOut size={15} />
+            Sign out safely
+          </Button>
+        </div>
+      </section>
+    </main>
+  );
+}
+
 export default function RoleConsole() {
-  const { user, loading, logout } = useAuth();
+  const { user, loading, logout, refresh, isSignedIn } = useAuth();
   const [, setLocation] = useLocation();
   const [issueForm, setIssueForm] = useState({
     recordReference: "",
@@ -232,6 +265,14 @@ export default function RoleConsole() {
   if (loading) {
     return (
       <div className="role-console__loading">Confirming secure session…</div>
+    );
+  }
+  if (isSignedIn && (!user || !role)) {
+    return (
+      <ApplicationProfileUnavailable
+        onRetry={() => void refresh()}
+        onSignOut={() => void logout()}
+      />
     );
   }
   if (!user || !role) return <AccessPortal />;

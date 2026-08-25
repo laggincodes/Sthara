@@ -1,5 +1,7 @@
 import { desc, eq } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
+import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
+import * as schema from "../drizzle/schema";
 import {
   auditLogs,
   cadastreRecords,
@@ -14,7 +16,12 @@ import {
   type CadastreRecord,
 } from "@shared/cadastre";
 
-let _db: ReturnType<typeof drizzle> | null = null;
+let _db: NodePgDatabase<typeof schema> | null = null;
+let _pool: Pool | null = null;
+
+function getApplicationDatabaseUrl() {
+  return process.env.POSTGIS_DATABASE_URL ?? process.env.DATABASE_URL;
+}
 
 function isBootstrapAdministrator(clerkUserId: string) {
   const bootstrapIds = (process.env.CLERK_BOOTSTRAP_ADMIN_USER_IDS ?? "")
@@ -25,9 +32,17 @@ function isBootstrapAdministrator(clerkUserId: string) {
 }
 
 export async function getDb() {
-  if (!_db && process.env.DATABASE_URL) {
+  const connectionString = getApplicationDatabaseUrl();
+  if (!_db && connectionString) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      if (!connectionString.startsWith("postgres")) {
+        console.warn(
+          "[Database] Clerk application users require a PostgreSQL connection."
+        );
+        return null;
+      }
+      _pool = new Pool({ connectionString });
+      _db = drizzle(_pool, { schema });
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
@@ -43,7 +58,7 @@ export async function upsertUser(user: InsertUser): Promise<void> {
   const db = await getDb();
   if (!db) return;
   const values: InsertUser = { clerkUserId: user.clerkUserId };
-  const updateSet: Record<string, unknown> = {};
+  const updateSet: Partial<InsertUser> = {};
   (["name", "email", "loginMethod"] as const).forEach(field => {
     if (user[field] !== undefined) {
       values[field] = user[field] ?? null;
@@ -58,7 +73,7 @@ export async function upsertUser(user: InsertUser): Promise<void> {
   await db
     .insert(users)
     .values(values)
-    .onDuplicateKeyUpdate({ set: updateSet });
+    .onConflictDoUpdate({ target: users.clerkUserId, set: updateSet });
 }
 
 export async function getUserByClerkUserId(clerkUserId: string) {
@@ -212,13 +227,16 @@ export async function createIssueReport(input: {
 }) {
   const db = await getDb();
   if (!db) throw new Error("Platform database is unavailable.");
-  const result = await db.insert(issueReports).values({
-    recordReference: input.recordReference,
-    category: input.category,
-    details: input.details,
-    reportedByClerkUserId: input.reportedByClerkUserId,
-  });
-  const id = String(result[0].insertId);
+  const [created] = await db
+    .insert(issueReports)
+    .values({
+      recordReference: input.recordReference,
+      category: input.category,
+      details: input.details,
+      reportedByClerkUserId: input.reportedByClerkUserId,
+    })
+    .returning({ id: issueReports.id });
+  const id = String(created?.id);
   await createAuditLog({
     actorClerkUserId: input.reportedByClerkUserId,
     actorRole: input.actorRole,
@@ -249,15 +267,18 @@ export async function createVerificationSubmission(input: {
 }) {
   const db = await getDb();
   if (!db) throw new Error("Platform database is unavailable.");
-  const result = await db.insert(verificationSubmissions).values({
-    recordReference: input.recordReference,
-    submissionType: input.submissionType,
-    sourceUrl: input.sourceUrl ?? null,
-    sourceReference: input.sourceReference,
-    notes: input.notes,
-    submittedByClerkUserId: input.submittedByClerkUserId,
-  });
-  const id = String(result[0].insertId);
+  const [created] = await db
+    .insert(verificationSubmissions)
+    .values({
+      recordReference: input.recordReference,
+      submissionType: input.submissionType,
+      sourceUrl: input.sourceUrl ?? null,
+      sourceReference: input.sourceReference,
+      notes: input.notes,
+      submittedByClerkUserId: input.submittedByClerkUserId,
+    })
+    .returning({ id: verificationSubmissions.id });
+  const id = String(created?.id);
   await createAuditLog({
     actorClerkUserId: input.submittedByClerkUserId,
     actorRole: input.actorRole,

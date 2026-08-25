@@ -31,6 +31,7 @@ export function useAuth(options?: UseAuthOptions) {
       loading: !isLoaded || (Boolean(isSignedIn) && meQuery.isLoading),
       error: meQuery.error ?? null,
       isAuthenticated: Boolean(isSignedIn && meQuery.data),
+      isSignedIn: Boolean(isSignedIn),
     }),
     [clerkUser, isLoaded, isSignedIn, meQuery.data, meQuery.error, meQuery.isLoading]
   );

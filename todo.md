@@ -314,3 +314,5 @@
 - [x] Remove the unresolved `%VITE_ANALYTICS_ENDPOINT%/umami` client request from the Vercel build without affecting Clerk or application security.
 - [x] Replace the fragile Clerk internal-DOM CSS selector with supported appearance styling and verify the warning no longer appears.
 - [x] Identify and remove any application-owned `unload` listener causing the Vercel permission-policy violation, then verify stable page loading.
+- [ ] Prevent a Clerk readiness/API timing race from repeatedly redirecting an authenticated dashboard visitor back to the access portal.
+- [ ] Apply the reviewed non-destructive `drizzle/postgres/0000_vengeful_wallflower.sql` migration to the Neon database selected by `POSTGIS_DATABASE_URL`, then verify first-sign-in profile creation and `/dashboard` access.
