@@ -306,3 +306,5 @@
 - [x] Restrict dashboard settings to server-assigned Administrator accounts and verify unauthenticated, Citizen, and Authority users cannot access protected settings behavior.
 - [x] Prepare Vercel configuration and a complete environment-variable handoff for this full-stack Clerk/Cesium application, without committing secrets.
 - [ ] Trigger and verify the GitHub-linked Vercel production deployment after the current code is synchronized; deployment parity depends on the required Vercel environment variables and portable storage/AI provider setup.
+- [ ] Disable only Vercel SSO protection for the ready production deployment and verify public access while retaining Clerk, backend RBAC, API authentication, and all evidence safeguards.
+- [ ] Redeploy Vercel production after the user-confirmed environment variables are present, then verify the mounted Clerk form and public entry route.

@@ -15,3 +15,7 @@ Immediately after publishing checkpoint `5680ff8b`, two cache-busted requests to
 ## Branded Clerk follow-up
 
 The local updated entry route retained the secure-access shell and sign-in/create-account controls during two browser checks. A subsequent browser check confirmed that the mounted Clerk form uses the dark application palette with cyan primary controls. The unauthenticated dashboard profile control redirects to `/access?returnTo=/overview` rather than exposing session options or protected settings.
+
+## Vercel public-access verification
+
+Vercel SSO protection was disabled only after explicit user authorization. Password protection and trusted-IP protections remain disabled as before; the application-owned Clerk, server-side RBAC, API authentication, and evidence safeguards were not changed. The ready production deployment at `sih-2026-bjpc802x4-gautam-kumar01s-projects.vercel.app` now reaches the 3D ULPIN-VPM secure-access shell rather than redirecting to Vercel login. The hosted Clerk component was still mounting in the fresh Vercel snapshot and must be rechecked after its remote script completes.
