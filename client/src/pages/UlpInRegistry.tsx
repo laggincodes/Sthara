@@ -1,6 +1,5 @@
 import { trpc } from "@/lib/trpc";
 import {
-<<<<<<< HEAD
   ArrowDownAZ,
   ArrowUpAZ,
   ArrowLeft,
@@ -23,6 +22,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
+import { toast as sonnerToast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -121,6 +121,7 @@ export default function UlpInRegistry() {
   >(readPersonalFavoriteFolders);
   const [favoriteFolderFilter, setFavoriteFolderFilter] = useState("all");
   const [favoriteFolderDraft, setFavoriteFolderDraft] = useState("");
+  const [folderSavePulse, setFolderSavePulse] = useState("");
   const [comparisonRecords, setComparisonRecords] = useState<SourceRecord[]>(
     []
   );
@@ -157,39 +158,17 @@ export default function UlpInRegistry() {
       ).sort((left, right) => left.localeCompare(right)),
     [personalFavoriteFolders]
   );
-=======
-  ArrowLeft,
-  FileSearch,
-  LockKeyhole,
-  ScanSearch,
-  Search,
-  ShieldCheck,
-} from "lucide-react";
-import { useMemo, useState } from "react";
-import { useLocation } from "wouter";
-
-export default function UlpInRegistry() {
-  const [, setLocation] = useLocation();
-  const [query, setQuery] = useState("");
-  const geometry = trpc.postgis.geojson.useQuery();
-  const records = geometry.data?.features ?? [];
->>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
   const recordCountLabel = geometry.isLoading
     ? "Loading live source records…"
     : `${records.length} source-attributed footprints available for discovery`;
   const filteredRecords = useMemo(() => {
     const normalized = query.trim().toLowerCase();
-<<<<<<< HEAD
-=======
-    if (!normalized) return records.slice(0, 8);
->>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
     return records
       .filter(feature => {
         const name =
           typeof feature.properties.name === "string"
             ? feature.properties.name
             : "";
-<<<<<<< HEAD
         const source =
           typeof feature.properties.source === "string"
             ? feature.properties.source
@@ -265,9 +244,10 @@ export default function UlpInRegistry() {
   };
   const assignFavoriteFolder = (recordId: string, folder: string) => {
     if (!recordId) return;
+    const normalizedFolder = folder.trim();
     setPersonalFavoriteFolders(current => {
       const next = { ...current };
-      if (folder.trim()) next[recordId] = folder.trim();
+      if (normalizedFolder) next[recordId] = normalizedFolder;
       else delete next[recordId];
       window.localStorage.setItem(
         PERSONAL_FAVORITE_FOLDERS_STORAGE_KEY,
@@ -275,6 +255,18 @@ export default function UlpInRegistry() {
       );
       return next;
     });
+    setFolderSavePulse(recordId);
+    window.setTimeout(() => setFolderSavePulse(""), 650);
+    sonnerToast.success(
+      normalizedFolder
+        ? "Favorite folder updated"
+        : "Favorite moved to unfiled",
+      {
+        description: normalizedFolder
+          ? `Saved to ${normalizedFolder}. This organization stays local to your browser.`
+          : "The browser-local folder assignment was cleared.",
+      }
+    );
   };
   const toggleComparisonRecord = (record: SourceRecord) => {
     const recordId = recordText(record.properties.ulpin, "");
@@ -452,14 +444,6 @@ export default function UlpInRegistry() {
       openRecordDetails(sharedRecord);
     }
   }, [records, selectedRecordId, sharedRecordId]);
-=======
-        return `${feature.properties.ulpin ?? ""} ${name}`
-          .toLowerCase()
-          .includes(normalized);
-      })
-      .slice(0, 8);
-  }, [query, records]);
->>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
 
   return (
     <main className="registry-workspace">
@@ -504,7 +488,6 @@ export default function UlpInRegistry() {
 
         <div className="registry-layout">
           <section className="registry-records">
-<<<<<<< HEAD
             <div
               className="registry-summary-panel"
               aria-label="Registry summary"
@@ -536,14 +519,11 @@ export default function UlpInRegistry() {
                 </div>
               </article>
             </div>
-=======
->>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
             <div className="registry-records-heading">
               <div>
                 <p>Live source records</p>
                 <span>{recordCountLabel}</span>
               </div>
-<<<<<<< HEAD
               <div className="registry-discovery-controls">
                 <label>
                   <Search size={15} />
@@ -681,18 +661,6 @@ export default function UlpInRegistry() {
                 </ol>
               )}
             </section>
-=======
-              <label>
-                <Search size={15} />
-                <input
-                  value={query}
-                  onChange={event => setQuery(event.target.value)}
-                  placeholder="Search source record or place"
-                  aria-label="Search source footprint records"
-                />
-              </label>
-            </div>
->>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
             <div
               className="registry-table"
               role="table"
@@ -702,23 +670,14 @@ export default function UlpInRegistry() {
                 <span>Source record</span>
                 <span>Footprint area</span>
                 <span>Evidence state</span>
-<<<<<<< HEAD
                 <span>Actions</span>
-=======
-                <span />
->>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
               </div>
               {geometry.isLoading ? (
                 <div className="registry-empty">
                   <FileSearch size={18} /> Loading live source records…
                 </div>
-<<<<<<< HEAD
               ) : visibleRecords.length ? (
                 visibleRecords.map(feature => {
-=======
-              ) : filteredRecords.length ? (
-                filteredRecords.map(feature => {
->>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
                   const name =
                     typeof feature.properties.name === "string"
                       ? feature.properties.name
@@ -728,22 +687,18 @@ export default function UlpInRegistry() {
                     "number"
                       ? `${feature.properties.footprintAreaSquareMetres.toLocaleString()} m²`
                       : "Area unavailable";
-<<<<<<< HEAD
                   const recordId = String(feature.properties.ulpin ?? "");
                   const isFavorite = personalFavorites.includes(recordId);
                   const isCompared = comparisonRecords.some(
                     record =>
                       recordText(record.properties.ulpin, "") === recordId
                   );
-=======
->>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
                   return (
                     <div
                       className="registry-table-row"
                       role="row"
                       key={String(feature.properties.ulpin)}
                     >
-<<<<<<< HEAD
                       <button
                         type="button"
                         className="registry-record-focus"
@@ -753,17 +708,10 @@ export default function UlpInRegistry() {
                         <b>{name}</b>
                         <small>{String(feature.properties.ulpin)}</small>
                       </button>
-=======
-                      <span>
-                        <b>{name}</b>
-                        <small>{String(feature.properties.ulpin)}</small>
-                      </span>
->>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
                       <span>{area}</span>
                       <span>
                         <i /> Public footprint only
                       </span>
-<<<<<<< HEAD
                       <span className="registry-row-actions">
                         <button
                           type="button"
@@ -820,18 +768,6 @@ export default function UlpInRegistry() {
                           <ScanSearch size={14} /> Details
                         </button>
                       </span>
-=======
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setLocation(
-                            `/workspace?segment=buildings&site=${encodeURIComponent(String(feature.properties.ulpin))}`
-                          )
-                        }
-                      >
-                        <ScanSearch size={14} /> Inspect
-                      </button>
->>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
                     </div>
                   );
                 })
@@ -842,7 +778,6 @@ export default function UlpInRegistry() {
                 </div>
               )}
             </div>
-<<<<<<< HEAD
             {filteredRecords.length > 8 && (
               <button
                 type="button"
@@ -854,8 +789,6 @@ export default function UlpInRegistry() {
                   : `Show all ${filteredRecords.length} matching records`}
               </button>
             )}
-=======
->>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
           </section>
 
           <aside className="registry-gate">
@@ -891,7 +824,6 @@ export default function UlpInRegistry() {
           </aside>
         </div>
       </section>
-<<<<<<< HEAD
       <Dialog
         open={Boolean(selectedRecord)}
         onOpenChange={open => {
@@ -1025,7 +957,9 @@ export default function UlpInRegistry() {
               />
             </label>
           </section>
-          <section className="registry-favorite-folder-panel">
+          <section
+            className={`registry-favorite-folder-panel${folderSavePulse === selectedRecordId ? " folder-save-success" : ""}`}
+          >
             <p>
               <Folder size={14} /> Favorite folder / category
             </p>
@@ -1109,8 +1043,6 @@ export default function UlpInRegistry() {
           </div>
         </DialogContent>
       </Dialog>
-=======
->>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
     </main>
   );
 }

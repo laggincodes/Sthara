@@ -116,6 +116,9 @@ describe("dashboard usability controls", () => {
     expect(registrySource).toContain("Unfiled favorites");
     expect(registrySource).toContain('favoriteFolderFilter === ""');
     expect(registrySource).toContain("assignFavoriteFolder");
+    expect(registrySource).toContain("Favorite folder updated");
+    expect(registrySource).toContain("folder-save-success");
+    expect(registrySource).toContain("sonnerToast.success");
   });
 
   it("limits comparison to two source records and carries both identifiers to combined source context", () => {
@@ -127,6 +130,17 @@ describe("dashboard usability controls", () => {
     expect(registrySource).toContain("/workspace?segment=buildings&compare=");
     expect(workspaceSource).toContain("activeMapUlpins");
     expect(workspaceSource).toContain("source record comparison");
+  });
+
+  it("keeps the workspace map focused on preview and approximate measurements", () => {
+    expect(cesiumViewerSource).toContain("measurementControlsOnly");
+    expect(workspaceSource).toContain("measurementControlsOnly");
+    expect(workspaceSource).toContain("spatial-below-map");
+    expect(dashboardStyles).toContain(".spatial-map-column");
+    expect(dashboardStyles).toContain(".spatial-below-map");
+    expect(dashboardStyles).toContain(
+      ".spatial-model-stage .cesium-focus-popup"
+    );
   });
 
   it("reserves a non-overlapping control zone and keeps small-screen Registry controls usable", () => {

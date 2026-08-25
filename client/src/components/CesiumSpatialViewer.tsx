@@ -4,7 +4,6 @@ import {
   matchesMapEvidenceFilter,
   type MapEvidenceFilter,
 } from "@shared/evidenceMapFilter";
-<<<<<<< HEAD
 import type {
   Cartesian2 as CesiumCartesian2,
   Cartesian3 as CesiumCartesian3,
@@ -13,28 +12,6 @@ import type {
   Viewer as CesiumViewer,
 } from "cesium";
 import { AlertTriangle, LoaderCircle, RefreshCw } from "lucide-react";
-=======
-import "cesium/Build/Cesium/Widgets/widgets.css";
-import {
-  Cartesian2,
-  Cartesian3,
-  Color,
-  ColorMaterialProperty,
-  ConstantProperty,
-  defined,
-  EllipsoidTerrainProvider,
-  Entity,
-  GeoJsonDataSource,
-  HeadingPitchRange,
-  Ion,
-  LabelGraphics,
-  PointGraphics,
-  PolygonGraphics,
-  PolygonHierarchy,
-  ScreenSpaceEventType,
-  Viewer,
-} from "cesium";
->>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
 import { useEffect, useRef, useState } from "react";
 
 export type MapCommand = {
@@ -60,7 +37,6 @@ export type SyntheticVisualLayers = {
   simulatedLidarPointCloud: boolean;
 };
 
-<<<<<<< HEAD
 type FocusSummary = {
   name: string;
   ulpin: string;
@@ -68,8 +44,6 @@ type FocusSummary = {
   comparisonCount?: number;
 };
 
-=======
->>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
 function featureLayer(
   properties: Record<string, unknown>
 ): keyof CesiumLayerFlags {
@@ -92,6 +66,7 @@ export function CesiumSpatialViewer({
     simulatedDroneImagery: false,
     simulatedLidarPointCloud: false,
   },
+  measurementControlsOnly = false,
   onSyntheticDemoSelect,
   focusUlpins,
   onFeatureSelect,
@@ -112,6 +87,7 @@ export function CesiumSpatialViewer({
   };
   syntheticDemoView?: "2d" | "3d";
   syntheticVisualLayers?: SyntheticVisualLayers;
+  measurementControlsOnly?: boolean;
   onSyntheticDemoSelect?: () => void;
   focusUlpins?: string[];
   onFeatureSelect?: (feature: {
@@ -119,7 +95,6 @@ export function CesiumSpatialViewer({
     properties: Record<string, unknown>;
   }) => void;
 }) {
-<<<<<<< HEAD
   const cesiumRuntime = (
     window as Window & { Cesium?: typeof import("cesium") }
   ).Cesium;
@@ -167,17 +142,11 @@ export function CesiumSpatialViewer({
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<CesiumViewer | null>(null);
   const dataSourceRef = useRef<CesiumGeoJsonDataSource | null>(null);
-=======
-  const containerRef = useRef<HTMLDivElement>(null);
-  const viewerRef = useRef<Viewer | null>(null);
-  const dataSourceRef = useRef<GeoJsonDataSource | null>(null);
->>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
   const osmBuildingsRef = useRef<{
     show: boolean;
     destroy?: () => void;
   } | null>(null);
   const imageryLayerRef = useRef<{ show: boolean } | null>(null);
-<<<<<<< HEAD
   const streetImageryLayerRef = useRef<{ show: boolean } | null>(null);
   const authorityMarkerRef = useRef<CesiumEntity | null>(null);
   const syntheticDemoDataSourceRef = useRef<CesiumGeoJsonDataSource | null>(
@@ -210,15 +179,6 @@ export function CesiumSpatialViewer({
   const [measurementSummary, setMeasurementSummary] = useState<string | null>(
     null
   );
-=======
-  const authorityMarkerRef = useRef<Entity | null>(null);
-  const syntheticDemoDataSourceRef = useRef<GeoJsonDataSource | null>(null);
-  const [viewerReady, setViewerReady] = useState(false);
-  const [syntheticHover, setSyntheticHover] = useState(false);
-  const [imageryState, setImageryState] = useState<
-    "loading" | "ready" | "unavailable"
-  >("loading");
->>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
   const osmBuildingsEnabled = Boolean(
     import.meta.env.VITE_CESIUM_ION_ACCESS_TOKEN
   );
@@ -226,7 +186,6 @@ export function CesiumSpatialViewer({
     refetchInterval: 20_000,
     retry: 1,
   });
-<<<<<<< HEAD
   const retryViewer = () => {
     viewerRef.current?.destroy();
     viewerRef.current = null;
@@ -286,27 +245,6 @@ export function CesiumSpatialViewer({
       return;
     }
     if (!viewer) return;
-=======
-
-  useEffect(() => {
-    if (!containerRef.current || viewerRef.current) return;
-    Ion.defaultAccessToken = import.meta.env.VITE_CESIUM_ION_ACCESS_TOKEN || "";
-    const viewer = new Viewer(containerRef.current, {
-      animation: false,
-      baseLayer: false,
-      baseLayerPicker: false,
-      fullscreenButton: false,
-      geocoder: false,
-      homeButton: false,
-      infoBox: false,
-      navigationHelpButton: false,
-      sceneModePicker: false,
-      selectionIndicator: false,
-      timeline: false,
-      terrainProvider: new EllipsoidTerrainProvider(),
-      shouldAnimate: false,
-    });
->>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
     viewer.scene.backgroundColor = Color.fromCssColorString("#081217");
     viewer.scene.globe.baseColor = Color.fromCssColorString("#162a2c");
     viewer.scene.globe.depthTestAgainstTerrain = false;
@@ -315,13 +253,8 @@ export function CesiumSpatialViewer({
     viewer.camera.setView({
       destination: Cartesian3.fromDegrees(77.6245, 12.9352, 2300),
     });
-<<<<<<< HEAD
     let highlightedEntity: CesiumEntity | null = null;
     const restoreFootprintStyle = (entity: CesiumEntity | null) => {
-=======
-    let highlightedEntity: Entity | null = null;
-    const restoreFootprintStyle = (entity: Entity | null) => {
->>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
       if (!entity?.polygon) return;
       const properties = (entity.properties?.getValue?.() ?? {}) as Record<
         string,
@@ -338,7 +271,6 @@ export function CesiumSpatialViewer({
         Color.fromCssColorString("#e9ffff")
       );
     };
-<<<<<<< HEAD
     const removeMeasurementEntities = () => {
       measurementEntitiesRef.current.forEach(entity =>
         viewer.entities.remove(entity)
@@ -479,14 +411,6 @@ export function CesiumSpatialViewer({
         const entity =
           defined(picked) && picked.id && typeof picked.id === "object"
             ? (picked.id as CesiumEntity)
-=======
-    viewer.screenSpaceEventHandler.setInputAction(
-      (movement: { position: Cartesian2 }) => {
-        const picked = viewer.scene.pick(movement.position);
-        const entity =
-          defined(picked) && picked.id && typeof picked.id === "object"
-            ? (picked.id as Entity)
->>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
             : undefined;
         const syntheticProperties = (entity?.properties?.getValue?.() ??
           {}) as Record<string, unknown>;
@@ -524,19 +448,11 @@ export function CesiumSpatialViewer({
       ScreenSpaceEventType.LEFT_CLICK
     );
     viewer.screenSpaceEventHandler.setInputAction(
-<<<<<<< HEAD
       (movement: { endPosition: CesiumCartesian2 }) => {
         const picked = viewer.scene.pick(movement.endPosition);
         const entity =
           defined(picked) && picked.id && typeof picked.id === "object"
             ? (picked.id as CesiumEntity)
-=======
-      (movement: { endPosition: Cartesian2 }) => {
-        const picked = viewer.scene.pick(movement.endPosition);
-        const entity =
-          defined(picked) && picked.id && typeof picked.id === "object"
-            ? (picked.id as Entity)
->>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
             : undefined;
         const properties = (entity?.properties?.getValue?.() ?? {}) as Record<
           string,
@@ -548,7 +464,6 @@ export function CesiumSpatialViewer({
     );
     viewerRef.current = viewer;
     setViewerReady(true);
-<<<<<<< HEAD
     setViewerState("ready");
     let cancelled = false;
     if (osmBuildingsEnabled) {
@@ -613,70 +528,17 @@ export function CesiumSpatialViewer({
           }
         }
       );
-=======
-    let cancelled = false;
-    if (osmBuildingsEnabled) {
-      void import("cesium").then(async ({ createWorldImageryAsync }) => {
-        if (cancelled || !viewerRef.current) return;
-        try {
-          const imageryProvider = await createWorldImageryAsync();
-          if (cancelled || !viewerRef.current) return;
-          const imageryLayer =
-            viewer.imageryLayers.addImageryProvider(imageryProvider);
-          imageryLayer.alpha = 0.9;
-          imageryLayerRef.current = imageryLayer;
-          setImageryState("ready");
-          viewer.scene.requestRender();
-        } catch (error) {
-          setImageryState("unavailable");
-          console.warn(
-            "[Cesium] Optional World Imagery layer unavailable",
-            error
-          );
-        }
-      });
-    } else {
-      setImageryState("unavailable");
-    }
-    if (osmBuildingsEnabled) {
-      void import("cesium").then(async ({ createOsmBuildingsAsync }) => {
-        if (cancelled || !viewerRef.current) return;
-        try {
-          const osmBuildings = await createOsmBuildingsAsync();
-          if (cancelled || !viewerRef.current) {
-            osmBuildings.destroy?.();
-            return;
-          }
-          osmBuildings.show = true;
-          viewer.scene.primitives.add(osmBuildings);
-          osmBuildingsRef.current = osmBuildings;
-          viewer.scene.requestRender();
-        } catch (error) {
-          console.warn(
-            "[Cesium] Optional OSM Buildings layer unavailable",
-            error
-          );
-        }
-      });
->>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
     }
     return () => {
       cancelled = true;
       osmBuildingsRef.current = null;
       imageryLayerRef.current = null;
-<<<<<<< HEAD
       streetImageryLayerRef.current = null;
       viewer.destroy();
       viewerRef.current = null;
       setViewerReady(false);
     };
   }, [onFeatureSelect, osmBuildingsEnabled, viewerRetryKey]);
-=======
-      viewer.destroy();
-      viewerRef.current = null;
-    };
-  }, [onFeatureSelect, osmBuildingsEnabled]);
->>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
 
   useEffect(() => {
     const osmBuildings = osmBuildingsRef.current;
@@ -686,7 +548,6 @@ export function CesiumSpatialViewer({
   }, [layers.buildings]);
 
   useEffect(() => {
-<<<<<<< HEAD
     const satelliteLayer = imageryLayerRef.current;
     const streetLayer = streetImageryLayerRef.current;
     if (satelliteLayer)
@@ -720,13 +581,6 @@ export function CesiumSpatialViewer({
       duration: 0.55,
     });
   };
-=======
-    const imageryLayer = imageryLayerRef.current;
-    if (!imageryLayer) return;
-    imageryLayer.show = layers.terrain;
-    viewerRef.current?.scene.requestRender();
-  }, [layers.terrain]);
->>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
 
   useEffect(() => {
     const viewer = viewerRef.current;
@@ -843,7 +697,6 @@ export function CesiumSpatialViewer({
       await viewer.dataSources.add(dataSource);
       if (filteredCollection.features.length > 0 && !syntheticDemoFeature) {
         if (focusUlpins?.length) {
-<<<<<<< HEAD
           const focusedEntities = dataSource.entities.values.filter(entity => {
             const properties = (entity.properties?.getValue?.() ??
               {}) as Record<string, unknown>;
@@ -890,17 +743,12 @@ export function CesiumSpatialViewer({
           } else {
             setFocusSummary(null);
           }
-=======
->>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
           await viewer.flyTo(dataSource, {
             duration: 0.7,
             offset: new HeadingPitchRange(0.22, -0.92, 260),
           });
         } else {
-<<<<<<< HEAD
           setFocusSummary(null);
-=======
->>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
           viewer.camera.lookAt(
             Cartesian3.fromDegrees(85.054779, 25.6124294),
             new HeadingPitchRange(0.22, -1.12, 980)
@@ -1134,7 +982,6 @@ export function CesiumSpatialViewer({
       ref={containerRef}
       aria-label="Live PostGIS Cesium map"
     >
-<<<<<<< HEAD
       {viewerState === "initializing" && (
         <div className="cesium-loader" role="status" aria-live="polite">
           <LoaderCircle size={18} />
@@ -1161,46 +1008,50 @@ export function CesiumSpatialViewer({
           className="cesium-context-controls"
           aria-label="Map context controls"
         >
-          <section>
-            <span>Basemap · visual context</span>
-            <div>
-              <button
-                type="button"
-                className={basemap === "satellite" ? "active" : ""}
-                disabled={imageryState !== "ready"}
-                onClick={() => setBasemap("satellite")}
-              >
-                Satellite
-              </button>
-              <button
-                type="button"
-                className={basemap === "street" ? "active" : ""}
-                disabled={streetState !== "ready"}
-                onClick={() => setBasemap("street")}
-              >
-                Street
-              </button>
-            </div>
-          </section>
-          <section>
-            <span>3D camera</span>
-            <div>
-              <button
-                type="button"
-                className={cameraView === "perspective" ? "active" : ""}
-                onClick={() => setMapView("perspective")}
-              >
-                Perspective
-              </button>
-              <button
-                type="button"
-                className={cameraView === "plan" ? "active" : ""}
-                onClick={() => setMapView("plan")}
-              >
-                Plan view
-              </button>
-            </div>
-          </section>
+          {!measurementControlsOnly && (
+            <section>
+              <span>Basemap · visual context</span>
+              <div>
+                <button
+                  type="button"
+                  className={basemap === "satellite" ? "active" : ""}
+                  disabled={imageryState !== "ready"}
+                  onClick={() => setBasemap("satellite")}
+                >
+                  Satellite
+                </button>
+                <button
+                  type="button"
+                  className={basemap === "street" ? "active" : ""}
+                  disabled={streetState !== "ready"}
+                  onClick={() => setBasemap("street")}
+                >
+                  Street
+                </button>
+              </div>
+            </section>
+          )}
+          {!measurementControlsOnly && (
+            <section>
+              <span>3D camera</span>
+              <div>
+                <button
+                  type="button"
+                  className={cameraView === "perspective" ? "active" : ""}
+                  onClick={() => setMapView("perspective")}
+                >
+                  Perspective
+                </button>
+                <button
+                  type="button"
+                  className={cameraView === "plan" ? "active" : ""}
+                  onClick={() => setMapView("plan")}
+                >
+                  Plan view
+                </button>
+              </div>
+            </section>
+          )}
           <section>
             <span>Visual measure</span>
             <div>
@@ -1244,15 +1095,6 @@ export function CesiumSpatialViewer({
             : geometryQuery.data
               ? `${geometryQuery.data.features.filter(feature => layers[featureLayer(feature.properties)] && matchesMapEvidenceFilter(feature.properties, evidenceFilter) && (!focusUlpins || focusUlpins.includes(feature.properties.ulpin))).length} visible / ${geometryQuery.data.features.length} live · ${basemap === "street" ? "street" : "satellite"} context${osmBuildingsEnabled ? (imageryState === "ready" ? " + OSM 3D context" : imageryState === "loading" ? " · loading visual context" : "") : ""}`
               : "Connecting to PostGIS"}
-=======
-      <div className="cesium-status">
-        <i className={geometryQuery.isFetching ? "loading" : ""} />
-        {geometryQuery.isFetching
-          ? "Refreshing PostGIS"
-          : geometryQuery.data
-            ? `${geometryQuery.data.features.filter(feature => layers[featureLayer(feature.properties)] && matchesMapEvidenceFilter(feature.properties, evidenceFilter) && (!focusUlpins || focusUlpins.includes(feature.properties.ulpin))).length} visible / ${geometryQuery.data.features.length} live${osmBuildingsEnabled ? (imageryState === "ready" ? " · imagery + OSM 3D context" : imageryState === "loading" ? " · loading visual context" : " · OSM 3D context") : ""}`
-            : "Connecting to PostGIS"}
->>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
       </div>
       {osmBuildingsEnabled && (
         <div className="cesium-osm-attribution">
@@ -1265,32 +1107,22 @@ export function CesiumSpatialViewer({
             OpenStreetMap contributors
           </a>{" "}
           ·{" "}
-<<<<<<< HEAD
           {basemap === "street"
             ? "OpenStreetMap street tiles"
             : imageryState === "ready"
               ? "Cesium World Imagery + OSM buildings"
               : "OSM buildings"}{" "}
-=======
-          {imageryState === "ready"
-            ? "Cesium World Imagery + OSM buildings"
-            : "OSM buildings"}{" "}
->>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
           · visual context only
         </div>
       )}
       {geometryQuery.error && (
         <div className="cesium-error">
-<<<<<<< HEAD
           <span>
             Live geometry unavailable. The connection will retry automatically.
           </span>
           <button type="button" onClick={() => void geometryQuery.refetch()}>
             <RefreshCw size={12} /> Retry data
           </button>
-=======
-          Live geometry unavailable. The connection will retry automatically.
->>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
         </div>
       )}
       {syntheticDemoFeature && (
@@ -1305,7 +1137,6 @@ export function CesiumSpatialViewer({
           <span>Synthetic geometry · click for separate RERA attributes</span>
         </div>
       )}
-<<<<<<< HEAD
       {focusSummary && !syntheticDemoFeature && (
         <div className="cesium-focus-popup" role="status">
           <span>
@@ -1334,8 +1165,6 @@ export function CesiumSpatialViewer({
           </span>
         </div>
       )}
-=======
->>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
     </div>
   );
 }

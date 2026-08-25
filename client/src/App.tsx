@@ -29,11 +29,7 @@ function Router() {
 function App() {
   return (
     <ErrorBoundary>
-<<<<<<< HEAD
       <ThemeProvider defaultTheme="dark" switchable>
-=======
-      <ThemeProvider defaultTheme="dark">
->>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
         <TooltipProvider>
           <Toaster richColors theme="dark" position="top-right" />
           <Router />

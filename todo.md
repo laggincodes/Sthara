@@ -190,7 +190,6 @@
 - [x] Add a side-panel action that simulates a non-issued 3D ULPIN preview for the selected synthetic prototype without producing or implying an actual ULPIN.
 - [x] Add a synthetic-map layer menu for clearly labelled simulated drone-imagery and LiDAR point-cloud visual context, separate from real source data.
 - [x] Add safety regression coverage and desktop/mobile interaction verification for hover, simulation preview, and simulated layer controls; checkpoint and synchronize.
-<<<<<<< HEAD
 - [x] Create a downloadable, Git-excluded non-secret `.env` template that documents the project environment-variable names with safe placeholders.
 - [x] Prepare a secure Vercel deployment handoff: identify required environment variables, document managed-platform dependencies, and assess serverless compatibility without exposing secrets.
 - [x] Fix the published-site `ReferenceError: Cesium is not defined` failure and validate the deployed 3D map runtime.
@@ -220,8 +219,12 @@
 - [x] Extend browser-local favorites with custom folders/categories and favorite-folder filtering.
 - [x] Add regression coverage and desktop/mobile validation for the layout, comparison, and favorite-folder workflows.
 
-- [ ] Add a subtle success animation and toast when a source record is assigned to a browser-local favorite folder.
-- [ ] Separate workspace text panels from the Cesium map while retaining only distance and area measurement overlays on-map, without changing other map behavior.
-- [ ] Add regression coverage and desktop/mobile validation for favorite-folder feedback and the separated workspace layout.
-=======
->>>>>>> dfe3bdc5c7e1f1a7a2e2f9d7c8a8e64de4760af3
+- [x] Add a subtle success animation and toast when a source record is assigned to a browser-local favorite folder.
+- [x] Separate workspace text panels from the Cesium map while retaining only distance and area measurement overlays on-map, without changing other map behavior.
+- [x] Add regression coverage and desktop/mobile validation for favorite-folder feedback and the separated workspace layout.
+
+- [x] Move Spatial Workspace data and explanatory panels below the Cesium map so the map section contains only the map preview and distance/area measurement controls.
+- [x] Add the requested favorite-folder success animation and toast notification without changing existing folder behavior.
+- [x] Validate the separated layout on desktop/mobile, run regression tests/build, and push the validated code to the connected GitHub repository.
+
+- [ ] Synchronize the current validated code to the exact repository https://github.com/Gautam-kumar01/SIH-2026 and verify the pushed main branch.
