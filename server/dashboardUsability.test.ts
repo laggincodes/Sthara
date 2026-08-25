@@ -173,6 +173,27 @@ describe("dashboard usability controls", () => {
     expect(workspaceSource).toContain("Mock record finder");
   });
 
+  it("provides a property-type color legend for grouped mock records", () => {
+    expect(workspaceSource).toContain("mockPropertyTypeColors");
+    expect(workspaceSource).toContain("spatial-property-type-dot");
+    expect(workspaceSource).toContain("Property type legend");
+    expect(workspaceSource).toContain("Campus facility");
+  });
+
+  it("makes mock floor levels interactive with floor-specific rights details", () => {
+    expect(workspaceSource).toContain("selectedMockFloor");
+    expect(workspaceSource).toContain("Floor-level detail");
+    expect(workspaceSource).toContain("MOCK-FLOOR-");
+    expect(workspaceSource).toContain(
+      "onMockFloorSelect={setSelectedMockFloor}"
+    );
+    expect(cesiumViewerSource).toContain(
+      "onMockFloorSelect?: (floorLevel: number)"
+    );
+    expect(cesiumViewerSource).toContain("DEMO floor level");
+    expect(cesiumViewerSource).toContain("floorMatch");
+  });
+
   it("adds a selected-building mock floor stack without implying an approved floor plan", () => {
     expect(workspaceSource).toContain("mockFloorLevels={selected ? 4 : 0}");
     expect(workspaceSource).toContain("4 mock floor levels shown in 3D only");

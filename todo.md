@@ -255,3 +255,7 @@
 - [x] Add color-coded property-type indicators to grouped mock ULPIN records.
 - [x] Rewrite and restyle the mock apartment ownership and vertical-rights section for clearer labels, spacing, and demo safeguards.
 - [x] Add regression coverage and validate the new mock layers and responsive presentation.
+
+- [x] Add a clear property-type color legend next to grouped mock ULPIN records.
+- [x] Make illustrative mock floor levels clickable and show floor-specific mock ownership and rights details.
+- [x] Add regression coverage, validate the interaction and responsive layout, and push the release to the requested GitHub repository.

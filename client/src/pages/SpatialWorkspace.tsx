@@ -207,6 +207,9 @@ export default function SpatialWorkspace() {
   const [groupMockRecords, setGroupMockRecords] = useState(false);
   const [sourceMapView, setSourceMapView] = useState<"2d" | "3d">("3d");
   const [mockUlpIn, setMockUlpIn] = useState<string | null>(null);
+  const [selectedMockFloor, setSelectedMockFloor] = useState<number | null>(
+    null
+  );
   const [sampleAsset, setSampleAsset] = useState<SampleMapAsset | null>(null);
   const [sampleAssetError, setSampleAssetError] = useState<string | null>(null);
   const [sampleUploadProgress, setSampleUploadProgress] = useState<
@@ -634,6 +637,7 @@ export default function SpatialWorkspace() {
                 mockFloorLevels={selected ? 4 : 0}
                 measurementControlsOnly
                 onFeatureSelect={onFeatureSelect}
+                onMockFloorSelect={setSelectedMockFloor}
                 sampleAsset={sampleAsset}
               />
               <div className="spatial-stage-grid" />
@@ -1273,6 +1277,21 @@ export default function SpatialWorkspace() {
                 </button>
               ))}
             </div>
+            <div
+              className="spatial-property-type-legend"
+              aria-label="Property type legend"
+            >
+              <span>Property type legend</span>
+              {Object.entries(mockPropertyTypeColors).map(([type, color]) => (
+                <i key={type}>
+                  <b
+                    className="spatial-property-type-dot"
+                    style={{ background: color }}
+                  />
+                  {type}
+                </i>
+              ))}
+            </div>
             {filteredMockRecords.length > 0 && (
               <div className="spatial-mock-record-list">
                 {groupMockRecords
@@ -1350,6 +1369,46 @@ export default function SpatialWorkspace() {
                 ? "Grouped by property type"
                 : "Group by property type"}
             </button>
+          </div>
+          <div className="spatial-floor-detail" aria-live="polite">
+            <div className="spatial-rights-heading">
+              <div>
+                <span className="spatial-kicker">Interactive mock layer</span>
+                <p>
+                  {selectedMockFloor
+                    ? `Floor ${selectedMockFloor} detail`
+                    : "Floor-level detail"}
+                </p>
+              </div>
+              <Layers3 size={16} />
+            </div>
+            <small>
+              {selectedMockFloor
+                ? `Illustrative data for mock floor ${selectedMockFloor}; not an authority-linked apartment record.`
+                : "Click a labeled DEMO LEVEL in the 3D map to inspect its illustrative rights state."}
+            </small>
+            <dl>
+              <div>
+                <dt>Floor identity</dt>
+                <dd>
+                  {selectedMockFloor
+                    ? `MOCK-FLOOR-${selectedMockFloor}`
+                    : "Not selected"}
+                </dd>
+              </div>
+              <div>
+                <dt>Ownership</dt>
+                <dd>
+                  {selectedMockFloor
+                    ? "Demo placeholder · not supplied"
+                    : "Unavailable"}
+                </dd>
+              </div>
+              <div>
+                <dt>Rights status</dt>
+                <dd>Mock only · authority record required</dd>
+              </div>
+            </dl>
           </div>
           <div
             className="spatial-mock-rights"

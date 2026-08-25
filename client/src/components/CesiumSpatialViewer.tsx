@@ -81,6 +81,7 @@ export function CesiumSpatialViewer({
   sampleAsset,
   sourceMapView = "3d",
   mockFloorLevels = 0,
+  onMockFloorSelect,
 }: {
   command: MapCommand;
   layers: CesiumLayerFlags;
@@ -108,6 +109,7 @@ export function CesiumSpatialViewer({
   sampleAsset?: SampleMapAsset | null;
   sourceMapView?: "2d" | "3d";
   mockFloorLevels?: number;
+  onMockFloorSelect?: (floorLevel: number) => void;
 }) {
   const cesiumRuntime = (
     window as Window & { Cesium?: typeof import("cesium") }
@@ -519,6 +521,15 @@ export function CesiumSpatialViewer({
             : undefined;
         const syntheticProperties = (entity?.properties?.getValue?.() ??
           {}) as Record<string, unknown>;
+        const floorMatch = entity?.name?.match(/^DEMO floor level (\d+)$/i);
+        if (floorMatch) {
+          const floorLevel = Number(floorMatch[1]);
+          if (Number.isFinite(floorLevel)) {
+            viewer.selectedEntity = entity;
+            onMockFloorSelect?.(floorLevel);
+            return;
+          }
+        }
         if (entity && syntheticProperties.demoNonAuthoritative === true) {
           viewer.selectedEntity = entity;
           onSyntheticDemoSelect?.();
@@ -817,7 +828,12 @@ export function CesiumSpatialViewer({
             return focusUlpins.includes(String(properties.ulpin ?? ""));
           });
           const focusedEntity = focusedEntities[0];
-          if (focusedEntity && mockFloorLevels > 0 && focusedEntity.polygon) {
+          if (
+            focusedEntity &&
+            mockFloorLevels > 0 &&
+            sourceMapView === "3d" &&
+            focusedEntity.polygon
+          ) {
             const floorCount = Math.min(
               Math.max(Math.round(mockFloorLevels), 1),
               12
