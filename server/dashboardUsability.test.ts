@@ -146,6 +146,15 @@ describe("dashboard usability controls", () => {
     expect(workspaceSource).toContain("source record comparison");
   });
 
+  it("provides an explicit 2D and 3D toggle for source-record map views", () => {
+    expect(workspaceSource).toContain("sourceMapView");
+    expect(workspaceSource).toContain('aria-label="Source record map view"');
+    expect(workspaceSource).toContain("view.toUpperCase()");
+    expect(workspaceSource).toContain("sourceMapView={sourceMapView}");
+    expect(cesiumViewerSource).toContain('sourceMapView?: "2d" | "3d"');
+    expect(cesiumViewerSource).toContain('sourceMapView === "3d"');
+  });
+
   it("supports searching and filtering browser-local mock identity records", () => {
     expect(workspaceSource).toContain("mockRecordQuery");
     expect(workspaceSource).toContain(
@@ -154,6 +163,53 @@ describe("dashboard usability controls", () => {
     expect(workspaceSource).toContain("Mock ULPINs");
     expect(workspaceSource).toContain('mockRecordFilter === "ownership"');
     expect(workspaceSource).toContain("filteredMockRecords");
+  });
+
+  it("groups mock search results by explicit property type without changing authority status", () => {
+    expect(workspaceSource).toContain("propertyType");
+    expect(workspaceSource).toContain("groupedMockRecords");
+    expect(workspaceSource).toContain("Group by property type");
+    expect(workspaceSource).toContain("Grouped by property type");
+    expect(workspaceSource).toContain("Mock record finder");
+  });
+
+  it("provides a property-type color legend for grouped mock records", () => {
+    expect(workspaceSource).toContain("mockPropertyTypeColors");
+    expect(workspaceSource).toContain("spatial-property-type-dot");
+    expect(workspaceSource).toContain("Property type legend");
+    expect(workspaceSource).toContain("Campus facility");
+  });
+
+  it("makes mock floor levels interactive with floor-specific rights details", () => {
+    expect(workspaceSource).toContain("selectedMockFloor");
+    expect(workspaceSource).toContain("Floor-level detail");
+    expect(workspaceSource).toContain("MOCK-FLOOR-");
+    expect(workspaceSource).toContain(
+      "onMockFloorSelect={setSelectedMockFloor}"
+    );
+    expect(cesiumViewerSource).toContain(
+      "onMockFloorSelect?: (floorLevel: number)"
+    );
+    expect(cesiumViewerSource).toContain("DEMO floor level");
+    expect(cesiumViewerSource).toContain("floorMatch");
+  });
+
+  it("adds a selected-building mock floor stack without implying an approved floor plan", () => {
+    expect(workspaceSource).toContain("mockFloorLevels={selected ? 4 : 0}");
+    expect(workspaceSource).toContain("4 mock floor levels shown in 3D only");
+    expect(cesiumViewerSource).toContain("mockFloorLevels?: number");
+    expect(cesiumViewerSource).toContain("DEMO floor level");
+    expect(workspaceSource).toContain("not an approved floor plan");
+  });
+
+  it("uses property-type colors and a readable mock-rights evidence panel", () => {
+    expect(workspaceSource).toContain("mockPropertyTypeColors");
+    expect(workspaceSource).toContain("spatial-property-type-dot");
+    expect(workspaceSource).toContain("Prototype data panel");
+    expect(workspaceSource).toContain(
+      "not government ownership or rights records"
+    );
+    expect(workspaceSource).toContain("Mock only · authority record required");
   });
 
   it("keeps mock identity and rights demonstrations explicitly non-authoritative", () => {
