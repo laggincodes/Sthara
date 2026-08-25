@@ -1,6 +1,6 @@
 # Vercel Deployment Handoff
 
-This repository now includes a Vercel Node serverless entry at `api/[...path].ts`. It reuses the existing Express, Clerk middleware, tRPC, and PostGIS API wiring. The Vite application builds to `dist/public`; `vercel.json` serves that SPA and routes API requests through the serverless handler.
+This repository now includes a Vercel Node serverless entry at `api/[...path].ts`. It reuses the existing Express, Clerk middleware, tRPC, and PostGIS API wiring. The Vite application builds to `dist/public`; `vercel.json` routes `/api/*` explicitly to that function **before** applying the SPA fallback to `index.html`.
 
 > **Compatibility note.** The existing Manus deployment remains the reference environment. Vercel does not supply Manus built-in Forge AI or storage services, so the AI-assisted extraction/search and evidence-file storage paths require portable replacements before they can be described as fully operational on Vercel.
 
@@ -33,3 +33,5 @@ The current project routes AI operations through `BUILT_IN_FORGE_API_URL` and `B
 ## Validation after deployment
 
 Confirm that the root route displays the branded Clerk sign-in interface, that `/overview` presents the public dashboard, that `/api/trpc` answers authenticated requests, and that a Citizen account receives a server-side forbidden response from `platform.adminSettings`. Finally, confirm that an Administrator account can load the settings dialog while ordinary accounts cannot.
+
+> **Routing check.** Before diagnosing Clerk sign-in, request `/api/trpc/auth.me?batch=1&input=%7B%7D`. It must return a tRPC JSON response, never the SPA HTML. The explicit function route follows the documented Vercel `routes` `src`/`dest` behavior described in the [Vercel configuration reference](https://vercel.com/docs/project-configuration/vercel-json).

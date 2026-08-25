@@ -14,7 +14,8 @@ describe("Vercel serverless API routing", () => {
     };
 
     expect(config.routes[0]).toEqual({
-      handle: "filesystem",
+      src: "/api/(.*)",
+      dest: "/api/[...path].ts",
     });
     expect(config.routes[1]).toEqual({
       src: "/(.*)",
