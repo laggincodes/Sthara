@@ -297,4 +297,15 @@ describe("dashboard usability controls", () => {
     expect(dashboardStyles).toContain(".registry-favorite-folder-panel");
     expect(dashboardStyles).toContain(".map-header");
   });
+
+  it("keeps Buildings explorer copy and long source-record labels readable without horizontal clipping", () => {
+    expect(dashboardStyles).toContain(".explorer-record-list button span");
+    expect(dashboardStyles).toContain(".explorer-record-list button small");
+    expect(dashboardStyles).toContain("overflow-wrap: anywhere");
+    expect(dashboardStyles).toContain("white-space: normal");
+    expect(dashboardStyles).toContain(
+      ".explorer-segment-card .spatial-institution-lock small"
+    );
+    expect(dashboardStyles).toContain(".spatial-dossier-title > div");
+  });
 });

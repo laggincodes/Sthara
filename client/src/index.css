@@ -3087,6 +3087,7 @@ input:focus-visible {
 }
 .spatial-dossier {
   display: grid;
+  min-width: 0;
   align-content: start;
   gap: 12px;
   padding: 14px;
@@ -3094,6 +3095,7 @@ input:focus-visible {
   border-left: 1px solid rgba(204, 237, 232, 0.1);
 }
 .spatial-dossier-card {
+  min-width: 0;
   padding: 15px;
   background: linear-gradient(145deg, #132026, #0c171c);
   border: 1px solid rgba(204, 237, 232, 0.1);
@@ -3103,6 +3105,9 @@ input:focus-visible {
   display: flex;
   justify-content: space-between;
   gap: 10px;
+}
+.spatial-dossier-title > div {
+  min-width: 0;
 }
 .spatial-dossier-title p {
   margin: 0;
@@ -4839,6 +4844,7 @@ input:focus-visible {
 }
 .explorer-segment-card {
   position: relative;
+  min-width: 0;
   overflow: hidden;
   border-color: rgba(42, 212, 217, 0.2);
   background:
@@ -4869,6 +4875,7 @@ input:focus-visible {
   color: #a4bab6;
   font-size: 10px;
   line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 .explorer-segment-card dl {
   display: grid;
@@ -4904,6 +4911,9 @@ input:focus-visible {
 .explorer-segment-card .spatial-institution-lock {
   margin-top: 0;
 }
+.explorer-segment-card .spatial-institution-lock small {
+  overflow-wrap: anywhere;
+}
 .explorer-record-list {
   display: grid;
   gap: 5px;
@@ -4915,6 +4925,7 @@ input:focus-visible {
 }
 .explorer-record-list button {
   display: grid;
+  min-width: 0;
   gap: 3px;
   width: 100%;
   padding: 8px 9px;
@@ -4938,18 +4949,25 @@ input:focus-visible {
   transform: scale(0.98);
 }
 .explorer-record-list button span {
-  overflow: hidden;
+  display: block;
+  min-width: 0;
   font-size: 10px;
   font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 .explorer-record-list button small,
 .explorer-empty-records {
+  display: block;
+  min-width: 0;
   color: #8fa7a2;
   font:
     8.5px "IBM Plex Mono",
     monospace;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 @media (max-width: 620px) {
   .explorer-segment-card dl {

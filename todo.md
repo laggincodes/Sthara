@@ -273,3 +273,6 @@
 
 - [x] Re-verify the current role-visibility, Authority mock-review, and floor-tooltip release before GitHub synchronization.
 - [x] Push the validated release to the connected SIH-2026 GitHub repository and verify the remote main branch.
+
+- [x] Repair clipped Buildings explorer and source-record text so long labels wrap or truncate intentionally without horizontal overflow.
+- [x] Validate the responsive text-overflow repair on desktop and mobile, then publish and synchronize it to GitHub.
