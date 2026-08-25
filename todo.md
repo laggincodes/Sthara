@@ -310,3 +310,4 @@
 - [ ] Redeploy Vercel production after the user-confirmed environment variables are present, then verify the mounted Clerk form and public entry route.
 - [ ] Diagnose the fresh Vercel bundle for a missing Clerk browser key without exposing or changing the user-provided secret values.
 - [ ] Support the configured public `CLERK_PUBLISH_KEY` alias alongside `VITE_CLERK_PUBLISHABLE_KEY`, then rebuild and verify the public Clerk workspace.
+- [ ] Diagnose and correct the reported Vercel Clerk sign-in redirect loop without weakening Clerk, API, role, or evidence safeguards.
