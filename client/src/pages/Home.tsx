@@ -24,6 +24,7 @@ import {
   Grid3X3,
   Layers3,
   Loader2,
+  LogOut,
   MapPinned,
   Maximize2,
   Menu,
@@ -38,6 +39,7 @@ import {
   ShieldCheck,
   Sparkles,
   Sun,
+  UserRound,
   Users,
   UploadCloud,
   X,
@@ -79,6 +81,7 @@ import {
 import { filterIitPatnaAutocomplete } from "../../../shared/iitPatnaAutocomplete";
 import { useLocation } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 type LayerKey = "parcels" | "buildings" | "utilities" | "terrain";
 
@@ -263,6 +266,7 @@ export default function Home() {
     refetchInterval: 20_000,
   });
   const authQuery = trpc.auth.me.useQuery();
+  const session = useAuth();
   const areaSearchInput = useMemo(
     () => ({ query: areaSearchRequest ?? "Amity University Patna" }),
     [areaSearchRequest]
@@ -376,6 +380,19 @@ export default function Home() {
   }, [geometryQuery.data]);
   const canSaveAuthorityRecord =
     authQuery.data?.role === "authority" || authQuery.data?.role === "admin";
+  const isDashboardAdmin = session.user?.role === "admin";
+  const dashboardAdminSettings = trpc.platform.adminSettings.useQuery(undefined, {
+    enabled: isDashboardAdmin,
+  });
+  const profileName =
+    session.user?.name || session.clerkUser?.fullName || "Signed-in user";
+  const profileInitials =
+    profileName
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map(part => part[0]?.toUpperCase())
+      .join("") || "UP";
   const revisionNoteValidation = validateRevisionNote(editorForm.editNote);
   const validateAuthorityRevisionNote = () => {
     if (revisionNoteValidation.valid) {
@@ -414,6 +431,27 @@ export default function Home() {
       () => startLogin(`/?editor=${encodeURIComponent(selectedLiveFeature.ulpin)}`),
       150
     );
+  };
+  const openSessionProfile = () => {
+    if (!session.user) {
+      setLocation("/access?returnTo=/overview");
+      return;
+    }
+    setWorkspaceOpen("Session profile");
+  };
+  const openAdminSettings = () => {
+    if (!session.user) {
+      setLocation("/access?returnTo=/overview");
+      return;
+    }
+    if (!isDashboardAdmin) {
+      toast.error("Administrator settings are locked", {
+        description:
+          "This account does not have the server-assigned Administrator role required for dashboard settings.",
+      });
+      return;
+    }
+    setWorkspaceOpen("Workspace settings");
   };
   useEffect(() => {
     const resumeUlpin = window.sessionStorage.getItem(
@@ -1002,7 +1040,7 @@ export default function Home() {
               className="icon-button"
               type="button"
               aria-label="Open settings"
-              onClick={() => setWorkspaceOpen("Workspace settings")}
+              onClick={openAdminSettings}
             >
               <Settings2 size={18} />
             </button>
@@ -1021,6 +1059,38 @@ export default function Home() {
             >
               <Plus size={17} /> Generate ULPIN
             </button>
+            <button
+              className="profile-button"
+              type="button"
+              onClick={openSessionProfile}
+              aria-label={session.user ? "Open profile and session options" : "Sign in"}
+            >
+              <span className="profile-button__avatar">
+                {session.user ? profileInitials : <UserRound size={15} />}
+              </span>
+              <span className="profile-button__label">
+                <b>{session.user ? profileName : "Sign in"}</b>
+                <small>
+                  {session.user
+                    ? session.user.role.replaceAll("_", " ")
+                    : "secure access"}
+                </small>
+              </span>
+            </button>
+            {session.user && (
+              <button
+                className="icon-button session-logout-button"
+                type="button"
+                title="Sign out"
+                aria-label="Sign out"
+                onClick={() => {
+                  toast.message("Signing out securely");
+                  void session.logout();
+                }}
+              >
+                <LogOut size={17} />
+              </button>
+            )}
           </div>
         </header>
 
@@ -2738,12 +2808,16 @@ export default function Home() {
                       ? "Terrain evidence workspace"
                       : workspaceOpen === "Operator account"
                         ? "Authority operator workspace"
-                        : "Workspace settings"}
+                        : workspaceOpen === "Session profile"
+                          ? "Clerk session workspace"
+                          : "Administrator settings"}
             </p>
             <h2 id="workspace-title">{workspaceOpen}</h2>
             <p>
               {workspaceOpen === "Workspace settings"
-                ? "Adjust the active map layer baseline and continue directly to the live spatial workspace."
+                ? "Administrator-only settings. The server validates this role before returning protected settings context or allowing administrative actions."
+                : workspaceOpen === "Session profile"
+                  ? "Review the active Clerk-managed account session or securely sign out from this device."
                 : workspaceOpen === "Operator account"
                   ? authQuery.data
                     ? `Signed in as ${authQuery.data.name ?? "authority operator"} with ${authQuery.data.role} access.`
@@ -2777,12 +2851,20 @@ export default function Home() {
             {workspaceOpen === "Workspace settings" && (
               <div className="workspace-context-list">
                 <span>
-                  <Layers3 size={14} /> {activeLayerCount} spatial layers
-                  currently enabled
+                  <ShieldCheck size={14} /> {dashboardAdminSettings.data?.access ?? "Administrator role verification in progress"}
                 </span>
                 <span>
-                  <Database size={14} /> PostGIS refreshes live geometry every
-                  20 seconds
+                  <Settings2 size={14} /> {dashboardAdminSettings.data?.sections.join(" · ") ?? "Protected settings sections loading"}
+                </span>
+              </div>
+            )}
+            {workspaceOpen === "Session profile" && session.user && (
+              <div className="workspace-context-list">
+                <span>
+                  <UserRound size={14} /> {profileName}
+                </span>
+                <span>
+                  <ShieldCheck size={14} /> {session.user.role.replaceAll("_", " ")} · server-assigned application role
                 </span>
               </div>
             )}
@@ -2832,6 +2914,17 @@ export default function Home() {
                   }
                 >
                   Open live records <ArrowUpRight size={16} />
+                </button>
+              ) : workspaceOpen === "Session profile" ? (
+                <button
+                  className="primary-button warm"
+                  type="button"
+                  onClick={() => {
+                    toast.message("Signing out securely");
+                    void session.logout();
+                  }}
+                >
+                  Sign out <LogOut size={16} />
                 </button>
               ) : workspaceOpen === "Audit trail" ? (
                 <button

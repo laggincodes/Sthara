@@ -12,6 +12,37 @@ import "./index.css";
 
 const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 const queryClient = new QueryClient();
+const clerkAppearance = {
+  variables: {
+    colorPrimary: "#2ad4d9",
+    colorBackground: "#0b171d",
+    colorInputBackground: "#071015",
+    colorInputText: "#eafff9",
+    colorText: "#eafff9",
+    colorTextSecondary: "#9cbcb7",
+    colorDanger: "#eba760",
+    borderRadius: "0.75rem",
+    fontFamily: "Space Grotesk, ui-sans-serif, system-ui, sans-serif",
+  },
+  elements: {
+    rootBox: "w-full",
+    card: "bg-transparent shadow-none border-0 w-full",
+    headerTitle: "text-[#eafff9]",
+    headerSubtitle: "text-[#9cbcb7]",
+    socialButtonsBlockButton:
+      "border-[#2a5559] bg-[#102129] text-[#eafff9] hover:bg-[#17323b]",
+    dividerLine: "bg-[#2a5559]",
+    dividerText: "text-[#7ea29d]",
+    formFieldLabel: "text-[#b8d4cf]",
+    formFieldInput:
+      "border-[#2a5559] bg-[#071015] text-[#eafff9] focus:border-[#2ad4d9]",
+    formButtonPrimary: "bg-[#2ad4d9] text-[#062126] hover:bg-[#74ebe9]",
+    footerActionText: "text-[#9cbcb7]",
+    footerActionLink: "text-[#75e7de] hover:text-[#b9fffa]",
+    identityPreviewText: "text-[#eafff9]",
+    identityPreviewEditButton: "text-[#75e7de]",
+  },
+};
 
 const redirectToClerkSignIn = (error: unknown) => {
   if (!(error instanceof TRPCClientError)) return;
@@ -70,6 +101,7 @@ createRoot(document.getElementById("root")!).render(
     publishableKey={publishableKey}
     signInFallbackRedirectUrl="/dashboard"
     signUpFallbackRedirectUrl="/dashboard"
+    appearance={clerkAppearance}
   >
     <ClerkTrpcBridge />
   </ClerkProvider>

@@ -30,6 +30,7 @@ describe("secure role-based cadastral platform foundation", () => {
     expect(routerSource).toContain("submitEvidence: authorityProcedure");
     expect(routerSource).toContain("adminUsers: adminProcedure");
     expect(routerSource).toContain("assignRole: adminProcedure");
+    expect(routerSource).toContain("adminSettings: adminProcedure");
     expect(routerSource).toContain(
       "Administrators cannot change their own role."
     );
@@ -74,5 +75,16 @@ describe("secure role-based cadastral platform foundation", () => {
     expect(appSource).toContain('path="/access"');
     expect(appSource).toContain('path="/dashboard"');
     expect(roleConsoleSource).toContain('setLocation("/overview")');
+  });
+
+  it("keeps dashboard settings behind an administrator procedure and session controls tied to Clerk", () => {
+    const homeSource = readProjectFile("client/src/pages/Home.tsx");
+    const mainSource = readProjectFile("client/src/main.tsx");
+    expect(homeSource).toContain("platform.adminSettings.useQuery");
+    expect(homeSource).toContain("Administrator settings are locked");
+    expect(homeSource).toContain("void session.logout()");
+    expect(homeSource).toContain("/access?returnTo=/overview");
+    expect(mainSource).toContain("appearance={clerkAppearance}");
+    expect(mainSource).toContain('colorPrimary: "#2ad4d9"');
   });
 });

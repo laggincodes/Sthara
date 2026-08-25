@@ -342,6 +342,69 @@ input:focus-visible {
   align-items: center;
   gap: 9px;
 }
+.profile-button {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  gap: 8px;
+  padding: 5px 8px 5px 5px;
+  color: #dff7f3;
+  background: #101c22;
+  border: 1px solid rgba(121, 231, 223, 0.18);
+  border-radius: 9px;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+.profile-button:hover {
+  background: #152a31;
+  border-color: rgba(42, 212, 217, 0.48);
+}
+.profile-button:active {
+  transform: scale(0.97);
+}
+.profile-button__avatar {
+  display: grid;
+  width: 25px;
+  height: 25px;
+  flex: 0 0 auto;
+  place-items: center;
+  color: #b9fffa;
+  background: linear-gradient(135deg, #216266, #14313a);
+  border-radius: 7px;
+  font: 700 9px "IBM Plex Mono", monospace;
+}
+.profile-button__label {
+  display: grid;
+  min-width: 0;
+  gap: 1px;
+}
+.profile-button__label b,
+.profile-button__label small {
+  overflow: hidden;
+  max-width: 104px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.profile-button__label b {
+  font-size: 10px;
+  font-weight: 700;
+}
+.profile-button__label small {
+  color: #7fb3ac;
+  font: 8px "IBM Plex Mono", monospace;
+  text-transform: capitalize;
+}
+.session-logout-button {
+  color: #f6c49f;
+}
+.session-logout-button:hover {
+  color: #ffdfc4;
+  border-color: rgba(235, 167, 96, 0.5);
+}
 .search-button {
   display: flex;
   align-items: center;
@@ -4870,6 +4933,12 @@ input:focus-visible {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+.access-portal__clerk {
+  width: min(100%, 400px);
+}
+.access-portal__clerk .cl-card {
+  width: 100%;
+}
 .role-console {
   padding-bottom: 54px;
 }
@@ -5104,6 +5173,9 @@ input:focus-visible {
   background: #071015;
 }
 @media (max-width: 760px) {
+  .profile-button__label {
+    display: none;
+  }
   .access-portal {
     grid-template-columns: 1fr;
     padding: 26px 18px;

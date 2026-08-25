@@ -485,6 +485,16 @@ export const appRouter = router({
     governmentSummary: governmentProcedure.query(async () =>
       getPlatformDashboardSummary()
     ),
+    adminSettings: adminProcedure.query(() => ({
+      access: "server-assigned-administrator-only" as const,
+      sections: [
+        "Role assignment",
+        "Audit access",
+        "Evidence workflow policy",
+      ],
+      note:
+        "Settings visibility never grants permissions; protected actions remain enforced by server procedures.",
+    })),
     adminUsers: adminProcedure.query(async () => getPlatformUsers()),
     assignRole: adminProcedure
       .input(assignRoleInput)

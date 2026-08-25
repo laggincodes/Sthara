@@ -300,3 +300,9 @@
 
 - [x] Make the public entry route present the Clerk access portal before the dashboard while retaining protected in-app routes and safe return handling.
 - [ ] Validate unauthenticated and signed-in entry behavior, then synchronize the checked release to Gautam-kumar01/SIH-2026.
+
+- [x] Add a signed-in profile control and explicit Clerk logout action to the dashboard header without exposing identity details to unauthenticated visitors.
+- [x] Apply the dashboard’s dark visual system and 3D ULPIN-VPM branding to the mounted Clerk sign-in and sign-up components.
+- [x] Restrict dashboard settings to server-assigned Administrator accounts and verify unauthenticated, Citizen, and Authority users cannot access protected settings behavior.
+- [x] Prepare Vercel configuration and a complete environment-variable handoff for this full-stack Clerk/Cesium application, without committing secrets.
+- [ ] Trigger and verify the GitHub-linked Vercel production deployment after the current code is synchronized; deployment parity depends on the required Vercel environment variables and portable storage/AI provider setup.
