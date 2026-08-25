@@ -61,28 +61,47 @@ const uploadInput = z.object({
   dataBase64: z.string().min(4).max(10_000_000),
 });
 
-const footprintUpdateInput = z.object({
-  ulpin: z.string().trim().min(3).max(96),
-  geometry: z
-    .object({
-      type: z.enum(["Polygon", "MultiPolygon"]),
-      coordinates: z.unknown(),
-    })
-    .optional(),
-  approvedHeightMetres: z.number().positive().max(600).optional(),
-  heightSource: z.string().trim().max(240).optional(),
-  ownershipRecord: z
-    .object({
-      parcelReference: z.string().trim().min(2).max(128),
-      ulpinRecord: z.string().trim().min(3).max(128),
-      ownerName: z.string().trim().min(2).max(240),
-      ownershipBasis: z.string().trim().min(3).max(400),
-      rightsSummary: z.string().trim().max(800).optional(),
-      sourceReference: z.string().trim().max(400).optional(),
-    })
-    .optional(),
-  editNote: z.string().trim().min(8).max(1200),
-});
+const footprintUpdateInput = z
+  .object({
+    ulpin: z.string().trim().min(3).max(96),
+    geometry: z
+      .object({
+        type: z.enum(["Polygon", "MultiPolygon"]),
+        coordinates: z.unknown(),
+      })
+      .optional(),
+    approvedHeightMetres: z.number().positive().max(600).optional(),
+    heightSource: z.string().trim().max(240).optional(),
+    ownershipRecord: z
+      .object({
+        parcelReference: z.string().trim().min(2).max(128),
+        ulpinRecord: z.string().trim().min(3).max(128),
+        ownerName: z.string().trim().min(2).max(240),
+        ownershipBasis: z.string().trim().min(3).max(400),
+        rightsSummary: z.string().trim().max(800).optional(),
+        sourceReference: z.string().trim().max(400).optional(),
+      })
+      .optional(),
+    editNote: z.string().trim().min(8).max(1200),
+  })
+  .superRefine((value, ctx) => {
+    if (value.approvedHeightMetres && !value.heightSource?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["heightSource"],
+        message:
+          "An authority-issued height source reference is required before saving an extrusion height.",
+      });
+    }
+    if (value.ownershipRecord && !value.ownershipRecord.sourceReference?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["ownershipRecord", "sourceReference"],
+        message:
+          "A verified ownership or parcel source reference is required before linking ownership data.",
+      });
+    }
+  });
 
 const layeredAreaSearchInput = z.object({
   query: z

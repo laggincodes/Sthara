@@ -208,6 +208,12 @@ export async function upsertPostgisGeoJsonFeatures(featureCollection: unknown) {
 
 export async function updatePostgisFootprint(update: FootprintUpdate) {
   if (update.geometry && !isValidFootprintGeometry(update.geometry)) throw new Error("A correction must be a valid Polygon or MultiPolygon with finite coordinates");
+  if (update.approvedHeightMetres && !update.heightSource?.trim()) {
+    throw new Error("An authority-issued height source reference is required before saving an extrusion height");
+  }
+  if (update.ownershipRecord && !update.ownershipRecord.sourceReference?.trim()) {
+    throw new Error("A verified ownership or parcel source reference is required before linking ownership data");
+  }
   const client = await getPool().connect();
   try {
     await client.query("BEGIN");
@@ -227,7 +233,7 @@ export async function updatePostgisFootprint(update: FootprintUpdate) {
         height_source = COALESCE(NULLIF($4, ''), height_source),
         parcel_reference = COALESCE(NULLIF($5, ''), parcel_reference),
         ulpin_record = COALESCE(NULLIF($6, ''), ulpin_record),
-        geometry_revision = geometry_revision + 1,
+        geometry_revision = CASE WHEN $2::jsonb IS NOT NULL THEN geometry_revision + 1 ELSE geometry_revision END,
         edited_by = $8,
         edit_note = $9,
         edited_at = NOW(),
@@ -254,10 +260,12 @@ export async function updatePostgisFootprint(update: FootprintUpdate) {
           linked_by = EXCLUDED.linked_by, linked_at = NOW(), updated_at = NOW()
       `, [row.id, ownership.rows[0].id, update.editorName]);
     }
-    await client.query(`
-      INSERT INTO property_geometry_revision (property_geometry_id, revision, geometry, approved_height_metres, height_source, parcel_reference, ulpin_record, ownership_data, edited_by, edit_note)
-      VALUES ($1, $2, ST_SetSRID(ST_GeomFromGeoJSON($3), 4326), $4, $5, $6, $7, '{}'::jsonb, $8, $9)
-    `, [row.id, row.geometry_revision, JSON.stringify(row.geometry), row.approved_height_metres, row.height_source, row.parcel_reference, row.ulpin_record, update.editorName, update.editNote]);
+    if (geometryJson) {
+      await client.query(`
+        INSERT INTO property_geometry_revision (property_geometry_id, revision, geometry, approved_height_metres, height_source, parcel_reference, ulpin_record, ownership_data, edited_by, edit_note)
+        VALUES ($1, $2, ST_SetSRID(ST_GeomFromGeoJSON($3), 4326), $4, $5, $6, $7, '{}'::jsonb, $8, $9)
+      `, [row.id, row.geometry_revision, JSON.stringify(row.geometry), row.approved_height_metres, row.height_source, row.parcel_reference, row.ulpin_record, update.editorName, update.editNote]);
+    }
     await client.query("COMMIT");
     return { ulpin: update.ulpin, geometryRevision: row.geometry_revision };
   } catch (error) {

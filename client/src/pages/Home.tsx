@@ -374,7 +374,8 @@ export default function Home() {
       ) / 100
     );
   }, [geometryQuery.data]);
-  const canSaveAuthorityRecord = authQuery.data?.role === "admin";
+  const canSaveAuthorityRecord =
+    authQuery.data?.role === "authority" || authQuery.data?.role === "admin";
   const revisionNoteValidation = validateRevisionNote(editorForm.editNote);
   const validateAuthorityRevisionNote = () => {
     if (revisionNoteValidation.valid) {
@@ -395,9 +396,9 @@ export default function Home() {
       return;
     }
     if (authQuery.data) {
-      toast.error("Administrator access is required", {
+      toast.error("Authority access is required", {
         description:
-          "This account is signed in but does not have the administrator role required to approve geometry, height, or ownership evidence.",
+          "This account is signed in but does not have the Authority or Administrator role required to submit audited geometry, height, or ownership evidence.",
       });
       return;
     }
@@ -576,6 +577,13 @@ export default function Home() {
       toast.error("Enter a positive approved height");
       return;
     }
+    if (height !== undefined && editorForm.heightSource.trim().length < 8) {
+      toast.error("Add the authority height source", {
+        description:
+          "A cited authority-issued height record is required before the map can show an approved extrusion.",
+      });
+      return;
+    }
     const ownershipSupplied = Boolean(
       editorForm.parcelReference ||
         editorForm.ulpinRecord ||
@@ -589,7 +597,8 @@ export default function Home() {
       (!editorForm.parcelReference ||
         !editorForm.ulpinRecord ||
         !editorForm.ownerName ||
-        !editorForm.ownershipBasis)
+        !editorForm.ownershipBasis ||
+        editorForm.sourceReference.trim().length < 8)
     ) {
       toast.error("Complete the verified ownership record", {
         description:
