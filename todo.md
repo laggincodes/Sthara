@@ -245,3 +245,8 @@
 - [x] Enhance sample floor-plan/model upload with drag-and-drop and a visible loading/progress state.
 - [x] Add a downloadable PDF report for generated mock 3D ULPIN and mock ownership/vertical-rights details.
 - [x] Add regression coverage, validate the new demo workflows, and push the validated release to the exact GitHub repository.
+
+- [x] Move the prototype/mock data section from the Spatial Workspace side column to the bottom of the map and existing data flow.
+- [x] Add a toggle button to switch the source-record map between 2D and 3D views.
+- [x] Group browser-local mock ULPIN records by building or property type in search results.
+- [x] Add regression coverage and validate the revised layout, map modes, grouping, and responsive behavior.

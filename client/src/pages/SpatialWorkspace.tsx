@@ -48,6 +48,7 @@ type MockRecord = {
   propertyName: string;
   ownership: string;
   verticalRights: string;
+  propertyType: string;
   createdAt: number;
 };
 
@@ -189,6 +190,8 @@ export default function SpatialWorkspace() {
   const [mockRecordFilter, setMockRecordFilter] = useState<
     "all" | "ulpin" | "ownership"
   >("all");
+  const [groupMockRecords, setGroupMockRecords] = useState(false);
+  const [sourceMapView, setSourceMapView] = useState<"2d" | "3d">("3d");
   const [mockUlpIn, setMockUlpIn] = useState<string | null>(null);
   const [sampleAsset, setSampleAsset] = useState<SampleMapAsset | null>(null);
   const [sampleAssetError, setSampleAssetError] = useState<string | null>(null);
@@ -327,6 +330,16 @@ export default function SpatialWorkspace() {
     });
   }, [mockRecordFilter, mockRecordQuery, mockRecords]);
 
+  const groupedMockRecords = useMemo(() => {
+    return filteredMockRecords.reduce<Record<string, MockRecord[]>>(
+      (groups, record) => {
+        (groups[record.propertyType] ??= []).push(record);
+        return groups;
+      },
+      {}
+    );
+  }, [filteredMockRecords]);
+
   const generateMockUlpIn = () => {
     if (!selected) return;
     const slug = selected.ulpin
@@ -340,6 +353,10 @@ export default function SpatialWorkspace() {
       propertyName: selectedName,
       ownership: "Demo placeholder · not supplied",
       verticalRights: "Illustrative apartment envelope",
+      propertyType:
+        typeof selected.properties.propertyType === "string"
+          ? selected.properties.propertyType
+          : "Multi-storey source building",
       createdAt: Date.now(),
     };
     setMockUlpIn(id);
@@ -599,6 +616,7 @@ export default function SpatialWorkspace() {
                 command={command}
                 layers={layers}
                 focusUlpins={activeMapUlpins}
+                sourceMapView={sourceMapView}
                 measurementControlsOnly
                 onFeatureSelect={onFeatureSelect}
                 sampleAsset={sampleAsset}
@@ -636,6 +654,24 @@ export default function SpatialWorkspace() {
                     {resolutionNote}
                   </small>
                 )}
+              </div>
+              <div
+                className="spatial-view-toggle"
+                role="group"
+                aria-label="Source record map view"
+              >
+                <span>Map view</span>
+                {(["2d", "3d"] as const).map(view => (
+                  <button
+                    type="button"
+                    key={view}
+                    className={sourceMapView === view ? "active" : ""}
+                    onClick={() => setSourceMapView(view)}
+                    aria-pressed={sourceMapView === view}
+                  >
+                    {view.toUpperCase()}
+                  </button>
+                ))}
               </div>
               <div className="spatial-stage-actions">
                 <button
@@ -1087,186 +1123,6 @@ export default function SpatialWorkspace() {
                 </button>
               )}
             </div>
-            <section
-              className="spatial-dossier-card spatial-demo-tools"
-              aria-label="Demo identity and sample model tools"
-            >
-              <div className="spatial-dossier-title">
-                <div>
-                  <p>Prototype tools</p>
-                  <h2>3D identity &amp; rights demo</h2>
-                </div>
-                <ShieldAlert size={17} />
-              </div>
-              <div className="spatial-demo-warning">
-                <b>DEMO / NON-AUTHORITATIVE</b>
-                <span>
-                  These values demonstrate the workflow only. They are not an
-                  issued ULPIN, ownership record, cadastral right, or survey.
-                </span>
-              </div>
-              <div className="spatial-demo-identity">
-                <div>
-                  <small>Selected source record</small>
-                  <strong>
-                    {selected ? selected.ulpin : "Select a live footprint"}
-                  </strong>
-                </div>
-                <button
-                  type="button"
-                  disabled={!selected}
-                  onClick={generateMockUlpIn}
-                >
-                  <ShieldCheck size={13} /> Generate mock 3D ULPIN
-                </button>
-                {mockUlpIn && (
-                  <div className="spatial-mock-id" role="status">
-                    <small>Sample identifier · not issued</small>
-                    <strong>{mockUlpIn}</strong>
-                  </div>
-                )}
-                <button
-                  type="button"
-                  className="spatial-pdf-button"
-                  disabled={mockRecords.length === 0}
-                  onClick={() => void exportMockDetailsPdf()}
-                >
-                  <FileDown size={13} /> Export mock details PDF
-                </button>
-              </div>
-              <div
-                className="spatial-mock-records"
-                aria-label="Mock record search and filters"
-              >
-                <div className="spatial-mock-records-heading">
-                  <p>Mock record finder</p>
-                  <span>{filteredMockRecords.length} shown</span>
-                </div>
-                <input
-                  value={mockRecordQuery}
-                  onChange={event => setMockRecordQuery(event.target.value)}
-                  placeholder="Search mock ID, source, or ownership"
-                  aria-label="Search mock ULPIN and ownership records"
-                />
-                <div
-                  className="spatial-mock-filter-row"
-                  role="group"
-                  aria-label="Filter mock records"
-                >
-                  {(["all", "ulpin", "ownership"] as const).map(filter => (
-                    <button
-                      type="button"
-                      key={filter}
-                      className={mockRecordFilter === filter ? "active" : ""}
-                      onClick={() => setMockRecordFilter(filter)}
-                    >
-                      {filter === "all"
-                        ? "All"
-                        : filter === "ulpin"
-                          ? "Mock ULPINs"
-                          : "Ownership"}
-                    </button>
-                  ))}
-                </div>
-                {filteredMockRecords.length > 0 && (
-                  <div className="spatial-mock-record-list">
-                    {filteredMockRecords.slice(0, 5).map(record => (
-                      <button
-                        type="button"
-                        key={record.id}
-                        className={mockUlpIn === record.id ? "active" : ""}
-                        onClick={() => setMockUlpIn(record.id)}
-                      >
-                        <strong>{record.id}</strong>
-                        <span>
-                          {record.propertyName} · {record.ownership}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <div
-                className="spatial-mock-rights"
-                aria-label="Mock ownership and vertical rights"
-              >
-                <p>Mock apartment ownership &amp; vertical rights</p>
-                <dl>
-                  <div>
-                    <dt>Ownership</dt>
-                    <dd>
-                      {selected
-                        ? "Demo placeholder · not supplied"
-                        : "Select a source record"}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Vertical volume</dt>
-                    <dd>
-                      {selected
-                        ? "Illustrative apartment envelope"
-                        : "Unavailable"}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Rights status</dt>
-                    <dd>Mock only · authority record required</dd>
-                  </div>
-                </dl>
-              </div>
-              <div className="spatial-sample-upload">
-                <div>
-                  <p>Sample floor plan / 3D model</p>
-                  <small>Browser-local preview only · max 25 MB</small>
-                </div>
-                <div
-                  className={`spatial-upload-dropzone${isSampleDragging ? " is-dragging" : ""}`}
-                  onDragOver={event => {
-                    event.preventDefault();
-                    setIsSampleDragging(true);
-                  }}
-                  onDragLeave={() => setIsSampleDragging(false)}
-                  onDrop={handleSampleAssetDrop}
-                >
-                  <Upload size={15} />
-                  <span>Drop a sample here or</span>
-                  <label className="spatial-upload-button">
-                    Browse files
-                    <input
-                      type="file"
-                      accept=".pdf,.png,.jpg,.jpeg,.glb,.gltf,application/pdf,image/png,image/jpeg,model/gltf-binary,model/gltf+json"
-                      onChange={handleSampleAssetUpload}
-                    />
-                  </label>
-                </div>
-                {sampleUploadProgress !== null && (
-                  <div className="spatial-upload-progress" role="status">
-                    <div>
-                      <span>Reading sample locally</span>
-                      <b>{sampleUploadProgress}%</b>
-                    </div>
-                    <i>
-                      <em style={{ width: `${sampleUploadProgress}%` }} />
-                    </i>
-                  </div>
-                )}
-                {sampleAsset && (
-                  <div className="spatial-sample-file" role="status">
-                    <strong>{sampleAsset.name}</strong>
-                    <span>
-                      {sampleAsset.kind === "model" ? "3D model" : "Floor plan"}{" "}
-                      · {(sampleAsset.size / 1024 / 1024).toFixed(2)} MB ·
-                      visible on map
-                    </span>
-                  </div>
-                )}
-                {sampleAssetError && (
-                  <small className="spatial-sample-error" role="alert">
-                    {sampleAssetError}
-                  </small>
-                )}
-              </div>
-            </section>
             <div className="spatial-dossier-card spatial-layer-panel">
               <div className="spatial-dossier-title">
                 <div>
@@ -1315,6 +1171,221 @@ export default function SpatialWorkspace() {
             </div>
           </aside>
         </div>
+
+        <section
+          className="spatial-dossier-card spatial-demo-tools"
+          aria-label="Demo identity and sample model tools"
+        >
+          <div className="spatial-dossier-title">
+            <div>
+              <p>Prototype tools</p>
+              <h2>3D identity &amp; rights demo</h2>
+            </div>
+            <ShieldAlert size={17} />
+          </div>
+          <div className="spatial-demo-warning">
+            <b>DEMO / NON-AUTHORITATIVE</b>
+            <span>
+              These values demonstrate the workflow only. They are not an issued
+              ULPIN, ownership record, cadastral right, or survey.
+            </span>
+          </div>
+          <div className="spatial-demo-identity">
+            <div>
+              <small>Selected source record</small>
+              <strong>
+                {selected ? selected.ulpin : "Select a live footprint"}
+              </strong>
+            </div>
+            <button
+              type="button"
+              disabled={!selected}
+              onClick={generateMockUlpIn}
+            >
+              <ShieldCheck size={13} /> Generate mock 3D ULPIN
+            </button>
+            {mockUlpIn && (
+              <div className="spatial-mock-id" role="status">
+                <small>Sample identifier · not issued</small>
+                <strong>{mockUlpIn}</strong>
+              </div>
+            )}
+            <button
+              type="button"
+              className="spatial-pdf-button"
+              disabled={mockRecords.length === 0}
+              onClick={() => void exportMockDetailsPdf()}
+            >
+              <FileDown size={13} /> Export mock details PDF
+            </button>
+          </div>
+          <div
+            className="spatial-mock-records"
+            aria-label="Mock record search and filters"
+          >
+            <div className="spatial-mock-records-heading">
+              <p>Mock record finder</p>
+              <span>{filteredMockRecords.length} shown</span>
+            </div>
+            <input
+              value={mockRecordQuery}
+              onChange={event => setMockRecordQuery(event.target.value)}
+              placeholder="Search mock ID, source, or ownership"
+              aria-label="Search mock ULPIN and ownership records"
+            />
+            <div
+              className="spatial-mock-filter-row"
+              role="group"
+              aria-label="Filter mock records"
+            >
+              {(["all", "ulpin", "ownership"] as const).map(filter => (
+                <button
+                  type="button"
+                  key={filter}
+                  className={mockRecordFilter === filter ? "active" : ""}
+                  onClick={() => setMockRecordFilter(filter)}
+                >
+                  {filter === "all"
+                    ? "All"
+                    : filter === "ulpin"
+                      ? "Mock ULPINs"
+                      : "Ownership"}
+                </button>
+              ))}
+            </div>
+            {filteredMockRecords.length > 0 && (
+              <div className="spatial-mock-record-list">
+                {groupMockRecords
+                  ? Object.entries(groupedMockRecords).map(
+                      ([group, records]) => (
+                        <section
+                          key={group}
+                          className="spatial-mock-record-group"
+                        >
+                          <b>{group}</b>
+                          {records.slice(0, 5).map(record => (
+                            <button
+                              type="button"
+                              key={record.id}
+                              className={
+                                mockUlpIn === record.id ? "active" : ""
+                              }
+                              onClick={() => setMockUlpIn(record.id)}
+                            >
+                              <strong>{record.id}</strong>
+                              <span>
+                                {record.propertyName} · {record.ownership}
+                              </span>
+                            </button>
+                          ))}
+                        </section>
+                      )
+                    )
+                  : filteredMockRecords.slice(0, 5).map(record => (
+                      <button
+                        type="button"
+                        key={record.id}
+                        className={mockUlpIn === record.id ? "active" : ""}
+                        onClick={() => setMockUlpIn(record.id)}
+                      >
+                        <strong>{record.id}</strong>
+                        <span>
+                          {record.propertyName} · {record.ownership}
+                        </span>
+                      </button>
+                    ))}
+              </div>
+            )}
+            <button
+              type="button"
+              className={`spatial-group-toggle${groupMockRecords ? " active" : ""}`}
+              onClick={() => setGroupMockRecords(value => !value)}
+              aria-pressed={groupMockRecords}
+            >
+              {groupMockRecords
+                ? "Grouped by property type"
+                : "Group by property type"}
+            </button>
+          </div>
+          <div
+            className="spatial-mock-rights"
+            aria-label="Mock ownership and vertical rights"
+          >
+            <p>Mock apartment ownership &amp; vertical rights</p>
+            <dl>
+              <div>
+                <dt>Ownership</dt>
+                <dd>
+                  {selected
+                    ? "Demo placeholder · not supplied"
+                    : "Select a source record"}
+                </dd>
+              </div>
+              <div>
+                <dt>Vertical volume</dt>
+                <dd>
+                  {selected ? "Illustrative apartment envelope" : "Unavailable"}
+                </dd>
+              </div>
+              <div>
+                <dt>Rights status</dt>
+                <dd>Mock only · authority record required</dd>
+              </div>
+            </dl>
+          </div>
+          <div className="spatial-sample-upload">
+            <div>
+              <p>Sample floor plan / 3D model</p>
+              <small>Browser-local preview only · max 25 MB</small>
+            </div>
+            <div
+              className={`spatial-upload-dropzone${isSampleDragging ? " is-dragging" : ""}`}
+              onDragOver={event => {
+                event.preventDefault();
+                setIsSampleDragging(true);
+              }}
+              onDragLeave={() => setIsSampleDragging(false)}
+              onDrop={handleSampleAssetDrop}
+            >
+              <Upload size={15} />
+              <span>Drop a sample here or</span>
+              <label className="spatial-upload-button">
+                Browse files
+                <input
+                  type="file"
+                  accept=".pdf,.png,.jpg,.jpeg,.glb,.gltf,application/pdf,image/png,image/jpeg,model/gltf-binary,model/gltf+json"
+                  onChange={handleSampleAssetUpload}
+                />
+              </label>
+            </div>
+            {sampleUploadProgress !== null && (
+              <div className="spatial-upload-progress" role="status">
+                <div>
+                  <span>Reading sample locally</span>
+                  <b>{sampleUploadProgress}%</b>
+                </div>
+                <i>
+                  <em style={{ width: `${sampleUploadProgress}%` }} />
+                </i>
+              </div>
+            )}
+            {sampleAsset && (
+              <div className="spatial-sample-file" role="status">
+                <strong>{sampleAsset.name}</strong>
+                <span>
+                  {sampleAsset.kind === "model" ? "3D model" : "Floor plan"} ·{" "}
+                  {(sampleAsset.size / 1024 / 1024).toFixed(2)} MB · visible on
+                  map
+                </span>
+              </div>
+            )}
+            {sampleAssetError && (
+              <small className="spatial-sample-error" role="alert">
+                {sampleAssetError}
+              </small>
+            )}
+          </div>
+        </section>
       </section>
     </main>
   );

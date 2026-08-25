@@ -146,6 +146,15 @@ describe("dashboard usability controls", () => {
     expect(workspaceSource).toContain("source record comparison");
   });
 
+  it("provides an explicit 2D and 3D toggle for source-record map views", () => {
+    expect(workspaceSource).toContain("sourceMapView");
+    expect(workspaceSource).toContain('aria-label="Source record map view"');
+    expect(workspaceSource).toContain("view.toUpperCase()");
+    expect(workspaceSource).toContain("sourceMapView={sourceMapView}");
+    expect(cesiumViewerSource).toContain('sourceMapView?: "2d" | "3d"');
+    expect(cesiumViewerSource).toContain('sourceMapView === "3d"');
+  });
+
   it("supports searching and filtering browser-local mock identity records", () => {
     expect(workspaceSource).toContain("mockRecordQuery");
     expect(workspaceSource).toContain(
@@ -154,6 +163,14 @@ describe("dashboard usability controls", () => {
     expect(workspaceSource).toContain("Mock ULPINs");
     expect(workspaceSource).toContain('mockRecordFilter === "ownership"');
     expect(workspaceSource).toContain("filteredMockRecords");
+  });
+
+  it("groups mock search results by explicit property type without changing authority status", () => {
+    expect(workspaceSource).toContain("propertyType");
+    expect(workspaceSource).toContain("groupedMockRecords");
+    expect(workspaceSource).toContain("Group by property type");
+    expect(workspaceSource).toContain("Grouped by property type");
+    expect(workspaceSource).toContain("Mock record finder");
   });
 
   it("keeps mock identity and rights demonstrations explicitly non-authoritative", () => {

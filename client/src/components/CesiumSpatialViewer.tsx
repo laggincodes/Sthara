@@ -79,6 +79,7 @@ export function CesiumSpatialViewer({
   focusUlpins,
   onFeatureSelect,
   sampleAsset,
+  sourceMapView = "3d",
 }: {
   command: MapCommand;
   layers: CesiumLayerFlags;
@@ -104,6 +105,7 @@ export function CesiumSpatialViewer({
     properties: Record<string, unknown>;
   }) => void;
   sampleAsset?: SampleMapAsset | null;
+  sourceMapView?: "2d" | "3d";
 }) {
   const cesiumRuntime = (
     window as Window & { Cesium?: typeof import("cesium") }
@@ -783,12 +785,17 @@ export function CesiumSpatialViewer({
             Color.fromCssColorString("#e9ffff")
           );
           entity.polygon.height = new ConstantProperty(1);
-          if (extrusionHeight) {
+          if (extrusionHeight && sourceMapView === "3d") {
             entity.polygon.extrudedHeight = new ConstantProperty(
               extrusionHeight
             );
             entity.polygon.material = new ColorMaterialProperty(
               Color.fromCssColorString("#55dcb4").withAlpha(0.62)
+            );
+          } else {
+            entity.polygon.extrudedHeight = undefined;
+            entity.polygon.material = new ColorMaterialProperty(
+              Color.fromCssColorString("#2ad4d9").withAlpha(0.28)
             );
           }
         }
@@ -872,6 +879,7 @@ export function CesiumSpatialViewer({
     focusUlpins,
     evidenceFilter,
     syntheticDemoFeature,
+    sourceMapView,
   ]);
 
   useEffect(() => {

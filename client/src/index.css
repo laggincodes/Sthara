@@ -2858,6 +2858,45 @@ input:focus-visible {
 .spatial-below-map .spatial-stage-actions {
   justify-content: flex-start;
 }
+.spatial-view-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  width: fit-content;
+  padding: 5px;
+  background: rgba(5, 15, 18, 0.78);
+  border: 1px solid rgba(204, 237, 232, 0.14);
+  border-radius: 7px;
+}
+.spatial-below-map .spatial-view-toggle {
+  position: static;
+  inset: auto;
+  transform: none;
+}
+.spatial-view-toggle > span {
+  padding: 0 5px;
+  color: #809a95;
+  font:
+    8px "IBM Plex Mono",
+    monospace;
+  text-transform: uppercase;
+}
+.spatial-view-toggle button {
+  min-width: 38px;
+  padding: 6px 8px;
+  color: #8fa9a4;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  cursor: pointer;
+  font:
+    8px "IBM Plex Mono",
+    monospace;
+}
+.spatial-view-toggle button.active {
+  color: #062024;
+  background: #72e3df;
+}
 .spatial-below-map .spatial-map-controls {
   display: flex;
   width: fit-content;
@@ -3354,8 +3393,21 @@ input:focus-visible {
 .spatial-mock-record-list {
   display: grid;
   gap: 5px;
-  max-height: 150px;
+  max-height: 190px;
   overflow: auto;
+}
+.spatial-mock-record-group {
+  display: grid;
+  gap: 5px;
+}
+.spatial-mock-record-group > b {
+  padding: 3px 2px;
+  color: #72e3df;
+  font:
+    8px "IBM Plex Mono",
+    monospace;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 .spatial-mock-record-list button {
   display: grid;
@@ -3382,6 +3434,23 @@ input:focus-visible {
 .spatial-mock-record-list span {
   color: #7e9893;
   font-size: 8px;
+}
+.spatial-group-toggle {
+  justify-self: start;
+  padding: 6px 8px;
+  color: #8fa9a4;
+  background: transparent;
+  border: 1px solid rgba(204, 237, 232, 0.13);
+  border-radius: 5px;
+  cursor: pointer;
+  font:
+    8px "IBM Plex Mono",
+    monospace;
+}
+.spatial-group-toggle.active {
+  color: #062024;
+  background: #72e3df;
+  border-color: #72e3df;
 }
 .spatial-mock-rights {
   padding-top: 12px;
