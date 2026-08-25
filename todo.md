@@ -231,3 +231,7 @@
 
 - [x] Add a PDF export action for the current approximate Cesium distance and area measurement result, including a prominent visual-only/non-survey disclaimer.
 - [x] Add regression coverage and validate the measurement PDF export on desktop and mobile without changing other map behavior.
+
+- [x] Include a snapshot image of the Cesium map and measured geometry in the exported measurement PDF.
+- [x] Audit the implemented dashboard against the requested 3D ULPIN-VPM description and document verified, demo-only, and authority-pending capabilities.
+- [x] Add regression coverage and validate the snapshot PDF export without weakening measurement evidence safeguards.

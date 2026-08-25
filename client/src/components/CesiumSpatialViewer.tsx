@@ -236,6 +236,26 @@ export function CesiumSpatialViewer({
     addWrapped(`Calculated result: ${measurementSummary}`, 12, true);
     addWrapped(`Map points captured: ${measurementPointsRef.current.length}`);
     addWrapped(`Exported: ${new Date().toLocaleString()}`);
+
+    const mapCanvas = viewerRef.current?.scene.canvas;
+    if (mapCanvas && mapCanvas.width > 0 && mapCanvas.height > 0) {
+      try {
+        const snapshot = mapCanvas.toDataURL("image/png");
+        cursorY += 8;
+        addWrapped("Map snapshot · measured geometry visible", 10, true);
+        const imageWidth = 490;
+        const imageHeight = Math.min(
+          300,
+          (imageWidth * mapCanvas.height) / mapCanvas.width
+        );
+        pdf.addImage(snapshot, "PNG", left, cursorY, imageWidth, imageHeight);
+        pdf.setDrawColor(180, 180, 180);
+        pdf.rect(left, cursorY, imageWidth, imageHeight);
+        cursorY += imageHeight + 16;
+      } catch (error) {
+        console.warn("[Cesium] Measurement map snapshot unavailable", error);
+      }
+    }
     cursorY += 12;
     addWrapped(
       "Important limitation: this is an approximate visual calculation from the Cesium map. It is not GNSS, survey, cadastral, legal, engineering, or authoritative measurement evidence.",

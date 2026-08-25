@@ -105,6 +105,14 @@ describe("dashboard usability controls", () => {
     );
     expect(cesiumViewerSource).toContain("not GNSS, survey, cadastral, legal");
     expect(cesiumViewerSource).toContain("disabled={!measurementSummary}");
+    expect(cesiumViewerSource).toContain('toDataURL("image/png")');
+    expect(cesiumViewerSource).toContain(
+      "Map snapshot · measured geometry visible"
+    );
+    expect(cesiumViewerSource).toContain(
+      "Measurement map snapshot unavailable"
+    );
+    expect(cesiumViewerSource).toContain('pdf.addImage(snapshot, "PNG"');
   });
 
   it("keeps Registry favorites browser-local and source-record scoped", () => {
