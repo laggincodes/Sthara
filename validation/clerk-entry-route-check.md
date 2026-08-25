@@ -45,3 +45,5 @@ The Clerk structural-CSS warning was traced to `.access-portal__clerk .cl-card`,
 After synchronizing the selector-removal release to GitHub `main`, the Vercel main-branch alias again rendered the full branded Clerk sign-in interface. Console verification is the remaining production check for the absence of the structural-CSS warning.
 
 The production console check returned no messages. The unsupported structural-CSS warning is resolved, while the branded form remains mounted and visible.
+
+The `unload is not allowed` violation was traced to the project’s Manus development debug collector, whose browser script registers `beforeunload` to report logs. The collector plugin was previously enabled during a build whenever `NODE_ENV` was not explicitly set. It is now Vite `serve`-only, so it still supports local debugging but cannot inject the unload listener into Vercel production HTML. Focused regression tests, TypeScript, and a production build check that asserts the collector script is absent from `dist/public/index.html` passed.
