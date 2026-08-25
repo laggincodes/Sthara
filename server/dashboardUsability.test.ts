@@ -146,6 +146,26 @@ describe("dashboard usability controls", () => {
     expect(workspaceSource).toContain("source record comparison");
   });
 
+  it("keeps mock identity and rights demonstrations explicitly non-authoritative", () => {
+    expect(workspaceSource).toContain("Generate mock 3D ULPIN");
+    expect(workspaceSource).toContain("MOCK-3D-");
+    expect(workspaceSource).toContain(
+      "Mock apartment ownership &amp; vertical rights"
+    );
+    expect(workspaceSource).toContain("DEMO / NON-AUTHORITATIVE");
+    expect(workspaceSource).toContain("authority record required");
+  });
+
+  it("supports browser-local sample floor-plan and 3D-model map previews", () => {
+    expect(workspaceSource).toContain("handleSampleAssetUpload");
+    expect(workspaceSource).toContain(".pdf,.png,.jpg,.jpeg,.glb,.gltf");
+    expect(workspaceSource).toContain("Browser-local preview only");
+    expect(workspaceSource).toContain("sampleAsset={sampleAsset}");
+    expect(cesiumViewerSource).toContain("ModelGraphics");
+    expect(cesiumViewerSource).toContain("Sample floor plan");
+    expect(cesiumViewerSource).toContain("not georeferenced");
+  });
+
   it("keeps the workspace map focused on preview and approximate measurements", () => {
     expect(cesiumViewerSource).toContain("measurementControlsOnly");
     expect(workspaceSource).toContain("measurementControlsOnly");

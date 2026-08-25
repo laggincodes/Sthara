@@ -2,6 +2,7 @@ import {
   CesiumSpatialViewer,
   type CesiumLayerFlags,
   type MapCommand,
+  type SampleMapAsset,
 } from "@/components/CesiumSpatialViewer";
 import {
   ThreeBuildingPreview,
@@ -32,6 +33,7 @@ import {
   ScanSearch,
   Settings2,
   ShieldAlert,
+  Upload,
   ShieldCheck,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -172,6 +174,9 @@ export default function SpatialWorkspace() {
     nonce: Date.now(),
   });
   const [selected, setSelected] = useState<SelectedFeature | null>(null);
+  const [mockUlpIn, setMockUlpIn] = useState<string | null>(null);
+  const [sampleAsset, setSampleAsset] = useState<SampleMapAsset | null>(null);
+  const [sampleAssetError, setSampleAssetError] = useState<string | null>(null);
   const [verticalLayer, setVerticalLayer] =
     useState<VerticalLayerId>("surface");
   const [resolutionNote, setResolutionNote] = useState<string | null>(null);
@@ -270,7 +275,66 @@ export default function SpatialWorkspace() {
     setSiteQuery(requestedSite);
     setResolutionNote(null);
     setSelected(null);
+    setMockUlpIn(null);
   }, [requestedSite]);
+
+  useEffect(() => {
+    return () => {
+      if (sampleAsset?.url.startsWith("blob:")) {
+        URL.revokeObjectURL(sampleAsset.url);
+      }
+    };
+  }, [sampleAsset]);
+
+  const generateMockUlpIn = () => {
+    if (!selected) return;
+    const slug = selected.ulpin
+      .replace(/[^a-z0-9]+/gi, "")
+      .slice(-8)
+      .toUpperCase();
+    setMockUlpIn(
+      `MOCK-3D-${slug || "SOURCE"}-${Date.now().toString(36).toUpperCase()}`
+    );
+  };
+
+  const handleSampleAssetUpload = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    const extension = file.name.split(".").pop()?.toLowerCase();
+    const isFloorPlan =
+      file.type === "application/pdf" ||
+      file.type === "image/png" ||
+      file.type === "image/jpeg" ||
+      extension === "pdf" ||
+      extension === "png" ||
+      extension === "jpg" ||
+      extension === "jpeg";
+    const isModel =
+      file.type === "model/gltf-binary" ||
+      file.type === "model/gltf+json" ||
+      extension === "glb" ||
+      extension === "gltf";
+    if (!isFloorPlan && !isModel) {
+      setSampleAssetError("Choose a PNG, JPG, PDF, GLB, or GLTF sample file.");
+      return;
+    }
+    if (file.size > 25 * 1024 * 1024) {
+      setSampleAssetError("Sample files must be 25 MB or smaller.");
+      return;
+    }
+    setSampleAssetError(null);
+    setSampleAsset({
+      kind: isModel ? "model" : "floor-plan",
+      name: file.name,
+      url: URL.createObjectURL(file),
+      size: file.size,
+      mimeType:
+        file.type || (isModel ? "model/gltf-binary" : "application/pdf"),
+    });
+  };
 
   const activateVerticalLayer = (layer: VerticalLayerId) => {
     setVerticalLayer(layer);
@@ -431,6 +495,7 @@ export default function SpatialWorkspace() {
                 focusUlpins={activeMapUlpins}
                 measurementControlsOnly
                 onFeatureSelect={onFeatureSelect}
+                sampleAsset={sampleAsset}
               />
               <div className="spatial-stage-grid" />
               <div className="spatial-stage-vignette" />
@@ -916,6 +981,103 @@ export default function SpatialWorkspace() {
                 </button>
               )}
             </div>
+            <section
+              className="spatial-dossier-card spatial-demo-tools"
+              aria-label="Demo identity and sample model tools"
+            >
+              <div className="spatial-dossier-title">
+                <div>
+                  <p>Prototype tools</p>
+                  <h2>3D identity &amp; rights demo</h2>
+                </div>
+                <ShieldAlert size={17} />
+              </div>
+              <div className="spatial-demo-warning">
+                <b>DEMO / NON-AUTHORITATIVE</b>
+                <span>
+                  These values demonstrate the workflow only. They are not an
+                  issued ULPIN, ownership record, cadastral right, or survey.
+                </span>
+              </div>
+              <div className="spatial-demo-identity">
+                <div>
+                  <small>Selected source record</small>
+                  <strong>
+                    {selected ? selected.ulpin : "Select a live footprint"}
+                  </strong>
+                </div>
+                <button
+                  type="button"
+                  disabled={!selected}
+                  onClick={generateMockUlpIn}
+                >
+                  <ShieldCheck size={13} /> Generate mock 3D ULPIN
+                </button>
+                {mockUlpIn && (
+                  <div className="spatial-mock-id" role="status">
+                    <small>Sample identifier · not issued</small>
+                    <strong>{mockUlpIn}</strong>
+                  </div>
+                )}
+              </div>
+              <div
+                className="spatial-mock-rights"
+                aria-label="Mock ownership and vertical rights"
+              >
+                <p>Mock apartment ownership &amp; vertical rights</p>
+                <dl>
+                  <div>
+                    <dt>Ownership</dt>
+                    <dd>
+                      {selected
+                        ? "Demo placeholder · not supplied"
+                        : "Select a source record"}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Vertical volume</dt>
+                    <dd>
+                      {selected
+                        ? "Illustrative apartment envelope"
+                        : "Unavailable"}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Rights status</dt>
+                    <dd>Mock only · authority record required</dd>
+                  </div>
+                </dl>
+              </div>
+              <div className="spatial-sample-upload">
+                <div>
+                  <p>Sample floor plan / 3D model</p>
+                  <small>Browser-local preview only · max 25 MB</small>
+                </div>
+                <label className="spatial-upload-button">
+                  <Upload size={14} /> Upload sample
+                  <input
+                    type="file"
+                    accept=".pdf,.png,.jpg,.jpeg,.glb,.gltf,application/pdf,image/png,image/jpeg,model/gltf-binary,model/gltf+json"
+                    onChange={handleSampleAssetUpload}
+                  />
+                </label>
+                {sampleAsset && (
+                  <div className="spatial-sample-file" role="status">
+                    <strong>{sampleAsset.name}</strong>
+                    <span>
+                      {sampleAsset.kind === "model" ? "3D model" : "Floor plan"}{" "}
+                      · {(sampleAsset.size / 1024 / 1024).toFixed(2)} MB ·
+                      visible on map
+                    </span>
+                  </div>
+                )}
+                {sampleAssetError && (
+                  <small className="spatial-sample-error" role="alert">
+                    {sampleAssetError}
+                  </small>
+                )}
+              </div>
+            </section>
             <div className="spatial-dossier-card spatial-layer-panel">
               <div className="spatial-dossier-title">
                 <div>

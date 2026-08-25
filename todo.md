@@ -235,3 +235,8 @@
 - [x] Include a snapshot image of the Cesium map and measured geometry in the exported measurement PDF.
 - [x] Audit the implemented dashboard against the requested 3D ULPIN-VPM description and document verified, demo-only, and authority-pending capabilities.
 - [x] Add regression coverage and validate the snapshot PDF export without weakening measurement evidence safeguards.
+
+- [x] Add a clearly labeled mock 3D ULPIN generation action for a selected source parcel/footprint.
+- [x] Add a clearly labeled mock ownership and vertical-rights panel for a selected multi-storey source record.
+- [x] Add browser-local upload and map-preview support for sample floor plans and 3D model files, with explicit demo-only labeling.
+- [x] Add regression coverage and validate the three demo workflows on desktop and mobile without implying official cadastral evidence.

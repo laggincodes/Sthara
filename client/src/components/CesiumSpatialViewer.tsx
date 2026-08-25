@@ -14,6 +14,14 @@ import type {
 import { AlertTriangle, FileDown, LoaderCircle, RefreshCw } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+export type SampleMapAsset = {
+  kind: "floor-plan" | "model";
+  name: string;
+  url: string;
+  size: number;
+  mimeType: string;
+};
+
 export type MapCommand = {
   kind:
     | "zoom-in"
@@ -70,6 +78,7 @@ export function CesiumSpatialViewer({
   onSyntheticDemoSelect,
   focusUlpins,
   onFeatureSelect,
+  sampleAsset,
 }: {
   command: MapCommand;
   layers: CesiumLayerFlags;
@@ -94,6 +103,7 @@ export function CesiumSpatialViewer({
     ulpin: string;
     properties: Record<string, unknown>;
   }) => void;
+  sampleAsset?: SampleMapAsset | null;
 }) {
   const cesiumRuntime = (
     window as Window & { Cesium?: typeof import("cesium") }
@@ -131,6 +141,7 @@ export function CesiumSpatialViewer({
     HeadingPitchRange,
     Ion,
     LabelGraphics,
+    ModelGraphics,
     OpenStreetMapImageryProvider,
     PointGraphics,
     PolygonGraphics,
@@ -153,6 +164,7 @@ export function CesiumSpatialViewer({
     null
   );
   const measurementEntitiesRef = useRef<CesiumEntity[]>([]);
+  const sampleAssetEntityRef = useRef<CesiumEntity | null>(null);
   const measurementPointsRef = useRef<CesiumCartesian3[]>([]);
   const measurementModeRef = useRef<"off" | "distance" | "area">("off");
   const [viewerReady, setViewerReady] = useState(false);
@@ -275,6 +287,35 @@ export function CesiumSpatialViewer({
   useEffect(() => {
     measurementModeRef.current = measurementMode;
   }, [measurementMode]);
+
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    if (!viewer || !viewerReady) return;
+    if (sampleAssetEntityRef.current) {
+      viewer.entities.remove(sampleAssetEntityRef.current);
+      sampleAssetEntityRef.current = null;
+    }
+    if (sampleAsset?.kind === "model") {
+      sampleAssetEntityRef.current = viewer.entities.add(
+        new Entity({
+          name: `DEMO sample 3D model · ${sampleAsset.name}`,
+          position: Cartesian3.fromDegrees(85.071159, 25.63366, 0),
+          model: new ModelGraphics({
+            uri: sampleAsset.url,
+            scale: 1,
+            minimumPixelSize: 48,
+          }),
+        })
+      );
+      viewer.scene.requestRender();
+    }
+    return () => {
+      if (sampleAssetEntityRef.current) {
+        viewer.entities.remove(sampleAssetEntityRef.current);
+        sampleAssetEntityRef.current = null;
+      }
+    };
+  }, [sampleAsset, viewerReady]);
 
   useEffect(() => {
     if (!containerRef.current || viewerRef.current) return;
@@ -1221,6 +1262,27 @@ export function CesiumSpatialViewer({
                 : "Source record · not issued"}
             </i>
           </footer>
+        </div>
+      )}
+      {sampleAsset?.kind === "floor-plan" && (
+        <div className="cesium-sample-asset-overlay" role="status">
+          <span>DEMO · sample floor plan preview · not georeferenced</span>
+          {sampleAsset.mimeType === "application/pdf" ? (
+            <iframe
+              title={`Sample floor plan ${sampleAsset.name}`}
+              src={sampleAsset.url}
+            />
+          ) : (
+            <img
+              src={sampleAsset.url}
+              alt={`Sample floor plan ${sampleAsset.name}`}
+            />
+          )}
+        </div>
+      )}
+      {sampleAsset?.kind === "model" && (
+        <div className="cesium-sample-asset-badge" role="status">
+          DEMO · sample 3D model on map · not surveyed or authoritative
         </div>
       )}
       {measurementMode !== "off" && (
