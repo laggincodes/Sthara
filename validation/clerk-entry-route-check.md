@@ -25,3 +25,7 @@ After the user confirmed the Vercel environment variables and a new GitHub-trigg
 After adding safe support for the user-configured public `CLERK_PUBLISH_KEY` alias and pushing checkpoint `414dcc72`, the Vercel main-branch alias was checked twice. It still displayed the secure-access shell without a mounted Clerk form. The next diagnostic step must distinguish a delayed/stale deployment from an actual build-time environment injection issue.
 
 The Vercel main-branch bundle now contains a valid redacted `pk_test_…` Clerk public key resolving to the configured Clerk development frontend API, so the browser-key injection issue is corrected. In contrast, the Vercel page still does not load any Clerk resources or mount the hosted form, while the same application opens a fully mounted Clerk form in the local Manus preview. This isolates the remaining blocker to the Clerk instance’s allowed-origin/redirect configuration for the Vercel domain, rather than a missing Vercel environment variable.
+
+## Vercel API recovery follow-up
+
+After isolating local Vite startup code from the serverless bundle and adding a server-side compatibility fallback for the existing public Clerk key name, the Vercel `/api/trpc/auth.me` endpoint returned HTTP 200 with `x-clerk-auth-status: signed-out`, confirming that the Express, tRPC, and Clerk middleware path is live. A subsequent public-root snapshot remained blank with no browser-console output, so client asset routing and client initialization must be verified separately before declaring the end-user sign-in loop resolved.
