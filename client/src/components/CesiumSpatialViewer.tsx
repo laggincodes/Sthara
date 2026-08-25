@@ -11,8 +11,16 @@ import type {
   GeoJsonDataSource as CesiumGeoJsonDataSource,
   Viewer as CesiumViewer,
 } from "cesium";
-import { AlertTriangle, LoaderCircle, RefreshCw } from "lucide-react";
+import { AlertTriangle, FileDown, LoaderCircle, RefreshCw } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+
+export type SampleMapAsset = {
+  kind: "floor-plan" | "model";
+  name: string;
+  url: string;
+  size: number;
+  mimeType: string;
+};
 
 export type MapCommand = {
   kind:
@@ -70,6 +78,7 @@ export function CesiumSpatialViewer({
   onSyntheticDemoSelect,
   focusUlpins,
   onFeatureSelect,
+  sampleAsset,
 }: {
   command: MapCommand;
   layers: CesiumLayerFlags;
@@ -94,6 +103,7 @@ export function CesiumSpatialViewer({
     ulpin: string;
     properties: Record<string, unknown>;
   }) => void;
+  sampleAsset?: SampleMapAsset | null;
 }) {
   const cesiumRuntime = (
     window as Window & { Cesium?: typeof import("cesium") }
@@ -131,6 +141,7 @@ export function CesiumSpatialViewer({
     HeadingPitchRange,
     Ion,
     LabelGraphics,
+    ModelGraphics,
     OpenStreetMapImageryProvider,
     PointGraphics,
     PolygonGraphics,
@@ -153,6 +164,7 @@ export function CesiumSpatialViewer({
     null
   );
   const measurementEntitiesRef = useRef<CesiumEntity[]>([]);
+  const sampleAssetEntityRef = useRef<CesiumEntity | null>(null);
   const measurementPointsRef = useRef<CesiumCartesian3[]>([]);
   const measurementModeRef = useRef<"off" | "distance" | "area">("off");
   const [viewerReady, setViewerReady] = useState(false);
@@ -213,9 +225,97 @@ export function CesiumSpatialViewer({
     setMeasurementMode(current => (current === nextMode ? "off" : nextMode));
   };
 
+  const exportMeasurementPdf = async () => {
+    if (!measurementSummary) return;
+    const { jsPDF } = await import("jspdf");
+    const pdf = new jsPDF({ unit: "pt", format: "a4" });
+    const left = 52;
+    let cursorY = 58;
+    const addWrapped = (text: string, size = 10, bold = false) => {
+      pdf.setFont("helvetica", bold ? "bold" : "normal");
+      pdf.setFontSize(size);
+      const lines = pdf.splitTextToSize(text, 490) as string[];
+      pdf.text(lines, left, cursorY);
+      cursorY += lines.length * (size + 5) + 8;
+    };
+
+    addWrapped("3D ULPIN-VPM · Visual measurement report", 16, true);
+    addWrapped(
+      `Measurement mode: ${measurementMode === "distance" ? "Distance" : "Area"}`,
+      10,
+      true
+    );
+    addWrapped(`Calculated result: ${measurementSummary}`, 12, true);
+    addWrapped(`Map points captured: ${measurementPointsRef.current.length}`);
+    addWrapped(`Exported: ${new Date().toLocaleString()}`);
+
+    const mapCanvas = viewerRef.current?.scene.canvas;
+    if (mapCanvas && mapCanvas.width > 0 && mapCanvas.height > 0) {
+      try {
+        const snapshot = mapCanvas.toDataURL("image/png");
+        cursorY += 8;
+        addWrapped("Map snapshot · measured geometry visible", 10, true);
+        const imageWidth = 490;
+        const imageHeight = Math.min(
+          300,
+          (imageWidth * mapCanvas.height) / mapCanvas.width
+        );
+        pdf.addImage(snapshot, "PNG", left, cursorY, imageWidth, imageHeight);
+        pdf.setDrawColor(180, 180, 180);
+        pdf.rect(left, cursorY, imageWidth, imageHeight);
+        cursorY += imageHeight + 16;
+      } catch (error) {
+        console.warn("[Cesium] Measurement map snapshot unavailable", error);
+      }
+    }
+    cursorY += 12;
+    addWrapped(
+      "Important limitation: this is an approximate visual calculation from the Cesium map. It is not GNSS, survey, cadastral, legal, engineering, or authoritative measurement evidence.",
+      10,
+      true
+    );
+    addWrapped(
+      "The report contains only the measurement currently displayed in the browser. It does not create or imply a parcel boundary, ownership right, issued ULPIN, surveyed coordinate, or official area record."
+    );
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(8);
+    pdf.setTextColor(100);
+    pdf.text("3D ULPIN-VPM · source-aware spatial review", left, 790);
+    pdf.save("ulpin-vpm-visual-measurement-report.pdf");
+  };
+
   useEffect(() => {
     measurementModeRef.current = measurementMode;
   }, [measurementMode]);
+
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    if (!viewer || !viewerReady) return;
+    if (sampleAssetEntityRef.current) {
+      viewer.entities.remove(sampleAssetEntityRef.current);
+      sampleAssetEntityRef.current = null;
+    }
+    if (sampleAsset?.kind === "model") {
+      sampleAssetEntityRef.current = viewer.entities.add(
+        new Entity({
+          name: `DEMO sample 3D model · ${sampleAsset.name}`,
+          position: Cartesian3.fromDegrees(85.071159, 25.63366, 0),
+          model: new ModelGraphics({
+            uri: sampleAsset.url,
+            scale: 1,
+            minimumPixelSize: 48,
+          }),
+        })
+      );
+      viewer.scene.requestRender();
+    }
+    return () => {
+      if (sampleAssetEntityRef.current) {
+        viewer.entities.remove(sampleAssetEntityRef.current);
+        sampleAssetEntityRef.current = null;
+      }
+    };
+  }, [sampleAsset, viewerReady]);
 
   useEffect(() => {
     if (!containerRef.current || viewerRef.current) return;
@@ -1076,6 +1176,14 @@ export function CesiumSpatialViewer({
               >
                 Clear
               </button>
+              <button
+                type="button"
+                disabled={!measurementSummary}
+                onClick={() => void exportMeasurementPdf()}
+                title="Export the current approximate measurement as a PDF"
+              >
+                <FileDown size={12} /> PDF
+              </button>
             </div>
           </section>
         </div>
@@ -1154,6 +1262,27 @@ export function CesiumSpatialViewer({
                 : "Source record · not issued"}
             </i>
           </footer>
+        </div>
+      )}
+      {sampleAsset?.kind === "floor-plan" && (
+        <div className="cesium-sample-asset-overlay" role="status">
+          <span>DEMO · sample floor plan preview · not georeferenced</span>
+          {sampleAsset.mimeType === "application/pdf" ? (
+            <iframe
+              title={`Sample floor plan ${sampleAsset.name}`}
+              src={sampleAsset.url}
+            />
+          ) : (
+            <img
+              src={sampleAsset.url}
+              alt={`Sample floor plan ${sampleAsset.name}`}
+            />
+          )}
+        </div>
+      )}
+      {sampleAsset?.kind === "model" && (
+        <div className="cesium-sample-asset-badge" role="status">
+          DEMO · sample 3D model on map · not surveyed or authoritative
         </div>
       )}
       {measurementMode !== "off" && (

@@ -228,3 +228,20 @@
 - [x] Validate the separated layout on desktop/mobile, run regression tests/build, and push the validated code to the connected GitHub repository.
 
 - [x] Synchronize the current validated code to the exact repository https://github.com/Gautam-kumar01/SIH-2026 and verify the pushed main branch.
+
+- [x] Add a PDF export action for the current approximate Cesium distance and area measurement result, including a prominent visual-only/non-survey disclaimer.
+- [x] Add regression coverage and validate the measurement PDF export on desktop and mobile without changing other map behavior.
+
+- [x] Include a snapshot image of the Cesium map and measured geometry in the exported measurement PDF.
+- [x] Audit the implemented dashboard against the requested 3D ULPIN-VPM description and document verified, demo-only, and authority-pending capabilities.
+- [x] Add regression coverage and validate the snapshot PDF export without weakening measurement evidence safeguards.
+
+- [x] Add a clearly labeled mock 3D ULPIN generation action for a selected source parcel/footprint.
+- [x] Add a clearly labeled mock ownership and vertical-rights panel for a selected multi-storey source record.
+- [x] Add browser-local upload and map-preview support for sample floor plans and 3D model files, with explicit demo-only labeling.
+- [x] Add regression coverage and validate the three demo workflows on desktop and mobile without implying official cadastral evidence.
+
+- [x] Add search and filter controls for browser-local mock ULPIN and ownership records.
+- [x] Enhance sample floor-plan/model upload with drag-and-drop and a visible loading/progress state.
+- [x] Add a downloadable PDF report for generated mock 3D ULPIN and mock ownership/vertical-rights details.
+- [x] Add regression coverage, validate the new demo workflows, and push the validated release to the exact GitHub repository.

@@ -2,6 +2,7 @@ import {
   CesiumSpatialViewer,
   type CesiumLayerFlags,
   type MapCommand,
+  type SampleMapAsset,
 } from "@/components/CesiumSpatialViewer";
 import {
   ThreeBuildingPreview,
@@ -25,6 +26,7 @@ import {
   Building2,
   CircleDot,
   Database,
+  FileDown,
   Layers3,
   Maximize2,
   Minus,
@@ -32,12 +34,22 @@ import {
   ScanSearch,
   Settings2,
   ShieldAlert,
+  Upload,
   ShieldCheck,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useSearch } from "wouter";
 
 type SelectedFeature = { ulpin: string; properties: Record<string, unknown> };
+
+type MockRecord = {
+  id: string;
+  sourceRecordId: string;
+  propertyName: string;
+  ownership: string;
+  verticalRights: string;
+  createdAt: number;
+};
 
 const layerOptions: Array<{
   key: keyof CesiumLayerFlags;
@@ -172,6 +184,18 @@ export default function SpatialWorkspace() {
     nonce: Date.now(),
   });
   const [selected, setSelected] = useState<SelectedFeature | null>(null);
+  const [mockRecords, setMockRecords] = useState<MockRecord[]>([]);
+  const [mockRecordQuery, setMockRecordQuery] = useState("");
+  const [mockRecordFilter, setMockRecordFilter] = useState<
+    "all" | "ulpin" | "ownership"
+  >("all");
+  const [mockUlpIn, setMockUlpIn] = useState<string | null>(null);
+  const [sampleAsset, setSampleAsset] = useState<SampleMapAsset | null>(null);
+  const [sampleAssetError, setSampleAssetError] = useState<string | null>(null);
+  const [sampleUploadProgress, setSampleUploadProgress] = useState<
+    number | null
+  >(null);
+  const [isSampleDragging, setIsSampleDragging] = useState(false);
   const [verticalLayer, setVerticalLayer] =
     useState<VerticalLayerId>("surface");
   const [resolutionNote, setResolutionNote] = useState<string | null>(null);
@@ -270,7 +294,153 @@ export default function SpatialWorkspace() {
     setSiteQuery(requestedSite);
     setResolutionNote(null);
     setSelected(null);
+    setMockUlpIn(null);
   }, [requestedSite]);
+
+  useEffect(() => {
+    return () => {
+      if (sampleAsset?.url.startsWith("blob:")) {
+        URL.revokeObjectURL(sampleAsset.url);
+      }
+    };
+  }, [sampleAsset]);
+
+  const filteredMockRecords = useMemo(() => {
+    const query = mockRecordQuery.trim().toLowerCase();
+    return mockRecords.filter(record => {
+      const matchesQuery =
+        !query ||
+        [
+          record.id,
+          record.sourceRecordId,
+          record.propertyName,
+          record.ownership,
+        ]
+          .join(" ")
+          .toLowerCase()
+          .includes(query);
+      const matchesFilter =
+        mockRecordFilter === "all" ||
+        (mockRecordFilter === "ulpin" && record.id.startsWith("MOCK-3D-")) ||
+        (mockRecordFilter === "ownership" && record.ownership.length > 0);
+      return matchesQuery && matchesFilter;
+    });
+  }, [mockRecordFilter, mockRecordQuery, mockRecords]);
+
+  const generateMockUlpIn = () => {
+    if (!selected) return;
+    const slug = selected.ulpin
+      .replace(/[^a-z0-9]+/gi, "")
+      .slice(-8)
+      .toUpperCase();
+    const id = `MOCK-3D-${slug || "SOURCE"}-${Date.now().toString(36).toUpperCase()}`;
+    const record: MockRecord = {
+      id,
+      sourceRecordId: selected.ulpin,
+      propertyName: selectedName,
+      ownership: "Demo placeholder · not supplied",
+      verticalRights: "Illustrative apartment envelope",
+      createdAt: Date.now(),
+    };
+    setMockUlpIn(id);
+    setMockRecords(records => [record, ...records]);
+  };
+
+  const exportMockDetailsPdf = async () => {
+    const record =
+      mockRecords.find(item => item.id === mockUlpIn) ?? mockRecords[0];
+    if (!record) return;
+    const { jsPDF } = await import("jspdf");
+    const pdf = new jsPDF({ unit: "pt", format: "a4" });
+    let cursorY = 58;
+    const addWrapped = (text: string, size = 10, bold = false) => {
+      pdf.setFont("helvetica", bold ? "bold" : "normal");
+      pdf.setFontSize(size);
+      const lines = pdf.splitTextToSize(text, 490) as string[];
+      pdf.text(lines, 52, cursorY);
+      cursorY += lines.length * (size + 5) + 9;
+    };
+    addWrapped("3D ULPIN-VPM · Mock identity and rights report", 16, true);
+    addWrapped("DEMO / NON-AUTHORITATIVE", 11, true);
+    addWrapped(`Sample 3D ULPIN: ${record.id}`, 12, true);
+    addWrapped(`Source record: ${record.sourceRecordId}`);
+    addWrapped(`Property label: ${record.propertyName}`);
+    addWrapped(`Mock ownership: ${record.ownership}`);
+    addWrapped(`Mock vertical rights: ${record.verticalRights}`);
+    addWrapped(`Created: ${new Date(record.createdAt).toLocaleString()}`);
+    cursorY += 12;
+    addWrapped(
+      "These fields are illustrative demo values only. This PDF does not create an official ULPIN, prove ownership, establish a legal vertical right, or replace cadastral, survey, or authority evidence.",
+      10,
+      true
+    );
+    pdf.save("ulpin-vpm-mock-identity-rights-report.pdf");
+  };
+
+  const processSampleAsset = (file: File) => {
+    const extension = file.name.split(".").pop()?.toLowerCase();
+    const isFloorPlan =
+      file.type === "application/pdf" ||
+      file.type === "image/png" ||
+      file.type === "image/jpeg" ||
+      extension === "pdf" ||
+      extension === "png" ||
+      extension === "jpg" ||
+      extension === "jpeg";
+    const isModel =
+      file.type === "model/gltf-binary" ||
+      file.type === "model/gltf+json" ||
+      extension === "glb" ||
+      extension === "gltf";
+    if (!isFloorPlan && !isModel) {
+      setSampleAssetError("Choose a PNG, JPG, PDF, GLB, or GLTF sample file.");
+      return;
+    }
+    if (file.size > 25 * 1024 * 1024) {
+      setSampleAssetError("Sample files must be 25 MB or smaller.");
+      return;
+    }
+    setSampleAssetError(null);
+    setSampleUploadProgress(0);
+    const reader = new FileReader();
+    reader.onprogress = event => {
+      if (event.lengthComputable) {
+        setSampleUploadProgress(Math.round((event.loaded / event.total) * 100));
+      }
+    };
+    reader.onerror = () => {
+      setSampleUploadProgress(null);
+      setSampleAssetError("The sample file could not be read in this browser.");
+    };
+    reader.onload = () => {
+      setSampleAsset({
+        kind: isModel ? "model" : "floor-plan",
+        name: file.name,
+        url: URL.createObjectURL(file),
+        size: file.size,
+        mimeType:
+          file.type || (isModel ? "model/gltf-binary" : "application/pdf"),
+      });
+      setSampleUploadProgress(100);
+      window.setTimeout(() => setSampleUploadProgress(null), 700);
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  const handleSampleAssetUpload = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (file) processSampleAsset(file);
+  };
+
+  const handleSampleAssetDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsSampleDragging(false);
+    const file = event.dataTransfer.files?.[0];
+    if (file) processSampleAsset(file);
+  };
 
   const activateVerticalLayer = (layer: VerticalLayerId) => {
     setVerticalLayer(layer);
@@ -431,6 +601,7 @@ export default function SpatialWorkspace() {
                 focusUlpins={activeMapUlpins}
                 measurementControlsOnly
                 onFeatureSelect={onFeatureSelect}
+                sampleAsset={sampleAsset}
               />
               <div className="spatial-stage-grid" />
               <div className="spatial-stage-vignette" />
@@ -916,6 +1087,186 @@ export default function SpatialWorkspace() {
                 </button>
               )}
             </div>
+            <section
+              className="spatial-dossier-card spatial-demo-tools"
+              aria-label="Demo identity and sample model tools"
+            >
+              <div className="spatial-dossier-title">
+                <div>
+                  <p>Prototype tools</p>
+                  <h2>3D identity &amp; rights demo</h2>
+                </div>
+                <ShieldAlert size={17} />
+              </div>
+              <div className="spatial-demo-warning">
+                <b>DEMO / NON-AUTHORITATIVE</b>
+                <span>
+                  These values demonstrate the workflow only. They are not an
+                  issued ULPIN, ownership record, cadastral right, or survey.
+                </span>
+              </div>
+              <div className="spatial-demo-identity">
+                <div>
+                  <small>Selected source record</small>
+                  <strong>
+                    {selected ? selected.ulpin : "Select a live footprint"}
+                  </strong>
+                </div>
+                <button
+                  type="button"
+                  disabled={!selected}
+                  onClick={generateMockUlpIn}
+                >
+                  <ShieldCheck size={13} /> Generate mock 3D ULPIN
+                </button>
+                {mockUlpIn && (
+                  <div className="spatial-mock-id" role="status">
+                    <small>Sample identifier · not issued</small>
+                    <strong>{mockUlpIn}</strong>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  className="spatial-pdf-button"
+                  disabled={mockRecords.length === 0}
+                  onClick={() => void exportMockDetailsPdf()}
+                >
+                  <FileDown size={13} /> Export mock details PDF
+                </button>
+              </div>
+              <div
+                className="spatial-mock-records"
+                aria-label="Mock record search and filters"
+              >
+                <div className="spatial-mock-records-heading">
+                  <p>Mock record finder</p>
+                  <span>{filteredMockRecords.length} shown</span>
+                </div>
+                <input
+                  value={mockRecordQuery}
+                  onChange={event => setMockRecordQuery(event.target.value)}
+                  placeholder="Search mock ID, source, or ownership"
+                  aria-label="Search mock ULPIN and ownership records"
+                />
+                <div
+                  className="spatial-mock-filter-row"
+                  role="group"
+                  aria-label="Filter mock records"
+                >
+                  {(["all", "ulpin", "ownership"] as const).map(filter => (
+                    <button
+                      type="button"
+                      key={filter}
+                      className={mockRecordFilter === filter ? "active" : ""}
+                      onClick={() => setMockRecordFilter(filter)}
+                    >
+                      {filter === "all"
+                        ? "All"
+                        : filter === "ulpin"
+                          ? "Mock ULPINs"
+                          : "Ownership"}
+                    </button>
+                  ))}
+                </div>
+                {filteredMockRecords.length > 0 && (
+                  <div className="spatial-mock-record-list">
+                    {filteredMockRecords.slice(0, 5).map(record => (
+                      <button
+                        type="button"
+                        key={record.id}
+                        className={mockUlpIn === record.id ? "active" : ""}
+                        onClick={() => setMockUlpIn(record.id)}
+                      >
+                        <strong>{record.id}</strong>
+                        <span>
+                          {record.propertyName} · {record.ownership}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div
+                className="spatial-mock-rights"
+                aria-label="Mock ownership and vertical rights"
+              >
+                <p>Mock apartment ownership &amp; vertical rights</p>
+                <dl>
+                  <div>
+                    <dt>Ownership</dt>
+                    <dd>
+                      {selected
+                        ? "Demo placeholder · not supplied"
+                        : "Select a source record"}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Vertical volume</dt>
+                    <dd>
+                      {selected
+                        ? "Illustrative apartment envelope"
+                        : "Unavailable"}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Rights status</dt>
+                    <dd>Mock only · authority record required</dd>
+                  </div>
+                </dl>
+              </div>
+              <div className="spatial-sample-upload">
+                <div>
+                  <p>Sample floor plan / 3D model</p>
+                  <small>Browser-local preview only · max 25 MB</small>
+                </div>
+                <div
+                  className={`spatial-upload-dropzone${isSampleDragging ? " is-dragging" : ""}`}
+                  onDragOver={event => {
+                    event.preventDefault();
+                    setIsSampleDragging(true);
+                  }}
+                  onDragLeave={() => setIsSampleDragging(false)}
+                  onDrop={handleSampleAssetDrop}
+                >
+                  <Upload size={15} />
+                  <span>Drop a sample here or</span>
+                  <label className="spatial-upload-button">
+                    Browse files
+                    <input
+                      type="file"
+                      accept=".pdf,.png,.jpg,.jpeg,.glb,.gltf,application/pdf,image/png,image/jpeg,model/gltf-binary,model/gltf+json"
+                      onChange={handleSampleAssetUpload}
+                    />
+                  </label>
+                </div>
+                {sampleUploadProgress !== null && (
+                  <div className="spatial-upload-progress" role="status">
+                    <div>
+                      <span>Reading sample locally</span>
+                      <b>{sampleUploadProgress}%</b>
+                    </div>
+                    <i>
+                      <em style={{ width: `${sampleUploadProgress}%` }} />
+                    </i>
+                  </div>
+                )}
+                {sampleAsset && (
+                  <div className="spatial-sample-file" role="status">
+                    <strong>{sampleAsset.name}</strong>
+                    <span>
+                      {sampleAsset.kind === "model" ? "3D model" : "Floor plan"}{" "}
+                      · {(sampleAsset.size / 1024 / 1024).toFixed(2)} MB ·
+                      visible on map
+                    </span>
+                  </div>
+                )}
+                {sampleAssetError && (
+                  <small className="spatial-sample-error" role="alert">
+                    {sampleAssetError}
+                  </small>
+                )}
+              </div>
+            </section>
             <div className="spatial-dossier-card spatial-layer-panel">
               <div className="spatial-dossier-title">
                 <div>

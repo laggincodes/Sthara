@@ -99,6 +99,20 @@ describe("dashboard usability controls", () => {
     );
     expect(cesiumViewerSource).toContain("measurement");
     expect(cesiumViewerSource).toContain("clearMeasurement");
+    expect(cesiumViewerSource).toContain("exportMeasurementPdf");
+    expect(cesiumViewerSource).toContain(
+      "ulpin-vpm-visual-measurement-report.pdf"
+    );
+    expect(cesiumViewerSource).toContain("not GNSS, survey, cadastral, legal");
+    expect(cesiumViewerSource).toContain("disabled={!measurementSummary}");
+    expect(cesiumViewerSource).toContain('toDataURL("image/png")');
+    expect(cesiumViewerSource).toContain(
+      "Map snapshot · measured geometry visible"
+    );
+    expect(cesiumViewerSource).toContain(
+      "Measurement map snapshot unavailable"
+    );
+    expect(cesiumViewerSource).toContain('pdf.addImage(snapshot, "PNG"');
   });
 
   it("keeps Registry favorites browser-local and source-record scoped", () => {
@@ -130,6 +144,50 @@ describe("dashboard usability controls", () => {
     expect(registrySource).toContain("/workspace?segment=buildings&compare=");
     expect(workspaceSource).toContain("activeMapUlpins");
     expect(workspaceSource).toContain("source record comparison");
+  });
+
+  it("supports searching and filtering browser-local mock identity records", () => {
+    expect(workspaceSource).toContain("mockRecordQuery");
+    expect(workspaceSource).toContain(
+      "Search mock ULPIN and ownership records"
+    );
+    expect(workspaceSource).toContain("Mock ULPINs");
+    expect(workspaceSource).toContain('mockRecordFilter === "ownership"');
+    expect(workspaceSource).toContain("filteredMockRecords");
+  });
+
+  it("keeps mock identity and rights demonstrations explicitly non-authoritative", () => {
+    expect(workspaceSource).toContain("Generate mock 3D ULPIN");
+    expect(workspaceSource).toContain("MOCK-3D-");
+    expect(workspaceSource).toContain(
+      "Mock apartment ownership &amp; vertical rights"
+    );
+    expect(workspaceSource).toContain("DEMO / NON-AUTHORITATIVE");
+    expect(workspaceSource).toContain("authority record required");
+  });
+
+  it("exports mock identity and ownership details with a demo-only disclaimer", () => {
+    expect(workspaceSource).toContain("exportMockDetailsPdf");
+    expect(workspaceSource).toContain("Export mock details PDF");
+    expect(workspaceSource).toContain(
+      "ulpin-vpm-mock-identity-rights-report.pdf"
+    );
+    expect(workspaceSource).toContain("does not create an official ULPIN");
+    expect(workspaceSource).toContain("disabled={mockRecords.length === 0}");
+  });
+
+  it("supports browser-local sample floor-plan and 3D-model map previews", () => {
+    expect(workspaceSource).toContain("handleSampleAssetUpload");
+    expect(workspaceSource).toContain("handleSampleAssetDrop");
+    expect(workspaceSource).toContain("sampleUploadProgress");
+    expect(workspaceSource).toContain("spatial-upload-dropzone");
+    expect(workspaceSource).toContain("Reading sample locally");
+    expect(workspaceSource).toContain(".pdf,.png,.jpg,.jpeg,.glb,.gltf");
+    expect(workspaceSource).toContain("Browser-local preview only");
+    expect(workspaceSource).toContain("sampleAsset={sampleAsset}");
+    expect(cesiumViewerSource).toContain("ModelGraphics");
+    expect(cesiumViewerSource).toContain("Sample floor plan");
+    expect(cesiumViewerSource).toContain("not georeferenced");
   });
 
   it("keeps the workspace map focused on preview and approximate measurements", () => {
