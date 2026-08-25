@@ -2,6 +2,8 @@
  * User-supplied prototype controls. They are deliberately isolated from
  * authority data and must never be sent to the PostGIS write path.
  */
+import { validateGcpPairs } from "./gcpValidation.ts";
+
 export const SYNTHETIC_GCP_DEMO = {
   coordinateSystem: "WGS84",
   epsg: 4326,
@@ -116,29 +118,11 @@ function transform(
   };
 }
 
-function polygonIsNonCollinear(points: readonly PlanPoint[]) {
-  const signedDoubleArea = points.reduce((sum, point, index) => {
-    const next = points[(index + 1) % points.length];
-    return sum + point.x * next.y - next.x * point.y;
-  }, 0);
-  return Math.abs(signedDoubleArea) > 1;
-}
-
 export function buildSyntheticGcpDemoResult() {
   const points = SYNTHETIC_GCP_DEMO.controlPoints;
   const planPoints = points.map(point => point.planPixel);
-  const uniquePixels =
-    new Set(planPoints.map(point => `${point.x}:${point.y}`)).size ===
-    points.length;
-  const inPlanBounds = planPoints.every(
-    point =>
-      point.x >= 0 &&
-      point.y >= 0 &&
-      point.x <= SYNTHETIC_GCP_DEMO.planImage.widthPixels &&
-      point.y <= SYNTHETIC_GCP_DEMO.planImage.heightPixels
-  );
-  const nonCollinear = polygonIsNonCollinear(planPoints);
-  if (!uniquePixels || !inPlanBounds || !nonCollinear) {
+  const gcpValidation = validateGcpPairs(points, SYNTHETIC_GCP_DEMO.planImage);
+  if (!gcpValidation.valid) {
     throw new Error(
       "Synthetic GCP demo input failed its prototype validation gate."
     );
@@ -173,9 +157,12 @@ export function buildSyntheticGcpDemoResult() {
     status: "DEMO_NON_AUTHORITATIVE" as const,
     validation: {
       controlPointCount: points.length,
-      uniquePlanPixels: uniquePixels,
-      allPointsWithinDeclaredPlanBounds: inPlanBounds,
-      nonCollinear,
+      uniquePlanPixels: gcpValidation.uniquePlanPixels,
+      uniqueWgs84Coordinates: gcpValidation.uniqueWgs84Coordinates,
+      allPointsWithinDeclaredPlanBounds:
+        gcpValidation.allPointsWithinDeclaredPlanBounds,
+      nonCollinear: gcpValidation.nonCollinear,
+      plausibleLocalSpread: gcpValidation.plausibleLocalSpread,
       coordinateSystem: "WGS84 / EPSG:4326",
       residuals,
       rmsMetres,
