@@ -52,6 +52,18 @@ type FocusSummary = {
   comparisonCount?: number;
 };
 
+type OsmBuildingSelection = {
+  name: string;
+  buildingType: string;
+  osmIdentifier: string;
+};
+
+type OsmTileFeature = {
+  primitive?: unknown;
+  color?: unknown;
+  getProperty?: (name: string) => unknown;
+};
+
 function featureLayer(
   properties: Record<string, unknown>
 ): keyof CesiumLayerFlags {
@@ -165,6 +177,10 @@ export function CesiumSpatialViewer({
     show: boolean;
     destroy?: () => void;
   } | null>(null);
+  const selectedOsmFeatureRef = useRef<{
+    feature: OsmTileFeature;
+    originalColor: unknown;
+  } | null>(null);
   const imageryLayerRef = useRef<{ show: boolean } | null>(null);
   const streetImageryLayerRef = useRef<{ show: boolean } | null>(null);
   const authorityMarkerRef = useRef<CesiumEntity | null>(null);
@@ -191,6 +207,16 @@ export function CesiumSpatialViewer({
   const [streetState, setStreetState] = useState<
     "loading" | "ready" | "unavailable"
   >("loading");
+  const [osmBuildingsState, setOsmBuildingsState] = useState<
+    "loading" | "ready" | "unavailable"
+  >("loading");
+  const [osmBuildingsVisible, setOsmBuildingsVisible] = useState(true);
+  const [osmBuildingSelection, setOsmBuildingSelection] =
+    useState<OsmBuildingSelection | null>(null);
+  const [sourceBuildingSelection, setSourceBuildingSelection] = useState<{
+    name: string;
+    ulpin: string;
+  } | null>(null);
   const [basemap, setBasemap] = useState<"satellite" | "street">("satellite");
   const [cameraView, setCameraView] = useState<"perspective" | "plan">(
     "perspective"
@@ -364,6 +390,45 @@ export function CesiumSpatialViewer({
       destination: Cartesian3.fromDegrees(77.6245, 12.9352, 2300),
     });
     let highlightedEntity: CesiumEntity | null = null;
+    const restoreOsmBuildingHighlight = (clearSelection = true) => {
+      const selection = selectedOsmFeatureRef.current;
+      if (selection) {
+        selection.feature.color = selection.originalColor;
+        selectedOsmFeatureRef.current = null;
+      }
+      if (clearSelection) setOsmBuildingSelection(null);
+    };
+    const isOsmBuildingFeature = (
+      picked: unknown
+    ): picked is OsmTileFeature => {
+      if (!picked || typeof picked !== "object") return false;
+      const feature = picked as OsmTileFeature;
+      return (
+        feature.primitive === osmBuildingsRef.current &&
+        typeof feature.getProperty === "function"
+      );
+    };
+    const osmProperty = (feature: OsmTileFeature, keys: string[]) => {
+      for (const key of keys) {
+        const value = feature.getProperty?.(key);
+        if (typeof value === "string" && value.trim()) return value.trim();
+        if (typeof value === "number") return String(value);
+      }
+      return "Not exposed by OSM tile";
+    };
+    const selectOsmBuilding = (feature: OsmTileFeature) => {
+      restoreOsmBuildingHighlight(false);
+      const originalColor = feature.color;
+      feature.color = Color.fromCssColorString("#ffe17a").withAlpha(0.92);
+      selectedOsmFeatureRef.current = { feature, originalColor };
+      setOsmBuildingSelection({
+        name: osmProperty(feature, ["name", "addr:housename"]),
+        buildingType: osmProperty(feature, ["building", "building:use"]),
+        osmIdentifier: osmProperty(feature, ["osm_id", "id"]),
+      });
+      viewer.selectedEntity = undefined;
+      viewer.scene.requestRender();
+    };
     const restoreFootprintStyle = (entity: CesiumEntity | null) => {
       if (!entity?.polygon) return;
       const properties = (entity.properties?.getValue?.() ?? {}) as Record<
@@ -518,6 +583,11 @@ export function CesiumSpatialViewer({
           return;
         }
         const picked = viewer.scene.pick(movement.position);
+        if (isOsmBuildingFeature(picked)) {
+          selectOsmBuilding(picked);
+          return;
+        }
+        restoreOsmBuildingHighlight();
         const entity =
           defined(picked) && picked.id && typeof picked.id === "object"
             ? (picked.id as CesiumEntity)
@@ -558,6 +628,13 @@ export function CesiumSpatialViewer({
         }
         highlightedEntity = selectedEntity;
         viewer.selectedEntity = selectedEntity;
+        setSourceBuildingSelection({
+          name:
+            typeof properties.name === "string"
+              ? properties.name
+              : "Source-backed PostGIS footprint",
+          ulpin,
+        });
         void viewer.flyTo(selectedEntity, {
           duration: 0.45,
           offset: new HeadingPitchRange(0.32, -0.86, 180),
@@ -643,8 +720,10 @@ export function CesiumSpatialViewer({
             osmBuildings.show = true;
             viewer.scene.primitives.add(osmBuildings);
             osmBuildingsRef.current = osmBuildings;
+            setOsmBuildingsState("ready");
             viewer.scene.requestRender();
           } catch (error) {
+            setOsmBuildingsState("unavailable");
             console.warn(
               "[Cesium] Optional OSM Buildings layer unavailable",
               error
@@ -656,6 +735,7 @@ export function CesiumSpatialViewer({
     return () => {
       cancelled = true;
       osmBuildingsRef.current = null;
+      selectedOsmFeatureRef.current = null;
       imageryLayerRef.current = null;
       streetImageryLayerRef.current = null;
       viewer.destroy();
@@ -667,9 +747,9 @@ export function CesiumSpatialViewer({
   useEffect(() => {
     const osmBuildings = osmBuildingsRef.current;
     if (!osmBuildings) return;
-    osmBuildings.show = layers.buildings;
+    osmBuildings.show = layers.buildings && osmBuildingsVisible;
     viewerRef.current?.scene.requestRender();
-  }, [layers.buildings]);
+  }, [layers.buildings, osmBuildingsVisible, osmBuildingsState]);
 
   useEffect(() => {
     const satelliteLayer = imageryLayerRef.current;
@@ -911,6 +991,10 @@ export function CesiumSpatialViewer({
               }
             });
             viewer.selectedEntity = focusedEntity;
+            setSourceBuildingSelection({
+              name,
+              ulpin: String(properties.ulpin ?? "Source record"),
+            });
             setFocusSummary({
               name,
               ulpin: String(properties.ulpin ?? "Source record"),
@@ -919,6 +1003,7 @@ export function CesiumSpatialViewer({
             });
           } else {
             setFocusSummary(null);
+            setSourceBuildingSelection(null);
           }
           await viewer.flyTo(dataSource, {
             duration: 0.7,
@@ -1232,6 +1317,19 @@ export function CesiumSpatialViewer({
             </section>
           )}
           <section>
+            <span>3D Tiles · visual context</span>
+            <div>
+              <button
+                type="button"
+                className={osmBuildingsVisible ? "active" : ""}
+                disabled={osmBuildingsState !== "ready"}
+                onClick={() => setOsmBuildingsVisible(current => !current)}
+              >
+                OSM Buildings
+              </button>
+            </div>
+          </section>
+          <section>
             <span>Visual measure</span>
             <div>
               <button
@@ -1300,6 +1398,38 @@ export function CesiumSpatialViewer({
               ? "Cesium World Imagery + OSM buildings"
               : "OSM buildings"}{" "}
           · visual context only
+        </div>
+      )}
+      {osmBuildingSelection && (
+        <div className="cesium-osm-building-inspector" role="status">
+          <span>OSM 3D TILE SELECTED · VISUAL CONTEXT</span>
+          <b>{osmBuildingSelection.name}</b>
+          <dl>
+            <div>
+              <dt>OSM building type</dt>
+              <dd>{osmBuildingSelection.buildingType}</dd>
+            </div>
+            <div>
+              <dt>OSM tile identifier</dt>
+              <dd>{osmBuildingSelection.osmIdentifier}</dd>
+            </div>
+          </dl>
+          <small>
+            OSM 3D Tiles are visual context only; they do not establish parcel,
+            floor, height, ownership, rights, or ULPIN evidence.
+          </small>
+          {sourceBuildingSelection ? (
+            <footer>
+              <span>Current source-backed record</span>
+              <b>{sourceBuildingSelection.name}</b>
+              <code>{sourceBuildingSelection.ulpin}</code>
+            </footer>
+          ) : (
+            <footer>
+              <span>PostGIS source metadata remains separate</span>
+              <b>Select a cyan source footprint to inspect it.</b>
+            </footer>
+          )}
         </div>
       )}
       {geometryQuery.error && (

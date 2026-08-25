@@ -276,3 +276,8 @@
 
 - [x] Repair clipped Buildings explorer and source-record text so long labels wrap or truncate intentionally without horizontal overflow.
 - [x] Validate the responsive text-overflow repair on desktop and mobile, then publish and synchronize it to GitHub.
+
+- [x] Stream Cesium OSM Buildings as a toggleable 3D Tiles visual-context layer with a clear non-cadastral source label.
+- [x] Add selectable OSM 3D building highlighting and a visual-context inspector that distinguishes OSM attributes from source-backed property records.
+- [x] Link source-backed PostGIS property selection to the 3D view without inferring floors, ownership, parcel rights, or issued ULPIN data from OSM Buildings.
+- [x] Add regression coverage, validate the 3D Tiles controls and responsive inspector, then publish and synchronize the enhancement to GitHub.

@@ -81,6 +81,20 @@ describe("dashboard usability controls", () => {
     expect(cesiumViewerSource).toContain("visual context only");
   });
 
+  it("streams selectable OSM 3D Tiles while keeping them distinct from source-backed property evidence", () => {
+    expect(cesiumViewerSource).toContain("createOsmBuildingsAsync");
+    expect(cesiumViewerSource).toContain(
+      "OSM 3D TILE SELECTED · VISUAL CONTEXT"
+    );
+    expect(cesiumViewerSource).toContain("selectOsmBuilding");
+    expect(cesiumViewerSource).toContain("OSM Buildings");
+    expect(cesiumViewerSource).toContain(
+      "PostGIS source metadata remains separate"
+    );
+    expect(cesiumViewerSource).toContain("do not establish parcel");
+    expect(cesiumViewerSource).toContain("sourceBuildingSelection");
+  });
+
   it("summarizes source records and browser-local tags while providing direct non-issued record links", () => {
     expect(registrySource).toContain("Total source records");
     expect(registrySource).toContain("Total available footprint area");

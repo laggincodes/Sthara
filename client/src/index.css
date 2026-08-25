@@ -4685,12 +4685,103 @@ input:focus-visible {
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+.cesium-osm-building-inspector {
+  position: absolute;
+  z-index: 9;
+  right: 16px;
+  bottom: 44px;
+  display: grid;
+  width: min(276px, calc(100% - 32px));
+  gap: 5px;
+  padding: 10px 11px;
+  color: #eafff9;
+  background: rgba(16, 30, 24, 0.94);
+  border: 1px solid rgba(255, 225, 122, 0.52);
+  border-radius: 8px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.34);
+  pointer-events: none;
+}
+.cesium-osm-building-inspector > span,
+.cesium-osm-building-inspector footer > span {
+  color: #ffe17a;
+  font:
+    600 7px "IBM Plex Mono",
+    monospace;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+}
+.cesium-osm-building-inspector > b {
+  color: #fff7d6;
+  font:
+    600 12px/1.25 "Space Grotesk",
+    sans-serif;
+  overflow-wrap: anywhere;
+}
+.cesium-osm-building-inspector dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin: 1px 0;
+}
+.cesium-osm-building-inspector dl div {
+  min-width: 0;
+  padding: 6px;
+  background: rgba(255, 225, 122, 0.06);
+  border: 1px solid rgba(255, 225, 122, 0.12);
+  border-radius: 5px;
+}
+.cesium-osm-building-inspector dt {
+  color: #b8bd9f;
+  font:
+    7px "IBM Plex Mono",
+    monospace;
+}
+.cesium-osm-building-inspector dd {
+  margin: 3px 0 0;
+  color: #f7f0ce;
+  font:
+    8px/1.35 "IBM Plex Mono",
+    monospace;
+  overflow-wrap: anywhere;
+}
+.cesium-osm-building-inspector > small {
+  color: #c3c7af;
+  font:
+    7px/1.4 "IBM Plex Mono",
+    monospace;
+}
+.cesium-osm-building-inspector footer {
+  display: grid;
+  gap: 2px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 225, 122, 0.16);
+}
+.cesium-osm-building-inspector footer b {
+  color: #bdebe6;
+  font-size: 9px;
+  overflow-wrap: anywhere;
+}
+.cesium-osm-building-inspector footer code {
+  color: #89cfc8;
+  font:
+    7px "IBM Plex Mono",
+    monospace;
+  overflow-wrap: anywhere;
+}
 @media (max-width: 620px) {
   .cesium-osm-attribution {
     right: 8px;
     bottom: 8px;
     max-width: 190px;
     line-height: 1.35;
+  }
+  .cesium-osm-building-inspector {
+    right: 8px;
+    bottom: 46px;
+    width: min(256px, calc(100% - 16px));
+  }
+  .cesium-osm-building-inspector dl {
+    grid-template-columns: 1fr;
   }
 }
 
