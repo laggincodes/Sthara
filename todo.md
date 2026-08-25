@@ -226,3 +226,8 @@
 - [x] Move Spatial Workspace data and explanatory panels below the Cesium map so the map section contains only the map preview and distance/area measurement controls.
 - [x] Add the requested favorite-folder success animation and toast notification without changing existing folder behavior.
 - [x] Validate the separated layout on desktop/mobile, run regression tests/build, and push the validated code to the connected GitHub repository.
+
+- [x] Synchronize the current validated code to the exact repository https://github.com/Gautam-kumar01/SIH-2026 and verify the pushed main branch.
+
+- [x] Add a PDF export action for the current approximate Cesium distance and area measurement result, including a prominent visual-only/non-survey disclaimer.
+- [x] Add regression coverage and validate the measurement PDF export on desktop and mobile without changing other map behavior.

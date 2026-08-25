@@ -99,6 +99,12 @@ describe("dashboard usability controls", () => {
     );
     expect(cesiumViewerSource).toContain("measurement");
     expect(cesiumViewerSource).toContain("clearMeasurement");
+    expect(cesiumViewerSource).toContain("exportMeasurementPdf");
+    expect(cesiumViewerSource).toContain(
+      "ulpin-vpm-visual-measurement-report.pdf"
+    );
+    expect(cesiumViewerSource).toContain("not GNSS, survey, cadastral, legal");
+    expect(cesiumViewerSource).toContain("disabled={!measurementSummary}");
   });
 
   it("keeps Registry favorites browser-local and source-record scoped", () => {

@@ -11,7 +11,7 @@ import type {
   GeoJsonDataSource as CesiumGeoJsonDataSource,
   Viewer as CesiumViewer,
 } from "cesium";
-import { AlertTriangle, LoaderCircle, RefreshCw } from "lucide-react";
+import { AlertTriangle, FileDown, LoaderCircle, RefreshCw } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 export type MapCommand = {
@@ -211,6 +211,45 @@ export function CesiumSpatialViewer({
   const toggleMeasurementMode = (nextMode: "distance" | "area") => {
     clearMeasurement();
     setMeasurementMode(current => (current === nextMode ? "off" : nextMode));
+  };
+
+  const exportMeasurementPdf = async () => {
+    if (!measurementSummary) return;
+    const { jsPDF } = await import("jspdf");
+    const pdf = new jsPDF({ unit: "pt", format: "a4" });
+    const left = 52;
+    let cursorY = 58;
+    const addWrapped = (text: string, size = 10, bold = false) => {
+      pdf.setFont("helvetica", bold ? "bold" : "normal");
+      pdf.setFontSize(size);
+      const lines = pdf.splitTextToSize(text, 490) as string[];
+      pdf.text(lines, left, cursorY);
+      cursorY += lines.length * (size + 5) + 8;
+    };
+
+    addWrapped("3D ULPIN-VPM · Visual measurement report", 16, true);
+    addWrapped(
+      `Measurement mode: ${measurementMode === "distance" ? "Distance" : "Area"}`,
+      10,
+      true
+    );
+    addWrapped(`Calculated result: ${measurementSummary}`, 12, true);
+    addWrapped(`Map points captured: ${measurementPointsRef.current.length}`);
+    addWrapped(`Exported: ${new Date().toLocaleString()}`);
+    cursorY += 12;
+    addWrapped(
+      "Important limitation: this is an approximate visual calculation from the Cesium map. It is not GNSS, survey, cadastral, legal, engineering, or authoritative measurement evidence.",
+      10,
+      true
+    );
+    addWrapped(
+      "The report contains only the measurement currently displayed in the browser. It does not create or imply a parcel boundary, ownership right, issued ULPIN, surveyed coordinate, or official area record."
+    );
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(8);
+    pdf.setTextColor(100);
+    pdf.text("3D ULPIN-VPM · source-aware spatial review", left, 790);
+    pdf.save("ulpin-vpm-visual-measurement-report.pdf");
   };
 
   useEffect(() => {
@@ -1075,6 +1114,14 @@ export function CesiumSpatialViewer({
                 onClick={clearMeasurement}
               >
                 Clear
+              </button>
+              <button
+                type="button"
+                disabled={!measurementSummary}
+                onClick={() => void exportMeasurementPdf()}
+                title="Export the current approximate measurement as a PDF"
+              >
+                <FileDown size={12} /> PDF
               </button>
             </div>
           </section>
