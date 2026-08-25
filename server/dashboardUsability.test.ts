@@ -146,6 +146,16 @@ describe("dashboard usability controls", () => {
     expect(workspaceSource).toContain("source record comparison");
   });
 
+  it("supports searching and filtering browser-local mock identity records", () => {
+    expect(workspaceSource).toContain("mockRecordQuery");
+    expect(workspaceSource).toContain(
+      "Search mock ULPIN and ownership records"
+    );
+    expect(workspaceSource).toContain("Mock ULPINs");
+    expect(workspaceSource).toContain('mockRecordFilter === "ownership"');
+    expect(workspaceSource).toContain("filteredMockRecords");
+  });
+
   it("keeps mock identity and rights demonstrations explicitly non-authoritative", () => {
     expect(workspaceSource).toContain("Generate mock 3D ULPIN");
     expect(workspaceSource).toContain("MOCK-3D-");
@@ -156,8 +166,22 @@ describe("dashboard usability controls", () => {
     expect(workspaceSource).toContain("authority record required");
   });
 
+  it("exports mock identity and ownership details with a demo-only disclaimer", () => {
+    expect(workspaceSource).toContain("exportMockDetailsPdf");
+    expect(workspaceSource).toContain("Export mock details PDF");
+    expect(workspaceSource).toContain(
+      "ulpin-vpm-mock-identity-rights-report.pdf"
+    );
+    expect(workspaceSource).toContain("does not create an official ULPIN");
+    expect(workspaceSource).toContain("disabled={mockRecords.length === 0}");
+  });
+
   it("supports browser-local sample floor-plan and 3D-model map previews", () => {
     expect(workspaceSource).toContain("handleSampleAssetUpload");
+    expect(workspaceSource).toContain("handleSampleAssetDrop");
+    expect(workspaceSource).toContain("sampleUploadProgress");
+    expect(workspaceSource).toContain("spatial-upload-dropzone");
+    expect(workspaceSource).toContain("Reading sample locally");
     expect(workspaceSource).toContain(".pdf,.png,.jpg,.jpeg,.glb,.gltf");
     expect(workspaceSource).toContain("Browser-local preview only");
     expect(workspaceSource).toContain("sampleAsset={sampleAsset}");

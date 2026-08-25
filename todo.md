@@ -240,3 +240,8 @@
 - [x] Add a clearly labeled mock ownership and vertical-rights panel for a selected multi-storey source record.
 - [x] Add browser-local upload and map-preview support for sample floor plans and 3D model files, with explicit demo-only labeling.
 - [x] Add regression coverage and validate the three demo workflows on desktop and mobile without implying official cadastral evidence.
+
+- [x] Add search and filter controls for browser-local mock ULPIN and ownership records.
+- [x] Enhance sample floor-plan/model upload with drag-and-drop and a visible loading/progress state.
+- [x] Add a downloadable PDF report for generated mock 3D ULPIN and mock ownership/vertical-rights details.
+- [x] Add regression coverage, validate the new demo workflows, and push the validated release to the exact GitHub repository.
