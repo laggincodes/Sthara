@@ -677,7 +677,7 @@ export default function SpatialWorkspace() {
                 layers={layers}
                 focusUlpins={activeMapUlpins}
                 sourceMapView={sourceMapView}
-                mockFloorLevels={selected ? 4 : 0}
+                mockFloorLevels={activeMapUlpins.length > 0 ? 4 : 0}
                 measurementControlsOnly
                 onFeatureSelect={onFeatureSelect}
                 onMockFloorSelect={setSelectedMockFloor}

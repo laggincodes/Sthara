@@ -293,3 +293,7 @@
 - [x] Preserve server-assigned Citizen, Authority, Government Employee, and Administrator roles, verification records, property associations, and audit links against Clerk user IDs.
 - [x] Replace the access portal with Clerk-hosted sign-in/sign-up flows and validate Clerk-backed protected dashboards.
 - [x] Add migration/regression coverage, validate production build, and publish the Clerk identity migration.
+
+- [x] Adapt the existing generic search-driven layer-by-layer visualization so it applies simultaneously to every currently selected search-result footprint.
+- [x] Preserve the current single-footprint and empty-selection behavior while resetting the prior multi-footprint visualization on a new search.
+- [x] Add regression coverage and validate synchronized multi-footprint layers without changing unrelated camera, selection, styling, or Cesium behavior.

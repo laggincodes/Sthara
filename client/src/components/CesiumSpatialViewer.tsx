@@ -917,48 +917,54 @@ export function CesiumSpatialViewer({
           });
           const focusedEntity = focusedEntities[0];
           if (
-            focusedEntity &&
+            focusedEntities.length > 0 &&
             mockFloorLevels > 0 &&
-            sourceMapView === "3d" &&
-            focusedEntity.polygon
+            sourceMapView === "3d"
           ) {
             const floorCount = Math.min(
               Math.max(Math.round(mockFloorLevels), 1),
               12
             );
-            for (let floorIndex = 0; floorIndex < floorCount; floorIndex += 1) {
-              const floorHeight = 2 + floorIndex * 3.2;
-              const floorEntity = viewer.entities.add(
-                new Entity({
-                  name: `DEMO floor level ${floorIndex + 1}`,
-                  polygon: new PolygonGraphics({
-                    hierarchy: focusedEntity.polygon.hierarchy,
-                    height: floorHeight,
-                    extrudedHeight: floorHeight + 2.6,
-                    material: new ColorMaterialProperty(
-                      Color.fromCssColorString(
-                        floorIndex % 2 === 0 ? "#72e3df" : "#b48cff"
-                      ).withAlpha(0.18)
-                    ),
-                    outline: new ConstantProperty(true),
-                    outlineColor: new ConstantProperty(
-                      Color.fromCssColorString("#fff0b3").withAlpha(0.78)
-                    ),
-                    outlineWidth: 2,
-                  }),
-                  label: new LabelGraphics({
-                    text: `DEMO LEVEL ${floorIndex + 1}`,
-                    font: "600 10px sans-serif",
-                    fillColor: Color.fromCssColorString("#fff5ca"),
-                    outlineColor: Color.fromCssColorString("#132326"),
-                    outlineWidth: 3,
-                    pixelOffset: new Cartesian2(0, -14),
-                    show: floorIndex === floorCount - 1,
-                  }),
-                })
-              );
-              mockFloorEntitiesRef.current.push(floorEntity);
-            }
+            focusedEntities.forEach(focusedLayerTarget => {
+              if (!focusedLayerTarget.polygon) return;
+              for (
+                let floorIndex = 0;
+                floorIndex < floorCount;
+                floorIndex += 1
+              ) {
+                const floorHeight = 2 + floorIndex * 3.2;
+                const floorEntity = viewer.entities.add(
+                  new Entity({
+                    name: `DEMO floor level ${floorIndex + 1}`,
+                    polygon: new PolygonGraphics({
+                      hierarchy: focusedLayerTarget.polygon.hierarchy,
+                      height: floorHeight,
+                      extrudedHeight: floorHeight + 2.6,
+                      material: new ColorMaterialProperty(
+                        Color.fromCssColorString(
+                          floorIndex % 2 === 0 ? "#72e3df" : "#b48cff"
+                        ).withAlpha(0.18)
+                      ),
+                      outline: new ConstantProperty(true),
+                      outlineColor: new ConstantProperty(
+                        Color.fromCssColorString("#fff0b3").withAlpha(0.78)
+                      ),
+                      outlineWidth: 2,
+                    }),
+                    label: new LabelGraphics({
+                      text: `DEMO LEVEL ${floorIndex + 1}`,
+                      font: "600 10px sans-serif",
+                      fillColor: Color.fromCssColorString("#fff5ca"),
+                      outlineColor: Color.fromCssColorString("#132326"),
+                      outlineWidth: 3,
+                      pixelOffset: new Cartesian2(0, -14),
+                      show: floorIndex === floorCount - 1,
+                    }),
+                  })
+                );
+                mockFloorEntitiesRef.current.push(floorEntity);
+              }
+            });
           }
           if (focusedEntity) {
             const properties = (focusedEntity.properties?.getValue?.() ??

@@ -242,11 +242,28 @@ describe("dashboard usability controls", () => {
   });
 
   it("adds a selected-building mock floor stack without implying an approved floor plan", () => {
-    expect(workspaceSource).toContain("mockFloorLevels={selected ? 4 : 0}");
+    expect(workspaceSource).toContain(
+      "mockFloorLevels={activeMapUlpins.length > 0 ? 4 : 0}"
+    );
     expect(workspaceSource).toContain("4 mock floor levels shown in 3D only");
     expect(cesiumViewerSource).toContain("mockFloorLevels?: number");
     expect(cesiumViewerSource).toContain("DEMO floor level");
     expect(workspaceSource).toContain("not an approved floor plan");
+  });
+
+  it("applies the existing mock layer cycle to every focused search-result footprint and resets it for a new result", () => {
+    expect(workspaceSource).toContain("activeMapUlpins");
+    expect(cesiumViewerSource).toContain("focusedEntities.length > 0");
+    expect(cesiumViewerSource).toContain(
+      "focusedEntities.forEach(focusedLayerTarget"
+    );
+    expect(cesiumViewerSource).toContain(
+      "hierarchy: focusedLayerTarget.polygon.hierarchy"
+    );
+    expect(cesiumViewerSource).toContain(
+      "mockFloorEntitiesRef.current.forEach(entity"
+    );
+    expect(cesiumViewerSource).toContain("mockFloorEntitiesRef.current = []");
   });
 
   it("uses property-type colors and a readable mock-rights evidence panel", () => {
