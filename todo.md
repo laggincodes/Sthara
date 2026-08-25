@@ -313,4 +313,4 @@
 - [ ] Diagnose and correct the reported Vercel Clerk sign-in redirect loop without weakening Clerk, API, role, or evidence safeguards.
 - [x] Remove the unresolved `%VITE_ANALYTICS_ENDPOINT%/umami` client request from the Vercel build without affecting Clerk or application security.
 - [x] Replace the fragile Clerk internal-DOM CSS selector with supported appearance styling and verify the warning no longer appears.
-- [ ] Identify and remove any application-owned `unload` listener causing the Vercel permission-policy violation, then verify stable page loading.
+- [x] Identify and remove any application-owned `unload` listener causing the Vercel permission-policy violation, then verify stable page loading.

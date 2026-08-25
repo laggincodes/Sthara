@@ -47,3 +47,7 @@ After synchronizing the selector-removal release to GitHub `main`, the Vercel ma
 The production console check returned no messages. The unsupported structural-CSS warning is resolved, while the branded form remains mounted and visible.
 
 The `unload is not allowed` violation was traced to the project’s Manus development debug collector, whose browser script registers `beforeunload` to report logs. The collector plugin was previously enabled during a build whenever `NODE_ENV` was not explicitly set. It is now Vite `serve`-only, so it still supports local debugging but cannot inject the unload listener into Vercel production HTML. Focused regression tests, TypeScript, and a production build check that asserts the collector script is absent from `dist/public/index.html` passed.
+
+The Vercel main-branch alias for the unload-policy release renders the complete branded Clerk sign-in form after the normal hosted-component load delay. The remaining production verification is its console output and authenticated API continuity.
+
+The production console check returned no messages, so the unload permission-policy violation is gone. The same Vercel alias retained `200 application/json` from `/api/trpc/auth.me` with `x-clerk-auth-status: signed-out`, confirming that public Clerk access and the signed-out API path remain intact.
