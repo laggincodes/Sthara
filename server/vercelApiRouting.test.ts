@@ -7,16 +7,18 @@ describe("Vercel serverless API routing", () => {
     const config = JSON.parse(
       fs.readFileSync(path.resolve(import.meta.dirname, "..", "vercel.json"), "utf8")
     ) as {
-      rewrites: Array<{ source: string; destination: string }>;
+      routes: Array<
+        | { handle: string }
+        | { src: string; dest: string }
+      >;
     };
 
-    expect(config.rewrites[0]).toEqual({
-      source: "/api/(.*)",
-      destination: "/api/$1",
+    expect(config.routes[0]).toEqual({
+      handle: "filesystem",
     });
-    expect(config.rewrites[1]).toEqual({
-      source: "/(.*)",
-      destination: "/index.html",
+    expect(config.routes[1]).toEqual({
+      src: "/(.*)",
+      dest: "/index.html",
     });
   });
 });
