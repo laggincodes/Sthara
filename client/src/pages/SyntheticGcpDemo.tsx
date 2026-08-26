@@ -73,7 +73,7 @@ export default function SyntheticGcpDemo() {
   return (
     <main className="synthetic-demo-workspace">
       <header className="synthetic-demo-topbar">
-        <button type="button" onClick={() => setLocation("/")}>
+        <button type="button" onClick={() => setLocation("/dashboard")}>
           <ArrowLeft size={16} /> Dashboard
         </button>
         <div>

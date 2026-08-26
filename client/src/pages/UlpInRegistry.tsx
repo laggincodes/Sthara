@@ -448,7 +448,7 @@ export default function UlpInRegistry() {
   return (
     <main className="registry-workspace">
       <header className="registry-topbar">
-        <button type="button" onClick={() => setLocation("/")}>
+        <button type="button" onClick={() => setLocation("/dashboard")}>
           <ArrowLeft size={16} /> Dashboard
         </button>
         <div>
@@ -458,7 +458,7 @@ export default function UlpInRegistry() {
         </div>
         <button
           type="button"
-          onClick={() => setLocation("/?issue=eligibility")}
+          onClick={() => setLocation("/overview?issue=eligibility")}
         >
           <ShieldCheck size={15} /> Review eligibility
         </button>

@@ -316,3 +316,5 @@
 - [x] Identify and remove any application-owned `unload` listener causing the Vercel permission-policy violation, then verify stable page loading.
 - [ ] Prevent a Clerk readiness/API timing race from repeatedly redirecting an authenticated dashboard visitor back to the access portal.
 - [ ] Apply the reviewed non-destructive `drizzle/postgres/0000_vengeful_wallflower.sql` migration to the Neon database selected by `POSTGIS_DATABASE_URL`, then verify first-sign-in profile creation and `/dashboard` access.
+- [x] Confirm the Neon migration created the six application-profile tables without altering the existing spatial tables.
+- [x] Restore direct signed-in sidebar navigation to Parcels, Buildings, Command Home, and ULPIN Registry instead of returning to the generic dashboard.

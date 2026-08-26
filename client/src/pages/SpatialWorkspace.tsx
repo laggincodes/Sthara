@@ -566,7 +566,7 @@ export default function SpatialWorkspace() {
         className="spatial-workspace-rail"
         aria-label="Spatial workspace navigation"
       >
-        <Link href="/" className="spatial-brand">
+        <Link href="/overview" className="spatial-brand">
           <span className="spatial-brand-mark" />
           <span>
             <small>Dept. of Land Resources</small>
@@ -597,12 +597,12 @@ export default function SpatialWorkspace() {
           >
             <Building2 size={17} /> Buildings
           </button>
-          <button type="button" onClick={() => setLocation("/")}>
+          <button type="button" onClick={() => setLocation("/overview")}>
             <Layers3 size={17} /> Command home
           </button>
           <button
             type="button"
-            onClick={() => setLocation("/?workspace=ULPIN%20registry")}
+            onClick={() => setLocation("/ulpin-registry")}
           >
             <ShieldCheck size={17} /> ULPIN registry
           </button>
@@ -611,13 +611,15 @@ export default function SpatialWorkspace() {
           <p>Data operations</p>
           <button
             type="button"
-            onClick={() => setLocation("/?workspace=Data%20ingestion")}
+            onClick={() => setLocation("/overview?workspace=Data%20ingestion")}
           >
             <Database size={17} /> Data ingestion
           </button>
           <button
             type="button"
-            onClick={() => setLocation("/?workspace=Processing%20queue")}
+            onClick={() =>
+              setLocation("/overview?workspace=Processing%20queue")
+            }
           >
             <Settings2 size={17} /> Processing queue
           </button>
@@ -663,7 +665,7 @@ export default function SpatialWorkspace() {
           <button
             className="workspace-home-button"
             type="button"
-            onClick={() => setLocation("/")}
+            onClick={() => setLocation("/dashboard")}
           >
             <ArrowLeft size={15} /> Dashboard
           </button>
@@ -796,7 +798,7 @@ export default function SpatialWorkspace() {
                     type="button"
                     onClick={() =>
                       setLocation(
-                        `/?workspace=Data%20ingestion&site=${encodeURIComponent(siteQuery)}`
+                        `/overview?workspace=Data%20ingestion&site=${encodeURIComponent(siteQuery)}`
                       )
                     }
                   >
@@ -807,8 +809,8 @@ export default function SpatialWorkspace() {
                     onClick={() =>
                       setLocation(
                         selected
-                          ? `/?editor=${encodeURIComponent(selected.ulpin)}`
-                          : "/?workspace=Operator%20access"
+                          ? `/overview?editor=${encodeURIComponent(selected.ulpin)}`
+                          : "/overview?workspace=Operator%20access"
                       )
                     }
                   >
@@ -959,7 +961,7 @@ export default function SpatialWorkspace() {
                   <span>Side-by-side source record comparison</span>
                   <button
                     type="button"
-                    onClick={() => setLocation("/?workspace=ULPIN%20registry")}
+                    onClick={() => setLocation("/ulpin-registry")}
                   >
                     Back to Registry
                   </button>

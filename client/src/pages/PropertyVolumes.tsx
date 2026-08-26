@@ -65,7 +65,7 @@ export default function PropertyVolumes() {
   return (
     <main className="volume-workspace">
       <header className="volume-topbar">
-        <button type="button" onClick={() => setLocation("/")}>
+        <button type="button" onClick={() => setLocation("/dashboard")}>
           <ArrowLeft size={16} /> Dashboard
         </button>
         <div>
