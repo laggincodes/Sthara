@@ -65,3 +65,5 @@ A production click on ULPIN Registry from the updated Command Home opened `/ulpi
 The new `/profile-settings` route was also checked without a Clerk session. After Clerk finished loading, it redirected to `/access?returnTo=/profile-settings` and rendered the branded sign-in form; it did not expose profile data or remain on a blank page.
 
 Profile settings and loading-state implementation checks passed locally. The dedicated route uses Clerk’s user-update API for names and Clerk’s built-in account manager for email/security, stores only device-local appearance and reduced-motion preferences, and contains no role mutation. Dashboard summary widgets use an accessible `aria-busy` skeleton while their protected query is loading. Focused profile/RBAC/Neon mapping tests, TypeScript, and a production build passed before release.
+
+The GitHub-linked Vercel release completed successfully. A signed-out production request to `/profile-settings` first showed only the intended loading skeleton while Clerk initialized, then redirected to `/access?returnTo=/profile-settings` and rendered the full branded Clerk sign-in form without a client error.
