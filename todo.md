@@ -318,6 +318,8 @@
 - [ ] Apply the reviewed non-destructive `drizzle/postgres/0000_vengeful_wallflower.sql` migration to the Neon database selected by `POSTGIS_DATABASE_URL`, then verify first-sign-in profile creation and `/dashboard` access.
 - [x] Confirm the Neon migration created the six application-profile tables without altering the existing spatial tables.
 - [x] Restore direct signed-in sidebar navigation to Parcels, Buildings, Command Home, and ULPIN Registry instead of returning to the generic dashboard.
-- [ ] Add a secure signed-in profile settings page for Clerk-managed personal information and application preferences without client-side role editing.
-- [ ] Add accessible skeleton loading states for dashboard summary widgets while protected data is fetching.
+- [x] Add a secure signed-in profile settings page for Clerk-managed personal information and application preferences without client-side role editing.
+- [x] Add accessible skeleton loading states for dashboard summary widgets while protected data is fetching.
 - [ ] Validate profile settings, widget loading states, server-controlled role boundaries, and the Vercel release for application-owned errors.
+- [x] Produce a comprehensive Hindi PDF explaining the implemented 3D ULPIN-VPM architecture, frontend, backend, data flows, safeguards, deployment, and limitations.
+- [x] Create an evidence-safe project README.md and push the documentation-only update to GitHub main without changing application code.
