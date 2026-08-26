@@ -61,3 +61,7 @@ The final sidebar issue was caused by legacy workspace buttons that still routed
 The GitHub-linked Vercel deployment for the workspace-routing release completed successfully. Production browser verification confirmed that `/workspace?segment=parcels` renders the Parcels explorer directly, and a live click on the Command Home sidebar control opens `/overview` rather than the Clerk access root.
 
 A production click on ULPIN Registry from the updated Command Home opened `/ulpin-registry` directly and rendered the evidence-safe registry workspace. The navigation no longer returns the visitor to the generic Citizen dashboard through the Clerk access root.
+
+The new `/profile-settings` route was also checked without a Clerk session. After Clerk finished loading, it redirected to `/access?returnTo=/profile-settings` and rendered the branded sign-in form; it did not expose profile data or remain on a blank page.
+
+Profile settings and loading-state implementation checks passed locally. The dedicated route uses Clerk’s user-update API for names and Clerk’s built-in account manager for email/security, stores only device-local appearance and reduced-motion preferences, and contains no role mutation. Dashboard summary widgets use an accessible `aria-busy` skeleton while their protected query is loading. Focused profile/RBAC/Neon mapping tests, TypeScript, and a production build passed before release.

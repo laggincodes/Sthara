@@ -7,6 +7,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import PropertyVolumes from "./pages/PropertyVolumes";
+import ProfileSettings from "./pages/ProfileSettings";
 import RoleConsole, { AccessPortal } from "./pages/RoleConsole";
 import SpatialWorkspace from "./pages/SpatialWorkspace";
 import SyntheticGcpDemo from "./pages/SyntheticGcpDemo";
@@ -24,6 +25,7 @@ function Router() {
       <Route path="/synthetic-gcp-demo" component={SyntheticGcpDemo} />
       <Route path="/access" component={AccessPortal} />
       <Route path="/dashboard" component={RoleConsole} />
+      <Route path="/profile-settings" component={ProfileSettings} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

@@ -2916,16 +2916,25 @@ export default function Home() {
                   Open live records <ArrowUpRight size={16} />
                 </button>
               ) : workspaceOpen === "Session profile" ? (
-                <button
-                  className="primary-button warm"
-                  type="button"
-                  onClick={() => {
-                    toast.message("Signing out securely");
-                    void session.logout();
-                  }}
-                >
-                  Sign out <LogOut size={16} />
-                </button>
+                <>
+                  <button
+                    className="primary-button"
+                    type="button"
+                    onClick={() => setLocation("/profile-settings")}
+                  >
+                    Profile settings <Settings2 size={16} />
+                  </button>
+                  <button
+                    className="primary-button warm"
+                    type="button"
+                    onClick={() => {
+                      toast.message("Signing out securely");
+                      void session.logout();
+                    }}
+                  >
+                    Sign out <LogOut size={16} />
+                  </button>
+                </>
               ) : workspaceOpen === "Audit trail" ? (
                 <button
                   className="primary-button"

@@ -1,5 +1,6 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
+import { DashboardWidgetSkeleton } from "@/components/DashboardWidgetSkeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,6 +15,7 @@ import {
   Map,
   ShieldCheck,
   UserRoundCheck,
+  Settings2,
   Users,
 } from "lucide-react";
 import { FormEvent, useMemo, useState } from "react";
@@ -299,6 +301,13 @@ export default function RoleConsole() {
         <div>
           <span>{formatRole(role)} · backend-enforced role</span>
           <b>{user.name || "Authenticated user"}</b>
+          <button
+            type="button"
+            onClick={() => setLocation("/profile-settings")}
+            aria-label="Open profile settings"
+          >
+            <Settings2 size={14} /> Profile settings
+          </button>
           <button type="button" onClick={() => logout()} aria-label="Sign out">
             <LogOut size={14} /> Sign out
           </button>
@@ -320,15 +329,19 @@ export default function RoleConsole() {
         </Button>
       </section>
 
-      <section className="role-console__metrics" aria-label="Platform summary">
-        {summaryCards.map(([label, value]) => (
-          <article key={label}>
-            <span>{label}</span>
-            <b>{value}</b>
-            <small>Platform-derived summary · not a legal register</small>
-          </article>
-        ))}
-      </section>
+      {dashboardSummary.isLoading ? (
+        <DashboardWidgetSkeleton />
+      ) : (
+        <section className="role-console__metrics" aria-label="Platform summary">
+          {summaryCards.map(([label, value]) => (
+            <article key={label}>
+              <span>{label}</span>
+              <b>{value}</b>
+              <small>Platform-derived summary · not a legal register</small>
+            </article>
+          ))}
+        </section>
+      )}
 
       <section className="role-console__grid">
         <article className="role-console__panel role-console__panel--map">
