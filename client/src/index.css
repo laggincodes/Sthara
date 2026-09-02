@@ -375,7 +375,9 @@ input:focus-visible {
   color: #b9fffa;
   background: linear-gradient(135deg, #216266, #14313a);
   border-radius: 7px;
-  font: 700 9px "IBM Plex Mono", monospace;
+  font:
+    700 9px "IBM Plex Mono",
+    monospace;
 }
 .profile-button__label {
   display: grid;
@@ -395,7 +397,9 @@ input:focus-visible {
 }
 .profile-button__label small {
   color: #7fb3ac;
-  font: 8px "IBM Plex Mono", monospace;
+  font:
+    8px "IBM Plex Mono",
+    monospace;
   text-transform: capitalize;
 }
 .session-logout-button {
@@ -2985,6 +2989,168 @@ input:focus-visible {
   gap: 12px;
   flex-wrap: wrap;
 }
+.building-information-panel {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  color: #dcecea;
+  background: linear-gradient(145deg, #132026, #0c171c);
+  border: 1px solid rgba(204, 237, 232, 0.12);
+  border-radius: 10px;
+}
+.building-information-panel.empty {
+  border-style: dashed;
+}
+.building-information-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.building-information-heading > div {
+  min-width: 0;
+}
+.building-information-heading p {
+  margin: 0;
+  color: #7fe4e3;
+  font:
+    8px "IBM Plex Mono",
+    monospace;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.building-information-heading h2 {
+  margin: 5px 0 0;
+  color: #eef9f7;
+  font:
+    600 18px/1.15 "Space Grotesk",
+    sans-serif;
+  letter-spacing: -0.035em;
+}
+.building-information-heading > svg {
+  flex: 0 0 auto;
+  color: #2ad4d9;
+}
+.building-information-panel.empty .building-information-heading > svg,
+.building-information-status.unverified,
+.building-information-field dd.unavailable {
+  color: #ebb476;
+}
+.building-information-empty-copy {
+  max-width: 720px;
+  margin: 0;
+  color: #91aaa5;
+  font:
+    10px/1.6 "IBM Plex Mono",
+    monospace;
+}
+.building-information-status {
+  width: fit-content;
+  padding: 5px 7px;
+  border-radius: 4px;
+  font:
+    8px "IBM Plex Mono",
+    monospace;
+  letter-spacing: 0.08em;
+}
+.building-information-status.source-backed {
+  color: #a5f1d0;
+  background: rgba(112, 217, 151, 0.1);
+  border: 1px solid rgba(112, 217, 151, 0.22);
+}
+.building-information-status.unverified {
+  background: rgba(235, 180, 118, 0.1);
+  border: 1px solid rgba(235, 180, 118, 0.25);
+}
+.building-information-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 18px;
+  margin: 0;
+}
+.building-info-field {
+  min-width: 0;
+  padding-bottom: 9px;
+  border-bottom: 1px solid rgba(204, 237, 232, 0.08);
+}
+.building-info-field dt {
+  margin-bottom: 4px;
+  color: #748a85;
+  font-size: 9px;
+}
+.building-info-field dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: #c9e1de;
+  font:
+    9px/1.45 "IBM Plex Mono",
+    monospace;
+}
+.building-information-floors {
+  display: grid;
+  gap: 9px;
+  padding: 12px;
+  background: rgba(42, 212, 217, 0.05);
+  border: 1px solid rgba(42, 212, 217, 0.12);
+  border-radius: 7px;
+}
+.building-information-floors > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: #8fa9a4;
+  font-size: 9px;
+}
+.building-information-floors > div:first-child b {
+  color: #dcecea;
+  font:
+    8px "IBM Plex Mono",
+    monospace;
+  text-align: right;
+}
+.building-information-floors p {
+  margin: 0;
+  color: #ebb476;
+  font:
+    9px/1.5 "IBM Plex Mono",
+    monospace;
+}
+.building-floor-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.building-floor-list span {
+  padding: 6px 8px;
+  color: #bce5e1;
+  background: #17272e;
+  border: 1px solid rgba(204, 237, 232, 0.1);
+  border-radius: 4px;
+  font:
+    8px "IBM Plex Mono",
+    monospace;
+}
+.building-information-verification {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: #8fa9a4;
+  font:
+    9px/1.5 "IBM Plex Mono",
+    monospace;
+}
+.building-information-verification svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: #2ad4d9;
+}
+.building-information-verification span {
+  display: grid;
+  gap: 3px;
+}
+.building-information-verification b {
+  color: #dcecea;
+}
 .spatial-stage-grid,
 .spatial-stage-vignette {
   position: absolute;
@@ -4031,6 +4197,9 @@ input:focus-visible {
   .spatial-below-map {
     padding: 16px;
   }
+  .building-information-grid {
+    grid-template-columns: 1fr;
+  }
   .spatial-dossier {
     grid-template-columns: 1fr 1fr;
     border-top: 1px solid rgba(204, 237, 232, 0.1);
@@ -4961,12 +5130,16 @@ input:focus-visible {
   color: #7de8df;
 }
 .role-console__profile-unavailable > span {
-  font: 600 9px "IBM Plex Mono", monospace;
+  font:
+    600 9px "IBM Plex Mono",
+    monospace;
   letter-spacing: 0.11em;
 }
 .role-console__profile-unavailable h1 {
   margin: 0;
-  font: 600 clamp(30px, 4vw, 48px) / 1 "Space Grotesk", sans-serif;
+  font:
+    600 clamp(30px, 4vw, 48px) / 1 "Space Grotesk",
+    sans-serif;
   letter-spacing: -0.04em;
 }
 .role-console__profile-unavailable p {
@@ -5222,7 +5395,11 @@ input:focus-visible {
   padding: clamp(24px, 5vw, 70px);
   color: #eafff9;
   background:
-    radial-gradient(circle at 15% 10%, rgba(42, 212, 217, 0.12), transparent 33%),
+    radial-gradient(
+      circle at 15% 10%,
+      rgba(42, 212, 217, 0.12),
+      transparent 33%
+    ),
     #071015;
 }
 .profile-settings__shell {
@@ -5243,12 +5420,16 @@ input:focus-visible {
 .profile-settings__eyebrow,
 .profile-settings__card-heading span {
   color: #79d8d0;
-  font: 600 9px "IBM Plex Mono", monospace;
+  font:
+    600 9px "IBM Plex Mono",
+    monospace;
   letter-spacing: 0.12em;
 }
 .profile-settings h1 {
   margin: 10px 0;
-  font: 600 clamp(36px, 5vw, 60px) / 0.98 "Space Grotesk", sans-serif;
+  font:
+    600 clamp(36px, 5vw, 60px) / 0.98 "Space Grotesk",
+    sans-serif;
   letter-spacing: -0.05em;
 }
 .profile-settings__intro {
@@ -5289,7 +5470,9 @@ input:focus-visible {
 }
 .profile-settings__card h2 {
   margin: 0;
-  font: 600 21px "Space Grotesk", sans-serif;
+  font:
+    600 21px "Space Grotesk",
+    sans-serif;
 }
 .profile-settings__fields {
   display: grid;
@@ -5338,7 +5521,9 @@ input:focus-visible {
 .profile-settings__preference-row b,
 .profile-settings__card--role > strong {
   color: #f0fffc;
-  font: 600 15px "Space Grotesk", sans-serif;
+  font:
+    600 15px "Space Grotesk",
+    sans-serif;
 }
 .profile-settings__preference-row span,
 .profile-settings__card--role p,
@@ -5359,7 +5544,9 @@ input:focus-visible {
 }
 .profile-settings__empty > p {
   margin: 0;
-  font: 600 9px "IBM Plex Mono", monospace;
+  font:
+    600 9px "IBM Plex Mono",
+    monospace;
   letter-spacing: 0.1em;
 }
 html[data-ulpin-motion="reduced"] *,

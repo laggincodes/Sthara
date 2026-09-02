@@ -45,6 +45,18 @@ export type SyntheticVisualLayers = {
   simulatedLidarPointCloud: boolean;
 };
 
+export type DetailedMapSelection = {
+  kind: "source-record" | "osm-3d-tile";
+  ulpin?: string;
+  properties: Record<string, unknown>;
+  sourceReference: string;
+  coordinates?: {
+    latitude: number;
+    longitude: number;
+    basis: "source-geometry" | "map-pick";
+  };
+};
+
 type FocusSummary = {
   name: string;
   ulpin: string;
@@ -90,6 +102,7 @@ export function CesiumSpatialViewer({
   onSyntheticDemoSelect,
   focusUlpins,
   onFeatureSelect,
+  onDetailedFeatureSelect,
   sampleAsset,
   sourceMapView = "3d",
   mockFloorLevels = 0,
@@ -119,6 +132,7 @@ export function CesiumSpatialViewer({
     ulpin: string;
     properties: Record<string, unknown>;
   }) => void;
+  onDetailedFeatureSelect?: (feature: DetailedMapSelection) => void;
   sampleAsset?: SampleMapAsset | null;
   sourceMapView?: "2d" | "3d";
   mockFloorLevels?: number;
@@ -416,7 +430,10 @@ export function CesiumSpatialViewer({
       }
       return "Not exposed by OSM tile";
     };
-    const selectOsmBuilding = (feature: OsmTileFeature) => {
+    const selectOsmBuilding = (
+      feature: OsmTileFeature,
+      coordinates?: DetailedMapSelection["coordinates"]
+    ) => {
       restoreOsmBuildingHighlight(false);
       const originalColor = feature.color;
       feature.color = Color.fromCssColorString("#ffe17a").withAlpha(0.92);
@@ -425,6 +442,17 @@ export function CesiumSpatialViewer({
         name: osmProperty(feature, ["name", "addr:housename"]),
         buildingType: osmProperty(feature, ["building", "building:use"]),
         osmIdentifier: osmProperty(feature, ["osm_id", "id"]),
+      });
+      onDetailedFeatureSelect?.({
+        kind: "osm-3d-tile",
+        properties: {
+          name: osmProperty(feature, ["name", "addr:housename"]),
+          buildingType: osmProperty(feature, ["building", "building:use"]),
+          osmIdentifier: osmProperty(feature, ["osm_id", "id"]),
+          source: "OpenStreetMap 3D Tiles",
+        },
+        sourceReference: osmProperty(feature, ["osm_id", "id"]),
+        coordinates,
       });
       viewer.selectedEntity = undefined;
       viewer.scene.requestRender();
@@ -584,7 +612,23 @@ export function CesiumSpatialViewer({
         }
         const picked = viewer.scene.pick(movement.position);
         if (isOsmBuildingFeature(picked)) {
-          selectOsmBuilding(picked);
+          const pickedPosition =
+            viewer.scene.pickPosition(movement.position) ??
+            viewer.camera.pickEllipsoid(
+              movement.position,
+              viewer.scene.globe.ellipsoid
+            );
+          const pickedCoordinates = pickedPosition
+            ? (() => {
+                const cartographic = Cartographic.fromCartesian(pickedPosition);
+                return {
+                  latitude: (cartographic.latitude * 180) / Math.PI,
+                  longitude: (cartographic.longitude * 180) / Math.PI,
+                  basis: "map-pick" as const,
+                };
+              })()
+            : undefined;
+          selectOsmBuilding(picked, pickedCoordinates);
           return;
         }
         restoreOsmBuildingHighlight();
@@ -640,6 +684,13 @@ export function CesiumSpatialViewer({
           offset: new HeadingPitchRange(0.32, -0.86, 180),
         });
         onFeatureSelect?.({ ulpin, properties });
+        onDetailedFeatureSelect?.({
+          kind: "source-record",
+          ulpin,
+          properties,
+          sourceReference: ulpin,
+          coordinates: undefined,
+        });
       },
       ScreenSpaceEventType.LEFT_CLICK
     );
@@ -742,7 +793,12 @@ export function CesiumSpatialViewer({
       viewerRef.current = null;
       setViewerReady(false);
     };
-  }, [onFeatureSelect, osmBuildingsEnabled, viewerRetryKey]);
+  }, [
+    onDetailedFeatureSelect,
+    onFeatureSelect,
+    osmBuildingsEnabled,
+    viewerRetryKey,
+  ]);
 
   useEffect(() => {
     const osmBuildings = osmBuildingsRef.current;

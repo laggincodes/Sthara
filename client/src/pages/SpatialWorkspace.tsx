@@ -3,6 +3,7 @@ import {
   type CesiumLayerFlags,
   type MapCommand,
   type SampleMapAsset,
+  type DetailedMapSelection,
 } from "@/components/CesiumSpatialViewer";
 import {
   ThreeBuildingPreview,
@@ -19,6 +20,7 @@ import {
   SOURCE_BACKED_EXPLORER_SUGGESTIONS,
 } from "@shared/placeExplorer";
 import { resolveBuildingEvidenceLevel } from "@/lib/buildingEvidenceLevel";
+import BuildingInformationPanel from "@/components/BuildingInformationPanel";
 import { trpc } from "@/lib/trpc";
 import {
   ArrowLeft,
@@ -40,7 +42,10 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useSearch } from "wouter";
 
-type SelectedFeature = { ulpin: string; properties: Record<string, unknown> };
+type SelectedFeature = {
+  ulpin: string;
+  properties: Record<string, unknown>;
+};
 type DemoRole = "citizen" | "surveyor" | "authority";
 
 const demoRoleDetails: Record<
@@ -234,6 +239,8 @@ export default function SpatialWorkspace() {
     nonce: Date.now(),
   });
   const [selected, setSelected] = useState<SelectedFeature | null>(null);
+  const [buildingSelection, setBuildingSelection] =
+    useState<DetailedMapSelection | null>(null);
   const [mockRecords, setMockRecords] = useState<MockRecord[]>([]);
   const [mockRecordQuery, setMockRecordQuery] = useState("");
   const [mockRecordFilter, setMockRecordFilter] = useState<
@@ -348,12 +355,58 @@ export default function SpatialWorkspace() {
     (feature: SelectedFeature) => setSelected(feature),
     []
   );
+  const onDetailedFeatureSelect = useCallback(
+    (feature: DetailedMapSelection) => {
+      setBuildingSelection(feature);
+      if (feature.kind === "source-record" && feature.ulpin) {
+        setSelected({ ulpin: feature.ulpin, properties: feature.properties });
+      } else {
+        setSelected(null);
+      }
+    },
+    []
+  );
+  const selectSearchRecord = useCallback(
+    (record: {
+      ulpin: string;
+      name: string;
+      footprintAreaSquareMetres: number;
+      approvedHeightMetres: number | null;
+      parcelReference: string | null;
+      ulpinRecord: string | null;
+      latitude: number | null;
+      longitude: number | null;
+    }) => {
+      const selection: DetailedMapSelection = {
+        kind: "source-record",
+        ulpin: record.ulpin,
+        properties: {
+          ...record,
+          source: "Live PostGIS source record",
+        },
+        sourceReference: record.ulpin,
+        coordinates:
+          record.latitude !== null && record.longitude !== null
+            ? {
+                latitude: record.latitude,
+                longitude: record.longitude,
+                basis: "source-geometry",
+              }
+            : undefined,
+      };
+      setBuildingSelection(selection);
+      setSelected({ ulpin: record.ulpin, properties: selection.properties });
+      issueCommand("inspect-footprint");
+    },
+    []
+  );
 
   useEffect(() => {
     setSearchText(requestedSite);
     setSiteQuery(requestedSite);
     setResolutionNote(null);
     setSelected(null);
+    setBuildingSelection(null);
     setMockUlpIn(null);
   }, [requestedSite]);
 
@@ -539,6 +592,13 @@ export default function SpatialWorkspace() {
         {
           onSuccess: result => {
             setSiteQuery(result.resolvedQuery);
+            const firstRecord = result.records[0];
+            if (firstRecord) {
+              selectSearchRecord(firstRecord);
+            } else {
+              setSelected(null);
+              setBuildingSelection(null);
+            }
             setResolutionNote(
               result.resolution === "ai-assisted-source-alias"
                 ? `AI routing matched an existing source-backed area: ${result.rationale}`
@@ -600,10 +660,7 @@ export default function SpatialWorkspace() {
           <button type="button" onClick={() => setLocation("/overview")}>
             <Layers3 size={17} /> Command home
           </button>
-          <button
-            type="button"
-            onClick={() => setLocation("/ulpin-registry")}
-          >
+          <button type="button" onClick={() => setLocation("/ulpin-registry")}>
             <ShieldCheck size={17} /> ULPIN registry
           </button>
         </div>
@@ -682,6 +739,7 @@ export default function SpatialWorkspace() {
                 mockFloorLevels={activeMapUlpins.length > 0 ? 4 : 0}
                 measurementControlsOnly
                 onFeatureSelect={onFeatureSelect}
+                onDetailedFeatureSelect={onDetailedFeatureSelect}
                 onMockFloorSelect={setSelectedMockFloor}
                 onMockFloorHover={setHoveredMockFloor}
                 sampleAsset={sampleAsset}
@@ -892,6 +950,7 @@ export default function SpatialWorkspace() {
                 <span>LIVE POSTGIS · individual footprints only</span>
               </div>
             </section>
+            <BuildingInformationPanel selection={buildingSelection} />
           </div>
 
           <aside className="spatial-dossier">
@@ -925,18 +984,7 @@ export default function SpatialWorkspace() {
                     <button
                       type="button"
                       key={record.ulpin}
-                      onClick={() => {
-                        setSelected({
-                          ulpin: record.ulpin,
-                          properties: {
-                            name: record.name,
-                            footprintAreaSquareMetres:
-                              record.footprintAreaSquareMetres,
-                            approvedHeightMetres: record.approvedHeightMetres,
-                          },
-                        });
-                        issueCommand("inspect-footprint");
-                      }}
+                      onClick={() => selectSearchRecord(record)}
                     >
                       <span>{record.name}</span>
                       <small>
