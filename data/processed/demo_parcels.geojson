@@ -1,0 +1,87 @@
+{
+  "type": "FeatureCollection",
+  "name": "demo_parcels",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+    }
+  },
+  "metadata": {
+    "dataset_name": "DEMO DATA — 3D Cadastral Intelligence Test Parcels",
+    "description": "Synthetic cadastral parcel boundaries designed for geometric pipeline testing.",
+    "is_demo": true,
+    "legal_disclaimer": "SYNTHETIC DEMO DATA FOR RESEARCH AND TESTING ONLY. NOT OFFICIAL GOVERNMENT CADASTRAL RECORDS."
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "id": "PARCEL-DEMO-101",
+      "properties": {
+        "survey_no": "DEMO-401/1",
+        "owner_class": "Commercial Mixed",
+        "registered_area_sqm": 720.0,
+        "ward": "Demo Ward A",
+        "notes": "Primary demo parcel (rectangular footprint)"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [73.85600, 18.52000],
+            [73.85630, 18.52000],
+            [73.85630, 18.52024],
+            [73.85600, 18.52024],
+            [73.85600, 18.52000]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "PARCEL-DEMO-102",
+      "properties": {
+        "survey_no": "DEMO-401/2",
+        "owner_class": "Residential Tower",
+        "registered_area_sqm": 840.0,
+        "ward": "Demo Ward A",
+        "notes": "Eastern adjacent parcel sharing boundary with DEMO-401/1"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [73.85630, 18.52000],
+            [73.85665, 18.52000],
+            [73.85665, 18.52024],
+            [73.85630, 18.52024],
+            [73.85630, 18.52000]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "PARCEL-DEMO-103",
+      "properties": {
+        "survey_no": "DEMO-401/3",
+        "owner_class": "Public Utility / Easement",
+        "registered_area_sqm": 600.0,
+        "ward": "Demo Ward A",
+        "notes": "Southern adjacent parcel sharing southern boundary with DEMO-401/1"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [73.85600, 18.51975],
+            [73.85630, 18.51975],
+            [73.85630, 18.52000],
+            [73.85600, 18.52000],
+            [73.85600, 18.51975]
+          ]
+        ]
+      }
+    }
+  ]
+}
