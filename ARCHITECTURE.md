@@ -1,0 +1,348 @@
+# System Architecture Document
+
+## 1. Architectural Principles & Vision
+**3D Cadastral Intelligence** is designed upon the foundational principle of **Deterministic Geometric Authority**:
+- **Authoritative Computational Geometry**: Coordinate reference system (CRS) transformations, planar buffering, polygon intersections, 3D polyhedral extrusions, boundary containment checks, and 3D ULPIN formulations are strictly deterministic and mathematically guaranteed using mature, industry-standard computational geometry engines (`Shapely`, `GeoPandas`, `PyProj`).
+- **Auxiliary, Non-Authoritative AI Layer**: Large Language Models (Google Gemini) are strictly isolated from authoritative geometric logic. Gemini is used solely for non-binding explanatory tasks: translating complex spatial validation logs into plain-English municipal briefs and providing user-friendly property rights summaries. AI never touches raw coordinates, mesh vertices, or legal pass/fail determinations.
+- **High-Performance Decoupled Architecture**: A lightweight Next.js frontend delivers real-time 60 FPS WebGL rendering and spatial inspection, communicating with an asynchronous Python FastAPI backend via structured REST APIs.
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           CLIENT (Next.js)                              │
+│  ┌───────────────────────┐  ┌─────────────────────┐  ┌───────────────┐  │
+│  │ 2D Map (MapLibre/GL)  │  │ 3D Scene (Three.js/ │  │ Control Panel │  │
+│  │ GeoJSON Footprints    │  │ R3F Volumetric Mesh)│  │ & Validation  │  │
+│  └───────────┬───────────┘  └──────────┬──────────┘  └───────┬───────┘  │
+│              └─────────────────────────┼─────────────────────┘          │
+│                                        ▼                                │
+│                               API Gateway Client                        │
+└────────────────────────────────────────┬────────────────────────────────┘
+                                         │ HTTPS / REST (JSON & GeoJSON)
+┌────────────────────────────────────────▼────────────────────────────────┐
+│                          BACKEND (FastAPI)                              │
+│  ┌───────────────────────────────────────────────────────────────────┐  │
+│  │                      API Routing & Controllers                    │  │
+│  └───────────────────────────────────┬───────────────────────────────┘  │
+│                                      ▼                                  │
+│  ┌───────────────────────────────────────────────────────────────────┐  │
+│  │                 DETERMINISTIC GEOSPATIAL PIPELINE                 │  │
+│  │  1. Ingestion & CRS Projection (PyProj)                           │  │
+│  │  2. 2D Polygon Validation (Shapely)                               │  │
+│  │  3. 3D Volumetric Extrusion Engine (Shapely + Triangulation)      │  │
+│  │  4. Spatial Clash & Encroachment Validator                        │  │
+│  │  5. 3D ULPIN Algorithmic Generator                                │  │
+│  └──────────────────┬───────────────────────────────┬────────────────┘  │
+│                     │                               │                   │
+│                     ▼                               ▼                   │
+│  ┌──────────────────────────────────┐  ┌─────────────────────────────┐  │
+│  │    STORAGE & PERSISTENCE         │  │   OPTIONAL AI ADVISOR       │  │
+│  │   - PostgreSQL + PostGIS         │  │   - Google Gemini Flash API │  │
+│  │     (or local GeoJSON cache)     │  │   - Summary & Explanation   │  │
+│  │   - Volume & ULPIN Store         │  │     (Read-Only / Auxiliary) │  │
+│  └──────────────────────────────────┘  └─────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 2. Technology Stack
+
+### Frontend Stack
+- **Framework**: Next.js 15+ (App Router, React 19)
+- **Language**: TypeScript 5+
+- **Styling**: Tailwind CSS, Lucide React icons
+- **2D Mapping**: MapLibre GL / Leaflet (rendering 2D cadastral polygons, parcel boundaries, satellite tiles)
+- **3D Visualization**: Three.js, React Three Fiber (`@react-three/fiber`), `@react-three/drei`
+- **State Management & Fetching**: React Hooks, standard native fetch / TanStack Query pattern
+
+### Backend Stack
+- **Framework**: Python 3.11+, FastAPI (asynchronous REST API)
+- **Application Server**: Uvicorn (ASGI)
+- **Data Validation & Schemas**: Pydantic v2
+
+### Geospatial & Geometry Processing Engine
+- **Shapely 2.0+ (GEOS)**: Core computational geometry (polygon intersection, containment, buffering, union, planar difference).
+- **GeoPandas**: Vector feature processing, attribute table management, spatial indexing (`STRtree`).
+- **PyProj 3.6+ (PROJ)**: Geodetic transformations and projection management (e.g., WGS84 `EPSG:4326` to planar metric UTM `EPSG:32643`).
+- **Rasterio / NumPy**: Elevation surface sampling, baseline height calculations.
+
+### Database & Storage Architecture
+- **Production Mode**: PostgreSQL 16 with **PostGIS 3.4** extension (spatial indexes, 3D geometry types).
+- **SIH Hackathon Fast-Track Mode**: Local in-memory GeoDataFrame cache and file-backed GeoJSON store (`data/processed/sih_sample_cadastre.geojson`). Guarantees zero installation friction during live evaluation while strictly conforming to PostGIS schemas.
+
+### AI Assistance (Optional)
+- **Provider**: Google Gemini Flash API (`google-genai` Python SDK).
+- **Scope**: Natural language summaries of validation flags and municipal reports. AI has zero access to manipulate spatial geometry.
+
+---
+
+## 3. Frontend Architecture
+
+The frontend follows a modern, dense, GIS-workstation single-page layout:
+
+### Component Hierarchy
+```
+src/
+├── app/
+│   ├── layout.tsx                # Global styling, fonts, root layout
+│   └── page.tsx                  # Main Cadastral Dashboard
+├── components/
+│   ├── layout/
+│   │   ├── Header.tsx            # Project title, dataset picker, run action
+│   │   └── StatusBar.tsx         # Connection status, active CRS, processing indicators
+│   ├── map2d/
+│   │   ├── Map2DViewer.tsx       # Leaflet / MapLibre 2D parcel boundary map
+│   │   └── LayerControl2D.tsx    # Toggle parcel, footprints, aerial tiles
+│   ├── viewer3d/
+│   │   ├── CadastralStage.tsx    # Three.js Canvas, Lighting, OrbitControls, Ground Grid
+│   │   ├── ParcelColumnMesh.tsx  # Extruded legal boundary bounding column (wireframe)
+│   │   ├── VolumeMesh.tsx        # Render individual floor/basement polyhedrons
+│   │   ├── ClashIndicator.tsx    # Red wireframe mesh highlighting detected encroachments
+│   │   └── ExplodeSlider.tsx     # Vertical floor separation slider (exploded view)
+│   ├── panels/
+│   │   ├── DatasetSelector.tsx   # Preset selector (Standard Urban, Overhang Encroachment)
+│   │   ├── ValidationPanel.tsx   # Pass/Warning/Fail checks and clash breakdown
+│   │   ├── PropertyCard.tsx      # 3D ULPIN, volume, floor bounds, ownership class
+│   │   └── AIExplainModal.tsx    # Optional Gemini plain-language explanation drawer
+│   └── ui/                       # Reusable UI elements (Badges, Buttons, Tabs, Accordions)
+├── lib/
+│   ├── api.ts                    # Typed API client for FastAPI backend
+│   ├── types.ts                  # Shared TypeScript interfaces matching Pydantic models
+│   └── three-utils.ts            # Triangulation helpers and coordinate normalizers
+```
+
+---
+
+## 4. Backend Architecture
+
+The backend is structured into clean separation of concerns:
+```
+backend/
+├── app/
+│   ├── main.py                   # FastAPI app, CORS middleware, lifespan events
+│   ├── api/
+│   │   ├── api_router.py         # Root API router aggregator
+│   │   └── routes/
+│   │       ├── health.py         # System health & dependency diagnostic
+│   │       ├── datasets.py       # Sample data retrieval and file upload
+│   │       ├── spatial.py        # Spatial intelligence & building-parcel topological association
+│   │       ├── elevation.py      # Elevation inspection & deterministic DEM raster sampling
+│   │       ├── buildings.py      # Structural height, floor slicing, 3D mesh extrusion, and stratified floor solids (/generate-floors-3d, /extrude-demo-floors)
+│   │       ├── properties.py     # 3D property volumes (/generate-volume-3d, /demo-properties, /extrude-demo-properties)
+│   │       ├── parcels.py        # 2D parcel retrieval & spatial queries
+│   │       ├── volumes.py        # 3D property volume extraction & mesh generation
+│   │       ├── validation.py     # Deterministic boundary & clash verification
+│   │       ├── ulpin.py          # 3D-ULPIN generator & decoder
+│   │       └── ai_advisor.py     # Optional Gemini explanation bridge
+│   ├── core/
+│   │   ├── config.py             # App settings (CORS origins, API keys, paths)
+│   │   └── logging.py            # Structured logging
+│   ├── schemas/ / models/        # Pydantic schemas (Request / Response contracts)
+│   │   ├── geojson.py            # FeatureCollection and Geometry schemas
+│   │   ├── geometry_3d.py        # Canonical 3D Geometry Contract (Mesh3D, Mesh3DCollection, Generate3DResponse; see 3D_GEOMETRY_CONTRACT.md)
+│   │   ├── property_volume.py    # 3D floor solids, property volumes, hierarchy requests and responses
+│   │   ├── volume_schema.py      # Mesh definitions, vertices, faces, bounds
+│   │   ├── validation_schema.py  # Check lists, clash features, error details
+│   │   └── ulpin_schema.py       # 3D ULPIN structured components
+│   └── services/                 # Pure domain business logic
+│       ├── geojson_validator.py  # RFC 7946 & Shapely topological geometry validation
+│       ├── building_validator.py # Building footprint validation & ID resolution
+│       ├── spatial_relationship_service.py # STRtree spatial index & overlap area analysis
+│       ├── elevation_service.py  # Rasterio DEM inspection & centroid elevation extraction
+│       ├── building_height_service.py # Structural height subtraction & deterministic floor slicing
+│       ├── floor_volume_service.py   # 3D floor solid extrusion, priority 1-3 elevation slicing, watertight verification, and property volume aggregation
+│       ├── parcel_normalizer.py  # Authoritative ID extraction & centroid derivation
+│       ├── crs_service.py        # CRS validation, UTM projection, metric conversion
+│       ├── extrusion_service.py  # 2D polygon to 3D polyhedral mesh computation
+│       ├── validation_engine.py  # Containment, vertical overhang, volumetric overlap
+│       ├── ulpin_generator.py    # Algorithmic 3D ULPIN calculator
+│       └── gemini_advisor.py     # Auxiliary Gemini API summarization client
+```
+
+---
+
+## 5. Geospatial Processing Pipeline
+
+```
+[2D GeoJSON Input]
+       │ (WGS84 EPSG:4326 coordinates)
+       ▼
+[CRS Projection & Metric Normalization]
+       │ (PyProj converts to UTM EPSG:32643 in meters)
+       ▼
+[Planar Polygon Validation & Repair]
+       │ (Shapely make_valid: ensures closure, counter-clockwise winding, no self-intersections)
+       ▼
+[Vertical Stratification Slicing]
+       │ (Calculate Z_min, Z_max intervals for each floor, basement, and surface parcel)
+       ▼
+[Polyhedral Volume Synthesis]
+       │ (Compute 3D bounding boxes, polygon extrusion side-walls, top/bottom caps)
+       ▼
+[Geometric Metric Calculation]
+       │ (Exact footprint area m^2, 3D volume m^3, elevation span)
+       ▼
+[Mesh Serialization]
+       │ (Normalized centroid relative coordinates for Three.js client)
+```
+
+---
+
+## 6. 3D Rendering Pipeline
+
+1. **Precision Centroid Centering**:
+   - Projected UTM coordinates have large numerical magnitudes (e.g., $X=720450.2, Y=3124500.8$). Passing these directly into WebGL causes floating-point jitter and rendering artifacts.
+   - The backend computes a local centroid reference: $(X_{ref}, Y_{ref}, Z_{ref})$.
+   - Mesh vertex coordinates are transmitted as local metric offsets relative to this origin:
+     $$x_{local} = x - X_{ref}, \quad y_{local} = y - Y_{ref}, \quad z_{local} = z - Z_{ref}$$
+2. **Triangulated Mesh Payload**:
+   - The backend computes 2D polygon triangulation for top/bottom caps and creates two triangular faces per quad wall.
+   - Client receives a structured JSON with `vertices` (flat Float32 array) and `indices` (Uint16 array).
+3. **Shader & Material Encoding**:
+   - **Surface Parcel Column**: Translucent dashed boundary pillar wireframe.
+   - **Valid Building Units**: Semi-transparent cyan/slate material (`roughness: 0.2`, `metalness: 0.1`, `opacity: 0.7`).
+   - **Basement Volumes**: Translucent amber tone below the ground plane grid.
+   - **Encroachment Clashes**: High-visibility pulsating red wireframe highlight.
+4. **Interactive Exploded View**:
+   - Users can drag a vertical slider in the UI to apply a progressive displacement along the local vertical axis:
+     $$y_{display} = y_{local} + (\text{floor\_index} \times \text{explode\_factor})$$
+
+---
+
+## 7. Database Architecture
+
+The data architecture is designed for dual-mode deployment:
+
+### Mode 1: Production (PostgreSQL 16 + PostGIS 3.4)
+- Schema Tables:
+  - `cadastral_parcels`: Stores parcel boundary polygon in `GEOMETRY(PolygonZ, 4326)` with legal parcel attributes.
+  - `buildings`: Stores base footprint polygon in `GEOMETRY(PolygonZ, 4326)` and vertical floor count.
+  - `property_volumes`: Stores polyhedral volumes in `GEOMETRY(PolyhedralSurfaceZ, 4326)`, vertical intervals, stratum types, and assigned 3D ULPINs.
+  - `validation_logs`: Stores historical validation audit trails and detected clash geometries.
+
+### Mode 2: Hackathon Zero-Config (In-Memory + GeoJSON Cache)
+- Fast-track file store located at `data/processed/sih_sample_cadastre.geojson`.
+- Loaded into memory during FastAPI startup lifespan event.
+- Instant query response without requiring PostgreSQL service configuration on demo machines.
+
+---
+
+## 8. API Communication & Data Flow
+
+All communication between Next.js and FastAPI uses standard REST over HTTPS:
+- Standard response envelope:
+  ```json
+  {
+    "status": "success",
+    "data": { ... },
+    "message": "Pipeline executed successfully",
+    "timestamp": "2026-09-06T14:30:00Z"
+  }
+  ```
+- Errors return standard HTTP status codes with structured details:
+  ```json
+  {
+    "status": "error",
+    "error_code": "INVALID_CRS",
+    "message": "Input dataset missing required coordinate reference system",
+    "details": {}
+  }
+  ```
+
+---
+
+## 9. Validation Flow (Deterministic)
+
+```
+PARCEL POLYGON (P) & BUILDING FOOTPRINT (B)
+                      │
+                      ▼
+        [Phase 1: Footprint Containment]
+      Is B completely within P? (Shapely: P.contains(B))
+       ├── YES: Footprint compliant
+       └── NO:  FLAG CRITICAL CLASH (Footprint encroachment)
+                      │
+                      ▼
+        [Phase 2: Vertical Overhang Check]
+      For each floor k with footprint F_k:
+      Is F_k completely within P?
+       ├── YES: Floor k within legal parcel column
+       └── NO:  FLAG OVERHANG CLASH
+                Compute clash polygon: C_k = F_k.difference(P)
+                Compute clash volume: Vol_clash = Area(C_k) * Height(k)
+                      │
+                      ▼
+        [Phase 3: Inter-Unit Non-Overlap Check]
+      For each pair of units (U_i, U_j):
+      Do vertical ranges [Zmin_i, Zmax_i] overlap AND 2D footprints intersect?
+       ├── YES: FLAG VOLUMETRIC CLASH (Shared unauthorized space)
+       └── NO:  Units topologically independent
+                      │
+                      ▼
+        [Phase 4: Municipal Height Restriction]
+      Is max(Z_max) <= Permissible_Zoning_Height?
+       ├── YES: Height compliant
+       └── NO:  FLAG WARNING (Zoning height exceedance)
+```
+
+---
+
+## 10. 3D ULPIN Prototype Generation Flow (Step 13)
+
+> [!IMPORTANT]
+> **CRITICAL SEMANTIC NOTICE**: The 3D ULPIN Prototype is a project-specific deterministic identifier design for validated 3D cadastral property entities. It is NOT an official Government of India ULPIN specification.
+
+```
+PROPERTY ENTITY (PARCEL -> BUILDING -> FLOOR -> PROPERTY_VOLUME)
+                         │
+                         ▼
+        [Phase 1: Component Validation & Sorting]
+   - Verify non-empty property_id & parcel_id
+   - Reject duplicate building_ids (DUPLICATE_COMPONENT)
+   - Reject duplicate floor_ids (DUPLICATE_COMPONENT)
+   - Sort building_ids lexicographically: sorted(building_ids)
+   - Sort floor_ids lexicographically: sorted(floor_ids)
+                         │
+                         ▼
+        [Phase 2: Spatial Extent Precondition Check]
+   - Check PropertyVolumeResult.geometry_status:
+     ├── UNAVAILABLE: Return identifier_status = UNAVAILABLE (no ULPIN issued)
+     ├── INVALID:     Return identifier_status = INVALID (no ULPIN issued)
+     └── VALID:       Proceed to canonical hashing
+                         │
+                         ▼
+        [Phase 3: Canonical Identity Serialization]
+   Assemble invariant canonical identity string (UTF-8):
+   3DULPIN|v1|property:<prop_id>|parcel:<parcel_id>|buildings:<b1>,<b2>|floors:<f1>,<f2>
+                         │
+                         ▼
+        [Phase 4: Cryptographic Hash Generation]
+   - Compute SHA-256 hex digest: hashlib.sha256(canonical_bytes).hexdigest().upper()
+   - Format versioned prototype identifier:
+     3DULPIN-V1-<64_HEX_DIGEST>
+     Example: 3DULPIN-V1-9457DE1DBBBEB319BAE64DA99B35C83FEA80A6C289569BF383B38A82A5BC6C6F
+```
+
+### Decoupling from Mesh Representation
+$$\text{3D ULPIN} \neq \text{hash}(\text{raw vertices})$$
+The identifier is strictly independent of:
+- Mesh vertex ordering or floating-point jitter
+- Triangle face tessellation
+- Three.js scene graphs or rendering pipeline states
+- Calculated bounding boxes, surface area, or volume metrics
+Changing visual appearance, moving the camera, or reordering geometry arrays never alters the 3D ULPIN Prototype.
+
+---
+
+## 11. AI Architecture & Strict Guardrails
+
+| System Capability | Implementation Module | Permitted Role of Gemini AI |
+|---|---|---|
+| CRS Reprojection | `pyproj.Transformer` | **STRICTLY PROHIBITED** |
+| Geometric Extrusion | `shapely.geometry` | **STRICTLY PROHIBITED** |
+| Encroachment Detection | `shapely.difference` | **STRICTLY PROHIBITED** |
+| Volume Computation | Computational Geometry | **STRICTLY PROHIBITED** |
+| 3D ULPIN Code Creation | Deterministic Python Hash | **STRICTLY PROHIBITED** |
+| Validation Report Translation | `gemini_advisor.py` | **Permitted**: Generates plain-English briefing |
+| Citizen Inquiries on Property | `gemini_advisor.py` | **Permitted**: Explains volumetric rights |
+| Regulatory Recommendations | `gemini_advisor.py` | **Permitted**: Suggests municipal reference bylaws |

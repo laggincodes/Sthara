@@ -1,0 +1,7501 @@
+{
+  "type": "FeatureCollection",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-REL-16318240",
+      "properties": {
+        "building_id": "OSM-BUILDING-REL-16318240",
+        "osm_id": "16318240",
+        "osm_type": "relation",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap relation. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                77.1130759,
+                28.6477368
+              ],
+              [
+                77.1128855,
+                28.6476148
+              ],
+              [
+                77.112812,
+                28.6477031
+              ],
+              [
+                77.1130024,
+                28.6478251
+              ],
+              [
+                77.1130759,
+                28.6477368
+              ]
+            ]
+          ],
+          [
+            [
+              [
+                77.1132507,
+                28.647857
+              ],
+              [
+                77.1130822,
+                28.6477472
+              ],
+              [
+                77.1130124,
+                28.6478296
+              ],
+              [
+                77.1131809,
+                28.6479394
+              ],
+              [
+                77.1132507,
+                28.647857
+              ]
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349830327",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349830327",
+        "osm_id": "349830327",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1127827,
+              28.6477091
+            ],
+            [
+              77.1128657,
+              28.6476096
+            ],
+            [
+              77.1126815,
+              28.6474912
+            ],
+            [
+              77.1125984,
+              28.6475907
+            ],
+            [
+              77.1127827,
+              28.6477091
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349830338",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349830338",
+        "osm_id": "349830338",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1126424,
+              28.6478305
+            ],
+            [
+              77.1128367,
+              28.6479534
+            ],
+            [
+              77.1128905,
+              28.6478879
+            ],
+            [
+              77.1126962,
+              28.647765
+            ],
+            [
+              77.1126424,
+              28.6478305
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349830348",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349830348",
+        "osm_id": "349830348",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1135828,
+              28.6475241
+            ],
+            [
+              77.1137235,
+              28.6475984
+            ],
+            [
+              77.1138321,
+              28.64744
+            ],
+            [
+              77.1136914,
+              28.6473657
+            ],
+            [
+              77.1135828,
+              28.6475241
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349830351",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349830351",
+        "osm_id": "349830351",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1134161,
+              28.6476431
+            ],
+            [
+              77.1134613,
+              28.6475807
+            ],
+            [
+              77.1132316,
+              28.6474527
+            ],
+            [
+              77.1131864,
+              28.6475151
+            ],
+            [
+              77.1134161,
+              28.6476431
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349830378",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349830378",
+        "osm_id": "349830378",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1131484,
+              28.6472988
+            ],
+            [
+              77.1133032,
+              28.6473894
+            ],
+            [
+              77.1134066,
+              28.6472531
+            ],
+            [
+              77.1132518,
+              28.6471625
+            ],
+            [
+              77.1131484,
+              28.6472988
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349830381",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349830381",
+        "osm_id": "349830381",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1131041,
+              28.6476876
+            ],
+            [
+              77.113147,
+              28.6477154
+            ],
+            [
+              77.1132196,
+              28.6476289
+            ],
+            [
+              77.1131767,
+              28.6476011
+            ],
+            [
+              77.1131041,
+              28.6476876
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349830385",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349830385",
+        "osm_id": "349830385",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1124979,
+              28.6490594
+            ],
+            [
+              77.1125634,
+              28.6489821
+            ],
+            [
+              77.112014,
+              28.6486236
+            ],
+            [
+              77.1119485,
+              28.6487009
+            ],
+            [
+              77.1124979,
+              28.6490594
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349830389",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349830389",
+        "osm_id": "349830389",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.113229,
+              28.6479482
+            ],
+            [
+              77.1133697,
+              28.6480391
+            ],
+            [
+              77.113432,
+              28.6479648
+            ],
+            [
+              77.1132913,
+              28.6478739
+            ],
+            [
+              77.113229,
+              28.6479482
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349830396",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349830396",
+        "osm_id": "349830396",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1128693,
+              28.6475863
+            ],
+            [
+              77.1129579,
+              28.6476421
+            ],
+            [
+              77.1130468,
+              28.6475131
+            ],
+            [
+              77.1129502,
+              28.6474545
+            ],
+            [
+              77.1128693,
+              28.6475863
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349830397",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349830397",
+        "osm_id": "349830397",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1128751,
+              28.6484945
+            ],
+            [
+              77.1129592,
+              28.6485429
+            ],
+            [
+              77.1132302,
+              28.6481802
+            ],
+            [
+              77.1131461,
+              28.6481318
+            ],
+            [
+              77.1128751,
+              28.6484945
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349830413",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349830413",
+        "osm_id": "349830413",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1121546,
+              28.6481853
+            ],
+            [
+              77.1123803,
+              28.6483258
+            ],
+            [
+              77.1126062,
+              28.6480463
+            ],
+            [
+              77.1123804,
+              28.6479058
+            ],
+            [
+              77.1121546,
+              28.6481853
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349830426",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349830426",
+        "osm_id": "349830426",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1134183,
+              28.6474673
+            ],
+            [
+              77.1135079,
+              28.6475205
+            ],
+            [
+              77.1136163,
+              28.6473797
+            ],
+            [
+              77.1135267,
+              28.6473265
+            ],
+            [
+              77.1134183,
+              28.6474673
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349830442",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349830442",
+        "osm_id": "349830442",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1135509,
+              28.6478185
+            ],
+            [
+              77.1136259,
+              28.6477189
+            ],
+            [
+              77.1134728,
+              28.64763
+            ],
+            [
+              77.1133977,
+              28.6477295
+            ],
+            [
+              77.1135509,
+              28.6478185
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349830446",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349830446",
+        "osm_id": "349830446",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1130737,
+              28.6477142
+            ],
+            [
+              77.1131449,
+              28.647619
+            ],
+            [
+              77.1130969,
+              28.6475914
+            ],
+            [
+              77.1130257,
+              28.6476865
+            ],
+            [
+              77.1130737,
+              28.6477142
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349830465",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349830465",
+        "osm_id": "349830465",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1128106,
+              28.6473019
+            ],
+            [
+              77.1129395,
+              28.6473761
+            ],
+            [
+              77.1130084,
+              28.6472839
+            ],
+            [
+              77.1128795,
+              28.6472097
+            ],
+            [
+              77.1128106,
+              28.6473019
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349830474",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349830474",
+        "osm_id": "349830474",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1137024,
+              28.6478568
+            ],
+            [
+              77.1139465,
+              28.6479964
+            ],
+            [
+              77.1140509,
+              28.6478558
+            ],
+            [
+              77.1138068,
+              28.6477162
+            ],
+            [
+              77.1137024,
+              28.6478568
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349830475",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349830475",
+        "osm_id": "349830475",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1131915,
+              28.6477676
+            ],
+            [
+              77.1132841,
+              28.647828
+            ],
+            [
+              77.1133693,
+              28.6477275
+            ],
+            [
+              77.1132766,
+              28.6476671
+            ],
+            [
+              77.1131915,
+              28.6477676
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349830477",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349830477",
+        "osm_id": "349830477",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.112692,
+              28.6474704
+            ],
+            [
+              77.1127725,
+              28.6475181
+            ],
+            [
+              77.1128267,
+              28.6474477
+            ],
+            [
+              77.1127462,
+              28.6474
+            ],
+            [
+              77.112692,
+              28.6474704
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349830487",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349830487",
+        "osm_id": "349830487",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1137023,
+              28.6486438
+            ],
+            [
+              77.1138073,
+              28.6487027
+            ],
+            [
+              77.1138484,
+              28.6486464
+            ],
+            [
+              77.1137435,
+              28.6485874
+            ],
+            [
+              77.1137023,
+              28.6486438
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349830501",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349830501",
+        "osm_id": "349830501",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1126673,
+              28.6487106
+            ],
+            [
+              77.1127283,
+              28.6486372
+            ],
+            [
+              77.1123373,
+              28.6483868
+            ],
+            [
+              77.1122763,
+              28.6484602
+            ],
+            [
+              77.1126673,
+              28.6487106
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349830506",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349830506",
+        "osm_id": "349830506",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.113155,
+              28.6475239
+            ],
+            [
+              77.113225,
+              28.6474258
+            ],
+            [
+              77.1131626,
+              28.6473915
+            ],
+            [
+              77.1130926,
+              28.6474896
+            ],
+            [
+              77.113155,
+              28.6475239
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349830507",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349830507",
+        "osm_id": "349830507",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1132014,
+              28.6477483
+            ],
+            [
+              77.113272,
+              28.6476655
+            ],
+            [
+              77.1132267,
+              28.6476357
+            ],
+            [
+              77.1131561,
+              28.6477184
+            ],
+            [
+              77.1132014,
+              28.6477483
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349830521",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349830521",
+        "osm_id": "349830521",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1132985,
+              28.6478577
+            ],
+            [
+              77.1134474,
+              28.6479553
+            ],
+            [
+              77.1135417,
+              28.6478446
+            ],
+            [
+              77.1133928,
+              28.647747
+            ],
+            [
+              77.1132985,
+              28.6478577
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349830538",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349830538",
+        "osm_id": "349830538",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.112525,
+              28.6489068
+            ],
+            [
+              77.1126105,
+              28.6489548
+            ],
+            [
+              77.1127347,
+              28.6487843
+            ],
+            [
+              77.1126492,
+              28.6487363
+            ],
+            [
+              77.112525,
+              28.6489068
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349830545",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349830545",
+        "osm_id": "349830545",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1128524,
+              28.6475794
+            ],
+            [
+              77.1129111,
+              28.6475051
+            ],
+            [
+              77.1128376,
+              28.6474603
+            ],
+            [
+              77.1127789,
+              28.6475347
+            ],
+            [
+              77.1128524,
+              28.6475794
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349830546",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349830546",
+        "osm_id": "349830546",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1129338,
+              28.6480188
+            ],
+            [
+              77.1131077,
+              28.6481199
+            ],
+            [
+              77.1131732,
+              28.6480332
+            ],
+            [
+              77.1129993,
+              28.6479321
+            ],
+            [
+              77.1129338,
+              28.6480188
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349830555",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349830555",
+        "osm_id": "349830555",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1133087,
+              28.6474068
+            ],
+            [
+              77.1133979,
+              28.6474595
+            ],
+            [
+              77.1134815,
+              28.6473504
+            ],
+            [
+              77.1133923,
+              28.6472978
+            ],
+            [
+              77.1133087,
+              28.6474068
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349830577",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349830577",
+        "osm_id": "349830577",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1135109,
+              28.6476222
+            ],
+            [
+              77.1136487,
+              28.6477022
+            ],
+            [
+              77.1137142,
+              28.6476153
+            ],
+            [
+              77.1135764,
+              28.6475353
+            ],
+            [
+              77.1135109,
+              28.6476222
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349830579",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349830579",
+        "osm_id": "349830579",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.113567,
+              28.6485675
+            ],
+            [
+              77.1136941,
+              28.6486398
+            ],
+            [
+              77.1137358,
+              28.6485833
+            ],
+            [
+              77.1136088,
+              28.648511
+            ],
+            [
+              77.113567,
+              28.6485675
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349830597",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349830597",
+        "osm_id": "349830597",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1130218,
+              28.6476815
+            ],
+            [
+              77.1130816,
+              28.6475814
+            ],
+            [
+              77.1130312,
+              28.6475581
+            ],
+            [
+              77.1129713,
+              28.6476582
+            ],
+            [
+              77.1130218,
+              28.6476815
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349830600",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349830600",
+        "osm_id": "349830600",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1130906,
+              28.6474783
+            ],
+            [
+              77.1131528,
+              28.6473891
+            ],
+            [
+              77.1130102,
+              28.6473127
+            ],
+            [
+              77.1129481,
+              28.6474019
+            ],
+            [
+              77.1130906,
+              28.6474783
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349830606",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349830606",
+        "osm_id": "349830606",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1122155,
+              28.6473545
+            ],
+            [
+              77.1124662,
+              28.647515
+            ],
+            [
+              77.1125249,
+              28.6474417
+            ],
+            [
+              77.1125908,
+              28.6473652
+            ],
+            [
+              77.1123401,
+              28.6472047
+            ],
+            [
+              77.1122155,
+              28.6473545
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349984924",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349984924",
+        "osm_id": "349984924",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1112169,
+              28.6488812
+            ],
+            [
+              77.1112808,
+              28.6487887
+            ],
+            [
+              77.1111486,
+              28.6487184
+            ],
+            [
+              77.1110848,
+              28.648811
+            ],
+            [
+              77.1112169,
+              28.6488812
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349984925",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349984925",
+        "osm_id": "349984925",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1110853,
+              28.6480723
+            ],
+            [
+              77.1111767,
+              28.6479574
+            ],
+            [
+              77.11111,
+              28.6479165
+            ],
+            [
+              77.1110185,
+              28.6480314
+            ],
+            [
+              77.1110853,
+              28.6480723
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349984926",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349984926",
+        "osm_id": "349984926",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1134148,
+              28.6484117
+            ],
+            [
+              77.1133836,
+              28.6484527
+            ],
+            [
+              77.1134962,
+              28.6485186
+            ],
+            [
+              77.1135274,
+              28.6484775
+            ],
+            [
+              77.1134148,
+              28.6484117
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349984928",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349984928",
+        "osm_id": "349984928",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.110635,
+              28.6487898
+            ],
+            [
+              77.1107254,
+              28.6486798
+            ],
+            [
+              77.1106773,
+              28.6486494
+            ],
+            [
+              77.110587,
+              28.6487594
+            ],
+            [
+              77.110635,
+              28.6487898
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349984934",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349984934",
+        "osm_id": "349984934",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1107107,
+              28.6488424
+            ],
+            [
+              77.1108123,
+              28.6487175
+            ],
+            [
+              77.1107541,
+              28.648681
+            ],
+            [
+              77.1106525,
+              28.6488059
+            ],
+            [
+              77.1107107,
+              28.6488424
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349984945",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349984945",
+        "osm_id": "349984945",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1114489,
+              28.6483131
+            ],
+            [
+              77.1115641,
+              28.6483845
+            ],
+            [
+              77.1115852,
+              28.6483582
+            ],
+            [
+              77.1114701,
+              28.6482868
+            ],
+            [
+              77.1114489,
+              28.6483131
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349984949",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349984949",
+        "osm_id": "349984949",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.113377,
+              28.6488982
+            ],
+            [
+              77.1134527,
+              28.6487981
+            ],
+            [
+              77.1133274,
+              28.6487252
+            ],
+            [
+              77.1132518,
+              28.6488253
+            ],
+            [
+              77.113377,
+              28.6488982
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349984951",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349984951",
+        "osm_id": "349984951",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.111598,
+              28.6486531
+            ],
+            [
+              77.1116725,
+              28.6485401
+            ],
+            [
+              77.1115842,
+              28.6484952
+            ],
+            [
+              77.1115097,
+              28.6486082
+            ],
+            [
+              77.111598,
+              28.6486531
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349984954",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349984954",
+        "osm_id": "349984954",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1134018,
+              28.6488992
+            ],
+            [
+              77.1134933,
+              28.6489557
+            ],
+            [
+              77.1135627,
+              28.6488691
+            ],
+            [
+              77.1134713,
+              28.6488126
+            ],
+            [
+              77.1134018,
+              28.6488992
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349984956",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349984956",
+        "osm_id": "349984956",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1137642,
+              28.6485426
+            ],
+            [
+              77.1137369,
+              28.6485785
+            ],
+            [
+              77.1138495,
+              28.6486443
+            ],
+            [
+              77.1138767,
+              28.6486084
+            ],
+            [
+              77.1137642,
+              28.6485426
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349984957",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349984957",
+        "osm_id": "349984957",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1119876,
+              28.6477805
+            ],
+            [
+              77.1120843,
+              28.6476644
+            ],
+            [
+              77.1120428,
+              28.6476377
+            ],
+            [
+              77.1119461,
+              28.6477539
+            ],
+            [
+              77.1119876,
+              28.6477805
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349984960",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349984960",
+        "osm_id": "349984960",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1111542,
+              28.6483617
+            ],
+            [
+              77.1112801,
+              28.64843
+            ],
+            [
+              77.1113185,
+              28.6483755
+            ],
+            [
+              77.1111925,
+              28.6483072
+            ],
+            [
+              77.1111542,
+              28.6483617
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349984961",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349984961",
+        "osm_id": "349984961",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1109082,
+              28.6479705
+            ],
+            [
+              77.1109961,
+              28.6478556
+            ],
+            [
+              77.1109047,
+              28.6478018
+            ],
+            [
+              77.1108169,
+              28.6479167
+            ],
+            [
+              77.1109082,
+              28.6479705
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349984963",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349984963",
+        "osm_id": "349984963",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1132279,
+              28.6486318
+            ],
+            [
+              77.1132957,
+              28.6486693
+            ],
+            [
+              77.1133788,
+              28.6485537
+            ],
+            [
+              77.1133109,
+              28.6485161
+            ],
+            [
+              77.1132279,
+              28.6486318
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349984964",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349984964",
+        "osm_id": "349984964",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1136809,
+              28.6484312
+            ],
+            [
+              77.1136536,
+              28.6484671
+            ],
+            [
+              77.1137662,
+              28.648533
+            ],
+            [
+              77.1137935,
+              28.6484971
+            ],
+            [
+              77.1136809,
+              28.6484312
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349984968",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349984968",
+        "osm_id": "349984968",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1109178,
+              28.6479887
+            ],
+            [
+              77.1109989,
+              28.6480367
+            ],
+            [
+              77.1110948,
+              28.647912
+            ],
+            [
+              77.1110136,
+              28.647864
+            ],
+            [
+              77.1109178,
+              28.6479887
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349984983",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349984983",
+        "osm_id": "349984983",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.113327,
+              28.6482834
+            ],
+            [
+              77.1132958,
+              28.6483245
+            ],
+            [
+              77.1134084,
+              28.6483903
+            ],
+            [
+              77.1134396,
+              28.6483493
+            ],
+            [
+              77.113327,
+              28.6482834
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349984997",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349984997",
+        "osm_id": "349984997",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1116036,
+              28.6484182
+            ],
+            [
+              77.1117251,
+              28.6484934
+            ],
+            [
+              77.111778,
+              28.6484277
+            ],
+            [
+              77.1116565,
+              28.6483524
+            ],
+            [
+              77.1116036,
+              28.6484182
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349984999",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349984999",
+        "osm_id": "349984999",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1134851,
+              28.6480971
+            ],
+            [
+              77.1134539,
+              28.6481382
+            ],
+            [
+              77.1135665,
+              28.648204
+            ],
+            [
+              77.1135977,
+              28.648163
+            ],
+            [
+              77.1134851,
+              28.6480971
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985012",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985012",
+        "osm_id": "349985012",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1135325,
+              28.6482686
+            ],
+            [
+              77.1135013,
+              28.6483096
+            ],
+            [
+              77.1136139,
+              28.6483755
+            ],
+            [
+              77.1136451,
+              28.6483344
+            ],
+            [
+              77.1135325,
+              28.6482686
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985015",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985015",
+        "osm_id": "349985015",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1135653,
+              28.648223
+            ],
+            [
+              77.1135341,
+              28.648264
+            ],
+            [
+              77.1136467,
+              28.6483299
+            ],
+            [
+              77.1136779,
+              28.6482888
+            ],
+            [
+              77.1135653,
+              28.648223
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985017",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985017",
+        "osm_id": "349985017",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1133598,
+              28.6482824
+            ],
+            [
+              77.1134452,
+              28.648338
+            ],
+            [
+              77.1135559,
+              28.6482072
+            ],
+            [
+              77.1134704,
+              28.6481516
+            ],
+            [
+              77.1133598,
+              28.6482824
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985019",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985019",
+        "osm_id": "349985019",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1112685,
+              28.6472479
+            ],
+            [
+              77.1114027,
+              28.6473348
+            ],
+            [
+              77.1114424,
+              28.6472876
+            ],
+            [
+              77.1113082,
+              28.6472007
+            ],
+            [
+              77.1112685,
+              28.6472479
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985020",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985020",
+        "osm_id": "349985020",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1105765,
+              28.6477828
+            ],
+            [
+              77.1106559,
+              28.6478271
+            ],
+            [
+              77.1107507,
+              28.6476963
+            ],
+            [
+              77.1106714,
+              28.647652
+            ],
+            [
+              77.1105765,
+              28.6477828
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985024",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985024",
+        "osm_id": "349985024",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1117651,
+              28.6482002
+            ],
+            [
+              77.1118922,
+              28.6482663
+            ],
+            [
+              77.1119498,
+              28.6481811
+            ],
+            [
+              77.1118227,
+              28.6481149
+            ],
+            [
+              77.1117651,
+              28.6482002
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985027",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985027",
+        "osm_id": "349985027",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1113979,
+              28.6473839
+            ],
+            [
+              77.1115321,
+              28.6474708
+            ],
+            [
+              77.1115718,
+              28.6474236
+            ],
+            [
+              77.1114376,
+              28.6473367
+            ],
+            [
+              77.1113979,
+              28.6473839
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985037",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985037",
+        "osm_id": "349985037",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1111105,
+              28.6478886
+            ],
+            [
+              77.1111763,
+              28.6479251
+            ],
+            [
+              77.1112576,
+              28.6478121
+            ],
+            [
+              77.1111918,
+              28.6477756
+            ],
+            [
+              77.1111105,
+              28.6478886
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985040",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985040",
+        "osm_id": "349985040",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1132852,
+              28.648333
+            ],
+            [
+              77.113254,
+              28.648374
+            ],
+            [
+              77.1133666,
+              28.6484399
+            ],
+            [
+              77.1133978,
+              28.6483989
+            ],
+            [
+              77.1132852,
+              28.648333
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985048",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985048",
+        "osm_id": "349985048",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1108049,
+              28.6479153
+            ],
+            [
+              77.1108882,
+              28.6477828
+            ],
+            [
+              77.1108246,
+              28.6477488
+            ],
+            [
+              77.1107365,
+              28.6478757
+            ],
+            [
+              77.1108049,
+              28.6479153
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985054",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985054",
+        "osm_id": "349985054",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1123952,
+              28.6475904
+            ],
+            [
+              77.1122436,
+              28.647503
+            ],
+            [
+              77.1121366,
+              28.6476459
+            ],
+            [
+              77.1122882,
+              28.6477333
+            ],
+            [
+              77.1123952,
+              28.6475904
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985055",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985055",
+        "osm_id": "349985055",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1111648,
+              28.64896
+            ],
+            [
+              77.1112103,
+              28.6488984
+            ],
+            [
+              77.1110801,
+              28.6488245
+            ],
+            [
+              77.1110347,
+              28.6488861
+            ],
+            [
+              77.1111648,
+              28.64896
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985066",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985066",
+        "osm_id": "349985066",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1136025,
+              28.6481754
+            ],
+            [
+              77.1135713,
+              28.6482164
+            ],
+            [
+              77.1136839,
+              28.6482823
+            ],
+            [
+              77.1137151,
+              28.6482413
+            ],
+            [
+              77.1136025,
+              28.6481754
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985071",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985071",
+        "osm_id": "349985071",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.111441,
+              28.6473306
+            ],
+            [
+              77.1115752,
+              28.6474175
+            ],
+            [
+              77.1116149,
+              28.6473703
+            ],
+            [
+              77.1114807,
+              28.6472834
+            ],
+            [
+              77.111441,
+              28.6473306
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985074",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985074",
+        "osm_id": "349985074",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1108409,
+              28.6483975
+            ],
+            [
+              77.1109671,
+              28.648485
+            ],
+            [
+              77.1110054,
+              28.6484424
+            ],
+            [
+              77.1108793,
+              28.6483549
+            ],
+            [
+              77.1108409,
+              28.6483975
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985075",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985075",
+        "osm_id": "349985075",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1110004,
+              28.6478257
+            ],
+            [
+              77.1110377,
+              28.6478484
+            ],
+            [
+              77.1111176,
+              28.6477478
+            ],
+            [
+              77.1110804,
+              28.647725
+            ],
+            [
+              77.1110004,
+              28.6478257
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985080",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985080",
+        "osm_id": "349985080",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1118599,
+              28.6479718
+            ],
+            [
+              77.1120346,
+              28.6480703
+            ],
+            [
+              77.1121177,
+              28.6479568
+            ],
+            [
+              77.1119429,
+              28.6478583
+            ],
+            [
+              77.1118599,
+              28.6479718
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985081",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985081",
+        "osm_id": "349985081",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1108336,
+              28.6487274
+            ],
+            [
+              77.1109238,
+              28.6486118
+            ],
+            [
+              77.1108429,
+              28.6485632
+            ],
+            [
+              77.1107527,
+              28.6486788
+            ],
+            [
+              77.1108336,
+              28.6487274
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985082",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985082",
+        "osm_id": "349985082",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1113639,
+              28.6489597
+            ],
+            [
+              77.1114214,
+              28.648877
+            ],
+            [
+              77.1112933,
+              28.6488085
+            ],
+            [
+              77.1112358,
+              28.6488912
+            ],
+            [
+              77.1113639,
+              28.6489597
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985086",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985086",
+        "osm_id": "349985086",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1130503,
+              28.6486887
+            ],
+            [
+              77.1131348,
+              28.6487411
+            ],
+            [
+              77.1132082,
+              28.6486499
+            ],
+            [
+              77.1131237,
+              28.6485975
+            ],
+            [
+              77.1130503,
+              28.6486887
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985087",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985087",
+        "osm_id": "349985087",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1137076,
+              28.6480426
+            ],
+            [
+              77.1136764,
+              28.6480836
+            ],
+            [
+              77.113789,
+              28.6481495
+            ],
+            [
+              77.1138201,
+              28.6481085
+            ],
+            [
+              77.1137076,
+              28.6480426
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985088",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985088",
+        "osm_id": "349985088",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1120015,
+              28.6477924
+            ],
+            [
+              77.1121953,
+              28.6478918
+            ],
+            [
+              77.112284,
+              28.6477586
+            ],
+            [
+              77.1120901,
+              28.6476592
+            ],
+            [
+              77.1120015,
+              28.6477924
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985089",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985089",
+        "osm_id": "349985089",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1109326,
+              28.6487835
+            ],
+            [
+              77.111022,
+              28.6486538
+            ],
+            [
+              77.1109366,
+              28.6486085
+            ],
+            [
+              77.1108472,
+              28.6487381
+            ],
+            [
+              77.1109326,
+              28.6487835
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985091",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985091",
+        "osm_id": "349985091",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1114241,
+              28.6477672
+            ],
+            [
+              77.1115724,
+              28.6478526
+            ],
+            [
+              77.1116763,
+              28.6477139
+            ],
+            [
+              77.1115279,
+              28.6476284
+            ],
+            [
+              77.1114241,
+              28.6477672
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985092",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985092",
+        "osm_id": "349985092",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1106004,
+              28.6485796
+            ],
+            [
+              77.110674,
+              28.6486174
+            ],
+            [
+              77.1107555,
+              28.6484955
+            ],
+            [
+              77.1106818,
+              28.6484576
+            ],
+            [
+              77.1106004,
+              28.6485796
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985094",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985094",
+        "osm_id": "349985094",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1110615,
+              28.6482091
+            ],
+            [
+              77.1111838,
+              28.6482949
+            ],
+            [
+              77.1112064,
+              28.6482702
+            ],
+            [
+              77.1110841,
+              28.6481843
+            ],
+            [
+              77.1110615,
+              28.6482091
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985098",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985098",
+        "osm_id": "349985098",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1118091,
+              28.647467
+            ],
+            [
+              77.1117074,
+              28.647602
+            ],
+            [
+              77.1118017,
+              28.6476566
+            ],
+            [
+              77.1119033,
+              28.6475217
+            ],
+            [
+              77.1118091,
+              28.647467
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985101",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985101",
+        "osm_id": "349985101",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1113258,
+              28.6479603
+            ],
+            [
+              77.1113946,
+              28.6479983
+            ],
+            [
+              77.1114827,
+              28.6478754
+            ],
+            [
+              77.1114139,
+              28.6478374
+            ],
+            [
+              77.1113258,
+              28.6479603
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985103",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985103",
+        "osm_id": "349985103",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1136387,
+              28.6481268
+            ],
+            [
+              77.1136075,
+              28.6481679
+            ],
+            [
+              77.1137201,
+              28.6482338
+            ],
+            [
+              77.1137513,
+              28.6481927
+            ],
+            [
+              77.1136387,
+              28.6481268
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985105",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985105",
+        "osm_id": "349985105",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1114929,
+              28.6480684
+            ],
+            [
+              77.1115473,
+              28.6480979
+            ],
+            [
+              77.1116286,
+              28.647983
+            ],
+            [
+              77.1115743,
+              28.6479534
+            ],
+            [
+              77.1114929,
+              28.6480684
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985109",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985109",
+        "osm_id": "349985109",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1114826,
+              28.6472788
+            ],
+            [
+              77.1116167,
+              28.6473657
+            ],
+            [
+              77.1116564,
+              28.6473185
+            ],
+            [
+              77.1115223,
+              28.6472316
+            ],
+            [
+              77.1114826,
+              28.6472788
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985111",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985111",
+        "osm_id": "349985111",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1109737,
+              28.6485751
+            ],
+            [
+              77.111098,
+              28.6486465
+            ],
+            [
+              77.1111306,
+              28.6486028
+            ],
+            [
+              77.1110063,
+              28.6485314
+            ],
+            [
+              77.1109737,
+              28.6485751
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985112",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985112",
+        "osm_id": "349985112",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1138252,
+              28.6482488
+            ],
+            [
+              77.1137979,
+              28.6482848
+            ],
+            [
+              77.1139105,
+              28.6483506
+            ],
+            [
+              77.1139378,
+              28.6483147
+            ],
+            [
+              77.1138252,
+              28.6482488
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985115",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985115",
+        "osm_id": "349985115",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.111665,
+              28.6478632
+            ],
+            [
+              77.1117488,
+              28.647749
+            ],
+            [
+              77.1116928,
+              28.6477173
+            ],
+            [
+              77.111609,
+              28.6478315
+            ],
+            [
+              77.111665,
+              28.6478632
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985117",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985117",
+        "osm_id": "349985117",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1133085,
+              28.6486696
+            ],
+            [
+              77.113401,
+              28.648718
+            ],
+            [
+              77.1134705,
+              28.6486157
+            ],
+            [
+              77.113378,
+              28.6485673
+            ],
+            [
+              77.1133085,
+              28.6486696
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985119",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985119",
+        "osm_id": "349985119",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1109041,
+              28.648335
+            ],
+            [
+              77.1110329,
+              28.6484153
+            ],
+            [
+              77.1111072,
+              28.6483235
+            ],
+            [
+              77.1109785,
+              28.6482432
+            ],
+            [
+              77.1109041,
+              28.648335
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985120",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985120",
+        "osm_id": "349985120",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1108407,
+              28.6477348
+            ],
+            [
+              77.1109107,
+              28.647772
+            ],
+            [
+              77.1110009,
+              28.6476409
+            ],
+            [
+              77.110931,
+              28.6476038
+            ],
+            [
+              77.1108407,
+              28.6477348
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985122",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985122",
+        "osm_id": "349985122",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1117824,
+              28.6479445
+            ],
+            [
+              77.1118444,
+              28.6479809
+            ],
+            [
+              77.1119299,
+              28.6478688
+            ],
+            [
+              77.1118678,
+              28.6478324
+            ],
+            [
+              77.1117824,
+              28.6479445
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985123",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985123",
+        "osm_id": "349985123",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1109853,
+              28.6488129
+            ],
+            [
+              77.1110739,
+              28.6486868
+            ],
+            [
+              77.1110257,
+              28.6486607
+            ],
+            [
+              77.110937,
+              28.6487868
+            ],
+            [
+              77.1109853,
+              28.6488129
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985124",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985124",
+        "osm_id": "349985124",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1112073,
+              28.648636
+            ],
+            [
+              77.1114783,
+              28.6488121
+            ],
+            [
+              77.1115742,
+              28.6486986
+            ],
+            [
+              77.1113032,
+              28.6485224
+            ],
+            [
+              77.1112073,
+              28.648636
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985127",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985127",
+        "osm_id": "349985127",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1135617,
+              28.6488161
+            ],
+            [
+              77.113646,
+              28.6488721
+            ],
+            [
+              77.1137179,
+              28.6487887
+            ],
+            [
+              77.1136336,
+              28.6487327
+            ],
+            [
+              77.1135617,
+              28.6488161
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985128",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985128",
+        "osm_id": "349985128",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1135935,
+              28.6479613
+            ],
+            [
+              77.1135623,
+              28.6480024
+            ],
+            [
+              77.1136749,
+              28.6480683
+            ],
+            [
+              77.1137061,
+              28.6480272
+            ],
+            [
+              77.1135935,
+              28.6479613
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985129",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985129",
+        "osm_id": "349985129",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1110909,
+              28.6481744
+            ],
+            [
+              77.1112218,
+              28.6482467
+            ],
+            [
+              77.1112659,
+              28.6481852
+            ],
+            [
+              77.111135,
+              28.648113
+            ],
+            [
+              77.1110909,
+              28.6481744
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985130",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985130",
+        "osm_id": "349985130",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1136308,
+              28.6479177
+            ],
+            [
+              77.1135996,
+              28.6479588
+            ],
+            [
+              77.1137122,
+              28.6480246
+            ],
+            [
+              77.1137434,
+              28.6479836
+            ],
+            [
+              77.1136308,
+              28.6479177
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985136",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985136",
+        "osm_id": "349985136",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1112682,
+              28.6481744
+            ],
+            [
+              77.1113055,
+              28.6481248
+            ],
+            [
+              77.1111804,
+              28.6480524
+            ],
+            [
+              77.1111432,
+              28.648102
+            ],
+            [
+              77.1112682,
+              28.6481744
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985142",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985142",
+        "osm_id": "349985142",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1137278,
+              28.648378
+            ],
+            [
+              77.1138305,
+              28.6484381
+            ],
+            [
+              77.1138972,
+              28.6483503
+            ],
+            [
+              77.1137945,
+              28.6482902
+            ],
+            [
+              77.1137278,
+              28.648378
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985147",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985147",
+        "osm_id": "349985147",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.113717,
+              28.6483846
+            ],
+            [
+              77.1136898,
+              28.6484205
+            ],
+            [
+              77.1138024,
+              28.6484864
+            ],
+            [
+              77.1138296,
+              28.6484505
+            ],
+            [
+              77.113717,
+              28.6483846
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985149",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985149",
+        "osm_id": "349985149",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1107837,
+              28.6475107
+            ],
+            [
+              77.1106929,
+              28.647633
+            ],
+            [
+              77.1107412,
+              28.6476606
+            ],
+            [
+              77.110832,
+              28.6475384
+            ],
+            [
+              77.1107837,
+              28.6475107
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985169",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985169",
+        "osm_id": "349985169",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1105402,
+              28.6487274
+            ],
+            [
+              77.1105828,
+              28.6487525
+            ],
+            [
+              77.1106709,
+              28.6486376
+            ],
+            [
+              77.1106283,
+              28.6486124
+            ],
+            [
+              77.1105402,
+              28.6487274
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985190",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985190",
+        "osm_id": "349985190",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1115404,
+              28.6482031
+            ],
+            [
+              77.1116805,
+              28.6482827
+            ],
+            [
+              77.1117302,
+              28.6482153
+            ],
+            [
+              77.1115901,
+              28.6481357
+            ],
+            [
+              77.1115404,
+              28.6482031
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985198",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985198",
+        "osm_id": "349985198",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1114184,
+              28.6483558
+            ],
+            [
+              77.1115234,
+              28.6484202
+            ],
+            [
+              77.1115484,
+              28.6483888
+            ],
+            [
+              77.1114434,
+              28.6483244
+            ],
+            [
+              77.1114184,
+              28.6483558
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985200",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985200",
+        "osm_id": "349985200",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1131534,
+              28.6487446
+            ],
+            [
+              77.1132504,
+              28.6488038
+            ],
+            [
+              77.1133125,
+              28.6487255
+            ],
+            [
+              77.1132155,
+              28.6486663
+            ],
+            [
+              77.1131534,
+              28.6487446
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985204",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985204",
+        "osm_id": "349985204",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1108799,
+              28.6473628
+            ],
+            [
+              77.1110005,
+              28.6474306
+            ],
+            [
+              77.1110649,
+              28.6473424
+            ],
+            [
+              77.1109443,
+              28.6472746
+            ],
+            [
+              77.1108799,
+              28.6473628
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985206",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985206",
+        "osm_id": "349985206",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1115054,
+              28.6485847
+            ],
+            [
+              77.1115754,
+              28.6484925
+            ],
+            [
+              77.1114883,
+              28.6484416
+            ],
+            [
+              77.1114183,
+              28.6485338
+            ],
+            [
+              77.1115054,
+              28.6485847
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985223",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985223",
+        "osm_id": "349985223",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1104862,
+              28.6476015
+            ],
+            [
+              77.1106188,
+              28.6476796
+            ],
+            [
+              77.1106666,
+              28.6476251
+            ],
+            [
+              77.1105355,
+              28.647547
+            ],
+            [
+              77.1104862,
+              28.6476015
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985228",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985228",
+        "osm_id": "349985228",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1115686,
+              28.6484569
+            ],
+            [
+              77.1116757,
+              28.6485265
+            ],
+            [
+              77.111704,
+              28.6484929
+            ],
+            [
+              77.1115969,
+              28.6484233
+            ],
+            [
+              77.1115686,
+              28.6484569
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985236",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985236",
+        "osm_id": "349985236",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1116883,
+              28.6483032
+            ],
+            [
+              77.1118263,
+              28.6483766
+            ],
+            [
+              77.1118523,
+              28.6483389
+            ],
+            [
+              77.1117143,
+              28.6482656
+            ],
+            [
+              77.1116883,
+              28.6483032
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985239",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985239",
+        "osm_id": "349985239",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1116601,
+              28.6483459
+            ],
+            [
+              77.1117854,
+              28.6484202
+            ],
+            [
+              77.1118123,
+              28.6483853
+            ],
+            [
+              77.1116869,
+              28.648311
+            ],
+            [
+              77.1116601,
+              28.6483459
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985248",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985248",
+        "osm_id": "349985248",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1114783,
+              28.6482735
+            ],
+            [
+              77.1116208,
+              28.6483569
+            ],
+            [
+              77.111666,
+              28.6482974
+            ],
+            [
+              77.1115234,
+              28.648214
+            ],
+            [
+              77.1114783,
+              28.6482735
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985252",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985252",
+        "osm_id": "349985252",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1107602,
+              28.6472974
+            ],
+            [
+              77.1108702,
+              28.6473566
+            ],
+            [
+              77.1109436,
+              28.6472515
+            ],
+            [
+              77.1108336,
+              28.6471923
+            ],
+            [
+              77.1107602,
+              28.6472974
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985269",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985269",
+        "osm_id": "349985269",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1107346,
+              28.6478651
+            ],
+            [
+              77.1108193,
+              28.6477422
+            ],
+            [
+              77.1107506,
+              28.6477057
+            ],
+            [
+              77.1106659,
+              28.6478286
+            ],
+            [
+              77.1107346,
+              28.6478651
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985279",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985279",
+        "osm_id": "349985279",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1111967,
+              28.6473517
+            ],
+            [
+              77.1113308,
+              28.6474386
+            ],
+            [
+              77.1114105,
+              28.6473437
+            ],
+            [
+              77.1112651,
+              28.6472526
+            ],
+            [
+              77.1111967,
+              28.6473517
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985285",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985285",
+        "osm_id": "349985285",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1135201,
+              28.6480515
+            ],
+            [
+              77.1134889,
+              28.6480926
+            ],
+            [
+              77.1136015,
+              28.6481584
+            ],
+            [
+              77.1136327,
+              28.6481174
+            ],
+            [
+              77.1135201,
+              28.6480515
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985290",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985290",
+        "osm_id": "349985290",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1116014,
+              28.6481189
+            ],
+            [
+              77.1117443,
+              28.6481975
+            ],
+            [
+              77.1118143,
+              28.6480994
+            ],
+            [
+              77.1116714,
+              28.6480208
+            ],
+            [
+              77.1116014,
+              28.6481189
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985294",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985294",
+        "osm_id": "349985294",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1119422,
+              28.6474967
+            ],
+            [
+              77.1120349,
+              28.6473818
+            ],
+            [
+              77.111934,
+              28.6473192
+            ],
+            [
+              77.1118413,
+              28.6474341
+            ],
+            [
+              77.1119422,
+              28.6474967
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985321",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985321",
+        "osm_id": "349985321",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1137977,
+              28.6485033
+            ],
+            [
+              77.1137704,
+              28.6485392
+            ],
+            [
+              77.113883,
+              28.6486051
+            ],
+            [
+              77.1139103,
+              28.6485692
+            ],
+            [
+              77.1137977,
+              28.6485033
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985327",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985327",
+        "osm_id": "349985327",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1105783,
+              28.6480704
+            ],
+            [
+              77.1107481,
+              28.6481627
+            ],
+            [
+              77.1108679,
+              28.6479932
+            ],
+            [
+              77.1106981,
+              28.6479008
+            ],
+            [
+              77.1105783,
+              28.6480704
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985331",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985331",
+        "osm_id": "349985331",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1105565,
+              28.6483763
+            ],
+            [
+              77.1104696,
+              28.6484867
+            ],
+            [
+              77.1105806,
+              28.648554
+            ],
+            [
+              77.1106675,
+              28.6484436
+            ],
+            [
+              77.1105565,
+              28.6483763
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985339",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985339",
+        "osm_id": "349985339",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1115934,
+              28.6475567
+            ],
+            [
+              77.1116654,
+              28.6475966
+            ],
+            [
+              77.1117612,
+              28.6474635
+            ],
+            [
+              77.1116892,
+              28.6474236
+            ],
+            [
+              77.1115934,
+              28.6475567
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985344",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985344",
+        "osm_id": "349985344",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.11207,
+              28.6475696
+            ],
+            [
+              77.1121531,
+              28.6474547
+            ],
+            [
+              77.1120475,
+              28.6473959
+            ],
+            [
+              77.1119644,
+              28.6475109
+            ],
+            [
+              77.11207,
+              28.6475696
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985354",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985354",
+        "osm_id": "349985354",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1121269,
+              28.6476226
+            ],
+            [
+              77.1122307,
+              28.6474881
+            ],
+            [
+              77.1121677,
+              28.6474506
+            ],
+            [
+              77.1120638,
+              28.6475852
+            ],
+            [
+              77.1121269,
+              28.6476226
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985362",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985362",
+        "osm_id": "349985362",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1105575,
+              28.6480101
+            ],
+            [
+              77.1106358,
+              28.6478952
+            ],
+            [
+              77.1105745,
+              28.6478631
+            ],
+            [
+              77.1104963,
+              28.647978
+            ],
+            [
+              77.1105575,
+              28.6480101
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985364",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985364",
+        "osm_id": "349985364",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1114839,
+              28.6481427
+            ],
+            [
+              77.1115178,
+              28.6480951
+            ],
+            [
+              77.1113934,
+              28.6480269
+            ],
+            [
+              77.1113596,
+              28.6480745
+            ],
+            [
+              77.1114839,
+              28.6481427
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985366",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985366",
+        "osm_id": "349985366",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1117122,
+              28.647386
+            ],
+            [
+              77.1117923,
+              28.6474306
+            ],
+            [
+              77.1118946,
+              28.647289
+            ],
+            [
+              77.1118144,
+              28.6472445
+            ],
+            [
+              77.1117122,
+              28.647386
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985375",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985375",
+        "osm_id": "349985375",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1107645,
+              28.6488659
+            ],
+            [
+              77.110857,
+              28.6489235
+            ],
+            [
+              77.1109432,
+              28.648817
+            ],
+            [
+              77.1108507,
+              28.6487593
+            ],
+            [
+              77.1107645,
+              28.6488659
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985379",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985379",
+        "osm_id": "349985379",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1113326,
+              28.6483686
+            ],
+            [
+              77.1113913,
+              28.6482923
+            ],
+            [
+              77.111262,
+              28.6482157
+            ],
+            [
+              77.1112033,
+              28.648292
+            ],
+            [
+              77.1113326,
+              28.6483686
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985383",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985383",
+        "osm_id": "349985383",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1113981,
+              28.6482804
+            ],
+            [
+              77.1114365,
+              28.6482339
+            ],
+            [
+              77.1113168,
+              28.6481579
+            ],
+            [
+              77.1112784,
+              28.6482044
+            ],
+            [
+              77.1113981,
+              28.6482804
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985389",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985389",
+        "osm_id": "349985389",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1109853,
+              28.6478235
+            ],
+            [
+              77.1110802,
+              28.6477184
+            ],
+            [
+              77.1110093,
+              28.6476692
+            ],
+            [
+              77.1109145,
+              28.6477742
+            ],
+            [
+              77.1109853,
+              28.6478235
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985393",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985393",
+        "osm_id": "349985393",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1137437,
+              28.6479891
+            ],
+            [
+              77.1137125,
+              28.6480301
+            ],
+            [
+              77.1138251,
+              28.648096
+            ],
+            [
+              77.1138563,
+              28.648055
+            ],
+            [
+              77.1137437,
+              28.6479891
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985395",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985395",
+        "osm_id": "349985395",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1107513,
+              28.6486707
+            ],
+            [
+              77.1108463,
+              28.6485389
+            ],
+            [
+              77.1107718,
+              28.6484975
+            ],
+            [
+              77.1106768,
+              28.6486292
+            ],
+            [
+              77.1107513,
+              28.6486707
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985401",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985401",
+        "osm_id": "349985401",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1120463,
+              28.6476104
+            ],
+            [
+              77.1119202,
+              28.6475319
+            ],
+            [
+              77.1118082,
+              28.6476705
+            ],
+            [
+              77.1119343,
+              28.647749
+            ],
+            [
+              77.1120463,
+              28.6476104
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985405",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985405",
+        "osm_id": "349985405",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1111858,
+              28.6480089
+            ],
+            [
+              77.1113318,
+              28.6480949
+            ],
+            [
+              77.1113917,
+              28.6480166
+            ],
+            [
+              77.1112456,
+              28.6479306
+            ],
+            [
+              77.1111858,
+              28.6480089
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985421",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985421",
+        "osm_id": "349985421",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1114116,
+              28.647995
+            ],
+            [
+              77.1114937,
+              28.6480433
+            ],
+            [
+              77.1115671,
+              28.6479471
+            ],
+            [
+              77.111485,
+              28.6478989
+            ],
+            [
+              77.1114116,
+              28.647995
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985433",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985433",
+        "osm_id": "349985433",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1114399,
+              28.648224
+            ],
+            [
+              77.111485,
+              28.6481605
+            ],
+            [
+              77.1113565,
+              28.64809
+            ],
+            [
+              77.1113114,
+              28.6481535
+            ],
+            [
+              77.1114399,
+              28.648224
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985438",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985438",
+        "osm_id": "349985438",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.111045,
+              28.6478529
+            ],
+            [
+              77.1111012,
+              28.6478856
+            ],
+            [
+              77.1111854,
+              28.6477741
+            ],
+            [
+              77.1111291,
+              28.6477414
+            ],
+            [
+              77.111045,
+              28.6478529
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985439",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985439",
+        "osm_id": "349985439",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1108319,
+              28.647725
+            ],
+            [
+              77.1109206,
+              28.6475982
+            ],
+            [
+              77.1108296,
+              28.6475492
+            ],
+            [
+              77.110741,
+              28.6476761
+            ],
+            [
+              77.1108319,
+              28.647725
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985441",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985441",
+        "osm_id": "349985441",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.11059,
+              28.647458
+            ],
+            [
+              77.1107448,
+              28.6475432
+            ],
+            [
+              77.1107824,
+              28.6474906
+            ],
+            [
+              77.1106275,
+              28.6474055
+            ],
+            [
+              77.11059,
+              28.647458
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985443",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985443",
+        "osm_id": "349985443",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1105365,
+              28.6475393
+            ],
+            [
+              77.110687,
+              28.6476221
+            ],
+            [
+              77.1107361,
+              28.6475533
+            ],
+            [
+              77.1105856,
+              28.6474706
+            ],
+            [
+              77.1105365,
+              28.6475393
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985444",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985444",
+        "osm_id": "349985444",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1136494,
+              28.6484717
+            ],
+            [
+              77.1136221,
+              28.6485076
+            ],
+            [
+              77.1137347,
+              28.6485735
+            ],
+            [
+              77.113762,
+              28.6485376
+            ],
+            [
+              77.1136494,
+              28.6484717
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985448",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985448",
+        "osm_id": "349985448",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1135551,
+              28.6480049
+            ],
+            [
+              77.1135239,
+              28.648046
+            ],
+            [
+              77.1136365,
+              28.6481119
+            ],
+            [
+              77.1136677,
+              28.6480708
+            ],
+            [
+              77.1135551,
+              28.6480049
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985456",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985456",
+        "osm_id": "349985456",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1115273,
+              28.6472311
+            ],
+            [
+              77.1116614,
+              28.647318
+            ],
+            [
+              77.1117011,
+              28.6472708
+            ],
+            [
+              77.111567,
+              28.6471839
+            ],
+            [
+              77.1115273,
+              28.6472311
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985461",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985461",
+        "osm_id": "349985461",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1113555,
+              28.6474374
+            ],
+            [
+              77.1114896,
+              28.6475243
+            ],
+            [
+              77.1115293,
+              28.6474771
+            ],
+            [
+              77.1113952,
+              28.6473902
+            ],
+            [
+              77.1113555,
+              28.6474374
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985469",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985469",
+        "osm_id": "349985469",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.110781,
+              28.6484688
+            ],
+            [
+              77.110915,
+              28.6485542
+            ],
+            [
+              77.1109658,
+              28.6484927
+            ],
+            [
+              77.1108319,
+              28.6484074
+            ],
+            [
+              77.110781,
+              28.6484688
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985471",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985471",
+        "osm_id": "349985471",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1113281,
+              28.6484806
+            ],
+            [
+              77.1114168,
+              28.6485319
+            ],
+            [
+              77.1115015,
+              28.6484189
+            ],
+            [
+              77.1114128,
+              28.6483677
+            ],
+            [
+              77.1113281,
+              28.6484806
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985474",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985474",
+        "osm_id": "349985474",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.113148,
+              28.6485764
+            ],
+            [
+              77.1132173,
+              28.6486174
+            ],
+            [
+              77.1132996,
+              28.6485101
+            ],
+            [
+              77.1132303,
+              28.6484692
+            ],
+            [
+              77.113148,
+              28.6485764
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985475",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985475",
+        "osm_id": "349985475",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1116786,
+              28.6478821
+            ],
+            [
+              77.1117806,
+              28.647935
+            ],
+            [
+              77.1118612,
+              28.6478152
+            ],
+            [
+              77.1117592,
+              28.6477623
+            ],
+            [
+              77.1116786,
+              28.6478821
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985476",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985476",
+        "osm_id": "349985476",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1111626,
+              28.6487018
+            ],
+            [
+              77.1114469,
+              28.6488714
+            ],
+            [
+              77.1114788,
+              28.6488303
+            ],
+            [
+              77.1111945,
+              28.6486607
+            ],
+            [
+              77.1111626,
+              28.6487018
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985478",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985478",
+        "osm_id": "349985478",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1134179,
+              28.6487383
+            ],
+            [
+              77.1135434,
+              28.6488023
+            ],
+            [
+              77.1136088,
+              28.6487035
+            ],
+            [
+              77.1134834,
+              28.6486395
+            ],
+            [
+              77.1134179,
+              28.6487383
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985479",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985479",
+        "osm_id": "349985479",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1110133,
+              28.6485236
+            ],
+            [
+              77.1111409,
+              28.6485979
+            ],
+            [
+              77.1111986,
+              28.6485216
+            ],
+            [
+              77.111071,
+              28.6484473
+            ],
+            [
+              77.1110133,
+              28.6485236
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985480",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985480",
+        "osm_id": "349985480",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1110966,
+              28.648437
+            ],
+            [
+              77.1112266,
+              28.6485118
+            ],
+            [
+              77.1112717,
+              28.6484514
+            ],
+            [
+              77.1111417,
+              28.6483766
+            ],
+            [
+              77.1110966,
+              28.648437
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985484",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985484",
+        "osm_id": "349985484",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1134975,
+              28.6483122
+            ],
+            [
+              77.1134663,
+              28.6483532
+            ],
+            [
+              77.1135789,
+              28.6484191
+            ],
+            [
+              77.1136101,
+              28.648378
+            ],
+            [
+              77.1135461,
+              28.6483438
+            ],
+            [
+              77.1134975,
+              28.6483122
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985485",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985485",
+        "osm_id": "349985485",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.113458,
+              28.6483647
+            ],
+            [
+              77.1134268,
+              28.6484057
+            ],
+            [
+              77.1135394,
+              28.6484716
+            ],
+            [
+              77.1135706,
+              28.6484306
+            ],
+            [
+              77.1135122,
+              28.6483973
+            ],
+            [
+              77.113458,
+              28.6483647
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OSM-BUILDING-WAY-349985487",
+      "properties": {
+        "building_id": "OSM-BUILDING-WAY-349985487",
+        "osm_id": "349985487",
+        "osm_type": "way",
+        "building": "yes",
+        "name": null,
+        "height": null,
+        "building_levels": null,
+        "roof_elevation": null,
+        "ground_elevation": null,
+        "source": "OpenStreetMap",
+        "capture_source": "map.osm",
+        "is_cadastral": false,
+        "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+        "ownership_status": "UNKNOWN_UNREGISTERED",
+        "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.1110472,
+              28.6475075
+            ],
+            [
+              77.1113456,
+              28.6477008
+            ],
+            [
+              77.1113908,
+              28.647647
+            ],
+            [
+              77.1113963,
+              28.6476406
+            ],
+            [
+              77.1111596,
+              28.6474872
+            ],
+            [
+              77.1112114,
+              28.6474256
+            ],
+            [
+              77.1111497,
+              28.6473856
+            ],
+            [
+              77.1110472,
+              28.6475075
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

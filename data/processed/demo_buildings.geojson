@@ -1,0 +1,135 @@
+{
+  "type": "FeatureCollection",
+  "name": "demo_buildings",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+    }
+  },
+  "metadata": {
+    "dataset_name": "DEMO DATA — 3D Cadastral Intelligence Test Building Footprints",
+    "description": "Synthetic building footprint polygons with deterministic vertical height and floor specifications for testing.",
+    "is_demo": true,
+    "height_source": "SYNTHETIC_DEMO",
+    "legal_disclaimer": "SYNTHETIC DEMO DATA FOR RESEARCH AND TESTING ONLY. NOT OFFICIAL GOVERNMENT CADASTRAL RECORDS. DOES NOT CONSTITUTE LEGAL SURVEY."
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "id": "BLD-DEMO-001",
+      "properties": {
+        "building_id": "BLD-DEMO-001",
+        "name": "Commercial Plaza A",
+        "structure_type": "Commercial",
+        "roof_elevation": 574.48,
+        "building_height": 12.0,
+        "number_of_floors": 4,
+        "floor_height": 3.0,
+        "height_source": "SYNTHETIC_DEMO",
+        "vertical_datum": "AMSL",
+        "height_unit": "meters",
+        "notes": "Building footprint completely within PARCEL-DEMO-101. 4 storeys commercial."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [73.85606, 18.52006],
+            [73.85624, 18.52006],
+            [73.85624, 18.52018],
+            [73.85606, 18.52018],
+            [73.85606, 18.52006]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "BLD-DEMO-002",
+      "properties": {
+        "building_id": "BLD-DEMO-002",
+        "name": "Residential Tower 1",
+        "structure_type": "Residential",
+        "roof_elevation": 583.48,
+        "building_height": 21.0,
+        "number_of_floors": 7,
+        "floor_height": 3.0,
+        "height_source": "SYNTHETIC_DEMO",
+        "vertical_datum": "AMSL",
+        "height_unit": "meters",
+        "notes": "Building footprint completely within PARCEL-DEMO-102. 7 storeys residential tower."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [73.85636, 18.52006],
+            [73.85658, 18.52006],
+            [73.85658, 18.52018],
+            [73.85636, 18.52018],
+            [73.85636, 18.52006]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "BLD-DEMO-003",
+      "properties": {
+        "building_id": "BLD-DEMO-003",
+        "name": "Inter-Parcel Connector Annex",
+        "structure_type": "Mixed Utility",
+        "roof_elevation": 568.48,
+        "building_height": 6.0,
+        "number_of_floors": 2,
+        "floor_height": 3.0,
+        "height_source": "SYNTHETIC_DEMO",
+        "vertical_datum": "AMSL",
+        "height_unit": "meters",
+        "notes": "Straddles shared cadastral boundary between PARCEL-DEMO-101 and PARCEL-DEMO-102. 2 storeys connector."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [73.85625, 18.52008],
+            [73.85638, 18.52008],
+            [73.85638, 18.52016],
+            [73.85625, 18.52016],
+            [73.85625, 18.52008]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "BLD-DEMO-004",
+      "properties": {
+        "building_id": "BLD-DEMO-004",
+        "name": "Northern Outpost Pavilion",
+        "structure_type": "Auxiliary",
+        "roof_elevation": 566.48,
+        "building_height": 4.0,
+        "number_of_floors": 1,
+        "floor_height": 4.0,
+        "height_source": "SYNTHETIC_DEMO",
+        "vertical_datum": "AMSL",
+        "height_unit": "meters",
+        "notes": "Footprint located completely outside parcel boundaries to the north. Single storey pavilion."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [73.8561, 18.52028],
+            [73.85622, 18.52028],
+            [73.85622, 18.52038],
+            [73.8561, 18.52038],
+            [73.8561, 18.52028]
+          ]
+        ]
+      }
+    }
+  ]
+}

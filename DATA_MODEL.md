@@ -1,0 +1,277 @@
+# Data Model Specification
+
+## 1. Conceptual Hierarchy
+The cadastral data model is structured around a stratified property hierarchy that bridges traditional 2D surface parcels and multi-tier 3D volumetric rights conforming conceptually to **ISO 19152 (Land Administration Domain Model - LADM)**.
+
+```
+PROPERTY (Core Estate Unit)
+├── PARCEL (2D Surface Land Polygon & Base Boundary)
+│   ├── SPATIAL REFERENCE (CRS, Projections, Datum)
+│   └── BASE ULPIN (2D Centroid Land Identifier)
+├── BUILDING (Physical Superstructure Envelope)
+│   └── FLOORS (Vertical Slices / Structural Levels)
+├── PROPERTY VOLUMES (3D Stratified Polyhedral Units)
+│   ├── Surface Parcel Column (SFC)
+│   ├── Above-Ground Units (ABV)
+│   └── Air Rights Envelope (AIR)
+├── UNDERGROUND VOLUMES (3D Sub-Surface Polyhedral Units)
+│   └── Basement / Parking / Utility Conduits (SUB)
+├── VALIDATION RESULT (Topological Checks & Detected Clashes)
+└── PROTOTYPE 3D ULPIN (Deterministic Volumetric Identity String)
+```
+
+---
+
+## 2. Entity Definitions & Schemas
+
+### 2.1 Spatial Reference (Value Object)
+Defines coordinate reference systems and geodetic baselines.
+
+| Field Name | Type | Description | Example |
+|---|---|---|---|
+| `epsg_code` | `int` | Primary EPSG identifier | `32643` (UTM Zone 43N) |
+| `name` | `string` | Human-readable CRS title | `"WGS 84 / UTM zone 43N"` |
+| `units` | `string` | Metric coordinate unit | `"meters"` |
+| `datum` | `string` | Vertical / horizontal datum | `"WGS 84 / EGM96 Geoid"` |
+| `is_projected` | `bool` | True if planar Cartesian coordinates | `true` |
+
+---
+
+### 2.1b Vertical Dimension & Elevation Model (Value Object)
+Defines vertical coordinate conventions and geodetic elevation baselines.
+
+| Concept | Symbol / Key | Unit | Reference Baseline | Description |
+|---|---|---|---|---|
+| **Absolute Elevation** | $Z_{AMSL}$ | `meters` | Mean Sea Level (EGM96) | Orthometric physical elevation above geoid |
+| **Ground Elevation** | $Z_{ground}$ | `meters` | Mean Sea Level (EGM96) | Plinth / terrain surface elevation at feature centroid |
+| **Relative Height** | $H_{rel}$ | `meters` | Ground Plinth ($Z - Z_{ground}$) | Vertical displacement from local ground surface |
+| **Building Height** | $H_{bld}$ | `meters` | Base Plinth | Vertical span from ground to structural roof parapet |
+| **Floor Height** | $H_{fl}$ | `meters` | Slab Level | Vertical inter-floor slab spacing (typically 2.8m–3.5m) |
+
+#### Elevation Provenance Contract
+Every sampled elevation must record:
+- `source_dem`: Filename of the source raster (e.g. `"demo_elevation.tif"`).
+- `dem_crs`: Native CRS of the elevation raster (e.g. `"EPSG:4326"`).
+- `vertical_unit`: Metric unit (`"meters"`).
+- `vertical_reference`: Datum string (`"AMSL (Above Mean Sea Level)"`).
+- `sampling_method`: Spatial query algorithm (`"centroid_nearest"` or `"bilinear"`).
+- `status`: Sample outcome (`"SUCCESS"`, `"OUTSIDE_COVERAGE"`, `"NODATA"`, `"UNAVAILABLE"`).
+
+---
+
+### 2.2 Parcel (Entity: `CadastralParcel`)
+Represents the base legal 2D surface land boundary.
+
+| Field Name | Type | Description |
+|---|---|---|
+| `parcel_id` | `string` (UUID/Code) | Unique internal parcel identifier (e.g., `"PARCEL-IND-MH-402"`) |
+| `base_ulpin_2d` | `string` | Standard 2D 14-digit/geohash parcel identifier |
+| `survey_number` | `string` | Official revenue survey / khasra number (e.g., `"402/2A"`) |
+| `ward_id` | `string` | Municipal administrative ward or zone |
+| `geometry_2d` | `GeoJSON Polygon` | Planar boundary coordinates in metric/WGS84 |
+| `area_sqm` | `float` | Authoritative registered surface area in $m^2$ |
+| `perimeter_m` | `float` | Boundary perimeter in meters |
+| `ground_elevation_amsl`| `float` | Mean ground elevation above sea level in meters ($Z_{ground}$) |
+| `max_zoning_height_m` | `float` | Maximum permissible building height by municipal bylaw |
+| `owner_name` | `string` | Primary registered title holder / estate authority |
+| `status` | `enum` | `"ACTIVE"`, `"DISPUTED"`, `"SUBDIVIDED"` |
+
+---
+
+### 2.3 Building (Entity: `BuildingStructure`)
+Represents the physical architectural shell occupying the parcel, connecting 2D footprints with vertical elevation and floor structures.
+
+| Field Name | Type | Description |
+|---|---|---|
+| `building_id` | `string` | Unique building structure identifier (e.g., `"BLD-402-01"`) |
+| `parcel_id` | `string` (FK) | Reference to parent `CadastralParcel` |
+| `footprint_2d` | `GeoJSON Polygon` | Ground-level exterior footprint polygon |
+| `footprint_area_sqm` | `float` | Building plinth area in $m^2$ |
+| `ground_elevation` | `float` | Plinth surface elevation in meters AMSL ($Z_{ground}$) |
+| `roof_elevation` | `float` | Parapet/roof surface elevation in meters AMSL ($Z_{roof}$) |
+| `building_height` | `float` | Computed vertical height ($H_{bld} = Z_{roof} - Z_{ground}$) in meters |
+| `height_source` | `enum` | `"SYNTHETIC_DEMO"`, `"DSM"`, `"LIDAR"`, `"SURVEY"`, `"MANUAL_INPUT"`, `"FLOOR_METADATA"` |
+| `height_method` | `enum` | `"DIRECT_DIFFERENCE"`, `"ELEVATION_SUBTRACTION"`, `"FLOOR_MULTIPLICATION"`, `"SURVEY_SPECIFIED"` |
+| `height_status` | `enum` | `"AVAILABLE"`, `"UNAVAILABLE"`, `"INVALID"`, `"INCONSISTENT"`, `"ESTIMATED"` |
+| `height_confidence`| `float` (Nullable) | Quality metric (0.0 to 1.0) when deterministically scored |
+| `number_of_floors` | `int` | Total count of structural storeys |
+| `floor_height_m` | `float` | Baseline vertical floor slab spacing (e.g., $3.0m$) |
+| `occupancy_type` | `enum` | `"RESIDENTIAL"`, `"COMMERCIAL"`, `"MIXED_USE"`, `"AUXILIARY"` |
+| `association_status` | `enum` | `"WITHIN"`, `"INTERSECTS"`, `"MULTI_PARCEL"`, `"OUTSIDE"`, `"UNRESOLVED"` |
+| `overlap_percentage` | `float` | Percentage of building footprint lying within primary associated parcel |
+| `overlaps` | `list` | Detailed breakdown of intersection areas across all candidate parcels |
+
+---
+
+### 2.3b Canonical 3D Geometry Contract (Entities: `Mesh3D` & `Mesh3DCollection`)
+*Authoritative Reference: See [`3D_GEOMETRY_CONTRACT.md`](file:///C:/Users/Yatha/.gemini/antigravity/scratch/3d-cadastral-intelligence/3D_GEOMETRY_CONTRACT.md) for full JSON schema, vertex/face contracts, winding rules, and Three.js integration.*
+
+Represents the authoritative, closed 3D boundary representation (B-Rep) of an extruded building structure or property volume. Each individual building part is represented as a watertight `Mesh3D` solid. MultiPolygon footprints or disjoint parts are represented as a `Mesh3DCollection`.
+
+#### `Mesh3D` Solid Contract
+| Field Name | Type | Description | Example |
+|---|---|---|---|
+| `feature_id` | `string` | Identifier of feature or sub-part | `"BLD_DEMO_001"` |
+| `feature_type` | `enum` | Target category (`"BUILDING"`, `"FLOOR"`, `"PROPERTY_VOLUME"`, `"UNDERGROUND"`) | `"BUILDING"` |
+| `geometry_type`| `enum` | Type discriminator: always `"SOLID"` | `"SOLID"` |
+| `vertices` | `List[List[float]]` | Local coordinates `[x, y, z]` in meters relative to `viewer_origin` | `[[-5.0, -5.0, 0.0], ...]` |
+| `faces` | `List[List[int]]` | Triangular face vertex indices `[i, j, k]` with strict CCW outward winding | `[[0, 2, 1], ...]` |
+| `coordinate_reference` | `object` | `horizontal_crs`, `vertical_reference`, `source_crs`, and `viewer_origin` | `{"horizontal_crs": "EPSG:32643", ...}` |
+| `units` | `object` | Metric unit definitions (`"horizontal_unit": "meter"`, `"vertical_unit": "meter"`) | `{"horizontal_unit": "meter", ...}` |
+| `bounds` | `object` | Local axis-aligned bounding box `min: [x,y,z]`, `max: [x,y,z]` | `{"min": [-5,-5,0], "max": [5,5,12]}` |
+| `winding` | `enum` | Normal orientation rule: `"COUNTER_CLOCKWISE"` | `"COUNTER_CLOCKWISE"` |
+| `surface_area_sqm` | `float` | Enclosed outer surface area in $m^2$ | `540.0` |
+| `volume_cubic_m` | `float` | Exact mathematical closed solid volume in $m^3$ | `1200.0` |
+
+#### `Mesh3DCollection` Multi-Part Container
+Used when a building footprint is composed of multiple disjoint polygons (MultiPolygon) or wings:
+- `parts`: List of validated `Mesh3D` solids.
+- `bounds`: Unified bounding box enclosing all parts.
+- `total_volume_cubic_m`: Sum of volumes across all parts.
+- `total_surface_area_sqm`: Sum of surface areas across all parts.
+
+#### Coordinate Normalization Formula
+$$\vec{v}_{\text{local}} = \vec{v}_{\text{projected}} - \vec{v}_{\text{viewer\_origin}}$$
+This eliminates vertex jitter and z-fighting on WebGL 32-bit floating point GPUs when working with large metric UTM coordinates ($\sim 10^6\text{m}$). Absolute geospatial registration is preserved via `coordinate_reference.viewer_origin`.
+
+---
+
+
+### 2.4 3D Stratified Floor Solid (Entity: `Floor3DResult`)
+Represents an individual structural level within a building structure, materialized as a watertight 2-manifold `Mesh3D` solid.
+
+| Field Name | Type | Description |
+|---|---|---|
+| `floor_id` | `string` | Unique floor identifier (e.g., `"BLD-DEMO-001-FL02"`) |
+| `building_id` | `string` (FK) | Reference to parent `BuildingStructure` |
+| `parcel_id` | `string` (FK, Nullable) | Reference to root `CadastralParcel` |
+| `floor_index` | `int` | Level index: $0$ for Ground Floor, $1, 2, \dots$ for upper storeys |
+| `floor_name` | `string` | Standardized descriptive label (e.g., `"Ground Floor"`, `"Floor 2"`) |
+| `volume_type` | `enum` | Always `"FLOOR"` |
+| `base_elevation` | `float` | Lower floor slab elevation ($Z_{base}$) in meters AMSL |
+| `top_elevation` | `float` | Ceiling / upper slab elevation ($Z_{top}$) in meters AMSL |
+| `height` | `float` | Structural slab height ($Z_{top} - Z_{base}$) in meters |
+| `volume_cubic_m` | `float` | Exact polyhedral solid volume ($A_{footprint} \times h$) in $m^3$ |
+| `surface_area_sqm` | `float` | Total boundary surface area ($2 \times A + P \times h$) in $m^2$ |
+| `geometry_status` | `enum` | `"VALID"`, `"DEGRADED"`, `"UNAVAILABLE"`, `"ERROR"` |
+| `geometry` | `Mesh3DCollection` | Validated 2-manifold closed mesh parts with outward normals |
+
+#### Floor Height Resolution Priority:
+1. **Priority 1 (Explicit Elevations)**: When `base_elevation` and `top_elevation` are provided with $Z_{top} > Z_{base}$. Intervals must not overlap, must not extend below ground plinth, and must not exceed building roof.
+2. **Priority 2 (Explicit Floor Heights)**: When `floor_height` is provided per floor, elevations stack cumulatively: $Z_0 = Z_{ground}$, $Z_{i+1} = Z_i + h_i$.
+3. **Priority 3 (Equal Slicing)**: When total building height $H_{bld}$ and floor count $N$ are provided: $h_{fl} = H_{bld} / N$, stacked evenly from ground plinth.
+
+---
+
+### 2.5 3D Cadastral Property Volume (Entity: `PropertyVolumeResult`)
+The fundamental 3D cadastral unit representing a discrete volumetric property right, associated with a parcel, building, and constituent floor solid(s).
+
+| Field Name | Type | Description |
+|---|---|---|
+| `property_id` | `string` | Unique cadastral property identifier (e.g., `"PROP-BLD-001-A"`) |
+| `parcel_id` | `string` (FK) | Reference to root `CadastralParcel` |
+| `building_id` | `string` (FK) | Reference to parent `BuildingStructure` |
+| `floor_ids` | `List[string]` | References to constituent `BuildingFloor` instances (single or multi-floor duplex) |
+| `volume_type` | `enum` | `"PROPERTY_VOLUME"`, `"FLOOR"`, `"UNDERGROUND"`, `"AIRSPACE"` |
+| `unit_name` | `string` (Nullable) | Human-readable unit designation (e.g., `"Duplex Unit A (Floors 1-2)"`) |
+| `base_elevation` | `float` | Lowest floor base elevation in meters AMSL |
+| `top_elevation` | `float` | Highest floor roof/ceiling elevation in meters AMSL |
+| `total_height` | `float` | Total vertical span in meters ($Z_{max} - Z_{min}$) |
+| `volume_cubic_m` | `float` | Summed mathematical volume across constituent floors in $m^3$ |
+| `surface_area_sqm` | `float` | Summed outer boundary surface area across constituent floor parts in $m^2$ |
+| `geometry_status` | `enum` | `"VALID"`, `"DEGRADED"`, `"UNAVAILABLE"`, `"ERROR"` |
+| `geometry` | `Mesh3DCollection` | Collection of individual watertight floor solids without non-manifold internal walls |
+
+#### Multi-Floor & Multi-Building Integrity Contract:
+A property volume is represented as a `Mesh3DCollection` composed of its constituent watertight floor solids. This guarantees topological 2-manifold closedness ($V - E + F = 2$) for each individual part without introducing non-manifold internal junction walls.
+
+#### Property-Volume Geometry Semantics (Canonical Clarification):
+1. **Core Semantic Rule**: A `PROPERTY_VOLUME` represents a validated 3D spatial volume associated with a specific cadastral property/parcel. It must NOT be assumed that `PROPERTY_VOLUME = entire BUILDING_VOLUME`. Instead, it represents the 3D spatial extent supported by the available cadastral + building + elevation/floor evidence.
+2. **Initial Prototype Rule**: If a parcel contains a validated building and the system has no evidence indicating that ownership/use is divided vertically or horizontally, the initial property volume is the union of validated floor volumes for the building(s) associated with that property. This is a prototype spatial representation, not a legal determination of ownership.
+3. **Conceptual Distinctions**:
+   - `PARCEL`: 2D cadastral boundary geometry.
+   - `BUILDING`: Physical architectural structure.
+   - `FLOOR`: Physical 3D sub-volume of a building.
+   - `PROPERTY_VOLUME`: Cadastral-property-associated 3D spatial representation.
+   - `3D ULPIN`: Persistent identifier (never confused with the geometry).
+4. **No Automatic Airspace Enclosure**: Property volume must NOT automatically include the entire parcel footprint $\times$ arbitrary vertical height. Airspace, underground space, and public areas are excluded unless authoritatively specified.
+5. **Multiple Buildings on One Parcel**: Multiple independent buildings on a single parcel are represented as separate `Mesh3D` parts inside the property's `Mesh3DCollection`. The system never creates artificial connecting geometry between independent buildings.
+6. **No Double-Counting Shared Boundaries**: Adjacent floors meeting at a shared horizontal slab (e.g., Floor 1 top $45\text{m}$, Floor 2 base $45\text{m}$) have zero mathematical volume at the interface. Therefore:
+   $$V_{\text{property}} = \sum_{i=1}^N V_{\text{floor}_i}$$
+7. **Partial Floor Coverage & Footprint Provenance**: When floor-specific footprints are unavailable, the validated building footprint is used and the system explicitly records:
+   `FLOOR_FOOTPRINT_ASSUMED_FROM_BUILDING`
+8. **Unknown Vertical Extent**: If vertical elevation or height evidence is unavailable, `geometry_status = UNAVAILABLE`. Arbitrary default heights are prohibited.
+9. **Neutral Terminology & Legal Disclaimer**: Geometry does not prove legal ownership. Outputs are tagged with `DERIVED_SPATIAL_EXTENT: 3D property-volume representation derived from available spatial evidence (not a legal determination of ownership)`.
+
+---
+
+### 2.6 Underground Volume (Entity: `UndergroundVolume`)
+Specialized subclass of `PropertyVolume` dedicated to subterranean assets.
+
+| Field Name | Type | Description |
+|---|---|---|
+| `volume_id` | `string` (FK) | Inherits from `PropertyVolume` |
+| `depth_below_ground_m` | `float` | Maximum depth below ground datum ($|Z_{min} - Z_{ground}|$) |
+| `subterranean_type`| `enum` | `"BASEMENT_PARKING"`, `"METRO_CORRIDOR"`, `"UTILITY_TUNNEL"`, `"FOUNDATION"` |
+| `public_easement_clearance_m` | `float` | Distance to nearest registered municipal utility easement |
+
+---
+
+### 2.7 Validation Result (Entity: `CadastralValidationReport`)
+Captures deterministic spatial audit results and detected boundary clashes.
+
+| Field Name | Type | Description |
+|---|---|---|
+| `validation_id` | `string` | Unique audit report identifier |
+| `parcel_id` | `string` (FK) | Target parcel audited |
+| `overall_status` | `enum` | `"PASSED"` (All clear), `"WARNING"` (Advisory), `"FAILED"` (Clash detected) |
+| `total_checks_run` | `int` | Number of topological tests executed |
+| `checks` | `list[ValidationCheck]` | Granular record for each individual check |
+| `clashes` | `list[SpatialClash]` | Detailed geometry and volumetric clash records |
+| `timestamp` | `datetime` | ISO-8601 audit execution timestamp |
+
+#### Embedded: `ValidationCheck`
+```json
+{
+  "check_code": "VERTICAL_OVERHANG",
+  "name": "Vertical Column Boundary Check",
+  "status": "FAILED",
+  "message": "Floor 3 cantilever extends 1.40m past the eastern parcel boundary."
+}
+```
+
+#### Embedded: `SpatialClash`
+```json
+{
+  "clash_id": "CLASH-402-FL03-01",
+  "clash_type": "BOUNDARY_OVERHANG",
+  "severity": "CRITICAL",
+  "affected_volume_id": "VOL-402-FL03",
+  "encroachment_area_sqm": 12.60,
+  "encroachment_volume_m3": 37.80,
+  "clash_geometry_2d": { "type": "Polygon", "coordinates": [...] },
+  "elevation_interval": [9.0, 12.0]
+}
+```
+
+---
+
+### 2.8 Prototype 3D ULPIN Specification
+*Notice: This is a hackathon research prototype specification and does not represent an official Gazette notification.*
+
+The Prototype 3D Unique Land Parcel Identification Number is structured into 5 deterministic segments:
+
+```
+IND-CAD-<BaseGeohash>-<Stratum>-<Zmin_dm>-<Zmax_dm>-<UnitID>
+```
+
+| Segment | Characters | Description | Example |
+|---|---|---|---|
+| **Prefix** | 7 | National Cadastral System Code | `IND-CAD` |
+| **BaseGeohash** | 8 | Centroid Geohash of 2D base parcel | `TS09W12A` |
+| **Stratum** | 3 | Vertical stratification code (`SFC`, `ABV`, `SUB`, `AIR`) | `ABV` |
+| **Zmin_dm** | 4 | Lower elevation in decimeters ($Z_{min} \times 10$) | `0030` (3.0m) |
+| **Zmax_dm** | 4 | Upper elevation in decimeters ($Z_{max} \times 10$) | `0060` (6.0m) |
+| **UnitID** | 4 | Level / Unit sequence identifier | `FL02` |
+
+**Full Prototype String**: `IND-CAD-TS09W12A-ABV-0030-0060-FL02`
