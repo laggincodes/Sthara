@@ -39,6 +39,13 @@ import {
   FusionNormalizeResponse,
   PropertyContextRequest,
   PropertyContextResponse,
+  ModelRegistryResponse,
+  ExtractionResult,
+  CandidateValidationRequest,
+  CandidateValidationResponse,
+  CandidateComparisonRequest,
+  CandidateComparisonResponse,
+  DemoAiExtractionResponse,
 } from "@/types/cadastre";
 
 const BASE_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1").replace(/\/$/, "");
@@ -849,10 +856,164 @@ export const cadastreApi = {
       throw new ApiError("Unable to assemble spatial property context.", 0, "NETWORK_UNAVAILABLE");
     }
   },
+
+  // =========================================================================
+  // Step 19: AI/ML Extraction Subsystem API Methods
+  // =========================================================================
+
+  /**
+   * Step 19: Retrieves the registered extraction models, tasks, and availability.
+   */
+  async listAiModels(): Promise<ModelRegistryResponse> {
+    try {
+      const response = await fetch(`${BASE_URL}/ai/models`, {
+        headers: { Accept: "application/json" },
+      });
+      return await handleResponse<ModelRegistryResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Unable to fetch AI model registry.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Step 19: Extracts candidate building footprints from aerial/drone or DSM raster.
+   */
+  async extractBuildings(payload: {
+    source_id?: string;
+    model_id?: string;
+    min_area_m2?: number;
+    target_crs?: string;
+    demo_mode?: boolean;
+  }): Promise<ExtractionResult> {
+    try {
+      const response = await fetch(`${BASE_URL}/ai/extract/buildings`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(payload),
+      });
+      return await handleResponse<ExtractionResult>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Unable to extract building footprints.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Step 19: Segments floor elevation strata intervals from observed height evidence.
+   */
+  async extractFloors(payload: {
+    building_id: string;
+    total_height_m: number;
+    ground_elevation_m: number;
+    standard_floor_height_m?: number;
+    demo_mode?: boolean;
+  }): Promise<ExtractionResult> {
+    try {
+      const response = await fetch(`${BASE_URL}/ai/extract/floors`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(payload),
+      });
+      return await handleResponse<ExtractionResult>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Unable to segment floor strata.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Step 19: Delineates candidate apartment units from floor boundaries.
+   */
+  async extractUnits(payload: {
+    building_id: string;
+    floor_number: number;
+    floor_polygon?: Record<string, unknown> | null;
+    corridor_width_m?: number;
+    demo_mode?: boolean;
+  }): Promise<ExtractionResult> {
+    try {
+      const response = await fetch(`${BASE_URL}/ai/extract/units`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(payload),
+      });
+      return await handleResponse<ExtractionResult>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Unable to delineate apartment units.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Step 19: Extracts coordinated vertical elevation strata intervals.
+   */
+  async extractVertical(payload: {
+    building_id: string;
+    base_elevation_m: number;
+    top_elevation_m: number;
+    floor_count: number;
+    demo_mode?: boolean;
+  }): Promise<ExtractionResult> {
+    try {
+      const response = await fetch(`${BASE_URL}/ai/extract/vertical`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(payload),
+      });
+      return await handleResponse<ExtractionResult>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Unable to delineate vertical bounds.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Step 19: Deterministic candidate validation gate before 3D extrusion.
+   */
+  async validateAiCandidates(payload: CandidateValidationRequest): Promise<CandidateValidationResponse> {
+    try {
+      const response = await fetch(`${BASE_URL}/ai/validate-candidates`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(payload),
+      });
+      return await handleResponse<CandidateValidationResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Unable to validate candidate features.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Step 19: Compares an AI candidate against authoritative reference or OSM building.
+   */
+  async compareAiCandidate(payload: CandidateComparisonRequest): Promise<CandidateComparisonResponse> {
+    try {
+      const response = await fetch(`${BASE_URL}/ai/compare`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(payload),
+      });
+      return await handleResponse<CandidateComparisonResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Unable to compare spatial candidate with reference.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Step 19: Retrieves the reproducible demonstration candidate bundle for SIH presentations.
+   */
+  async getDemoAiExtraction(): Promise<DemoAiExtractionResponse> {
+    try {
+      const response = await fetch(`${BASE_URL}/ai/demo`, {
+        headers: { Accept: "application/json" },
+      });
+      return await handleResponse<DemoAiExtractionResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Unable to fetch demo AI extraction bundle.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
 };
-
-
-
-
-
-

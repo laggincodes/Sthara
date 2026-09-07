@@ -6,7 +6,7 @@ from app.api.routes import (
     volumes,
     validation,
     ulpin,
-    ai_advisor,
+    ai_extraction,
     spatial,
     elevation,
     buildings,
@@ -32,5 +32,5 @@ api_router.include_router(parcels.router)
 api_router.include_router(volumes.router)
 api_router.include_router(validation.router)
 api_router.include_router(ulpin.router)
-api_router.include_router(ai_advisor.router)
+api_router.include_router(ai_extraction.router)
 

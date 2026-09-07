@@ -395,3 +395,21 @@ Changing visual appearance, moving the camera, or reordering geometry arrays nev
 | Validation Report Translation | `gemini_advisor.py` | **Permitted**: Generates plain-English briefing |
 | Citizen Inquiries on Property | `gemini_advisor.py` | **Permitted**: Explains volumetric rights |
 | Regulatory Recommendations | `gemini_advisor.py` | **Permitted**: Suggests municipal reference bylaws |
+## 5C. AI/ML Extraction Subsystem & Deterministic Boundary (Step 19)
+
+In adherence to the SIH technical approach, the system maintains an absolute architectural boundary between AI/ML extraction and deterministic geometry:
+
+1. **Separation of Responsibilities**:
+   - **AI/ML Layer**: Proposes candidate physical features (footprints, floor strata, unit partitions, vertical envelopes).
+   - **Deterministic Engine**: Authoritative for coordinate reference transformations (`pyproj`), polygon validation (`shapely`), 3D polyhedral extrusion (`Mesh3D`), watertight topology, analytical volume calculation, and parcel boundary checks.
+   - **Cadastral Registry**: Authoritative for legal title, strata ownership, and ULPIN registration.
+
+2. **Model Registry & Failure Transparency**:
+   - Extraction models document algorithmic limitations.
+   - Unavailable deep-learning pipelines (`pytorch_mask_rcnn_v1`, `open3d_pointnet_v1`) return `MODEL_UNAVAILABLE` rather than fabricating output.
+   - Missing floor plan evidence returns `UNIT_EXTRACTION_UNAVAILABLE` rather than hallucinating apartment divisions.
+
+3. **Deterministic Candidate Validation Gate**:
+   - Candidates must pass through `/api/v1/ai/validate-candidates`.
+   - Rejects invalid polygons, out-of-parcel buildings, and overlapping units.
+   - Flags low-confidence predictions ($< 0.60$) for human review.

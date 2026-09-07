@@ -15,6 +15,27 @@ from app.schemas.unit import (
     GenerateUnits3DResponse,
 )
 
+
+from app.schemas.ai_extraction import (
+    ExtractionType,
+    CandidateStatus,
+    ConfidenceLevel,
+    ExtractionMethod,
+    ModelMetadata,
+    ExtractionProvenance,
+    CandidateFeature,
+    ExtractionResult,
+    BuildingExtractionRequest,
+    FloorSegmentationRequest,
+    UnitDelineationRequest,
+    VerticalDelineationRequest,
+    CandidateValidationRequest,
+    CandidateValidationResponse,
+    CandidateComparisonRequest,
+    CandidateComparisonResponse,
+    ModelRegistryResponse,
+)
+
 from app.schemas.fusion import (
     SourceType,
     SourceStatus,
@@ -69,5 +90,23 @@ __all__ = [
     "FusionNormalizeResponse",
     "PropertyContextRequest",
     "PropertyContextResponse",
+    "ExtractionType",
+    "CandidateStatus",
+    "ConfidenceLevel",
+    "ExtractionMethod",
+    "ModelMetadata",
+    "ExtractionProvenance",
+    "CandidateFeature",
+    "ExtractionResult",
+    "BuildingExtractionRequest",
+    "FloorSegmentationRequest",
+    "UnitDelineationRequest",
+    "VerticalDelineationRequest",
+    "CandidateValidationRequest",
+    "CandidateValidationResponse",
+    "CandidateComparisonRequest",
+    "CandidateComparisonResponse",
+    "ModelRegistryResponse",
+
 ]
 
