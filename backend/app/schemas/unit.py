@@ -153,11 +153,23 @@ class UnitPropertyRecord(BaseModel):
     canonical_floor_id: str = Field(default="05", description="SIH Presentation canonical floor alias")
     canonical_unit_id: str = Field(default="501", description="SIH Presentation canonical unit alias")
     canonical_path: str = Field(default="P001/B01/05/501", description="SIH hierarchical chain: PARCEL -> BUILDING -> FLOOR -> UNIT")
+    property_id: Optional[str] = Field(default=None, description="Cadastral property entity identifier")
+    property_record_reference: str = Field(
+        default="P001-B01-FL05-U501",
+        description="Human-readable hierarchical reference for presentation (NOT a cryptographic hash)",
+    )
     z_range_amsl: Dict[str, float] = Field(..., description="Vertical range in meters AMSL: {'min_z': float, 'max_z': float}")
     volume_cubic_m: Optional[float] = Field(None, description="Exact mathematical volume in m3")
     footprint_area_sqm: Optional[float] = Field(None, description="Footprint area in m2")
     status: UnitStatus = Field(UnitStatus.VALID, description="Status of spatial evidence")
-    ulpin_prototype: Optional[str] = Field(default=None, description="Prototype 3D-ULPIN spatial hash")
+    ulpin_prototype: Optional[str] = Field(
+        default=None,
+        description="Authoritative 64-hex uppercase SHA-256 3D ULPIN prototype (3DULPIN-V1-<64_HEX>)",
+    )
+    ulpin_status: Optional[str] = Field(
+        default="VALID",
+        description="Lifecycle verification status of the 3D ULPIN prototype (VALID, INVALID, UNAVAILABLE)",
+    )
     disclaimer: str = Field(
         "CONCEPTUAL 3D PROPERTY RECORD · 3D ULPIN PROTOTYPE (RESEARCH IMPLEMENTATION). NOT AN OFFICIAL GOVERNMENT TITLE OR LEGAL OWNERSHIP CLAIM.",
         description="Statutory disclaimer"

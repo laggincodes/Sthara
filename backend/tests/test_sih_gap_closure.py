@@ -123,8 +123,55 @@ def test_canonical_demo_property_record():
     assert data["z_range_amsl"]["max_z"] == 580.48
     assert data["volume_cubic_m"] == 133.5
     assert data["status"] == "VALID"
-    assert "3DULPIN-V1-P001-B01-FL05-U501" in data["ulpin_prototype"]
+    assert data["property_record_reference"] == "P001-B01-FL05-U501"
+    assert data["ulpin_prototype"].startswith("3DULPIN-V1-")
+    assert len(data["ulpin_prototype"].split("-")[-1]) == 64
+    assert data["ulpin_status"] == "VALID"
     assert "3D ULPIN PROTOTYPE" in data["disclaimer"]
+
+    # Verify canonical ULPIN verifies successfully via /api/v1/ulpin/verify
+    v_res = client.post(
+        "/api/v1/ulpin/verify",
+        json={
+            "ulpin": data["ulpin_prototype"],
+            "property_id": data["property_id"],
+            "parcel_id": data["parcel_id"],
+            "building_ids": [data["building_id"]],
+            "floor_ids": [data["floor_id"]],
+        },
+    )
+    assert v_res.status_code == 200
+    assert v_res.json()["verified"] is True
+    assert v_res.json()["match"] is True
+
+    # Tampered ULPIN fails verification
+    tampered = data["ulpin_prototype"][:-1] + ("A" if data["ulpin_prototype"][-1] != "A" else "B")
+    v_fail = client.post(
+        "/api/v1/ulpin/verify",
+        json={
+            "ulpin": tampered,
+            "property_id": data["property_id"],
+            "parcel_id": data["parcel_id"],
+            "building_ids": [data["building_id"]],
+            "floor_ids": [data["floor_id"]],
+        },
+    )
+    assert v_fail.status_code == 200
+    assert v_fail.json()["verified"] is False
+
+    # Human-readable reference must NOT be accepted as canonical ULPIN
+    v_ref = client.post(
+        "/api/v1/ulpin/verify",
+        json={
+            "ulpin": data["property_record_reference"],
+            "property_id": data["property_id"],
+            "parcel_id": data["parcel_id"],
+            "building_ids": [data["building_id"]],
+            "floor_ids": [data["floor_id"]],
+        },
+    )
+    assert v_ref.status_code == 200
+    assert v_ref.json()["verified"] is False
 
 
 def test_property_record_alias_lookup():
@@ -162,3 +209,104 @@ def test_topology_controlled_scenarios():
     )
     assert overlap_conf is not None
     assert overlap_conf["overlap_metric"] == 40.0
+
+
+# -----------------------------------------------------------------------------
+# 5. Unit-Level 3D ULPIN Determinism & Geometry Decoupling Tests
+# -----------------------------------------------------------------------------
+def test_unit_ulpin_determinism_and_decoupling():
+    """Unit ULPIN is strictly deterministic and invariant to geometry/mesh variations."""
+    from app.services.ulpin_service import ULPINService
+    from app.schemas.unit import Unit, UnitType, UnitStatus
+    from app.schemas.geometry_3d import Geometry3DStatus
+
+    unit1 = Unit(
+        unit_id="BLD-DEMO-002-FL05-U501",
+        property_id="PROP-DEMO-102-U501",
+        parcel_id="PARCEL-DEMO-102",
+        building_id="BLD-DEMO-002",
+        floor_id="BLD-DEMO-002-FL05",
+        unit_number="501",
+        unit_type=UnitType.APARTMENT_UNIT,
+        status=UnitStatus.VALID,
+        volume_cubic_m=133.5,
+    )
+    # Exact duplicate unit identity
+    unit2 = Unit(
+        unit_id="BLD-DEMO-002-FL05-U501",
+        property_id="PROP-DEMO-102-U501",
+        parcel_id="PARCEL-DEMO-102",
+        building_id="BLD-DEMO-002",
+        floor_id="BLD-DEMO-002-FL05",
+        unit_number="501",
+        unit_type=UnitType.APARTMENT_UNIT,
+        status=UnitStatus.VALID,
+        volume_cubic_m=999.9,  # different volume, same entity
+    )
+
+    res1 = ULPINService.generate_for_unit(unit1)
+    res2 = ULPINService.generate_for_unit(unit2)
+
+    assert res1.ulpin == res2.ulpin
+    assert res1.identifier_status.value == "VALID"
+    assert len(res1.ulpin.split("-")[-1]) == 64
+
+    # Different unit_id / property_id -> different ULPIN
+    unit_diff = Unit(
+        unit_id="BLD-DEMO-002-FL05-U502",
+        property_id="PROP-DEMO-102-U502",
+        parcel_id="PARCEL-DEMO-102",
+        building_id="BLD-DEMO-002",
+        floor_id="BLD-DEMO-002-FL05",
+        unit_number="502",
+        unit_type=UnitType.APARTMENT_UNIT,
+        status=UnitStatus.VALID,
+    )
+    res_diff = ULPINService.generate_for_unit(unit_diff)
+    assert res_diff.ulpin != res1.ulpin
+
+    # Different floor -> different ULPIN
+    unit_diff_floor = Unit(
+        unit_id="BLD-DEMO-002-FL04-U501",
+        property_id="PROP-DEMO-102-U501",
+        parcel_id="PARCEL-DEMO-102",
+        building_id="BLD-DEMO-002",
+        floor_id="BLD-DEMO-002-FL04",
+        unit_number="501",
+        unit_type=UnitType.APARTMENT_UNIT,
+        status=UnitStatus.VALID,
+    )
+    res_diff_floor = ULPINService.generate_for_unit(unit_diff_floor)
+    assert res_diff_floor.ulpin != res1.ulpin
+
+
+def test_api_endpoint_ulpin_consistency():
+    """All relevant API endpoints return identical canonical ULPIN for the same property."""
+    # 1. /api/v1/units/canonical-demo
+    resp1 = client.get("/api/v1/units/canonical-demo")
+    assert resp1.status_code == 200
+    ulpin1 = resp1.json()["ulpin_prototype"]
+
+    # 2. /api/v1/properties/demo-ulpins
+    resp2 = client.get("/api/v1/properties/demo-ulpins")
+    assert resp2.status_code == 200
+    demo_ulpins = {item["property_id"]: item["ulpin"] for item in resp2.json()}
+    assert "PROP-DEMO-102-U501" in demo_ulpins
+    ulpin2 = demo_ulpins["PROP-DEMO-102-U501"]
+
+    # 3. Direct generation via /api/v1/ulpin/generate
+    resp3 = client.post(
+        "/api/v1/ulpin/generate",
+        json={
+            "property_id": "PROP-DEMO-102-U501",
+            "parcel_id": "PARCEL-DEMO-102",
+            "building_ids": ["BLD-DEMO-002"],
+            "floor_ids": ["BLD-DEMO-002-FL05"],
+        },
+    )
+    assert resp3.status_code == 200
+    ulpin3 = resp3.json()["ulpin"]
+
+    # All 3 must strictly match
+    assert ulpin1 == ulpin2
+    assert ulpin2 == ulpin3

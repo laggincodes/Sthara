@@ -29,6 +29,7 @@ from app.schemas.unit import (
     GenerateUnits3DResponse,
 )
 from app.services.extrusion_service import ExtrusionService
+from app.services.ulpin_service import ULPINService
 from app.core.logging import logger
 
 
@@ -332,8 +333,13 @@ class UnitService:
         canonical_f = "05" if "05" in unit.floor_id or "5" in unit.floor_id else unit.floor_id.split("-")[-1].replace("FL", "")
         canonical_u = clean_unit_num or "501"
 
-        # Deterministic 3D ULPIN prototype hash derived from spatial attributes
-        ulpin_str = f"3DULPIN-V1-{canonical_p}-{canonical_b}-FL{canonical_f}-U{canonical_u}"
+        # Separate human-readable reference for presentation (NOT a cryptographic hash)
+        property_record_reference = f"{canonical_p}-{canonical_b}-FL{canonical_f}-U{canonical_u}"
+
+        # Delegate exclusively to authoritative ULPINService for canonical 64-hex SHA-256 ULPIN
+        ulpin_res = ULPINService.generate_for_unit(unit)
+        canonical_ulpin = ulpin_res.ulpin
+        ulpin_status = ulpin_res.identifier_status.value
 
         return UnitPropertyRecord(
             parcel_id=unit.parcel_id,
@@ -342,16 +348,19 @@ class UnitService:
             unit_id=unit.unit_id,
             unit_number=unit.unit_number,
             unit_name=unit.unit_name,
+            property_id=unit.property_id,
             canonical_parcel_id=canonical_p,
             canonical_building_id=canonical_b,
             canonical_floor_id=canonical_f,
             canonical_unit_id=canonical_u,
             canonical_path=f"{canonical_p}/{canonical_b}/{canonical_f}/{canonical_u}",
+            property_record_reference=property_record_reference,
             z_range_amsl={"min_z": base_z, "max_z": top_z},
             volume_cubic_m=unit.volume_cubic_m or 133.5,
             footprint_area_sqm=unit.footprint_area or 44.5,
             status=unit.status,
-            ulpin_prototype=ulpin_str,
+            ulpin_prototype=canonical_ulpin,
+            ulpin_status=ulpin_status,
         )
 
     @classmethod

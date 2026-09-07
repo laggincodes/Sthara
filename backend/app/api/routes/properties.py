@@ -71,6 +71,14 @@ DEMO_PROPERTY_SPECS: List[PropertyVolumeRequest] = [
         volume_type=VolumeType.PROPERTY_VOLUME,
         unit_name="Residential Tower 1 — Unit 302 Residence",
     ),
+    PropertyVolumeRequest(
+        property_id="PROP-DEMO-102-U501",
+        parcel_id="PARCEL-DEMO-102",
+        building_id="BLD-DEMO-002",
+        floor_ids=["BLD-DEMO-002-FL05"],
+        volume_type=VolumeType.PROPERTY_VOLUME,
+        unit_name="Residential Tower 1 — Unit 501 Residence (Floor 5)",
+    ),
 ]
 
 

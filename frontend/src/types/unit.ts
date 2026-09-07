@@ -88,6 +88,8 @@ export interface UnitPropertyRecord {
   canonical_floor_id?: string;
   canonical_unit_id?: string;
   canonical_path?: string;
+  property_id?: string | null;
+  property_record_reference?: string;
   z_range_amsl: {
     min_z: number;
     max_z: number;
@@ -96,6 +98,7 @@ export interface UnitPropertyRecord {
   footprint_area_sqm?: number | null;
   status: UnitStatus;
   ulpin_prototype?: string | null;
+  ulpin_status?: string | null;
   disclaimer: string;
 }
 

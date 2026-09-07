@@ -111,6 +111,39 @@ class ULPINService:
         )
 
     @classmethod
+    def generate_for_unit(
+        cls,
+        unit: Any,
+        geometry_status: Optional[Geometry3DStatus] = None,
+    ) -> ULPINResult:
+        """
+        Authoritative generator for a unit-level cadastral entity.
+        Extracts stable property, parcel, building, and floor identifiers,
+        and delegates to the single canonical 3D ULPIN algorithm.
+        """
+        prop_id = getattr(unit, "property_id", None) or getattr(unit, "unit_id", "")
+        parcel_id = getattr(unit, "parcel_id", "")
+        b_id = getattr(unit, "building_id", "")
+        f_id = getattr(unit, "floor_id", "")
+
+        geom_stat = geometry_status
+        if geom_stat is None:
+            u_status = getattr(unit, "status", None)
+            u_status_str = u_status.value if hasattr(u_status, "value") else str(u_status)
+            geom_stat = Geometry3DStatus.VALID if u_status_str in ("VALID", "None", "") else Geometry3DStatus.INVALID
+
+        req = ULPINRequest(
+            property_id=prop_id,
+            parcel_id=parcel_id,
+            building_id=b_id,
+            building_ids=[b_id] if b_id else [],
+            floor_ids=[f_id] if f_id else [],
+            source_identity="cadastral_spatial_record",
+            geometry_status=geom_stat,
+        )
+        return cls.generate_3d_ulpin(req)
+
+    @classmethod
     def generate_3d_ulpin(
         cls,
         req: ULPINRequest,
