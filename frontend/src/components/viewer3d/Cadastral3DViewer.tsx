@@ -345,6 +345,10 @@ export function Cadastral3DViewer({
         onCreated={({ gl }) => {
           gl.domElement.addEventListener("webglcontextlost", (event) => {
             event.preventDefault();
+            console.warn("WebGL context lost. Suppressing default crash and waiting for recovery...");
+          });
+          gl.domElement.addEventListener("webglcontextrestored", () => {
+            console.info("WebGL context restored successfully.");
           });
         }}
         className="w-full h-full"
