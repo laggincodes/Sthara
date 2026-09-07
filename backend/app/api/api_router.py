@@ -12,6 +12,7 @@ from app.api.routes import (
     buildings,
     properties,
     units,
+    fusion,
 )
 
 api_router = APIRouter()
@@ -19,13 +20,14 @@ api_router = APIRouter()
 # Health router (active foundation)
 api_router.include_router(health.router)
 
-# Cadastral, Dataset, Spatial, Elevation, Building, and Property routers
+# Cadastral, Dataset, Spatial, Elevation, Building, Property, Units, and Fusion routers
 api_router.include_router(datasets.router)
 api_router.include_router(spatial.router)
 api_router.include_router(elevation.router)
 api_router.include_router(buildings.router)
 api_router.include_router(properties.router)
 api_router.include_router(units.router)
+api_router.include_router(fusion.router)
 api_router.include_router(parcels.router)
 api_router.include_router(volumes.router)
 api_router.include_router(validation.router)

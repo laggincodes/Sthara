@@ -315,6 +315,8 @@ export * from "./geometry3d";
 export * from "./property_volume";
 export * from "./ulpin";
 export * from "./unit";
+export * from "./fusion";
+
 
 
 

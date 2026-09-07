@@ -268,3 +268,40 @@ Prioritization tags:
 - **Expected Output**: Watertight 3D unit volumes rendered in 3D viewer and bound to cadastral property volumes.
 - **Acceptance Criteria**: Canonical 3D contract preserved; 0 TypeScript errors; 0 ESLint warnings; 145/145 tests pass.
 
+---
+
+## Step 18: Multi-Source Georeferencing and Spatial Data Fusion (Completed — Step 18)
+- **Priority**: **[MUST HAVE]** — **[COMPLETED]**
+- **Objective**: Create a deterministic multi-source spatial fusion layer aligning Cadastral GIS, Physical Buildings (Synthetic & Real OSM), Digital Elevation Models (DEM), LiDAR Point Clouds, Floor Strata, Apartment Units, and GNSS/CORS Geodetic Control into a unified project spatial frame.
+- **Tasks**:
+  1. Implemented common source metadata model (`backend/app/schemas/fusion.py`):
+     - `SourceType` (CADASTRAL_GIS, BUILDING_FOOTPRINT, OSM, DEM, DSM, LIDAR, FLOOR_PLAN, GNSS_CORS, DRONE_AERIAL).
+     - `DatasetMetadata`, `GNSSReferencePoint`, `LiDARSourceReference`, `SpatialConflict`, `FusedBuildingContext`, and `FusedPropertyContext`.
+  2. Implemented Georeferencing Service (`backend/app/services/georeferencing_service.py`):
+     - Source CRS inspection & PROJ validation.
+     - Target metric CRS strategy (`EPSG:32643` UTM 43N default or dynamic centroid derivation).
+     - Reversible geometry transformation preserving native coordinates in `properties._source_geometry` and recording `TransformationRecord`.
+  3. Implemented Spatial Fusion Service (`backend/app/services/fusion_service.py`):
+     - Multi-source validation and compatibility evaluation.
+     - Building <-> Parcel association via STRtree spatial index.
+     - Building <-> DEM ground elevation sampling.
+     - Building <-> LiDAR point cloud and roof return evidence.
+     - Floor and Unit containment validation with party-wall touching support.
+     - Real OSM ingestion with strict non-cadastral status (`is_cadastral=False`, `legal_status="UNVERIFIED_PHYSICAL_SURFACE"`).
+     - Fusion Integrity Status (`VALID`, `WARNING`, `PARTIAL`, `INVALID`) and Evidence Readiness Levels (`FULL`, `PARTIAL`, `LIMITED`, `INVALID`).
+  4. Exposed REST endpoints (`backend/app/api/routes/fusion.py`):
+     - `POST /api/v1/fusion/validate`
+     - `POST /api/v1/fusion/normalize`
+     - `POST /api/v1/fusion/property-context`
+     - `GET /api/v1/fusion/demo`
+     - `GET /api/v1/fusion/real-osm`
+  5. Built 13 comprehensive backend tests (`backend/tests/test_data_fusion.py`) — all 158 backend tests pass.
+  6. Implemented frontend Data Fusion UI in `frontend/`:
+     - Created `DataFusionCard.tsx` with layer alignment matrix, target CRS badge, fusion status indicators, geodetic station details, LiDAR metrics, and conflict registers.
+     - Embedded `DataFusionCard` in Data Workspace (`/data`).
+     - Added TypeScript definitions in `types/fusion.ts` and API client methods in `lib/api/client.ts`.
+  7. Authored technical documentation in `docs/DATA_FUSION.md` and `DATA_FUSION.md`.
+- **Expected Output**: Reversible multi-source spatial alignment connecting all 7 data layers without silent coordinate changes or fictitious ownership claims.
+- **Acceptance Criteria**: 0 TypeScript errors; 0 ESLint warnings; 158/158 tests pass; real OSM supported with non-cadastral honesty.
+
+
