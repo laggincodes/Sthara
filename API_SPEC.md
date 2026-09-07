@@ -1101,3 +1101,38 @@ Returns reproducible deterministic candidates for Tower 1.
 - **Purpose**: Evaluates topological integrity across 2D non-overlap, 2D footprint containment, vertical elevation intervals, duplicate entity IDs and duplicate geometries, canonical 3D mesh watertightness (Contract v1.0), subsurface clashes, and hierarchical parent-child references.
 - **Request**: `TopologyValidationRequest`
 - **Response**: `200 OK` (`TopologyValidationResponse`)
+
+---
+
+## 14. Real Multi-Source End-to-End Validation Endpoints (Step 23)
+
+### 14.1 Execute Real Multi-Source Integration Pipeline
+- **Route**: `GET /api/v1/fusion/real-pipeline`
+- **Purpose**: Executes and returns the comprehensive 9-stage end-to-end integration and validation pipeline across real crowd-sourced OpenStreetMap building footprints (Tagore Garden, New Delhi) and the synthetic authoritative cadastre (Pune).
+- **Query Parameters**:
+  - `target_crs` (`string`, default: `"EPSG:32643"`): Target metric projected coordinate reference system.
+  - `run_fresh` (`boolean`, default: `false`): If `true`, executes a live fresh run; if `false`, returns cached result from disk if available.
+- **Response**: `200 OK` (`Dict[str, Any]`)
+  ```json
+  {
+    "pipeline_id": "REAL-DATA-PIPELINE-E2E-001",
+    "executed_at": "2026-09-07T20:45:28.824346+00:00",
+    "execution_duration_sec": 0.045,
+    "target_crs": "EPSG:32643",
+    "fusion_status": "PARTIAL",
+    "quality_level": "LIMITED",
+    "pipeline_verdict": "VALIDATED_PARTIAL",
+    "summary": "Successfully validated multi-source 3D cadastral pipeline end-to-end...",
+    "stages": {
+      "01_data_ingestion": { "stage": "01_DATA_INGESTION", "status": "COMPLETED_WITH_HONEST_GAPS", ... },
+      "02_georeferencing": { "stage": "02_GEOREFERENCING", "target_crs": "EPSG:32643", ... },
+      "03_fusion_and_spatial_coverage": { "separation_distance_km": 1173.86, "verdict": "NO_OVERLAP", ... },
+      "04_ai_extraction_gate": { "status": "COMPLETED", ... },
+      "05_modelling_3d": { "canonical_contract_compliant": true, ... },
+      "06_topology_audit": { "status": "COMPLETED", ... },
+      "07_property_volume_and_3d_ulpin": { "cadastral_boundary_enforced": true, ... },
+      "08_viewer_compatibility": { "status": "COMPLETED", ... }
+    }
+  }
+  ```
+

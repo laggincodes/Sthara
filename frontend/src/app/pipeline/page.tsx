@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useCadastreContext } from "@/context/CadastreContext";
 import { PipelineStepStatus } from "@/components/cadastral/PipelineStatus";
 import { TopologyCard } from "@/components/cadastral/TopologyCard";
+import { RealPipelineCard } from "@/components/cadastral/RealPipelineCard";
 
 export default function PipelineAuditPage() {
   const [selectedStageId, setSelectedStageId] = useState<string | null>(null);
@@ -464,6 +465,11 @@ export default function PipelineAuditPage() {
             onRunAudit={runTopologyAudit}
             onLoadDemo={loadDemoTopology}
           />
+        </div>
+
+        {/* Step 23: Real Multi-Source End-to-End Validation Panel */}
+        <div className="mt-8">
+          <RealPipelineCard />
         </div>
       </div>
     </div>
