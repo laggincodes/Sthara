@@ -79,7 +79,8 @@ export function DataFusionCard({ onContextLoaded }: DataFusionCardProps) {
     { key: "lidar", label: "LiDAR Point Cloud" },
     { key: "floor_data", label: "Floor Strata Levels" },
     { key: "unit_data", label: "Apartment Units / Flats" },
-    { key: "gnss_cors", label: "GNSS / CORS Station" },
+    { key: "gnss_cors", label: "GNSS / CORS Reference Control" },
+    { key: "underground", label: "Underground Infrastructure" },
   ];
 
   return (
@@ -267,18 +268,33 @@ export function DataFusionCard({ onContextLoaded }: DataFusionCardProps) {
                 <div className="p-3.5 bg-slate-950/90 rounded-lg border border-slate-800 text-xs space-y-1">
                   <div className="flex items-center justify-between text-slate-400 font-mono text-[11px]">
                     <span className="flex items-center gap-1.5 text-cyan-400 font-semibold">
-                      GNSS / CORS Station
+                      GNSS / CORS Reference Control
                     </span>
-                    <span>{context.gnss_reference ? "LOCKED" : "UNAVAILABLE"}</span>
+                    <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-cyan-950 text-cyan-400 border border-cyan-800">
+                      {context.gnss_reference ? (context.gnss_reference.reference_type || "CORS_REFERENCE") : "UNAVAILABLE"}
+                    </span>
                   </div>
                   {context.gnss_reference ? (
                     <div>
-                      <div className="text-slate-200 font-semibold">{context.gnss_reference.station_id}</div>
-                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">
-                        Coords: [{context.gnss_reference.coordinates.map((c) => c.toFixed(4)).join(", ")}]
+                      <div className="text-slate-200 font-semibold flex items-center justify-between">
+                        <span>{context.gnss_reference.control_point_id || context.gnss_reference.station_id}</span>
+                        <span className="text-[9px] font-mono text-emerald-400">STATUS: LOCKED</span>
                       </div>
+                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                        Native (EPSG:4326): [{context.gnss_reference.coordinates.map((c) => c.toFixed(6)).join(", ")}]
+                      </div>
+                      {context.gnss_reference.target_coordinates && (
+                        <div className="text-[10px] text-cyan-300 font-mono">
+                          Target ({context.target_project_crs}): [{context.gnss_reference.target_coordinates.map((c) => c.toFixed(2)).join(", ")}]
+                        </div>
+                      )}
                       <div className="text-[10px] text-slate-400 font-mono">
                         Elevation: {context.gnss_reference.elevation}m ({context.gnss_reference.elevation_reference})
+                        {context.gnss_reference.accuracy_metadata && (
+                          <span className="text-slate-400 ml-1">
+                            · Accuracy: H: ±{context.gnss_reference.accuracy_metadata.horizontal_accuracy_m}m, V: ±{context.gnss_reference.accuracy_metadata.vertical_accuracy_m}m
+                          </span>
+                        )}
                       </div>
                     </div>
                   ) : (

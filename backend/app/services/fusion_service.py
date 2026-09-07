@@ -27,7 +27,11 @@ from app.schemas.fusion import (
     FusionQualityLevel,
     ConflictSeverity,
     DatasetMetadata,
+    ReferenceControlType,
+    ControlPointAccuracy,
     GNSSReferencePoint,
+    ControlPointValidationRequest,
+    ControlPointValidationResponse,
     LiDARSourceReference,
     SpatialConflict,
     FusedBuildingContext,
@@ -56,6 +60,7 @@ DEMO_UNITS_PATH = DATA_DIR / "processed" / "demo_units.geojson"
 REAL_OSM_BUILDINGS_PATH = DATA_DIR / "processed" / "real" / "osm_buildings.geojson"
 RAW_OSM_MAP_PATH = DATA_DIR / "raw" / "real" / "map.osm"
 DEMO_ELEVATION_PATH = DATA_DIR / "raw" / "demo_elevation.tif"
+CONTROL_POINTS_PATH = DATA_DIR / "processed" / "reference_control_points.json"
 
 
 class SpatialFusionService:
@@ -232,16 +237,41 @@ class SpatialFusionService:
         except Exception as e:
             warnings.append(f"DEM inspection warning: {e}")
 
-        # 5. GNSS / CORS Reference Point
+        # 5. GNSS / CORS Reference Point (Pune Geodetic Network Benchmark)
+        # Transform geographic coordinate [73.85652, 18.52025] to target metric project CRS
+        gnss_lon, gnss_lat = 73.85652, 18.52025
+        gnss_proj_x, gnss_proj_y = gnss_lon, gnss_lat
+        gnss_trans_applied = False
+        if target_crs != "EPSG:4326":
+            try:
+                trans = pyproj.Transformer.from_crs("EPSG:4326", target_crs, always_xy=True)
+                gnss_proj_x, gnss_proj_y = trans.transform(gnss_lon, gnss_lat)
+                gnss_trans_applied = True
+            except Exception as e:
+                warnings.append(f"GNSS coordinate transformation notice: {e}")
+
         gnss_station = GNSSReferencePoint(
             station_id="CORS-DL-01",
-            name="Tagore Garden Geodetic Benchmark",
-            coordinates=[73.8565, 18.5202],
+            control_point_id="CORS-MH-PUN-01",
+            name="Pune Central Geodetic CORS Station",
+            coordinate=[gnss_lon, gnss_lat],
+            coordinates=[gnss_lon, gnss_lat],
             elevation=562.48,
             elevation_reference="AMSL",
             crs="EPSG:4326",
-            source_info={"agency": "Survey of India (Simulated Demo)", "frequency": "1Hz", "dual_band": True},
+            source="SURVEY_OF_INDIA_CORS_NETWORK",
+            reference_type=ReferenceControlType.CORS_REFERENCE,
+            accuracy_metadata=ControlPointAccuracy(
+                horizontal_accuracy_m=0.008,
+                vertical_accuracy_m=0.015,
+                solution_type="CONTINUOUS_NETWORK_FIXED",
+                pdop=1.2,
+            ),
             status="ACTIVE",
+            target_crs=target_crs,
+            target_coordinates=[round(gnss_proj_x, 3), round(gnss_proj_y, 3)],
+            transformation_applied=gnss_trans_applied,
+            source_info={"agency": "Survey of India (Simulated Reference Benchmark)", "receiver": "Trimble Alloy", "frequency": "1Hz"},
         )
         provenance.append({
             "stage": "GNSS_CORS_LINK",
@@ -518,6 +548,29 @@ class SpatialFusionService:
             "floor_data": True,
             "unit_data": bool(units_geojson),
             "gnss_cors": True,
+            "underground": True,
+        }
+
+        source_status_map = {
+            "cadastral_gis": "SYNTHETIC",
+            "building_footprint": "SYNTHETIC",
+            "dem": "REAL" if dem_available else "UNAVAILABLE",
+            "lidar": "DERIVED",
+            "floor_plan": "ESTIMATED",
+            "unit": "SYNTHETIC",
+            "gnss_cors": "SYNTHETIC",
+            "underground": "SYNTHETIC",
+        }
+
+        underground_source = {
+            "dataset_id": "DS-UNDERGROUND-DEMO",
+            "name": "Subsurface Utility and Basement Infrastructure",
+            "features_count": 2,
+            "feature_types": ["BASEMENT", "UTILITY_CONDUIT"],
+            "crs": "EPSG:4326",
+            "target_crs": target_crs,
+            "source_status": "SYNTHETIC",
+            "disclaimer": "SYNTHETIC SUBSURFACE MODEL FOR DEMONSTRATION ONLY.",
         }
 
         # Determine overall fusion status and quality level
@@ -533,6 +586,8 @@ class SpatialFusionService:
             elevation_source=dem_metadata_dict,
             lidar_source=lidar_ref,
             gnss_reference=gnss_station,
+            underground_source=underground_source,
+            source_status_map=source_status_map,
             source_datasets=source_datasets,
             source_alignment=source_alignment,
             fusion_status=fusion_status,
@@ -671,4 +726,149 @@ class SpatialFusionService:
                 "No cadastral parcel boundary available in this region.",
             ],
             provenance=provenance,
+        )
+
+    # -------------------------------------------------------------------------
+    # GNSS / CORS Reference Control Workflow
+    # -------------------------------------------------------------------------
+    @classmethod
+    def get_reference_control_points(
+        cls,
+        target_crs: str = "EPSG:32643",
+    ) -> ControlPointValidationResponse:
+        """
+        Loads authoritative ground control and CORS reference points, validates geographic
+        plausibility, and projects coordinates into common project CRS.
+        """
+        raw_points: List[GNSSReferencePoint] = []
+        if CONTROL_POINTS_PATH.exists():
+            try:
+                with open(CONTROL_POINTS_PATH, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    for pt_dict in data.get("control_points", []):
+                        raw_points.append(GNSSReferencePoint(**pt_dict))
+            except Exception as e:
+                logger.error(f"Failed to read control points from {CONTROL_POINTS_PATH}: {e}")
+
+        # Fallback if file read fails
+        if not raw_points:
+            raw_points = [
+                GNSSReferencePoint(
+                    station_id="CORS-MH-PUN-01",
+                    control_point_id="CORS-MH-PUN-01",
+                    name="Pune Central Geodetic CORS Station",
+                    coordinate=[73.85652, 18.52025],
+                    coordinates=[73.85652, 18.52025],
+                    elevation=562.48,
+                    elevation_reference="AMSL",
+                    crs="EPSG:4326",
+                    source="SURVEY_OF_INDIA_CORS_NETWORK",
+                    reference_type=ReferenceControlType.CORS_REFERENCE,
+                    accuracy_metadata=ControlPointAccuracy(
+                        horizontal_accuracy_m=0.008,
+                        vertical_accuracy_m=0.015,
+                        solution_type="CONTINUOUS_NETWORK_FIXED",
+                        pdop=1.2,
+                    ),
+                    status="ACTIVE",
+                ),
+                GNSSReferencePoint(
+                    station_id="GCP-PUN-CADASTRAL-01",
+                    control_point_id="GCP-PUN-CADASTRAL-01",
+                    name="Shivajinagar Cadastral Ground Control Monument 01",
+                    coordinate=[73.85595, 18.51982],
+                    coordinates=[73.85595, 18.51982],
+                    elevation=561.92,
+                    elevation_reference="AMSL",
+                    crs="EPSG:4326",
+                    source="GROUND_CADASTRAL_RTK_SURVEY",
+                    reference_type=ReferenceControlType.GNSS_CONTROL_POINT,
+                    accuracy_metadata=ControlPointAccuracy(
+                        horizontal_accuracy_m=0.012,
+                        vertical_accuracy_m=0.020,
+                        solution_type="RTK_FIXED",
+                        pdop=1.4,
+                    ),
+                    status="BENCHMARK",
+                ),
+            ]
+
+        return cls.validate_and_transform_control_points(raw_points, target_crs=target_crs)
+
+    @classmethod
+    def validate_and_transform_control_points(
+        cls,
+        control_points: List[GNSSReferencePoint],
+        target_crs: str = "EPSG:32643",
+    ) -> ControlPointValidationResponse:
+        """
+        Deterministically validates control points:
+        1. Checks geographic bounds for longitude [-180, 180], latitude [-90, 90]
+        2. Validates elevation plausibility if provided (-500m to 9000m)
+        3. Transforms coordinates to target metric project CRS using pyproj
+        4. Preserves native coordinates, native CRS, and produces immutable TransformationRecord
+        """
+        validated_points: List[GNSSReferencePoint] = []
+        transformations: List[TransformationRecord] = []
+        warnings: List[str] = []
+        errors: List[str] = []
+
+        for pt in control_points:
+            coords = pt.coordinate or pt.coordinates
+            if not coords or len(coords) < 2:
+                errors.append(f"Control point '{pt.station_id}' has malformed coordinates.")
+                continue
+
+            lon, lat = coords[0], coords[1]
+            if not (-180.0 <= lon <= 180.0 and -90.0 <= lat <= 90.0):
+                errors.append(f"Control point '{pt.station_id}' coordinates ({lon}, {lat}) outside WGS84 range.")
+                continue
+
+            if pt.elevation is not None and not (-500.0 <= pt.elevation <= 9000.0):
+                warnings.append(f"Control point '{pt.station_id}' elevation ({pt.elevation}m) outside standard terrestrial range.")
+
+            proj_x, proj_y = lon, lat
+            transformed = False
+            if pt.crs != target_crs:
+                try:
+                    transformer = pyproj.Transformer.from_crs(pt.crs, target_crs, always_xy=True)
+                    proj_x, proj_y = transformer.transform(lon, lat)
+                    transformed = True
+                    transformations.append(
+                        TransformationRecord(
+                            source_crs=pt.crs,
+                            target_crs=target_crs,
+                            transformed=True,
+                            method="pyproj_exact",
+                        )
+                    )
+                except Exception as err:
+                    errors.append(f"Failed to transform control point '{pt.station_id}' from {pt.crs} to {target_crs}: {err}")
+                    continue
+
+            # Ensure station_id and control_point_id are in sync
+            cp_id = pt.control_point_id or pt.station_id
+            st_id = pt.station_id or cp_id
+
+            validated_pt = pt.model_copy(
+                update={
+                    "control_point_id": cp_id,
+                    "station_id": st_id,
+                    "coordinate": [lon, lat],
+                    "coordinates": [lon, lat],
+                    "target_crs": target_crs,
+                    "target_coordinates": [round(proj_x, 3), round(proj_y, 3)],
+                    "transformation_applied": transformed,
+                }
+            )
+            validated_points.append(validated_pt)
+
+        is_valid = len(errors) == 0 and len(validated_points) > 0
+        return ControlPointValidationResponse(
+            valid=is_valid,
+            target_crs=target_crs,
+            validated_points=validated_points,
+            transformations=transformations,
+            warnings=warnings,
+            errors=errors,
         )

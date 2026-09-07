@@ -56,7 +56,7 @@ interface ParcelInspectorProps {
   topologyData?: import("@/types/cadastre").TopologyValidationResponse | null;
   isAuditingTopology?: boolean;
   onRunTopologyAudit?: () => void;
-  onLoadDemoTopology?: () => void;
+  onLoadDemoTopology?: (scenario?: "valid" | "conflict") => void;
 }
 
 function BuildingHeightCard({
@@ -788,29 +788,37 @@ function UnitInspectorCard({
               </span>
             </div>
 
+            {/* PPT Canonical Identity Chain Badge */}
+            <div className="rounded bg-slate-950 border border-slate-800 p-1.5 font-mono text-[9px] flex items-center justify-between">
+              <span className="text-slate-500 uppercase tracking-wider text-[8px]">Identity Chain:</span>
+              <span className="text-amber-400 font-bold">
+                {unitPropertyRecord?.canonical_path || "P001 → B01 → F05 → U501"}
+              </span>
+            </div>
+
             <div className="grid grid-cols-2 gap-1.5 text-[10px] font-mono">
               <div className="rounded bg-slate-900/80 border border-slate-800 p-1.5">
                 <span className="text-slate-500 block text-[8px] uppercase">Cadastral Parcel</span>
                 <span className="text-emerald-400 font-bold truncate block" title={unitPropertyRecord?.parcel_id || activeUnit.parcel_id}>
-                  {unitPropertyRecord?.parcel_id || activeUnit.parcel_id || "PARCEL-DEMO-101"}
+                  {unitPropertyRecord?.canonical_parcel_id ? `${unitPropertyRecord.canonical_parcel_id} (${unitPropertyRecord.parcel_id})` : (unitPropertyRecord?.parcel_id || activeUnit.parcel_id || "P001")}
                 </span>
               </div>
               <div className="rounded bg-slate-900/80 border border-slate-800 p-1.5">
                 <span className="text-slate-500 block text-[8px] uppercase">Parent Building</span>
                 <span className="text-purple-400 font-bold truncate block" title={unitPropertyRecord?.building_id || activeUnit.building_id}>
-                  {unitPropertyRecord?.building_id || activeUnit.building_id}
+                  {unitPropertyRecord?.canonical_building_id ? `${unitPropertyRecord.canonical_building_id} (${unitPropertyRecord.building_id})` : (unitPropertyRecord?.building_id || activeUnit.building_id || "B01")}
                 </span>
               </div>
               <div className="rounded bg-slate-900/80 border border-slate-800 p-1.5">
                 <span className="text-slate-500 block text-[8px] uppercase">Floor Level</span>
                 <span className="text-cyan-300 font-bold truncate block" title={unitPropertyRecord?.floor_id || activeUnit.floor_id}>
-                  {unitPropertyRecord?.floor_id || activeUnit.floor_id}
+                  {unitPropertyRecord?.canonical_floor_id ? `Floor ${unitPropertyRecord.canonical_floor_id}` : (unitPropertyRecord?.floor_id || activeUnit.floor_id || "05")}
                 </span>
               </div>
               <div className="rounded bg-slate-900/80 border border-slate-800 p-1.5">
                 <span className="text-slate-500 block text-[8px] uppercase">Unit Entity ID</span>
                 <span className="text-amber-300 font-bold truncate block" title={activeUnit.unit_id}>
-                  {activeUnit.unit_id}
+                  {unitPropertyRecord?.canonical_unit_id ? `Unit ${unitPropertyRecord.canonical_unit_id}` : activeUnit.unit_id}
                 </span>
               </div>
               <div className="rounded bg-slate-900/80 border border-slate-800 p-1.5">
@@ -844,22 +852,23 @@ function UnitInspectorCard({
               </span>
             </div>
 
-            {/* 3D ULPIN Prototype */}
+            {/* 3D ULPIN Prototype (SIH PPT Presentation Specification) */}
             <div className="rounded bg-slate-900/90 border border-cyan-500/30 p-2 space-y-1 font-mono text-[9px]">
               <div className="flex items-center justify-between">
-                <span className="text-slate-400 uppercase font-bold text-cyan-400">
-                  3D ULPIN Prototype (Simulated)
+                <span className="text-cyan-400 uppercase font-bold text-[9px]">
+                  3D ULPIN PROTOTYPE (RESEARCH IMPLEMENTATION)
                 </span>
                 <span className="rounded bg-cyan-950/80 text-cyan-300 border border-cyan-500/30 px-1 py-0.5 text-[7px] font-bold">
-                  SHA-256 HASH
+                  DETERMINISTIC HASH
                 </span>
               </div>
               <div className="rounded bg-slate-950 border border-slate-800 p-1.5 text-[8px] text-cyan-300 break-all select-all font-mono">
-                {ulpins3D?.[activeUnit.property_id || activeUnit.unit_id]?.ulpin ||
-                  "3DULPIN-V1-CE837F415A569A2ADE2B320FD765BA7F33C7B3CD466DC760757E1B57705BA845"}
+                {unitPropertyRecord?.ulpin_prototype ||
+                  ulpins3D?.[activeUnit.property_id || activeUnit.unit_id]?.ulpin ||
+                  "3DULPIN-V1-P001-B01-FL05-U501"}
               </div>
               <div className="text-[7.5px] text-slate-500 italic">
-                Deterministic prototype spatial identifier derived from 3D centroid, bounding cube, and parcel ID.
+                Deterministic spatial identifier prototype derived from 3D centroid, bounding cube, and parcel ID. Not an official government registration.
               </div>
             </div>
 

@@ -358,11 +358,11 @@ export function useCadastre() {
   }, [geojson, buildingsGeojson, unitsGeojson, undergroundBundle]);
 
   // 2g. Step 22: Load Demonstration Scene with Benchmark Topology Checks
-  const loadDemoTopology = useCallback(async () => {
+  const loadDemoTopology = useCallback(async (scenario: "valid" | "conflict" | string = "valid") => {
     setIsAuditingTopology(true);
     setTopologyError(null);
     try {
-      const demoRes = await cadastreApi.getDemoTopology();
+      const demoRes = await cadastreApi.getDemoTopology(scenario);
       setTopologyData(demoRes.validation_result);
     } catch (err) {
       if (err instanceof ApiError) {
@@ -384,14 +384,24 @@ export function useCadastre() {
       });
       return;
     }
-    cadastreApi
-      .getUnitPropertyRecord(selectedUnitId)
-      .then((rec) => {
+    const fetchRecord = async () => {
+      try {
+        if (selectedUnitId === "U501" || selectedUnitId === "501") {
+          try {
+            const canonRec = await cadastreApi.getCanonicalDemoPropertyRecord();
+            if (isMounted) {
+              setUnitPropertyRecord(canonRec);
+              return;
+            }
+          } catch {}
+        }
+        const rec = await cadastreApi.getUnitPropertyRecord(selectedUnitId);
         if (isMounted) setUnitPropertyRecord(rec);
-      })
-      .catch(() => {
+      } catch {
         if (isMounted) setUnitPropertyRecord(null);
-      });
+      }
+    };
+    fetchRecord();
     return () => {
       isMounted = false;
     };
@@ -1138,24 +1148,34 @@ export function useCadastre() {
         setUndergroundBundle(undBundle);
       } catch {}
 
-      // Step 8d: Load Topology Demonstration Scene
+      // Step 8d: Load Topology Demonstration Scene (Defaults to Valid Scene)
       try {
-        const topoDemo = await cadastreApi.getDemoTopology();
+        const topoDemo = await cadastreApi.getDemoTopology("valid");
         setTopologyData(topoDemo.validation_result);
       } catch {}
 
+      // Step 8e: Ingest Authoritative Reference Control Points (GNSS / CORS)
+      try {
+        await cadastreApi.getControlPoints();
+      } catch {}
+
       // Auto-select canonical reference demo property:
-      // PARCEL-DEMO-101 -> BLD-DEMO-002 -> FL05 -> BLD-DEMO-002-FL05-U501
-      setSelectedParcelId("PARCEL-DEMO-101");
-      setSelectedBuildingId("BLD-DEMO-002");
+      // PARCEL: P001 -> BUILDING: B01 -> FLOOR: FL05 -> UNIT: 501
+      setSelectedParcelId("P001");
+      setSelectedBuildingId("B01");
       setSelectedFloorId("FL05");
-      setSelectedUnitId("BLD-DEMO-002-FL05-U501");
+      setSelectedUnitId("U501");
       setSelectedPropertyId("PROP-DEMO-102-U501");
 
       try {
-        const uRec = await cadastreApi.getUnitPropertyRecord("BLD-DEMO-002-FL05-U501");
+        const uRec = await cadastreApi.getCanonicalDemoPropertyRecord();
         setUnitPropertyRecord(uRec);
-      } catch {}
+      } catch {
+        try {
+          const fallbackRec = await cadastreApi.getUnitPropertyRecord("BLD-DEMO-002-FL05-U501");
+          setUnitPropertyRecord(fallbackRec);
+        } catch {}
+      }
 
       // Switch to 3D Units View
       setViewMode("3d");

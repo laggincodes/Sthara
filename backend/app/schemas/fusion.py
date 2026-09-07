@@ -72,15 +72,35 @@ class DatasetMetadata(BaseModel):
     status: SourceStatus = Field(default=SourceStatus.AVAILABLE, description="Operational status of the source dataset")
 
 
+class ReferenceControlType(str, Enum):
+    GNSS_CONTROL_POINT = "GNSS_CONTROL_POINT"
+    CORS_REFERENCE = "CORS_REFERENCE"
+
+
+class ControlPointAccuracy(BaseModel):
+    horizontal_accuracy_m: Optional[float] = Field(None, description="Horizontal accuracy (1-sigma RMS) in meters")
+    vertical_accuracy_m: Optional[float] = Field(None, description="Vertical accuracy (1-sigma RMS) in meters")
+    solution_type: Optional[str] = Field(None, description="RTK_FIXED, DGPS, STATIC, BENCHMARK, SIMULATED")
+    pdop: Optional[float] = Field(None, description="Position Dilution of Precision if reported")
+
+
 class GNSSReferencePoint(BaseModel):
     station_id: str = Field(..., description="Unique CORS / survey monument identifier (e.g. 'CORS-DL-01')")
+    control_point_id: Optional[str] = Field(None, description="Standardized control point identifier")
     name: Optional[str] = Field(None, description="Descriptive station or benchmark name")
+    coordinate: Optional[List[float]] = Field(None, description="[x, y] or [lon, lat] in specified CRS")
     coordinates: List[float] = Field(..., description="[longitude, latitude] or [x, y] in specified CRS")
     elevation: Optional[float] = Field(None, description="Elevation above reference datum in meters")
     elevation_reference: Optional[str] = Field(None, description="Vertical datum (e.g. 'EGM96', 'WGS84_ELLIPSOID', 'AMSL')")
     crs: str = Field(default="EPSG:4326", description="Horizontal coordinate reference system")
+    source: str = Field(default="SURVEY_REFERENCE", description="Source agency or provider")
     source_info: Optional[Dict[str, Any]] = Field(None, description="Operating agency, network, or calibration info")
+    reference_type: ReferenceControlType = Field(default=ReferenceControlType.CORS_REFERENCE, description="GNSS_CONTROL_POINT or CORS_REFERENCE")
+    accuracy_metadata: Optional[ControlPointAccuracy] = Field(None, description="Survey accuracy if provided; null if not provided")
     status: str = Field(default="ACTIVE", description="Control point status ('ACTIVE', 'BENCHMARK', 'SIMULATED')")
+    target_crs: Optional[str] = Field(None, description="Project CRS if transformed")
+    target_coordinates: Optional[List[float]] = Field(None, description="Projected coordinates in target CRS")
+    transformation_applied: bool = Field(default=False, description="True if projected into common CRS")
 
 
 class LiDARSourceReference(BaseModel):
@@ -145,7 +165,21 @@ class FusedPropertyContext(BaseModel):
     source_datasets: List[DatasetMetadata] = Field(default_factory=list, description="Inventory of all datasets fused into context")
     source_alignment: Dict[str, bool] = Field(
         default_factory=dict,
-        description="Boolean checklist of participating source layers (cadastral, building, dem, lidar, floors, units, gnss)",
+        description="Boolean checklist of participating source layers (cadastral, building, dem, lidar, floors, units, gnss, underground)",
+    )
+    underground_source: Optional[Dict[str, Any]] = Field(None, description="Subsurface utility or basement dataset reference")
+    source_status_map: Dict[str, str] = Field(
+        default_factory=lambda: {
+            "cadastral_gis": "SYNTHETIC",
+            "building_footprint": "SYNTHETIC",
+            "dem": "REAL",
+            "lidar": "DERIVED",
+            "floor_plan": "ESTIMATED",
+            "unit": "SYNTHETIC",
+            "gnss_cors": "SYNTHETIC",
+            "underground": "SYNTHETIC",
+        },
+        description="Per-source truthfulness classification: REAL, SYNTHETIC, DERIVED, ESTIMATED, UNAVAILABLE",
     )
     fusion_status: FusionStatus = Field(..., description="Overall topological and coordinate alignment status")
     quality_level: FusionQualityLevel = Field(..., description="Data completeness and evidence readiness tier")
@@ -197,3 +231,17 @@ class PropertyContextResponse(BaseModel):
     schema_version: str = Field(default="1.0", description="Contract schema version")
     context: FusedPropertyContext = Field(..., description="Unified multi-source spatial property context")
     message: str = Field(default="Property context created successfully", description="Status message")
+
+
+class ControlPointValidationRequest(BaseModel):
+    control_points: List[GNSSReferencePoint] = Field(..., description="Control points to validate and reproject")
+    target_crs: str = Field(default="EPSG:32643", description="Common project CRS to project into")
+
+
+class ControlPointValidationResponse(BaseModel):
+    valid: bool = Field(..., description="True if all control points are valid and within plausible geographic bounds")
+    target_crs: str = Field(..., description="Target project CRS")
+    validated_points: List[GNSSReferencePoint] = Field(..., description="Control points with target_coordinates computed")
+    transformations: List[TransformationRecord] = Field(default_factory=list, description="Coordinate transformation audit logs")
+    warnings: List[str] = Field(default_factory=list, description="Advisory notices")
+    errors: List[str] = Field(default_factory=list, description="Validation errors")

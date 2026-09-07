@@ -121,6 +121,7 @@ class ExtractionResult(BaseModel):
 class BuildingExtractionRequest(BaseModel):
     """Request to extract candidate building footprints from raster or DSM."""
     source_id: str = Field("DEMO_AERIAL_SURFACE", description="Identifier of the input raster")
+    raster_file: Optional[str] = Field(None, description="Optional path to GeoTIFF elevation raster for live extraction")
     model_id: Optional[str] = Field("bld_cv_otsu_v1", description="Requested model from registry")
     min_area_m2: float = Field(15.0, description="Minimum area filter for building footprints")
     target_crs: str = Field("EPSG:32643", description="Target metric projection for coordinates")

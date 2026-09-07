@@ -122,13 +122,43 @@ async def get_units_by_floor(floor_id: str):
     return matching
 
 
+@router.get("/canonical-demo", response_model=UnitPropertyRecord, summary="Get Canonical SIH Demonstration Property Record")
+async def get_canonical_demo_property_record():
+    """
+    Returns the canonical SIH demonstration property record:
+    P001 -> B01 -> F05 -> U501 (Apartment 501 on Floor 5 of Residential Tower 1).
+    """
+    all_units = load_demo_units_from_disk()
+    target_unit = next(
+        (u for u in all_units if "U501" in u.unit_id or u.unit_number == "501"),
+        all_units[0] if all_units else None,
+    )
+    if not target_unit:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Canonical demo unit U501 not found."
+        )
+    return UnitService.create_property_record(target_unit)
+
+
 @router.get("/property-record/{unit_id}", response_model=UnitPropertyRecord, summary="Get Conceptual 3D Property Record")
 async def get_unit_property_record(unit_id: str):
     """
     Returns a conceptual 3D Property Record for a unit, conforming to the SIH Presentation specification.
+    Resolves both canonical aliases ('P001', 'U501', '501') and full IDs ('BLD-DEMO-002-FL05-U501').
     """
     all_units = load_demo_units_from_disk()
-    matching = next((u for u in all_units if u.unit_id == unit_id), None)
+    # Support alias lookup
+    matching = next(
+        (
+            u for u in all_units
+            if u.unit_id == unit_id
+            or u.unit_number == unit_id
+            or u.property_id == unit_id
+            or (unit_id in ["501", "U501", "P001", "CANONICAL"] and ("501" in u.unit_id or u.unit_number == "501"))
+        ),
+        None,
+    )
     if not matching:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

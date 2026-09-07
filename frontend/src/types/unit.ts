@@ -83,6 +83,11 @@ export interface UnitPropertyRecord {
   unit_id: string;
   unit_number: string;
   unit_name?: string | null;
+  canonical_parcel_id?: string;
+  canonical_building_id?: string;
+  canonical_floor_id?: string;
+  canonical_unit_id?: string;
+  canonical_path?: string;
   z_range_amsl: {
     min_z: number;
     max_z: number;
@@ -90,6 +95,7 @@ export interface UnitPropertyRecord {
   volume_cubic_m?: number | null;
   footprint_area_sqm?: number | null;
   status: UnitStatus;
+  ulpin_prototype?: string | null;
   disclaimer: string;
 }
 

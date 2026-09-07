@@ -48,15 +48,32 @@ export interface DatasetMetadata {
   status: SourceStatus;
 }
 
+export type ReferenceControlType = "GNSS_CONTROL_POINT" | "CORS_REFERENCE";
+
+export interface ControlPointAccuracy {
+  horizontal_accuracy_m?: number | null;
+  vertical_accuracy_m?: number | null;
+  solution_type?: string | null;
+  pdop?: number | null;
+}
+
 export interface GNSSReferencePoint {
   station_id: string;
+  control_point_id?: string | null;
   name?: string | null;
+  coordinate?: number[] | null;
   coordinates: number[];
   elevation?: number | null;
   elevation_reference?: string | null;
   crs: string;
+  source?: string;
+  reference_type?: ReferenceControlType;
+  accuracy_metadata?: ControlPointAccuracy | null;
   source_info?: Record<string, unknown> | null;
   status: string;
+  target_crs?: string | null;
+  target_coordinates?: number[] | null;
+  transformation_applied?: boolean;
 }
 
 export interface LiDARSourceReference {
@@ -115,6 +132,8 @@ export interface FusedPropertyContext {
   elevation_source?: Record<string, unknown> | null;
   lidar_source?: LiDARSourceReference | null;
   gnss_reference?: GNSSReferencePoint | null;
+  underground_source?: Record<string, unknown> | null;
+  source_status_map?: Record<string, string>;
   source_datasets: DatasetMetadata[];
   source_alignment: Record<string, boolean>;
   fusion_status: FusionStatus;
@@ -167,4 +186,18 @@ export interface PropertyContextResponse {
   schema_version: string;
   context: FusedPropertyContext;
   message: string;
+}
+
+export interface ControlPointValidationRequest {
+  control_points: GNSSReferencePoint[];
+  target_crs?: string;
+}
+
+export interface ControlPointValidationResponse {
+  valid: boolean;
+  target_crs: string;
+  validated_points: GNSSReferencePoint[];
+  transformations: TransformationRecord[];
+  warnings: string[];
+  errors: string[];
 }

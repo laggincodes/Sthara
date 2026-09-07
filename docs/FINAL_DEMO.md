@@ -41,7 +41,7 @@ npm run dev
   > "Traditional Indian land administration (Bhu-Naksha / 2D ULPIN) relies strictly on 2D surface parcels. When a 30-storey tower is built, dozens of owners occupy the exact same 2D footprint. 2D maps cannot represent vertical ownership, cannot prevent horizontal floor encroachments, and completely ignore underground metro corridors, basements, and utility trunks. Our project implements the 3D Cadastral Intelligence Platform specified in the SIH mandate."
 
 ### Stage 2: 1-Click End-to-End Pipeline Execution (01:00 - 02:30)
-- **Action:** Click **"Run Demo"** on the persistent top audit bar, or navigate to `http://localhost:3000/pipeline` and click **"▶ Run Full Pipeline"**.
+- **Action:** Click **"Run Demo"** on the persistent top audit bar, or navigate to `http://localhost:3000/pipeline` and click **"▶ Run SIH Demo"**.
 - **Observation:**
   - The pipeline audit console executes all **8 SIH technical stages** synchronously:
     1. `01 INGESTION`: Ingests parcels (`demo_parcels.geojson`), footprints (`demo_buildings.geojson`), Copernicus DEM raster, and unit floor plans.

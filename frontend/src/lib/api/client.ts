@@ -58,6 +58,8 @@ import {
   TopologyValidationRequest,
   TopologyValidationResponse,
   DemoTopologyResponse,
+  ControlPointValidationRequest,
+  ControlPointValidationResponse,
 } from "@/types/cadastre";
 
 const BASE_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1").replace(/\/$/, "");
@@ -1138,9 +1140,10 @@ export const cadastreApi = {
   /**
    * Step 22: Retrieves multi-tier demonstration scene with benchmark topology checks.
    */
-  async getDemoTopology(): Promise<DemoTopologyResponse> {
+  async getDemoTopology(scenario: string = "conflict"): Promise<DemoTopologyResponse> {
     try {
-      const response = await fetch(`${BASE_URL}/topology/demo`, {
+      const url = `${BASE_URL}/topology/demo?scenario=${encodeURIComponent(scenario)}`;
+      const response = await fetch(url, {
         method: "GET",
         headers: { Accept: "application/json" },
       });
@@ -1173,6 +1176,55 @@ export const cadastreApi = {
   /**
    * Step 23: Retrieves real multi-source end-to-end integration pipeline validation report.
    */
+  /**
+   * Part B: Retrieves validated reference control network (GNSS & CORS stations).
+   */
+  async getControlPoints(targetCrs: string = "EPSG:32643"): Promise<ControlPointValidationResponse> {
+    try {
+      const response = await fetch(`${BASE_URL}/fusion/control-points?target_crs=${encodeURIComponent(targetCrs)}`, {
+        method: "GET",
+        headers: { Accept: "application/json" },
+      });
+      return await handleResponse<ControlPointValidationResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Unable to retrieve reference control points.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Part B: Validates and reprojects uploaded field survey control points.
+   */
+  async validateControlPoints(payload: ControlPointValidationRequest): Promise<ControlPointValidationResponse> {
+    try {
+      const response = await fetch(`${BASE_URL}/fusion/control-points/validate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(payload),
+      });
+      return await handleResponse<ControlPointValidationResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Unable to validate survey control points.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Part G: Retrieves canonical SIH demonstration property record (P001 -> B01 -> F05 -> U501).
+   */
+  async getCanonicalDemoPropertyRecord(): Promise<UnitPropertyRecord> {
+    try {
+      const response = await fetch(`${BASE_URL}/units/canonical-demo`, {
+        method: "GET",
+        headers: { Accept: "application/json" },
+      });
+      return await handleResponse<UnitPropertyRecord>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Unable to retrieve canonical demo property record.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
   async getRealDataPipelineResult(runFresh: boolean = false): Promise<Record<string, unknown>> {
     try {
       const response = await fetch(`${BASE_URL}/fusion/real-pipeline?run_fresh=${runFresh}`, {
