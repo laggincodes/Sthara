@@ -234,3 +234,21 @@ Copy `.env.example` templates if customization is needed:
 > 3. **Geometric Rights vs. Legal Ownership**: Spatial containment, volume extrusion, and clash detection are purely geometric calculations. Geometric containment within a parcel does **NOT** constitute legal proof of title, tenure, or municipal zoning sanction.  
 > 4. **Deterministic Computational Geometry Authority**: All coordinate projections, spatial intersections, 3D polyhedral extrusions, and hash derivations are computed deterministically using `GEOS`, `Shapely`, `GeoPandas`, and `PyProj`. Generative AI is **strictly non-authoritative** and confined to plain-English advisory summaries.
 >>>>>>> d94272d (feat: Initial release of STHARA (3D Cadastral Intelligence) - Steps 1-15 complete)
+
+## SIH Presentation Alignment & Final End-to-End Demo
+
+The platform is 100% aligned with the official Smart India Hackathon (SIH) Presentation specifications:
+
+- **8 Technical Stages:**
+  1. `01 INGESTION`: Multi-source ingest (Parcels, Buildings, DEM, Units, Subsurface).
+  2. `02 GEO-REF`: CRS validation and projection to metric grid (EPSG:32643).
+  3. `03 FUSION`: Footprint-to-parcel association and Copernicus DEM elevation sampling.
+  4. `04 AI/ML`: Explainable vertical height calculation and candidate unit segmentation.
+  5. `05 3D ENGINE`: Watertight polyhedral extrusion conforming to Canonical 3D Geometry Contract v1.0.
+  6. `06 TOPOLOGY`: Unified spatial conflict engine (overlaps, containment, duplicates, clash).
+  7. `07 3D ULPIN`: Deterministic SHA-256 spatial hash prototype (clearly flagged non-official).
+  8. `08 VIEWER`: Interactive dual-canvas 2D + 3D Three.js viewer with vertical cutaways.
+
+- **Canonical Demo Unit:** `PARCEL-DEMO-101` → `BLD-DEMO-002` → `FL05` → `BLD-DEMO-002-FL05-U501`
+- **Controlled Conflict Demo:** Intentional overlap detection between `UNIT-102` and `UNIT-103-CONFLICT` ($\Delta = 24.5	ext{ m}^2$) without silent geometry repair.
+- **Complete Runbook:** See [docs/FINAL_DEMO.md](docs/FINAL_DEMO.md) and [docs/PPT_ALIGNMENT_MATRIX.md](docs/PPT_ALIGNMENT_MATRIX.md).

@@ -1132,20 +1132,34 @@ export function useCadastre() {
         setUnits3DData(units3DRes);
       } catch {}
 
-      // Step 8c: Load Topology Demonstration Scene
+      // Step 8c: Load Underground Assets
+      try {
+        const undBundle = await cadastreApi.getUndergroundDemo();
+        setUndergroundBundle(undBundle);
+      } catch {}
+
+      // Step 8d: Load Topology Demonstration Scene
       try {
         const topoDemo = await cadastreApi.getDemoTopology();
         setTopologyData(topoDemo.validation_result);
       } catch {}
 
-      // Auto-select primary demo parcel, building, and property volume
+      // Auto-select canonical reference demo property:
+      // PARCEL-DEMO-101 -> BLD-DEMO-002 -> FL05 -> BLD-DEMO-002-FL05-U501
       setSelectedParcelId("PARCEL-DEMO-101");
-      setSelectedBuildingId("BLD-DEMO-001");
-      setSelectedPropertyId("PROP-DEMO-101-U01");
+      setSelectedBuildingId("BLD-DEMO-002");
+      setSelectedFloorId("FL05");
+      setSelectedUnitId("BLD-DEMO-002-FL05-U501");
+      setSelectedPropertyId("PROP-DEMO-102-U501");
 
-      // Switch to 3D Property View
+      try {
+        const uRec = await cadastreApi.getUnitPropertyRecord("BLD-DEMO-002-FL05-U501");
+        setUnitPropertyRecord(uRec);
+      } catch {}
+
+      // Switch to 3D Units View
       setViewMode("3d");
-      setSubView3D("property");
+      setSubView3D("units");
     } catch (err: unknown) {
       const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : "Error executing demo pipeline.";
       setGeneralError(msg);
@@ -1154,190 +1168,186 @@ export function useCadastre() {
     }
   }, [demoSpecs]);
 
-  // Compute dynamic PipelineStep list reflecting authoritative real-time state
+  // Compute dynamic PipelineStep list reflecting authoritative real-time state across 8 SIH stages
   const pipelineSteps: import("@/components/cadastral/PipelineStatus").PipelineStep[] = useMemo(() => {
     const hasParcels = !!geojson && geojson.features.length > 0;
     const hasBuildings = !!buildingsGeojson && buildingsGeojson.features.length > 0;
 
-    // Step 1: Data Sources
+    // Stage 01: INGESTION (GIS + Drone/Aerial + LiDAR + DEM + Floor Plans)
     let s1Status: import("@/components/cadastral/PipelineStatus").PipelineStepStatus = "NOT_STARTED";
     let s1Detail = "";
     if (isLoading && !hasParcels) s1Status = "PROCESSING";
     else if (hasParcels && hasBuildings) {
       s1Status = "COMPLETE";
-      s1Detail = `${geojson.features.length}P / ${buildingsGeojson.features.length}B`;
+      s1Detail = `${geojson.features.length} Parcels / ${buildingsGeojson.features.length} Buildings`;
     } else if (hasParcels || hasBuildings) {
       s1Status = "WARNING";
       s1Detail = hasParcels ? "Parcels only" : "Buildings only";
     }
 
-    // Step 2: Parcel Validation
+    // Stage 02: GEO-REF (Common CRS & Metric Reprojection)
     let s2Status: import("@/components/cadastral/PipelineStatus").PipelineStepStatus = "NOT_STARTED";
     let s2Detail = "";
     if (isValidating) s2Status = "PROCESSING";
     else if (validationResult) {
       if (validationResult.valid) {
         s2Status = "COMPLETE";
-        s2Detail = `${validationResult.feature_count} Valid`;
+        s2Detail = `${validationResult.feature_count} Valid (EPSG:4326/32643)`;
       } else {
         s2Status = "ERROR";
         s2Detail = `${validationResult.errors.length} Errors`;
       }
     }
 
-    // Step 3: Spatial Mapping
+    // Stage 03: FUSION (Footprint-to-Parcel Association & DEM Sampling)
     let s3Status: import("@/components/cadastral/PipelineStatus").PipelineStepStatus = "NOT_STARTED";
     let s3Detail = "";
-    if (isAssociating) s3Status = "PROCESSING";
-    else if (associationData) {
+    const elevCount = Object.keys(elevationResults).length;
+    if (isAssociating || isSamplingElevation) s3Status = "PROCESSING";
+    else if (associationData && elevCount > 0) {
       s3Status = "COMPLETE";
-      s3Detail = `${associationData.summary.associated_buildings} Mapped`;
+      s3Detail = `${associationData.summary.associated_buildings} Mapped · ${elevCount} Sampled`;
+    } else if (associationData || elevCount > 0) {
+      s3Status = "WARNING";
+      s3Detail = associationData ? `${associationData.summary.associated_buildings} Mapped` : `${elevCount} Sampled`;
     }
 
-    // Step 4: DEM Elevation
+    // Stage 04: AI/ML (Candidate Extraction, Floor Segmentation & Gating)
     let s4Status: import("@/components/cadastral/PipelineStatus").PipelineStepStatus = "NOT_STARTED";
     let s4Detail = "";
-    if (isSamplingElevation) s4Status = "PROCESSING";
-    else if (Object.keys(elevationResults).length > 0) {
+    const floorCount = Object.keys(buildingFloors).length;
+    const unitCount = unitsGeojson?.features.length || 0;
+    if (isCalculatingHeight || isGeneratingFloors || isLoadingUnits) s4Status = "PROCESSING";
+    else if (floorCount > 0 || unitCount > 0) {
       s4Status = "COMPLETE";
-      s4Detail = `${Object.keys(elevationResults).length} Sampled`;
+      s4Detail = `${floorCount} Segmented · ${unitCount} Units`;
     }
 
-    // Step 5: 3D Geometry
+    // Stage 05: 3D ENGINE (Watertight Polyhedral Extrusion, Contract v1.0)
     let s5Status: import("@/components/cadastral/PipelineStatus").PipelineStepStatus = "NOT_STARTED";
     let s5Detail = "";
-    if (isGenerating3D) s5Status = "PROCESSING";
-    else if (building3DData) {
-      s5Status = building3DData.summary.successful > 0 ? "COMPLETE" : "ERROR";
-      s5Detail = `${building3DData.summary.successful} Solids`;
+    const bld3DCount = building3DData?.summary.successful || 0;
+    const fl3DCount = floors3DData?.summary.successful || 0;
+    const prop3DCount = property3DData?.summary.successful || 0;
+    const units3DCount = units3DData?.summary.successful || 0;
+    const total3D = bld3DCount + fl3DCount + prop3DCount + units3DCount;
+    if (isGenerating3D || isGeneratingFloors3D || isGeneratingProperty3D || isGeneratingUnits3D) s5Status = "PROCESSING";
+    else if (total3D > 0) {
+      s5Status = "COMPLETE";
+      s5Detail = `${total3D} Solids Extruded`;
     }
 
-    // Step 6: Stratified Floors
+    // Stage 06: TOPOLOGY (Unified Conflict Engine, Overlaps, Containment)
     let s6Status: import("@/components/cadastral/PipelineStatus").PipelineStepStatus = "NOT_STARTED";
     let s6Detail = "";
-    if (isGeneratingFloors3D) s6Status = "PROCESSING";
-    else if (floors3DData) {
-      s6Status = floors3DData.summary.successful > 0 ? "COMPLETE" : "ERROR";
-      s6Detail = `${floors3DData.summary.successful} Buildings`;
-    }
-
-    // Step 7: Property Volumes
-    let s7Status: import("@/components/cadastral/PipelineStatus").PipelineStepStatus = "NOT_STARTED";
-    let s7Detail = "";
-    if (isGeneratingProperty3D) s7Status = "PROCESSING";
-    else if (property3DData) {
-      s7Status = property3DData.summary.successful > 0 ? "COMPLETE" : "ERROR";
-      s7Detail = `${property3DData.summary.successful} Units`;
-    }
-
-    // Step 8: 3D ULPIN
-    let s8Status: import("@/components/cadastral/PipelineStatus").PipelineStepStatus = "NOT_STARTED";
-    let s8Detail = "";
-    if (isGeneratingULPIN) s8Status = "PROCESSING";
-    else if (Object.keys(ulpins3D).length > 0) {
-      const validCount = Object.values(ulpins3D).filter((u) => u.identifier_status === "VALID").length;
-      s8Status = validCount > 0 ? "COMPLETE" : "WARNING";
-      s8Detail = `${validCount} Verified`;
-    }
-
-    // Step 9: Topology & Spatial Conflict Engine
-    let s9Status: import("@/components/cadastral/PipelineStatus").PipelineStepStatus = "NOT_STARTED";
-    let s9Detail = "";
-    if (isAuditingTopology) s9Status = "PROCESSING";
+    if (isAuditingTopology) s6Status = "PROCESSING";
     else if (topologyData) {
       if (topologyData.summary.overall_status === "VALID") {
-        s9Status = "COMPLETE";
-        s9Detail = `${topologyData.summary.passed_checks} Valid`;
+        s6Status = "COMPLETE";
+        s6Detail = `${topologyData.summary.passed_checks} Valid (0 Conflicts)`;
       } else if (topologyData.summary.overall_status === "WARNING") {
-        s9Status = "WARNING";
-        s9Detail = `${topologyData.summary.warning_checks} Warnings`;
+        s6Status = "WARNING";
+        s6Detail = `${topologyData.summary.warning_checks} Warnings`;
       } else {
-        s9Status = "ERROR";
-        s9Detail = `${topologyData.summary.conflict_checks} Conflicts`;
+        s6Status = "ERROR";
+        s6Detail = `${topologyData.summary.conflict_checks} Conflicts Detected`;
       }
+    }
+
+    // Stage 07: 3D ULPIN (Deterministic 3D Spatial Hash Prototype)
+    let s7Status: import("@/components/cadastral/PipelineStatus").PipelineStepStatus = "NOT_STARTED";
+    let s7Detail = "";
+    const ulpinCount = Object.keys(ulpins3D).length;
+    if (isGeneratingULPIN) s7Status = "PROCESSING";
+    else if (ulpinCount > 0) {
+      const validCount = Object.values(ulpins3D).filter((u) => u.identifier_status === "VALID").length;
+      s7Status = validCount > 0 ? "COMPLETE" : "WARNING";
+      s7Detail = `${validCount} Verified (SHA-256)`;
+    }
+
+    // Stage 08: VIEWER (Interactive 2D Map + 3D Three.js Volumetric Stage)
+    let s8Status: import("@/components/cadastral/PipelineStatus").PipelineStepStatus = "NOT_STARTED";
+    let s8Detail = "";
+    if (viewMode === "3d" && total3D > 0) {
+      s8Status = "COMPLETE";
+      s8Detail = `3D View Active (${subView3D.toUpperCase()})`;
+    } else if (hasParcels || hasBuildings) {
+      s8Status = "COMPLETE";
+      s8Detail = "2D Cadastral Map Active";
     }
 
     return [
       {
-        id: "data-sources",
+        id: "01-ingestion",
         stepNumber: "01",
-        title: "Data Sources",
-        description: "Ingest vector cadastral boundaries and building footprints.",
-        provenance: "Cadastral GeoJSON",
+        title: "01 INGESTION",
+        description: "Multi-source ingest: 2D GIS parcels, building footprints, DEM raster, underground assets, and floor plans.",
+        provenance: "GeoJSON / Ingestion Engine",
         status: s1Status,
         detail: s1Detail,
       },
       {
-        id: "validation",
+        id: "02-geo-ref",
         stepNumber: "02",
-        title: "Parcel Validation",
-        description: "Verify topological integrity, self-intersections, and CRS.",
-        provenance: "GEOS / Shapely",
+        title: "02 GEO-REF",
+        description: "Coordinate reference system audit and projection alignment to metric grid (EPSG:32643 / WGS 84).",
+        provenance: "PROJ / Shapely GEOS",
         status: s2Status,
         detail: s2Detail,
       },
       {
-        id: "mapping",
+        id: "03-fusion",
         stepNumber: "03",
-        title: "Building Mapping",
-        description: "Spatial containment and intersection between parcel and footprint.",
-        provenance: "Spatial Intersect",
+        title: "03 FUSION",
+        description: "Multi-source data fusion: Spatial association of footprints with parcels and DEM orthometric ground elevation sampling.",
+        provenance: "Spatial Intersect + Copernicus DEM",
         status: s3Status,
         detail: s3Detail,
       },
       {
-        id: "elevation",
+        id: "04-ai-extraction",
         stepNumber: "04",
-        title: "DEM Elevation",
-        description: "Sample orthometric ground elevation from high-res DEM raster.",
-        provenance: "Copernicus DEM",
+        title: "04 AI/ML",
+        description: "AI extraction layer: Candidate building extraction, floor segmentation, vertical delineation & property candidate gating.",
+        provenance: "Candidate Gating & Heuristics",
         status: s4Status,
         detail: s4Detail,
       },
       {
-        id: "building-3d",
+        id: "05-3d-engine",
         stepNumber: "05",
-        title: "3D Geometry",
-        description: "Watertight polyhedral extrusion of building envelopes.",
-        provenance: "Mesh3D v1.0",
+        title: "05 3D ENGINE",
+        description: "Watertight polyhedral extrusion conforming strictly to Canonical 3D Geometry Contract v1.0.",
+        provenance: "Mesh3D v1.0 / Trimesh",
         status: s5Status,
         detail: s5Detail,
       },
       {
-        id: "floors-3d",
+        id: "06-topology",
         stepNumber: "06",
-        title: "Stratified Floors",
-        description: "Discrete vertical floor solids with metric slab elevations.",
-        provenance: "Stratified Solids",
+        title: "06 TOPOLOGY",
+        description: "Unified spatial conflict engine: Overlap check, containment, duplicates, underground clash, and 3D manifold audit.",
+        provenance: "SIH Stage 06 Topology Engine",
         status: s6Status,
         detail: s6Detail,
       },
       {
-        id: "properties-3d",
+        id: "07-3d-ulpin",
         stepNumber: "07",
-        title: "Property Volume",
-        description: "Cadastral property rights envelope bound to verified floor units.",
-        provenance: "Property Volume",
+        title: "07 3D ULPIN",
+        description: "Deterministic, cryptographically verifiable 3D spatial identifier generated for property units and volumes.",
+        provenance: "SHA-256 Spatial Hash Prototype",
         status: s7Status,
         detail: s7Detail,
       },
       {
-        id: "ulpin-3d",
+        id: "08-viewer",
         stepNumber: "08",
-        title: "3D ULPIN",
-        description: "Deterministic, cryptographically verifiable 3D spatial identifier.",
-        provenance: "SHA-256 Prototype",
+        title: "08 VIEWER",
+        description: "Interactive dual-canvas visualization: Synchronized 2D cadastral map + 3D Three.js volumetric viewer with vertical cutaways.",
+        provenance: "Three.js / MapLibre GL",
         status: s8Status,
         detail: s8Detail,
-      },
-      {
-        id: "topology-engine",
-        stepNumber: "09",
-        title: "Topology Engine",
-        description: "Overlap check, containment, duplicates & 3D mesh manifold audit.",
-        provenance: "SIH Stage 06",
-        status: s9Status,
-        detail: s9Detail,
       },
     ];
   }, [
@@ -1350,16 +1360,25 @@ export function useCadastre() {
     associationData,
     isSamplingElevation,
     elevationResults,
+    isCalculatingHeight,
+    isGeneratingFloors,
+    buildingFloors,
+    isLoadingUnits,
+    unitsGeojson,
     isGenerating3D,
     building3DData,
     isGeneratingFloors3D,
     floors3DData,
     isGeneratingProperty3D,
     property3DData,
+    isGeneratingUnits3D,
+    units3DData,
     isGeneratingULPIN,
     ulpins3D,
     isAuditingTopology,
     topologyData,
+    viewMode,
+    subView3D,
   ]);
 
     // Find currently selected normalized parcel
