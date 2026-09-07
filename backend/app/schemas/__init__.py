@@ -9,6 +9,10 @@ from app.schemas.unit import (
     UnitBatchValidationRequest,
     UnitBatchValidationResponse,
     UnitPropertyRecord,
+    Unit3DRequest,
+    BatchUnit3DRequest,
+    Unit3DResult,
+    GenerateUnits3DResponse,
 )
 
 __all__ = [
@@ -22,4 +26,8 @@ __all__ = [
     "UnitBatchValidationRequest",
     "UnitBatchValidationResponse",
     "UnitPropertyRecord",
+    "Unit3DRequest",
+    "BatchUnit3DRequest",
+    "Unit3DResult",
+    "GenerateUnits3DResponse",
 ]

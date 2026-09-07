@@ -521,11 +521,12 @@ class FloorVolumeService:
         cls,
         req: PropertyVolumeRequest,
         building_floors_map: Dict[str, BuildingFloors3DResult],
+        units_map: Optional[Dict[str, Any]] = None,
     ) -> PropertyVolumeResult:
         """
-        Deterministically constructs a 3D Property Volume from referenced building and floor solids.
+        Deterministically constructs a 3D Property Volume from referenced building, floor, or unit solids.
         Validates hierarchy:
-            PARCEL -> BUILDING -> FLOOR -> PROPERTY_VOLUME
+            PARCEL -> BUILDING -> FLOOR -> [UNIT] -> PROPERTY_VOLUME
         """
         warnings: List[str] = []
 
@@ -583,7 +584,202 @@ class FloorVolumeService:
                     warnings=warnings,
                 )
 
-        # 3. Match constituent floors & Check Duplicate Components
+        # 3A. Constituent Unit Components Aggregation (Step 17)
+        if req.unit_ids:
+            if len(req.unit_ids) != len(set(req.unit_ids)):
+                dups = [uid for uid in set(req.unit_ids) if req.unit_ids.count(uid) > 1]
+                warnings.append(f"DUPLICATE_COMPONENT: Duplicate unit components detected in property request: {dups}")
+                return PropertyVolumeResult(
+                    property_id=req.property_id,
+                    parcel_id=req.parcel_id,
+                    building_id=primary_bid,
+                    building_ids=target_building_ids,
+                    floor_ids=req.floor_ids,
+                    volume_type=req.volume_type,
+                    unit_name=req.unit_name,
+                    geometry_status=Geometry3DStatus.INVALID,
+                    warnings=warnings,
+                )
+
+            if not units_map:
+                warnings.append("PROPERTY_VOLUME_INCOMPLETE_COMPONENTS: No unit 3D models available for unit-based property volume.")
+                return PropertyVolumeResult(
+                    property_id=req.property_id,
+                    parcel_id=req.parcel_id,
+                    building_id=primary_bid,
+                    building_ids=target_building_ids,
+                    floor_ids=req.floor_ids,
+                    volume_type=req.volume_type,
+                    unit_name=req.unit_name,
+                    geometry_status=Geometry3DStatus.UNAVAILABLE,
+                    warnings=warnings,
+                )
+
+            matched_units = []
+            for uid in req.unit_ids:
+                u = units_map.get(uid)
+                if not u:
+                    warnings.append(f"PROPERTY_VOLUME_INCOMPLETE_COMPONENTS: Unit '{uid}' not found in unit models.")
+                    return PropertyVolumeResult(
+                        property_id=req.property_id,
+                        parcel_id=req.parcel_id,
+                        building_id=primary_bid,
+                        building_ids=target_building_ids,
+                        floor_ids=req.floor_ids,
+                        volume_type=req.volume_type,
+                        unit_name=req.unit_name,
+                        geometry_status=Geometry3DStatus.UNAVAILABLE,
+                        warnings=warnings,
+                    )
+                if u.geometry_status == Geometry3DStatus.UNAVAILABLE or not u.geometry:
+                    warnings.append(f"PROPERTY_VOLUME_INCOMPLETE_COMPONENTS: Unit '{uid}' geometry is UNAVAILABLE.")
+                    return PropertyVolumeResult(
+                        property_id=req.property_id,
+                        parcel_id=req.parcel_id,
+                        building_id=primary_bid,
+                        building_ids=target_building_ids,
+                        floor_ids=req.floor_ids,
+                        volume_type=req.volume_type,
+                        unit_name=req.unit_name,
+                        geometry_status=Geometry3DStatus.UNAVAILABLE,
+                        warnings=warnings,
+                    )
+                if u.geometry_status == Geometry3DStatus.INVALID:
+                    warnings.append(f"PROPERTY_VOLUME_INCOMPLETE_COMPONENTS: Unit '{uid}' geometry is INVALID.")
+                    return PropertyVolumeResult(
+                        property_id=req.property_id,
+                        parcel_id=req.parcel_id,
+                        building_id=primary_bid,
+                        building_ids=target_building_ids,
+                        floor_ids=req.floor_ids,
+                        volume_type=req.volume_type,
+                        unit_name=req.unit_name,
+                        geometry_status=Geometry3DStatus.INVALID,
+                        warnings=warnings,
+                    )
+                if u.building_id not in target_building_ids:
+                    warnings.append(f"PROPERTY_VOLUME_INCOMPLETE_COMPONENTS: Unit '{uid}' does not belong to building(s) {target_building_ids}.")
+                    return PropertyVolumeResult(
+                        property_id=req.property_id,
+                        parcel_id=req.parcel_id,
+                        building_id=primary_bid,
+                        building_ids=target_building_ids,
+                        floor_ids=req.floor_ids,
+                        volume_type=req.volume_type,
+                        unit_name=req.unit_name,
+                        geometry_status=Geometry3DStatus.UNAVAILABLE,
+                        warnings=warnings,
+                    )
+                if u.parcel_id != req.parcel_id:
+                    warnings.append(f"Parcel mismatch: Unit '{uid}' parcel '{u.parcel_id}' differs from '{req.parcel_id}'.")
+                    return PropertyVolumeResult(
+                        property_id=req.property_id,
+                        parcel_id=req.parcel_id,
+                        building_id=primary_bid,
+                        building_ids=target_building_ids,
+                        floor_ids=req.floor_ids,
+                        volume_type=req.volume_type,
+                        unit_name=req.unit_name,
+                        geometry_status=Geometry3DStatus.INVALID,
+                        warnings=warnings,
+                    )
+                matched_units.append(u)
+
+            # Deterministic sorting
+            matched_units = sorted(
+                matched_units,
+                key=lambda x: (x.building_id, x.floor_id, x.unit_number, x.unit_id)
+            )
+
+            # Construct composite Mesh3DCollection of unit solids
+            property_parts: List[Mesh3D] = []
+            total_vol = 0.0
+            total_area = 0.0
+            all_vx: List[float] = []
+            all_vy: List[float] = []
+            all_vz: List[float] = []
+            part_counter = 0
+
+            for u in matched_units:
+                if not u.geometry:
+                    continue
+                for part in u.geometry.parts:
+                    prop_part = Mesh3D(
+                        feature_id=f"{req.property_id}_part_{part_counter}",
+                        feature_type=FeatureType.PROPERTY_VOLUME,
+                        geometry_type=GeometryType.SOLID,
+                        vertices=part.vertices,
+                        faces=part.faces,
+                        coordinate_reference=part.coordinate_reference,
+                        units=part.units,
+                        bounds=part.bounds,
+                        winding=part.winding,
+                        surface_area_sqm=part.surface_area_sqm,
+                        volume_cubic_m=part.volume_cubic_m,
+                    )
+                    property_parts.append(prop_part)
+                    total_vol += part.volume_cubic_m
+                    total_area += part.surface_area_sqm
+                    for v in part.vertices:
+                        all_vx.append(v[0])
+                        all_vy.append(v[1])
+                        all_vz.append(v[2])
+                    part_counter += 1
+
+            if not property_parts:
+                return PropertyVolumeResult(
+                    property_id=req.property_id,
+                    parcel_id=req.parcel_id,
+                    building_id=primary_bid,
+                    building_ids=target_building_ids,
+                    floor_ids=list(dict.fromkeys(u.floor_id for u in matched_units)),
+                    volume_type=req.volume_type,
+                    unit_name=req.unit_name,
+                    geometry_status=Geometry3DStatus.UNAVAILABLE,
+                    warnings=["No mesh parts available in constituent units."],
+                )
+
+            bounds_3d = Bounds3D(
+                min=[round(min(all_vx), 3), round(min(all_vy), 3), round(min(all_vz), 3)],
+                max=[round(max(all_vx), 3), round(max(all_vy), 3), round(max(all_vz), 3)],
+            )
+
+            collection = Mesh3DCollection(
+                parts=property_parts,
+                bounds=bounds_3d,
+                total_volume_cubic_m=round(total_vol, 3),
+                total_surface_area_sqm=round(total_area, 3),
+            )
+
+            base_elev = min(u.base_elevation for u in matched_units if u.base_elevation is not None)
+            top_elev = max(u.top_elevation for u in matched_units if u.top_elevation is not None)
+            tot_h = round(top_elev - base_elev, 3)
+            constituent_floor_ids = list(dict.fromkeys(u.floor_id for u in matched_units))
+
+            warnings.append(
+                "DERIVED_SPATIAL_EXTENT: 3D property-volume representation derived from available spatial evidence (not a legal determination of ownership)."
+            )
+
+            return PropertyVolumeResult(
+                property_id=req.property_id,
+                parcel_id=req.parcel_id,
+                building_id=primary_bid,
+                building_ids=target_building_ids,
+                floor_ids=constituent_floor_ids,
+                volume_type=req.volume_type,
+                unit_name=req.unit_name,
+                base_elevation=round(base_elev, 3),
+                top_elevation=round(top_elev, 3),
+                total_height=tot_h,
+                footprint_area=round(sum(u.footprint_area or 0.0 for u in matched_units), 3),
+                volume_cubic_m=round(total_vol, 3),
+                surface_area_sqm=round(total_area, 3),
+                geometry_status=Geometry3DStatus.VALID,
+                geometry=collection,
+                warnings=warnings,
+            )
+
+        # 3B. Match constituent floors & Check Duplicate Components
         if req.floor_ids and len(req.floor_ids) != len(set(req.floor_ids)):
             dups = [fid for fid in set(req.floor_ids) if req.floor_ids.count(fid) > 1]
             warnings.append(f"DUPLICATE_COMPONENT: Duplicate floor components detected in property request: {dups}")
@@ -821,6 +1017,7 @@ class FloorVolumeService:
         cls,
         batch_req: BatchPropertyVolumeRequest,
         building_floors_map: Dict[str, BuildingFloors3DResult],
+        units_map: Optional[Dict[str, Any]] = None,
     ) -> GeneratePropertyVolumeResponse:
         """
         Batch processing for multi-property 3D volume generation.
@@ -830,7 +1027,7 @@ class FloorVolumeService:
         failed = 0
 
         for prop_req in batch_req.properties:
-            res = cls.generate_property_volume(prop_req, building_floors_map)
+            res = cls.generate_property_volume(prop_req, building_floors_map, units_map=units_map)
             if res.geometry_status == Geometry3DStatus.VALID:
                 successful += 1
             else:

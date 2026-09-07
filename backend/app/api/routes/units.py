@@ -11,6 +11,10 @@ from app.schemas.unit import (
     UnitBatchValidationResponse,
     UnitPropertyRecord,
     UnitStatus,
+    Unit3DRequest,
+    BatchUnit3DRequest,
+    Unit3DResult,
+    GenerateUnits3DResponse,
 )
 from app.services.unit_service import UnitService
 from app.core.logging import logger
@@ -132,3 +136,54 @@ async def get_unit_property_record(unit_id: str):
         )
 
     return UnitService.create_property_record(matching)
+
+
+@router.post("/generate-3d", response_model=GenerateUnits3DResponse, summary="Generate 3D Unit Solids")
+async def generate_units_3d(request: BatchUnit3DRequest):
+    """
+    Generates closed, watertight 3D polyhedral solids for requested units conforming to 3D Geometry Contract v1.0.
+    Enforces same-floor non-overlap and isolated error handling.
+    """
+    return UnitService.generate_batch_units_3d(request)
+
+
+@router.get("/demo-3d", response_model=GenerateUnits3DResponse, summary="Get Synthetic Demo Units in 3D")
+async def get_demo_units_3d():
+    """
+    Generates and returns canonical 3D solids for the reference synthetic demo units on Tower 1 Floor 5.
+    """
+    demo_units = load_demo_units_from_disk()
+    if not demo_units:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Synthetic demo units dataset not found on disk."
+        )
+
+    unit_reqs = [
+        Unit3DRequest(
+            unit_id=u.unit_id,
+            property_id=u.property_id,
+            parcel_id=u.parcel_id,
+            building_id=u.building_id,
+            floor_id=u.floor_id,
+            unit_number=u.unit_number,
+            unit_name=u.unit_name,
+            unit_type=u.unit_type,
+            geometry_2d=u.geometry_2d,
+            base_elevation=u.base_elevation,
+            top_elevation=u.top_elevation,
+            height=u.height,
+            parent_floor_base=577.48,
+            parent_floor_top=580.48,
+            source_crs="EPSG:4326",
+            target_crs="EPSG:32643",
+        )
+        for u in demo_units
+    ]
+
+    batch_req = BatchUnit3DRequest(
+        units=unit_reqs,
+        target_crs="EPSG:32643",
+        compute_shared_origin=True,
+    )
+    return UnitService.generate_batch_units_3d(batch_req)

@@ -22,6 +22,10 @@ export function ViewerLegend() {
           <span className="text-slate-300">Property Volume</span>
         </div>
         <div className="flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-sm bg-cyan-400/90 border border-cyan-300" />
+          <span className="text-slate-300">Apartment Unit</span>
+        </div>
+        <div className="flex items-center gap-1.5">
           <span className="h-2.5 w-2.5 rounded-sm bg-amber-400 border border-amber-300" />
           <span className="text-amber-200">Selected / Active</span>
         </div>

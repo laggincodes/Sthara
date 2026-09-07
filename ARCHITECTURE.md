@@ -151,6 +151,7 @@ backend/
 │       ├── elevation_service.py  # Rasterio DEM inspection & centroid elevation extraction
 │       ├── building_height_service.py # Structural height subtraction & deterministic floor slicing
 │       ├── floor_volume_service.py   # 3D floor solid extrusion, priority 1-3 elevation slicing, watertight verification, and property volume aggregation
+│       ├── unit_service.py           # Unit validation, party-wall touching analysis, and watertight 3D solid extrusion
 │       ├── parcel_normalizer.py  # Authoritative ID extraction & centroid derivation
 │       ├── crs_service.py        # CRS validation, UTM projection, metric conversion
 │       ├── extrusion_service.py  # 2D polygon to 3D polyhedral mesh computation
@@ -200,10 +201,12 @@ backend/
    - Client receives a structured JSON with `vertices` (flat Float32 array) and `indices` (Uint16 array).
 3. **Shader & Material Encoding**:
    - **Surface Parcel Column**: Translucent dashed boundary pillar wireframe.
-   - **Valid Building Units**: Semi-transparent cyan/slate material (`roughness: 0.2`, `metalness: 0.1`, `opacity: 0.7`).
+   - **Valid Building Footprints / Floors**: Semi-transparent cyan/slate material (`roughness: 0.2`, `metalness: 0.1`, `opacity: 0.7`).
+   - **Apartment Units**: Distinctive cyan translucent volume (`#06b6d4`, `opacity: 0.65`) with bright cyan edge highlighting (`#22d3ee`), amber selection halo (`#f59e0b`).
    - **Basement Volumes**: Translucent amber tone below the ground plane grid.
    - **Encroachment Clashes**: High-visibility pulsating red wireframe highlight.
-4. **Interactive Exploded View**:
+4. **Interactive Exploded View & Sub-Views**:
+   - The 3D viewer supports 4 distinct inspection sub-views: `Buildings`, `Floors`, `Property Volumes`, and `Apartment Units`.
    - Users can drag a vertical slider in the UI to apply a progressive displacement along the local vertical axis:
      $$y_{display} = y_{local} + (\text{floor\_index} \times \text{explode\_factor})$$
 

@@ -902,3 +902,83 @@ Base URL: `http://localhost:8000/api/v1`
 - **Route**: `GET /units/property-record/{unit_id}`
 - **Purpose**: Generates a conceptual 3D Property Record for an apartment unit with explicit non-ownership legal disclaimer.
 - **Response**: `UnitPropertyRecord`
+
+### 9.7 Generate 3D Unit Volumes (Polyhedral Mesh Extrusion)
+- **Route**: `POST /units/generate-3d`
+- **Purpose**: Extrudes 2D unit footprint boundaries into closed, watertight 2-manifold `Mesh3D` polyhedral solids (`feature_type="UNIT"`). Performs mutual non-overlap verification across units on the same floor (allowing shared party-wall touching) and validates closed solid mesh volumes against analytical prism volumes ($A_{footprint} \times h$).
+- **Request**: `BatchUnit3DRequest`
+  ```json
+  {
+    "units": [
+      {
+        "unit_id": "BLD-DEMO-002-FL05-U501",
+        "unit_number": "501",
+        "floor_id": "BLD-DEMO-002-FL05",
+        "building_id": "BLD-DEMO-002",
+        "footprint_geometry": {
+          "type": "Polygon",
+          "coordinates": [[[73.8568, 18.5204], [73.8569, 18.5204], [73.8569, 18.5205], [73.8568, 18.5205], [73.8568, 18.5204]]]
+        },
+        "base_elevation": 577.48,
+        "top_elevation": 580.48,
+        "height": 3.0,
+        "parent_floor_base": 577.48,
+        "parent_floor_top": 580.48,
+        "source_crs": "EPSG:4326",
+        "target_crs": "EPSG:32643"
+      }
+    ],
+    "target_crs": "EPSG:32643",
+    "compute_shared_origin": true
+  }
+  ```
+- **Response**: `200 OK` (`GenerateUnits3DResponse` conforming to Canonical 3D Geometry Contract v1.0)
+  ```json
+  {
+    "schema_version": "1.0",
+    "results": [
+      {
+        "unit_id": "BLD-DEMO-002-FL05-U501",
+        "unit_number": "501",
+        "floor_id": "BLD-DEMO-002-FL05",
+        "building_id": "BLD-DEMO-002",
+        "geometry_status": "VALID",
+        "unit": {
+          "unit_id": "BLD-DEMO-002-FL05-U501",
+          "unit_number": "501",
+          "floor_id": "BLD-DEMO-002-FL05",
+          "building_id": "BLD-DEMO-002",
+          "base_elevation": 577.48,
+          "top_elevation": 580.48,
+          "height": 3.0,
+          "footprint_area_sqm": 85.2
+        },
+        "geometry": {
+          "feature_id": "BLD-DEMO-002-FL05-U501",
+          "feature_type": "UNIT",
+          "geometry_type": "SOLID",
+          "vertices": [[...]],
+          "faces": [[...]],
+          "bounds": { "min": [...], "max": [...] },
+          "winding": "COUNTER_CLOCKWISE",
+          "volume_cubic_m": 255.6,
+          "surface_area_sqm": 128.4
+        },
+        "warnings": []
+      }
+    ],
+    "summary": {
+      "requested": 1,
+      "successful": 1,
+      "failed": 0
+    },
+    "warnings": []
+  }
+  ```
+
+### 9.8 Extrude Preloaded Demo Unit Solids
+- **Route**: `GET /units/demo-3d`
+- **Purpose**: Generates canonical 3D extruded solids for all synthetic reference units in `data/processed/demo_units.geojson` (Units 501, 502, 503, 504 on Floor 5 of `BLD-DEMO-002`) with a shared local coordinate origin.
+- **Request**: None
+- **Response**: `200 OK` (`GenerateUnits3DResponse`)
+

@@ -6,12 +6,13 @@ export interface ViewerLayers {
   buildings: boolean;
   floors: boolean;
   properties: boolean;
+  units: boolean;
   grid: boolean;
 }
 
 export interface ViewerControlsProps {
-  subView: "building" | "floors" | "property";
-  onChangeSubView: (mode: "building" | "floors" | "property") => void;
+  subView: "building" | "floors" | "property" | "units";
+  onChangeSubView: (mode: "building" | "floors" | "property" | "units") => void;
   layers: ViewerLayers;
   onToggleLayer: (layer: keyof ViewerLayers) => void;
   isWireframe: boolean;
@@ -23,6 +24,7 @@ export interface ViewerControlsProps {
   onSwitchTo2D?: () => void;
   hasFloorsData: boolean;
   hasPropertiesData: boolean;
+  hasUnitsData?: boolean;
 }
 
 export function ViewerControls({
@@ -39,6 +41,7 @@ export function ViewerControls({
   onSwitchTo2D,
   hasFloorsData,
   hasPropertiesData,
+  hasUnitsData = false,
 }: ViewerControlsProps) {
   return (
     <div className="absolute top-3 left-3 right-3 z-10 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
@@ -81,6 +84,18 @@ export function ViewerControls({
           >
             Property Volumes
           </button>
+          <button
+            type="button"
+            onClick={() => onChangeSubView("units")}
+            disabled={!hasUnitsData}
+            className={`px-2.5 py-1 rounded transition-colors font-medium disabled:opacity-40 ${
+              subView === "units"
+                ? "bg-cyan-500 text-white shadow-sm"
+                : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            Apartment Units
+          </button>
         </div>
 
         <div className="h-4 w-px bg-slate-800 mx-0.5" />
@@ -116,8 +131,8 @@ export function ViewerControls({
           Grid
         </button>
 
-        {/* Exploded Floor Slider (Visible in Floors & Property modes) */}
-        {(subView === "floors" || subView === "property") && (
+        {/* Exploded Floor Slider (Visible in Floors, Property & Units modes) */}
+        {(subView === "floors" || subView === "property" || subView === "units") && (
           <div className="flex items-center gap-1.5 pl-1.5 border-l border-slate-800">
             <span className="text-[9px] font-mono text-slate-400 whitespace-nowrap">
               Explode:

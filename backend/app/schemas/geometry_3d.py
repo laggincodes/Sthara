@@ -17,6 +17,7 @@ class FeatureType(str, Enum):
     FLOOR = "FLOOR"
     PROPERTY_VOLUME = "PROPERTY_VOLUME"
     UNDERGROUND = "UNDERGROUND"
+    UNIT = "UNIT"
 
 
 class GeometryType(str, Enum):
