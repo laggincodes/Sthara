@@ -465,3 +465,36 @@ Conforming to Stage 06 of the SIH technical approach (06 TOPOLOGY: Overlap Check
 3. **Non-Destructive Conflict Guarantees**:
    - The engine never mutates, shifts, or silently clips geometry.
    - All violations are emitted as structured, immutable `TopologyConflictRecord` objects with quantitative metrics and actionable engineering recommendations.
+
+## 5F. Real Multi-Source End-to-End Validation Architecture (Step 23)
+
+Proves the complete end-to-end multi-source cadastral pipeline across both authentic real-world observations and synthetic cadastral data without simulating fake completeness or fabricating missing datasets:
+
+$$\text{DATA INGESTION} \rightarrow \text{GEOREFERENCING} \rightarrow \text{FUSION} \rightarrow \text{AI EXTRACTION} \rightarrow \text{3D MODELLING} \rightarrow \text{TOPOLOGY} \rightarrow \text{PROPERTY/UNIT VOLUME} \rightarrow \text{3D ULPIN} \rightarrow \text{VIEWER}$$
+
+1. **Multi-Source Data Classification & Ingestion**:
+   - **Real Physical Surface Data**: 155 building footprints from crowd-sourced OpenStreetMap data in Tagore Garden, New Delhi (`map.osm` & `osm_buildings.geojson`).
+   - **Synthetic Cadastral Stack**: Authoritative parcels, multi-storey buildings, DEM GeoTIFF, and stratified apartment units in the Pune testbed.
+   - **Transparent Gap Handling**: Unsupplied real sources (airborne LiDAR `.las/.laz`, architectural CAD/BIM floor plans, GNSS RINEX observation streams, municipal subsurface utility registers, and Delhi parcel cadastre) are explicitly declared as `UNAVAILABLE`.
+   - **Pipeline Fusion Status**: Designated as `PARTIAL` with quality level `LIMITED`, refusing to fake "complete" data.
+
+2. **Geodetic Harmonization & Preserved Provenance**:
+   - Both regional datasets are reprojected into a common metric coordinate reference system (`EPSG:32643` - UTM Zone 43N).
+   - Original source CRS (`EPSG:4326`) and unprojected geometries are preserved in metadata for full auditability.
+
+3. **Honest Spatial Disjoint Evaluation**:
+   - Evaluates genuine geographic separation between New Delhi and Pune (~1174 km).
+   - Reports pairwise relationship as `DISJOINT` with `overlap_percentage = 0.0%` and verdict `NO_OVERLAP`.
+   - Strictly prohibits artificial coordinate shifts or synthetic translations.
+
+4. **Cadastral Isolation for Physical Observations**:
+   - Real OSM buildings are designated as non-cadastral physical surface observations (`is_cadastral = False`, `legal_status = "UNVERIFIED_PHYSICAL_SURFACE"`).
+   - Physical buildings are extruded into valid 3D polyhedral solids under Canonical 3D Geometry Contract v1.0, but are strictly barred from receiving cadastral property ULPIN identifiers.
+   - Authoritative 3D ULPIN prototypes are restricted to verified parcel-linked property volumes.
+
+5. **Automated Audit Orchestration**:
+   - Reproducible CLI entry point via `python -m app.integration.real_data_pipeline`.
+   - Machine-readable result emitted to `data/processed/real_data_pipeline_result.json`.
+   - Comprehensive documentation report emitted to `docs/REAL_DATA_INTEGRATION_REPORT.md`.
+   - REST API integration via `GET /api/v1/fusion/real-pipeline`.
+

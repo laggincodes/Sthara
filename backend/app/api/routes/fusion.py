@@ -143,3 +143,31 @@ async def get_real_osm_fusion(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to fuse real OSM buildings: {str(e)}",
         )
+
+
+@router.get(
+    "/real-pipeline",
+    summary="Execute and return real multi-source end-to-end pipeline validation",
+    description="Executes the full 9-stage end-to-end integration and validation pipeline across real OSM building footprints and synthetic cadastral data, returning honest spatial coverage, AI gate, 3D modelling, topology, and ULPIN records.",
+)
+async def get_real_data_pipeline(
+    target_crs: str = Query(default="EPSG:32643", description="Target metric project CRS"),
+    run_fresh: bool = Query(default=False, description="Whether to execute a fresh run or return cached result if present"),
+) -> dict:
+    try:
+        from app.integration.real_data_pipeline import RealDataPipeline, OUTPUT_RESULT_PATH
+        import json
+
+        if not run_fresh and OUTPUT_RESULT_PATH.exists():
+            with open(OUTPUT_RESULT_PATH, "r", encoding="utf-8") as f:
+                return json.load(f)
+
+        pipeline = RealDataPipeline(target_crs=target_crs)
+        return pipeline.execute()
+    except Exception as e:
+        logger.error(f"Real data pipeline execution error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to execute real data pipeline: {str(e)}",
+        )
+

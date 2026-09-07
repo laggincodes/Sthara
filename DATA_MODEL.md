@@ -543,3 +543,22 @@ Aggregated metrics reflecting overall cadastral health:
 | `mesh_issues_found` | `int` | Count of non-manifold or open 3D meshes |
 | `hierarchy_issues_found` | `int` | Count of broken parent-child references |
 | `tolerances` | `TopologyTolerances` | Configured engineering tolerances |
+
+---
+
+### 2.13 Real Multi-Source Integration Pipeline Result (`RealDataPipelineResult`)
+
+Captures the comprehensive end-to-end multi-source validation across real physical observations and synthetic cadastral data. Emitted to `data/processed/real_data_pipeline_result.json` and returned by `GET /api/v1/fusion/real-pipeline`:
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `pipeline_id` | `string` | Unique run identifier (e.g. `REAL-DATA-PIPELINE-E2E-001`) |
+| `executed_at` | `string (ISO 8601)` | Timestamp of execution |
+| `execution_duration_sec` | `float` | Execution wall-clock duration in seconds |
+| `target_crs` | `string` | Harmonized metric project CRS (`EPSG:32643`) |
+| `fusion_status` | `string` | Honest fusion outcome (`PARTIAL`) |
+| `quality_level` | `string` | Documented data quality rating (`LIMITED`) |
+| `pipeline_verdict` | `string` | Validation verdict (`VALIDATED_PARTIAL`) |
+| `summary` | `string` | Human-readable engineering summary |
+| `stages` | `Dict[str, Any]` | Stage execution dictionaries (`01_data_ingestion` through `08_viewer_compatibility`) |
+

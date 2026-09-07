@@ -416,3 +416,31 @@ Prioritization tags:
   6. Authored comprehensive documentation in `docs/TOPOLOGY.md` and updated `ARCHITECTURE.md`, `DATA_MODEL.md`, `API_SPEC.md`, `PHASES.md`.
 - **Expected Output**: Unified, deterministic, tolerance-aware spatial conflict engine covering all cadastral tiers without duplicate validation logic.
 - **Acceptance Criteria**: 0 TypeScript errors; 0 ESLint warnings; 215/215 backend tests pass; Next.js production build succeeds; SIH Stage 06 TOPOLOGY requirements fully satisfied.
+
+---
+
+## Step 23: Real Multi-Source End-to-End Validation (Completed — Step 23)
+- **Priority**: **[MUST HAVE]** — **[COMPLETED]**
+- **Objective**: Prove that the existing system can execute the intended multi-source 3D cadastral pipeline end-to-end with real and synthetic data without silently fabricating missing information, adhering to SIH PPT technical approach.
+- **Tasks**:
+  1. Developed Real Data Pipeline Orchestrator (`backend/app/integration/real_data_pipeline.py`):
+     - Stage 01 (Ingestion): Discovered and inventoried real crowd-sourced OpenStreetMap data in New Delhi (155 building footprints, `map.osm` & `osm_buildings.geojson`) alongside synthetic Pune demo datasets. Honestly declared absent sources (real LiDAR `.las/.laz`, architectural CAD/BIM floor plans, GNSS RINEX logs, subsurface registers, and Delhi parcel cadastre) as `UNAVAILABLE`, yielding pipeline status `PARTIAL`.
+     - Stage 02 (Georeferencing): Verified coordinate reprojections to unified project metric CRS (`EPSG:32643` - UTM Zone 43N) while preserving source geometry.
+     - Stage 03 (Fusion & Coverage): Evaluated geographic extents between Delhi and Pune (~1174 km separation) as `DISJOINT` (`NO_OVERLAP`, 0.0%) without fabricating artificial coordinate shifts.
+     - Stage 04 (AI Extraction Gate): Evaluated real OSM building footprints through `CandidateValidationGate` with valid 2D planar geometries; audited `ModelRegistry` verifying transparent `MODEL_UNAVAILABLE` reporting for unbundled heavy models (`pytorch_mask_rcnn_v1`, `open3d_pointnet_v1`).
+     - Stage 05 (3D Modelling): Extruded 3D polyhedral meshes via `ExtrusionService` strictly adhering to Canonical 3D Geometry Contract v1.0 (closed watertight 2-manifolds, CCW face winding, Euler $V - E + F = 2$).
+     - Stage 06 (Topology Audit): Audited both synthetic demo hierarchy and real OSM building footprints via `TopologyService.validate_full_topology`.
+     - Stage 07 (Property Volume & 3D ULPIN): Strictly enforced non-cadastral isolation for OSM buildings (`is_cadastral=False` $\implies$ NOT eligible for ULPIN) while generating deterministic 3D ULPIN prototype strings for synthetic cadastral units without vertex hashing.
+     - Stage 08 (Viewer Compatibility): Verified mesh vertex/face buffers and layer configurations for Three.js WebGL rendering.
+     - CLI entry point: Executable via `python -m app.integration.real_data_pipeline`.
+  2. Generated machine-readable audit result (`data/processed/real_data_pipeline_result.json`) and comprehensive documentation report (`docs/REAL_DATA_INTEGRATION_REPORT.md`).
+  3. Exposed REST API route (`GET /api/v1/fusion/real-pipeline`) in `backend/app/api/routes/fusion.py`.
+  4. Built comprehensive backend test suite (`backend/tests/test_real_data_pipeline.py`) with 9 tests covering all stages, honest gap handling, non-cadastral semantics, canonical geometry, and API routes — all 224 backend tests pass.
+  5. Implemented frontend UI:
+     - Added `getRealDataPipelineResult()` client method in `frontend/src/lib/api/client.ts`.
+     - Created `RealPipelineCard.tsx` with live/cached execution buttons, metrics grid, safeguards banner, and expandable stage log.
+     - Integrated into Pipeline Audit Page (`/pipeline`).
+  6. Updated `ARCHITECTURE.md`, `PHASES.md`, `DATA_MODEL.md`, `API_SPEC.md`.
+- **Expected Output**: Verified, reproducible, end-to-end multi-source cadastral pipeline execution with honest reporting of gaps, non-cadastral physical tagging, and canonical 3D geometry compliance.
+- **Acceptance Criteria**: 0 TypeScript errors; 0 ESLint warnings; 224/224 backend tests pass; Next.js production build succeeds; all quality gates green.
+

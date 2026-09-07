@@ -1169,5 +1169,22 @@ export const cadastreApi = {
       throw new ApiError("Unable to validate spatial topology.", 0, "NETWORK_UNAVAILABLE");
     }
   },
+
+  /**
+   * Step 23: Retrieves real multi-source end-to-end integration pipeline validation report.
+   */
+  async getRealDataPipelineResult(runFresh: boolean = false): Promise<Record<string, unknown>> {
+    try {
+      const response = await fetch(`${BASE_URL}/fusion/real-pipeline?run_fresh=${runFresh}`, {
+        method: "GET",
+        headers: { Accept: "application/json" },
+      });
+      return await handleResponse<Record<string, unknown>>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Unable to retrieve real data pipeline result.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
 };
+
 
