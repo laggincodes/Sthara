@@ -381,3 +381,38 @@ Prioritization tags:
   7. Authored technical documentation in `docs/UNDERGROUND_MODEL.md` and `UNDERGROUND_MODEL.md`.
 - **Expected Output**: Watertight subterranean solids, explicit depth coordinate math, transparent clash detection, and clear legal distinction between private strata and public infrastructure.
 - **Acceptance Criteria**: 0 TypeScript errors; 0 ESLint warnings; 196/196 tests pass; Next.js production build succeeds; SIH subsurface cadastre requirements fully satisfied.
+
+---
+
+## Step 22: Unified Topology & Spatial Conflict Engine (Completed — Step 22)
+- **Priority**: **[MUST HAVE]** — **[COMPLETED]**
+- **Objective**: Consolidate and harden all existing spatial and geometric checks across the full cadastral hierarchy (`PARCEL → BUILDING → FLOOR → UNIT → PROPERTY_VOLUME → UNDERGROUND`) into one coherent, deterministic, tolerance-aware Topology & Spatial Conflict Engine conforming to SIH PPT 06 TOPOLOGY: Overlap Check, Containment, Duplicates.
+- **Tasks**:
+  1. Implemented domain schemas (`backend/app/schemas/topology.py`):
+     - Enums: `TopologyStatus` (VALID, WARNING, CONFLICT, UNAVAILABLE), `TopologySeverity` (INFO, WARNING, ERROR), `TopologyCheckType` (DUPLICATE_CHECK, CONTAINMENT_2D, OVERLAP_2D, VERTICAL_INTERVAL, MESH_3D_INTEGRITY, HIERARCHY_INTEGRITY, UNDERGROUND_CLASH), `TopologyConflictType` (DUPLICATE_ID, SAME_ID_DIFFERENT_GEOMETRY, DUPLICATE_GEOMETRY, OUTSIDE_PARENT, PARTIAL_CONTAINMENT, POSITIVE_AREA_OVERLAP, POSITIVE_VOLUME_OVERLAP, VERTICAL_OVERLAP, VERTICAL_OUTSIDE_PARENT, INVALID_MESH, MISSING_REFERENCE), and `EntityType`.
+     - Models: `TopologyTolerances` (area $0.0001\,\text{m}^2$, equality $0.001\,\text{m}$, vertical $0.001\,\text{m}$, volume $0.0001\,\text{m}^3$, subsurface buffer $1.0\,\text{m}$), `TopologyCheckRecord`, `TopologyConflictRecord`, `TopologySummary`, request/response envelopes.
+     - Re-exported in `backend/app/schemas/__init__.py`.
+  2. Implemented Unified Topology Service (`backend/app/services/topology_service.py`):
+     - Non-destructive conflict reporting: zero silent clipping or shifting.
+     - Sibling duplicate detection (duplicate IDs, duplicate geometry with distinct IDs).
+     - 2D horizontal non-overlap: distinguishes boundary touch (valid party wall, area $\le 0.0001\,\text{m}^2$) from positive-area collisions.
+     - 2D footprint containment (building in parcel, unit in building, basement in parcel).
+     - Vertical interval continuity: vertical span containment and floor slab contact math.
+     - Canonical 3D mesh integrity: reuses `ExtrusionService.validate_mesh` for watertight 2-manifold validation.
+     - Underground clashes & proximity clearances: evaluates subterranean conduits and allows registered utility penetration easements.
+     - Deterministic lexicographic sorting of entity IDs, check IDs, and conflict records.
+     - Comprehensive multi-tier demonstration bundle (`get_demo_topology_bundle()`).
+  3. Exposed REST endpoints (`backend/app/api/routes/topology.py`):
+     - `GET /api/v1/topology/demo`
+     - `POST /api/v1/topology/validate`
+     - Registered in `backend/app/api/api_router.py`.
+  4. Built comprehensive backend test suite (`backend/tests/test_topology_engine.py`) with 19 tests covering containment, sibling overlaps, duplicates, vertical spans, mesh validation, underground clashes, reference integrity, determinism, and live HTTP endpoints — all 215 backend tests pass.
+  5. Implemented frontend Topology UI:
+     - Added TypeScript definitions (`types/topology.ts`) and re-exported in `types/cadastre.ts`.
+     - Added API client methods (`validateTopology()`, `getDemoTopology()`) in `lib/api/client.ts`.
+     - Created `TopologyCard.tsx` with health badges, metrics grid, tolerances banner, category filter tabs, and expandable conflict cards with actionable recommendations and highlight actions.
+     - Added Stage 06/09 `Topology Engine` in `useCadastre.ts` pipeline steps, state, and actions.
+     - Integrated into Pipeline Audit Page (`/pipeline`) and Property Inspector (`ParcelInspector.tsx`) across 2D and 3D workspaces (`/workspace/2d`, `/workspace/3d`).
+  6. Authored comprehensive documentation in `docs/TOPOLOGY.md` and updated `ARCHITECTURE.md`, `DATA_MODEL.md`, `API_SPEC.md`, `PHASES.md`.
+- **Expected Output**: Unified, deterministic, tolerance-aware spatial conflict engine covering all cadastral tiers without duplicate validation logic.
+- **Acceptance Criteria**: 0 TypeScript errors; 0 ESLint warnings; 215/215 backend tests pass; Next.js production build succeeds; SIH Stage 06 TOPOLOGY requirements fully satisfied.

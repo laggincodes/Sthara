@@ -1,3 +1,4 @@
+import { TopologyCard } from "@/components/cadastral/TopologyCard";
 import React from "react";
 import {
   NormalizedParcel,
@@ -52,6 +53,10 @@ interface ParcelInspectorProps {
   onSwitchTo3D?: () => void;
   onSwitchToFloors3D?: () => void;
   onSwitchToProperty3D?: () => void;
+  topologyData?: import("@/types/cadastre").TopologyValidationResponse | null;
+  isAuditingTopology?: boolean;
+  onRunTopologyAudit?: () => void;
+  onLoadDemoTopology?: () => void;
 }
 
 function BuildingHeightCard({
@@ -948,13 +953,17 @@ export function ParcelInspector({
   onSwitchTo3D,
   onSwitchToFloors3D,
   onSwitchToProperty3D,
+  topologyData,
+  isAuditingTopology,
+  onRunTopologyAudit,
+  onLoadDemoTopology,
 }: ParcelInspectorProps) {
   const [userSelectedTab, setUserSelectedTab] = React.useState<
-    "parcel" | "building" | "units" | "summary" | null
+    "parcel" | "building" | "units" | "summary" | "topology" | null
   >(null);
 
   // Derive active tab cleanly without an effect
-  const activeTab: "parcel" | "building" | "units" | "summary" =
+  const activeTab: "parcel" | "building" | "units" | "summary" | "topology" =
     userSelectedTab ?? (selectedBuilding && !selectedParcel ? "building" : "parcel");
 
   return (
@@ -1012,6 +1021,18 @@ export function ParcelInspector({
             Summary
           </button>
         )}
+
+        <button
+          type="button"
+          onClick={() => setUserSelectedTab("topology")}
+          className={`flex-1 rounded py-1 font-medium transition-colors ${
+            activeTab === "topology"
+              ? "bg-indigo-950/60 text-indigo-400 border border-indigo-500/30 font-bold"
+              : "text-slate-400 hover:text-slate-200"
+          }`}
+        >
+          Topology {topologyData?.summary?.conflict_checks || 0 > 0 ? `(!${topologyData?.summary?.conflict_checks || 0})` : ""}
+        </button>
       </div>
 
       {/* TAB 1: PARCEL DETAILS */}
@@ -1532,6 +1553,30 @@ export function ParcelInspector({
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* TAB 4: TOPOLOGY & SPATIAL CONFLICTS */}
+      {activeTab === "topology" && (
+        <div className="flex flex-col gap-3">
+          <TopologyCard
+            topologyData={topologyData}
+            isAuditing={isAuditingTopology}
+            onRunAudit={onRunTopologyAudit}
+            onLoadDemo={onLoadDemoTopology}
+            onSelectEntity={(entId) => {
+              if (entId.startsWith("PARCEL") && onSelectParcelId) {
+                onSelectParcelId(entId);
+                setUserSelectedTab("parcel");
+              } else if ((entId.startsWith("BLD") || entId.startsWith("B-")) && onSelectBuildingId) {
+                onSelectBuildingId(entId);
+                setUserSelectedTab("building");
+              } else if ((entId.startsWith("UNIT") || entId.startsWith("U-")) && onSelectUnitId) {
+                onSelectUnitId(entId);
+                setUserSelectedTab("units");
+              }
+            }}
+          />
         </div>
       )}
     </div>

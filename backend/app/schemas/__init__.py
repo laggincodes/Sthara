@@ -1,3 +1,18 @@
+from app.schemas.topology import (
+    TopologyStatus,
+    TopologySeverity,
+    TopologyCheckType,
+    TopologyConflictType,
+    EntityType,
+    TopologyTolerances,
+    TopologyCheckRecord,
+    TopologyConflictRecord,
+    TopologySummary,
+    TopologyValidationRequest,
+    TopologyValidationResponse,
+    DemoTopologyResponse,
+)
+
 from app.schemas.underground import (
     UndergroundFeatureType,
     UtilityType,
@@ -76,6 +91,19 @@ from app.schemas.fusion import (
 )
 
 __all__ = [
+    "TopologyStatus",
+    "TopologySeverity",
+    "TopologyCheckType",
+    "TopologyConflictType",
+    "EntityType",
+    "TopologyTolerances",
+    "TopologyCheckRecord",
+    "TopologyConflictRecord",
+    "TopologySummary",
+    "TopologyValidationRequest",
+    "TopologyValidationResponse",
+    "DemoTopologyResponse",
+
     "Unit",
     "UnitType",
     "UnitStatus",

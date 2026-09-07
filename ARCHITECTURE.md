@@ -439,3 +439,29 @@ Conforming to the SIH technical presentation, the platform models subterranean a
 
 4. **Visual Cutaway & Subsurface Inspection**:
    - The 3D viewport supports a dedicated **Cutaway Inspection Mode** where above-ground structures are rendered as semi-transparent silhouettes, allowing subterranean basements, pipe conduits, and duct banks to be visually inspected in spatial context.
+
+## 5E. Unified Topology & Spatial Conflict Engine Architecture (Step 22)
+
+Conforming to Stage 06 of the SIH technical approach (06 TOPOLOGY: Overlap Check, Containment, Duplicates), the system consolidates all geometric verification into a single, deterministic, tolerance-aware engine:
+
+1. **Multi-Tier Hierarchical Validation**:
+   - Spans the complete cadastral stack: $\text{PARCEL} \rightarrow \text{BUILDING} \rightarrow \text{FLOOR} \rightarrow \text{UNIT} \rightarrow \text{PROPERTY\_VOLUME} \rightarrow \text{UNDERGROUND}$.
+   - Evaluates reference integrity across the parent-child chain, preventing orphaned entities or mismatched relationships (`MISSING_REFERENCE`).
+
+2. **Core Topological Checks & Mathematics**:
+   - **Overlap Check**:
+     - 2D horizontal non-overlap evaluated across sibling parcels, buildings, and units on the same floor.
+     - Distinguishes valid party-wall contact (boundary touch $\le \epsilon_\text{area}$) from positive-area overlap ($A > \epsilon_\text{area}$, emitted as `POSITIVE_AREA_OVERLAP`).
+   - **Containment**:
+     - 2D footprint containment checks (building within parcel, unit within building/floor, basement within parcel).
+     - Vertical interval containment ($[Z_\text{base}, Z_\text{top}]_\text{child} \subseteq [Z_\text{base}, Z_\text{top}]_\text{parent}$).
+   - **Duplicates**:
+     - Identifies duplicate IDs (`DUPLICATE_ID`), same ID with differing geometries (`SAME_ID_DIFFERENT_GEOMETRY`), and identical spatial footprints registered under distinct IDs (`DUPLICATE_GEOMETRY`).
+   - **3D Mesh Integrity**:
+     - Reuses Canonical 3D Geometry Contract v1.0 (`ExtrusionService.validate_mesh`) to audit closed watertightness, 2-manifold edge sharing, and non-self-intersection.
+   - **Underground Clashes**:
+     - Audits subsurface physical collisions and proximity buffer clearances ($< 1.0\text{m}$) while permitting registered utility penetration easements into basements.
+
+3. **Non-Destructive Conflict Guarantees**:
+   - The engine never mutates, shifts, or silently clips geometry.
+   - All violations are emitted as structured, immutable `TopologyConflictRecord` objects with quantitative metrics and actionable engineering recommendations.

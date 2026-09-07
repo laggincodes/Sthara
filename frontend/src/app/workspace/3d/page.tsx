@@ -92,6 +92,10 @@ export default function Cadastral3DPage() {
     setCutawayMode,
     isLoadingUnderground,
     loadDemoUnderground,
+    topologyData,
+    isAuditingTopology,
+    runTopologyAudit,
+    loadDemoTopology,
   } = useCadastreContext();
 
   const crsString = validationResult?.crs || geojson?.crs?.properties?.name || "WGS 84 (EPSG:4326)";
@@ -379,6 +383,10 @@ export default function Cadastral3DPage() {
               onSwitchTo3D={() => setSubView3D("building")}
               onSwitchToFloors3D={() => setSubView3D("floors")}
               onSwitchToProperty3D={() => setSubView3D("property")}
+              topologyData={topologyData}
+              isAuditingTopology={isAuditingTopology}
+              onRunTopologyAudit={runTopologyAudit}
+              onLoadDemoTopology={loadDemoTopology}
             />
           </aside>
         )}
