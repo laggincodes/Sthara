@@ -116,6 +116,7 @@ class PropertyVolumeRequest(BaseModel):
     building_id: Optional[str] = Field(None, description="Parent building structure ID (if single building)")
     building_ids: Optional[List[str]] = Field(None, description="Parent building structure IDs (if multi-building property)")
     floor_ids: List[str] = Field(default_factory=list, description="List of constituent floor IDs (e.g. ['BLD-DEMO-001-FL00'])")
+    unit_ids: List[str] = Field(default_factory=list, description="List of constituent unit IDs (e.g. ['BLD-DEMO-002-FL05-U501'])")
     volume_type: VolumeType = Field(VolumeType.PROPERTY_VOLUME, description="Volume type discriminator")
     unit_name: Optional[str] = Field(None, description="Optional unit label (e.g. 'Unit 101 - Retail')")
     footprint_geometry: Optional[Dict[str, Any]] = Field(None, description="Optional custom footprint geometry")

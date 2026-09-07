@@ -47,6 +47,9 @@ export default function Cadastral3DPage() {
     building3DData,
     floors3DData,
     property3DData,
+    units3DData,
+    isGeneratingUnits3D,
+    units3DError,
     ulpins3D,
     subView3D,
     setSubView3D,
@@ -78,6 +81,7 @@ export default function Cadastral3DPage() {
     generate3DBuildingModels,
     generate3DFloorModels,
     generate3DPropertyModels,
+    generate3DUnitModels,
     setSelectedParcelId,
     setSelectedBuildingId,
     setSelectedUnitId,
@@ -86,7 +90,8 @@ export default function Cadastral3DPage() {
   const crsString = validationResult?.crs || geojson?.crs?.properties?.name || "WGS 84 (EPSG:4326)";
   const hasAny3D = (building3DData && building3DData.summary.successful > 0) ||
     (floors3DData && floors3DData.summary.successful > 0) ||
-    (property3DData && property3DData.summary.successful > 0);
+    (property3DData && property3DData.summary.successful > 0) ||
+    (units3DData && units3DData.summary.successful > 0);
 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden relative">
@@ -135,6 +140,17 @@ export default function Cadastral3DPage() {
             >
               Property Vol ({property3DData?.summary.successful || 0})
             </button>
+            <button
+              type="button"
+              onClick={() => setSubView3D("units")}
+              className={`px-2.5 py-1 rounded-md text-[11px] font-mono transition-colors ${
+                subView3D === "units"
+                  ? "bg-cyan-500 text-white font-semibold"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              Units ({units3DData?.summary.successful || 0})
+            </button>
           </div>
 
           {/* Model Generation Buttons */}
@@ -162,6 +178,14 @@ export default function Cadastral3DPage() {
               className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-[11px] transition-colors disabled:opacity-50"
             >
               {isGeneratingProperty3D ? "Generating..." : "Gen Property Vol"}
+            </button>
+            <button
+              type="button"
+              onClick={generate3DUnitModels}
+              disabled={isGeneratingUnits3D}
+              className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 text-[11px] transition-colors disabled:opacity-50"
+            >
+              {isGeneratingUnits3D ? "Generating..." : "Gen Units"}
             </button>
           </div>
         </div>
@@ -194,10 +218,10 @@ export default function Cadastral3DPage() {
       </div>
 
       {/* Error banner if any */}
-      {(generalError || elevationError || heightError || floorError || building3DError || floors3DError || property3DError) && (
+      {(generalError || elevationError || heightError || floorError || building3DError || floors3DError || property3DError || units3DError) && (
         <div className="border-b border-red-500/30 bg-red-950/50 px-4 py-1.5 text-xs font-mono text-red-300 flex items-center justify-between shrink-0">
           <span>
-            {generalError || elevationError || heightError || floorError || building3DError || floors3DError || property3DError}
+            {generalError || elevationError || heightError || floorError || building3DError || floors3DError || property3DError || units3DError}
           </span>
         </div>
       )}
@@ -215,6 +239,7 @@ export default function Cadastral3DPage() {
               data={building3DData}
               floorsData={floors3DData}
               propertiesData={property3DData}
+              unitsData={units3DData}
               subView={subView3D}
               onChangeSubView={setSubView3D}
               selectedBuildingId={selectedBuildingId}
@@ -223,20 +248,23 @@ export default function Cadastral3DPage() {
               onSelectFloor={setSelectedFloorId}
               selectedPropertyId={selectedPropertyId}
               onSelectProperty={setSelectedPropertyId}
+              selectedUnitId={selectedUnitId}
+              onSelectUnit={setSelectedUnitId}
               explodeDistance={explodeDistance}
               onChangeExplodeDistance={setExplodeDistance}
               isolatedFloorIndex={isolatedFloorIndex}
               onSelectIsolatedFloorIndex={setIsolatedFloorIndex}
-              isLoading={isGenerating3D || isGeneratingFloors3D || isGeneratingProperty3D}
+              isLoading={isGenerating3D || isGeneratingFloors3D || isGeneratingProperty3D || isGeneratingUnits3D}
               onGenerate3D={generate3DBuildingModels}
               onGenerateFloors={generate3DFloorModels}
               onGenerateProperties={generate3DPropertyModels}
+              onGenerateUnits={generate3DUnitModels}
               onSwitchTo2D={() => router.push("/workspace/2d")}
             />
           </ErrorBoundary>
 
           {/* Empty State Overlay */}
-          {!hasAny3D && !isLoading && !isGenerating3D && !isGeneratingFloors3D && !isGeneratingProperty3D && (
+          {!hasAny3D && !isLoading && !isGenerating3D && !isGeneratingFloors3D && !isGeneratingProperty3D && !isGeneratingUnits3D && (
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#0B0F19]/80 backdrop-blur-[2px] p-6 text-center">
               <div className="max-w-md rounded-xl border border-slate-800 bg-[#111827]/90 p-8 shadow-2xl">
                 <div className="mb-4 mx-auto flex h-12 w-12 items-center justify-center rounded-xl border border-cyan-500/30 bg-cyan-950/40 text-cyan-400">
@@ -246,7 +274,7 @@ export default function Cadastral3DPage() {
                 </div>
                 <h2 className="text-base font-semibold text-white mb-2">No 3D Models Generated</h2>
                 <p className="text-xs text-slate-400 mb-6 leading-relaxed">
-                  Generate watertight 3D building meshes, stratified floor-level volumes, and cadastral property volumes from active datasets.
+                  Generate watertight 3D building meshes, stratified floor-level volumes, apartment units, and cadastral property volumes from active datasets.
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5">
                   <button
@@ -269,6 +297,13 @@ export default function Cadastral3DPage() {
                     className="w-full sm:w-auto inline-flex items-center justify-center text-xs font-semibold text-white bg-amber-600 hover:bg-amber-500 px-3.5 py-2 rounded-lg transition-colors"
                   >
                     Generate Property Vol
+                  </button>
+                  <button
+                    type="button"
+                    onClick={generate3DUnitModels}
+                    className="w-full sm:w-auto inline-flex items-center justify-center text-xs font-semibold text-white bg-cyan-500 hover:bg-cyan-400 px-3.5 py-2 rounded-lg transition-colors"
+                  >
+                    Generate Units
                   </button>
                 </div>
               </div>

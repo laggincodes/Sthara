@@ -1,10 +1,20 @@
 import math
 from typing import List, Optional, Dict, Any, Tuple
-from shapely.geometry import shape, mapping, Polygon, MultiPolygon
-from shapely.validation import explain_validity
+from shapely.geometry import shape, mapping, Polygon, MultiPolygon, GeometryCollection
+from shapely.validation import explain_validity, make_valid
 from shapely.ops import transform
 import pyproj
 
+from app.schemas.geometry_3d import (
+    SCHEMA_VERSION,
+    Geometry3DStatus,
+    FeatureType,
+    GeometryType,
+    Bounds3D,
+    Mesh3D,
+    Mesh3DCollection,
+    BatchSummary3D,
+)
 from app.schemas.unit import (
     Unit,
     UnitStatus,
@@ -13,7 +23,12 @@ from app.schemas.unit import (
     UnitValidationResult,
     UnitBatchValidationResponse,
     UnitPropertyRecord,
+    Unit3DRequest,
+    BatchUnit3DRequest,
+    Unit3DResult,
+    GenerateUnits3DResponse,
 )
+from app.services.extrusion_service import ExtrusionService
 from app.core.logging import logger
 
 
@@ -320,4 +335,490 @@ class UnitService:
             volume_cubic_m=unit.volume_cubic_m,
             footprint_area_sqm=unit.footprint_area,
             status=unit.status,
+        )
+
+    @classmethod
+    def resolve_unit_vertical_extent(
+        cls,
+        req: Unit3DRequest,
+    ) -> Tuple[Optional[float], Optional[float], Optional[float], str, List[str]]:
+        """
+        Applies vertical extent resolution priority:
+        1. Explicit unit base and top elevation (or base + height)
+        2. Validated parent floor base and top elevation (inheritance)
+        3. Unavailable
+        """
+        warnings: List[str] = []
+        base_z = req.base_elevation
+        top_z = req.top_elevation
+
+        # If base is provided and height is provided but top is not
+        if (
+            base_z is not None and math.isfinite(base_z)
+            and top_z is None
+            and req.height is not None and math.isfinite(req.height) and req.height > 0
+        ):
+            top_z = base_z + req.height
+
+        # 1. Explicit unit base and top elevations
+        if base_z is not None and top_z is not None and math.isfinite(base_z) and math.isfinite(top_z):
+            if top_z <= base_z:
+                warnings.append(
+                    f"UNIT_INVALID_VERTICAL_EXTENT: Unit top elevation ({top_z}m) must be strictly greater than base elevation ({base_z}m)."
+                )
+                return round(base_z, 3), round(top_z, 3), round(top_z - base_z, 3), "INVALID", warnings
+
+            height = round(top_z - base_z, 3)
+            # Check against parent floor range if provided
+            if req.parent_floor_base is not None and math.isfinite(req.parent_floor_base):
+                if base_z < req.parent_floor_base - 0.05:
+                    warnings.append(
+                        f"UNIT_OUTSIDE_FLOOR_VERTICAL_BOUNDS: Unit base elevation ({base_z}m) is below parent floor base ({req.parent_floor_base}m)."
+                    )
+                    return round(base_z, 3), round(top_z, 3), height, "INVALID", warnings
+            if req.parent_floor_top is not None and math.isfinite(req.parent_floor_top):
+                if top_z > req.parent_floor_top + 0.05:
+                    warnings.append(
+                        f"UNIT_OUTSIDE_FLOOR_VERTICAL_BOUNDS: Unit top elevation ({top_z}m) exceeds parent floor top ({req.parent_floor_top}m)."
+                    )
+                    return round(base_z, 3), round(top_z, 3), height, "INVALID", warnings
+
+            return round(base_z, 3), round(top_z, 3), height, "EXPLICIT_UNIT_ELEVATION", warnings
+
+        # 2. Inherited from parent floor
+        if (
+            req.parent_floor_base is not None and math.isfinite(req.parent_floor_base)
+            and req.parent_floor_top is not None and math.isfinite(req.parent_floor_top)
+            and req.parent_floor_top > req.parent_floor_base
+        ):
+            base_z = req.parent_floor_base
+            top_z = req.parent_floor_top
+            height = round(top_z - base_z, 3)
+            warnings.append("UNIT_VERTICAL_EXTENT_INHERITED_FROM_FLOOR")
+            return round(base_z, 3), round(top_z, 3), height, "PARENT_FLOOR_INHERITED", warnings
+
+        return None, None, None, "UNAVAILABLE", ["UNIT_VERTICAL_EXTENT_UNAVAILABLE: No valid explicit elevations or parent floor extent."]
+
+    @classmethod
+    def resolve_unit_footprint(
+        cls,
+        req: Unit3DRequest,
+    ) -> Tuple[Optional[Any], str, List[str]]:
+        """
+        Resolves unit 2D polygon footprint.
+        """
+        warnings: List[str] = []
+        if not req.geometry_2d or "type" not in req.geometry_2d:
+            return None, "UNAVAILABLE", ["UNIT_FOOTPRINT_UNAVAILABLE: Missing 2D footprint geometry."]
+
+        try:
+            geom = shape(req.geometry_2d)
+            if geom.is_empty:
+                return None, "UNAVAILABLE", ["UNIT_FOOTPRINT_UNAVAILABLE: Empty 2D footprint geometry."]
+            if not geom.is_valid:
+                geom = make_valid(geom)
+            if isinstance(geom, GeometryCollection):
+                polys = [g for g in geom.geoms if isinstance(g, Polygon)]
+                if len(polys) == 1:
+                    geom = polys[0]
+                elif len(polys) > 1:
+                    geom = MultiPolygon(polys)
+            if isinstance(geom, (Polygon, MultiPolygon)):
+                return geom, "EXPLICIT_UNIT_FOOTPRINT", warnings
+            else:
+                return None, "INVALID", [f"Unsupported footprint geometry type: {geom.geom_type}"]
+        except Exception as e:
+            return None, "INVALID", [f"Error parsing unit footprint: {str(e)}"]
+
+    @classmethod
+    def generate_unit_3d(
+        cls,
+        req: Unit3DRequest,
+        scene_origin: Optional[Tuple[float, float, float]] = None,
+        target_crs: str = "EPSG:32643",
+    ) -> Unit3DResult:
+        """
+        Extrudes a single validated unit into a closed, watertight 3D solid mesh conforming
+        to the 3D Geometry Contract (v1.0).
+        """
+        warnings: List[str] = []
+        provenance: Dict[str, Any] = {
+            "source_crs": req.source_crs,
+            "target_crs": target_crs,
+        }
+
+        # 1. Resolve vertical extent
+        base_z, top_z, height, z_src, z_warns = cls.resolve_unit_vertical_extent(req)
+        warnings.extend(z_warns)
+        provenance["vertical_extent_source"] = z_src
+
+        if z_src == "UNAVAILABLE" or base_z is None or top_z is None or height is None:
+            return Unit3DResult(
+                unit_id=req.unit_id,
+                property_id=req.property_id,
+                parcel_id=req.parcel_id,
+                building_id=req.building_id,
+                floor_id=req.floor_id,
+                unit_number=req.unit_number,
+                unit_name=req.unit_name,
+                unit_type=req.unit_type,
+                base_elevation=base_z,
+                top_elevation=top_z,
+                height=height,
+                geometry_status=Geometry3DStatus.UNAVAILABLE,
+                warnings=warnings,
+                provenance=provenance,
+            )
+
+        if z_src == "INVALID":
+            return Unit3DResult(
+                unit_id=req.unit_id,
+                property_id=req.property_id,
+                parcel_id=req.parcel_id,
+                building_id=req.building_id,
+                floor_id=req.floor_id,
+                unit_number=req.unit_number,
+                unit_name=req.unit_name,
+                unit_type=req.unit_type,
+                base_elevation=base_z,
+                top_elevation=top_z,
+                height=height,
+                geometry_status=Geometry3DStatus.INVALID,
+                warnings=warnings,
+                provenance=provenance,
+            )
+
+        # 2. Resolve 2D footprint
+        footprint, f_src, f_warns = cls.resolve_unit_footprint(req)
+        warnings.extend(f_warns)
+        provenance["footprint_source"] = f_src
+
+        if f_src == "UNAVAILABLE" or footprint is None:
+            return Unit3DResult(
+                unit_id=req.unit_id,
+                property_id=req.property_id,
+                parcel_id=req.parcel_id,
+                building_id=req.building_id,
+                floor_id=req.floor_id,
+                unit_number=req.unit_number,
+                unit_name=req.unit_name,
+                unit_type=req.unit_type,
+                base_elevation=base_z,
+                top_elevation=top_z,
+                height=height,
+                geometry_status=Geometry3DStatus.UNAVAILABLE,
+                warnings=warnings,
+                provenance=provenance,
+            )
+
+        if f_src == "INVALID":
+            return Unit3DResult(
+                unit_id=req.unit_id,
+                property_id=req.property_id,
+                parcel_id=req.parcel_id,
+                building_id=req.building_id,
+                floor_id=req.floor_id,
+                unit_number=req.unit_number,
+                unit_name=req.unit_name,
+                unit_type=req.unit_type,
+                base_elevation=base_z,
+                top_elevation=top_z,
+                height=height,
+                geometry_status=Geometry3DStatus.INVALID,
+                warnings=warnings,
+                provenance=provenance,
+            )
+
+        # 3. Reproject footprint to target metric CRS
+        projected_geom, _ = ExtrusionService._project_geometry(
+            footprint, req.source_crs, target_crs
+        )
+
+        # 4. Resolve local scene origin
+        if scene_origin is not None:
+            origin = scene_origin
+        elif req.scene_origin is not None and len(req.scene_origin) == 3:
+            origin = (req.scene_origin[0], req.scene_origin[1], req.scene_origin[2])
+        else:
+            bounds = projected_geom.bounds
+            origin = (round(bounds[0], 2), round(bounds[1], 2), 0.0)
+
+        provenance["scene_origin"] = list(origin)
+
+        # 5. Extrude solid meshes
+        parts: List[Mesh3D] = []
+        polys: List[Polygon] = (
+            list(projected_geom.geoms)
+            if isinstance(projected_geom, MultiPolygon)
+            else [projected_geom]
+        )
+
+        total_vol = 0.0
+        total_surface_area = 0.0
+        total_footprint_area = round(float(projected_geom.area), 3)
+
+        for idx, poly in enumerate(polys):
+            if poly.area < 1e-4:
+                continue
+            part_id = f"{req.unit_id}_part_{idx}" if len(polys) > 1 else req.unit_id
+            mesh_part = ExtrusionService._extrude_single_polygon(
+                poly=poly,
+                base_z=base_z,
+                top_z=top_z,
+                origin=origin,
+                feature_id=part_id,
+                horizontal_crs=target_crs,
+                source_crs=req.source_crs,
+                vertical_ref="AMSL (Above Mean Sea Level)",
+                feature_type=FeatureType.UNIT,
+            )
+
+            # Validate mesh with canonical validator
+            val_res = ExtrusionService.validate_mesh(mesh_part)
+            if not val_res.valid:
+                warnings.extend([f"Mesh validation error in part {part_id}: {err}" for err in val_res.errors])
+                return Unit3DResult(
+                    unit_id=req.unit_id,
+                    property_id=req.property_id,
+                    parcel_id=req.parcel_id,
+                    building_id=req.building_id,
+                    floor_id=req.floor_id,
+                    unit_number=req.unit_number,
+                    unit_name=req.unit_name,
+                    unit_type=req.unit_type,
+                    base_elevation=base_z,
+                    top_elevation=top_z,
+                    height=height,
+                    footprint_area=total_footprint_area,
+                    geometry_status=Geometry3DStatus.INVALID,
+                    warnings=warnings,
+                    provenance=provenance,
+                )
+
+            parts.append(mesh_part)
+            total_vol += mesh_part.volume_cubic_m
+            total_surface_area += mesh_part.surface_area_sqm
+
+        if not parts:
+            warnings.append("Zero valid mesh parts extruded from footprint geometry.")
+            return Unit3DResult(
+                unit_id=req.unit_id,
+                property_id=req.property_id,
+                parcel_id=req.parcel_id,
+                building_id=req.building_id,
+                floor_id=req.floor_id,
+                unit_number=req.unit_number,
+                unit_name=req.unit_name,
+                unit_type=req.unit_type,
+                base_elevation=base_z,
+                top_elevation=top_z,
+                height=height,
+                footprint_area=total_footprint_area,
+                geometry_status=Geometry3DStatus.INVALID,
+                warnings=warnings,
+                provenance=provenance,
+            )
+
+        # Independent volume verification against analytical A * h
+        expected_vol = round(total_footprint_area * height, 3)
+        actual_vol = round(total_vol, 3)
+        if abs(expected_vol - actual_vol) > 0.05 * max(expected_vol, 1.0):
+            warnings.append(
+                f"Volume discrepancy: analytical volume ({expected_vol} m3) differs from mesh volume ({actual_vol} m3)."
+            )
+
+        all_min_x = min(m.bounds.min[0] for m in parts)
+        all_min_y = min(m.bounds.min[1] for m in parts)
+        all_min_z = min(m.bounds.min[2] for m in parts)
+        all_max_x = max(m.bounds.max[0] for m in parts)
+        all_max_y = max(m.bounds.max[1] for m in parts)
+        all_max_z = max(m.bounds.max[2] for m in parts)
+
+        unified_bounds = Bounds3D(
+            min=[round(all_min_x, 3), round(all_min_y, 3), round(all_min_z, 3)],
+            max=[round(all_max_x, 3), round(all_max_y, 3), round(all_max_z, 3)],
+        )
+
+        collection = Mesh3DCollection(
+            parts=parts,
+            bounds=unified_bounds,
+            total_volume_cubic_m=actual_vol,
+            total_surface_area_sqm=round(total_surface_area, 3),
+        )
+
+        return Unit3DResult(
+            unit_id=req.unit_id,
+            property_id=req.property_id,
+            parcel_id=req.parcel_id,
+            building_id=req.building_id,
+            floor_id=req.floor_id,
+            unit_number=req.unit_number,
+            unit_name=req.unit_name,
+            unit_type=req.unit_type,
+            base_elevation=base_z,
+            top_elevation=top_z,
+            height=height,
+            footprint_area=total_footprint_area,
+            volume_cubic_m=actual_vol,
+            surface_area_sqm=round(total_surface_area, 3),
+            geometry_status=Geometry3DStatus.VALID,
+            geometry=collection,
+            warnings=warnings,
+            provenance=provenance,
+        )
+
+    @classmethod
+    def generate_batch_units_3d(cls, req: BatchUnit3DRequest) -> GenerateUnits3DResponse:
+        """
+        Batch processing of multiple units into 3D polyhedral solids.
+        Enforces same-floor non-overlap and isolated error handling.
+        """
+        units = req.units
+        target_crs = req.target_crs or "EPSG:32643"
+        results: List[Unit3DResult] = []
+
+        # 1. Check duplicate unit_id in request
+        unit_id_counts: Dict[str, int] = {}
+        for u in units:
+            unit_id_counts[u.unit_id] = unit_id_counts.get(u.unit_id, 0) + 1
+
+        # 2. Check same-floor duplicate unit_number
+        floor_unit_nums: Dict[Tuple[str, str], List[str]] = {}
+        for u in units:
+            key = (u.building_id, u.floor_id)
+            floor_unit_nums.setdefault(key, []).append(u.unit_number)
+
+        # 3. Check same-floor positive area overlaps
+        floor_units: Dict[Tuple[str, str], List[Unit3DRequest]] = {}
+        for u in units:
+            key = (u.building_id, u.floor_id)
+            floor_units.setdefault(key, []).append(u)
+
+        overlapping_unit_ids: Dict[str, List[str]] = {}
+        for (bld, fl), grp in floor_units.items():
+            parsed = []
+            for u in grp:
+                if u.geometry_2d:
+                    try:
+                        sh = shape(u.geometry_2d)
+                        if not sh.is_valid:
+                            sh = make_valid(sh)
+                        parsed.append((u.unit_id, sh))
+                    except Exception:
+                        pass
+            for i in range(len(parsed)):
+                for j in range(i + 1, len(parsed)):
+                    uid_a, geom_a = parsed[i]
+                    uid_b, geom_b = parsed[j]
+                    try:
+                        inter = geom_a.intersection(geom_b)
+                        if inter.area > 1e-10:
+                            overlapping_unit_ids.setdefault(uid_a, []).append(uid_b)
+                            overlapping_unit_ids.setdefault(uid_b, []).append(uid_a)
+                    except Exception:
+                        pass
+
+        # 4. Compute shared scene origin across all valid footprints
+        shared_origin: Optional[Tuple[float, float, float]] = None
+        if req.compute_shared_origin:
+            all_min_x: List[float] = []
+            all_min_y: List[float] = []
+            for u in units:
+                if u.geometry_2d:
+                    try:
+                        sh = shape(u.geometry_2d)
+                        proj, _ = ExtrusionService._project_geometry(sh, u.source_crs, target_crs)
+                        all_min_x.append(proj.bounds[0])
+                        all_min_y.append(proj.bounds[1])
+                    except Exception:
+                        pass
+            if all_min_x and all_min_y:
+                shared_origin = (round(min(all_min_x), 2), round(min(all_min_y), 2), 0.0)
+
+        # 5. Process each unit independently
+        for u in units:
+            # Check duplicate unit_id
+            if unit_id_counts.get(u.unit_id, 0) > 1:
+                res = Unit3DResult(
+                    unit_id=u.unit_id,
+                    property_id=u.property_id,
+                    parcel_id=u.parcel_id,
+                    building_id=u.building_id,
+                    floor_id=u.floor_id,
+                    unit_number=u.unit_number,
+                    unit_name=u.unit_name,
+                    unit_type=u.unit_type,
+                    base_elevation=u.base_elevation,
+                    top_elevation=u.top_elevation,
+                    height=u.height,
+                    geometry_status=Geometry3DStatus.INVALID,
+                    warnings=[f"DUPLICATE_UNIT_ID: Unit identifier '{u.unit_id}' is duplicated in request."],
+                )
+                results.append(res)
+                continue
+
+            # Check duplicate unit_number on same floor
+            key = (u.building_id, u.floor_id)
+            if floor_unit_nums.get(key, []).count(u.unit_number) > 1:
+                res = Unit3DResult(
+                    unit_id=u.unit_id,
+                    property_id=u.property_id,
+                    parcel_id=u.parcel_id,
+                    building_id=u.building_id,
+                    floor_id=u.floor_id,
+                    unit_number=u.unit_number,
+                    unit_name=u.unit_name,
+                    unit_type=u.unit_type,
+                    base_elevation=u.base_elevation,
+                    top_elevation=u.top_elevation,
+                    height=u.height,
+                    geometry_status=Geometry3DStatus.INVALID,
+                    warnings=[f"DUPLICATE_UNIT_NUMBER: Unit number '{u.unit_number}' is duplicated on floor '{u.floor_id}'."],
+                )
+                results.append(res)
+                continue
+
+            # Check positive area overlap
+            if u.unit_id in overlapping_unit_ids:
+                other_ids = overlapping_unit_ids[u.unit_id]
+                res = Unit3DResult(
+                    unit_id=u.unit_id,
+                    property_id=u.property_id,
+                    parcel_id=u.parcel_id,
+                    building_id=u.building_id,
+                    floor_id=u.floor_id,
+                    unit_number=u.unit_number,
+                    unit_name=u.unit_name,
+                    unit_type=u.unit_type,
+                    base_elevation=u.base_elevation,
+                    top_elevation=u.top_elevation,
+                    height=u.height,
+                    geometry_status=Geometry3DStatus.INVALID,
+                    warnings=[f"POSITIVE_AREA_OVERLAP: Unit '{u.unit_id}' has positive-area planar overlap with unit(s) {other_ids} on same floor."],
+                )
+                results.append(res)
+                continue
+
+            # Standard 3D extrusion
+            res = cls.generate_unit_3d(
+                req=u,
+                scene_origin=shared_origin,
+                target_crs=target_crs,
+            )
+            results.append(res)
+
+        successful = sum(1 for r in results if r.geometry_status == Geometry3DStatus.VALID)
+        failed = sum(1 for r in results if r.geometry_status == Geometry3DStatus.INVALID)
+        unavailable = sum(1 for r in results if r.geometry_status == Geometry3DStatus.UNAVAILABLE)
+
+        summary = BatchSummary3D(
+            requested=len(units),
+            successful=successful,
+            failed=failed + unavailable,
+        )
+
+        return GenerateUnits3DResponse(
+            schema_version=SCHEMA_VERSION,
+            results=results,
+            summary=summary,
         )

@@ -8,6 +8,12 @@
  * Physical unit geometry does NOT establish legal ownership.
  */
 
+import type {
+  Geometry3DStatus,
+  Mesh3DCollection,
+  BatchSummary3D,
+} from "./geometry3d";
+
 export type UnitType =
   | "APARTMENT_UNIT"
   | "RESIDENTIAL_UNIT"
@@ -101,3 +107,60 @@ export interface UnitFeatureCollection {
     };
   }>;
 }
+
+export interface Unit3DRequest {
+  unit_id: string;
+  property_id?: string | null;
+  parcel_id: string;
+  building_id: string;
+  floor_id: string;
+  unit_number: string;
+  unit_name?: string | null;
+  unit_type?: UnitType;
+  geometry_2d?: {
+    type: "Polygon" | "MultiPolygon";
+    coordinates: number[][][] | number[][][][];
+  } | null;
+  base_elevation?: number | null;
+  top_elevation?: number | null;
+  height?: number | null;
+  parent_floor_base?: number | null;
+  parent_floor_top?: number | null;
+  source_crs?: string;
+  target_crs?: string | null;
+  scene_origin?: [number, number, number] | null;
+}
+
+export interface BatchUnit3DRequest {
+  units: Unit3DRequest[];
+  target_crs?: string | null;
+  compute_shared_origin?: boolean;
+}
+
+export interface Unit3DResult {
+  unit_id: string;
+  property_id?: string | null;
+  parcel_id: string;
+  building_id: string;
+  floor_id: string;
+  unit_number: string;
+  unit_name?: string | null;
+  unit_type: UnitType;
+  base_elevation?: number | null;
+  top_elevation?: number | null;
+  height?: number | null;
+  footprint_area?: number | null;
+  volume_cubic_m?: number | null;
+  surface_area_sqm?: number | null;
+  geometry_status: Geometry3DStatus;
+  geometry?: Mesh3DCollection | null;
+  warnings: string[];
+  provenance: Record<string, unknown>;
+}
+
+export interface GenerateUnits3DResponse {
+  schema_version: string;
+  results: Unit3DResult[];
+  summary: BatchSummary3D;
+}
+

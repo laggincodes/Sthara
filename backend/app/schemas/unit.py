@@ -2,7 +2,16 @@ from enum import Enum
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
 
-from app.schemas.geometry_3d import Mesh3DCollection
+from app.schemas.geometry_3d import (
+    SCHEMA_VERSION,
+    Geometry3DStatus,
+    FeatureType,
+    GeometryType,
+    Bounds3D,
+    Mesh3D,
+    Mesh3DCollection,
+    BatchSummary3D,
+)
 
 
 class UnitType(str, Enum):
@@ -147,3 +156,68 @@ class UnitPropertyRecord(BaseModel):
         "CONCEPTUAL 3D PROPERTY RECORD FOR PROTOTYPE DEMONSTRATION. NOT AN OFFICIAL GOVERNMENT TITLE OR LEGAL OWNERSHIP CLAIM.",
         description="Statutory disclaimer"
     )
+
+
+class Unit3DRequest(BaseModel):
+    """
+    Request parameters to generate a watertight 3D solid mesh for a unit.
+    """
+    unit_id: str = Field(..., description="Canonical unit identifier (e.g. 'BLD-DEMO-002-FL05-U501')")
+    property_id: Optional[str] = Field(None, description="Cadastral property identifier")
+    parcel_id: str = Field(..., description="Parent cadastral parcel identifier")
+    building_id: str = Field(..., description="Parent building identifier")
+    floor_id: str = Field(..., description="Parent floor identifier")
+    unit_number: str = Field(..., description="Unit number designation (e.g. '501')")
+    unit_name: Optional[str] = Field(None, description="Optional unit designation")
+    unit_type: UnitType = Field(UnitType.APARTMENT_UNIT, description="Unit type discriminator")
+    geometry_2d: Optional[Dict[str, Any]] = Field(None, description="2D footprint geometry (Polygon / MultiPolygon)")
+    base_elevation: Optional[float] = Field(None, description="Base elevation in meters AMSL")
+    top_elevation: Optional[float] = Field(None, description="Top elevation in meters AMSL")
+    height: Optional[float] = Field(None, description="Explicit unit height in meters")
+    parent_floor_base: Optional[float] = Field(None, description="Parent floor base elevation for inheritance")
+    parent_floor_top: Optional[float] = Field(None, description="Parent floor top elevation for inheritance")
+    source_crs: str = Field("EPSG:4326", description="Input coordinates CRS")
+    target_crs: Optional[str] = Field("EPSG:32643", description="Projected metric target CRS")
+    scene_origin: Optional[List[float]] = Field(None, description="Optional shared scene origin [x0, y0, z0]")
+
+
+class BatchUnit3DRequest(BaseModel):
+    """
+    Batch request to generate 3D solids for multiple units across buildings/floors.
+    """
+    units: List[Unit3DRequest] = Field(..., description="List of unit 3D requests")
+    target_crs: Optional[str] = Field("EPSG:32643", description="Projected metric target CRS")
+    compute_shared_origin: bool = Field(True, description="Compute unified origin across all unit footprints")
+
+
+class Unit3DResult(BaseModel):
+    """
+    Canonical result for an individual 3D unit solid conforming to 3D Geometry Contract v1.0.
+    """
+    unit_id: str = Field(..., description="Unit identifier")
+    property_id: Optional[str] = Field(None, description="Cadastral property identifier")
+    parcel_id: str = Field(..., description="Parent parcel identifier")
+    building_id: str = Field(..., description="Parent building identifier")
+    floor_id: str = Field(..., description="Parent floor identifier")
+    unit_number: str = Field(..., description="Unit number designation")
+    unit_name: Optional[str] = Field(None, description="Unit name")
+    unit_type: UnitType = Field(UnitType.APARTMENT_UNIT, description="Unit classification")
+    base_elevation: Optional[float] = Field(None, description="Resolved base elevation in meters AMSL")
+    top_elevation: Optional[float] = Field(None, description="Resolved top elevation in meters AMSL")
+    height: Optional[float] = Field(None, description="Resolved vertical height in meters")
+    footprint_area: Optional[float] = Field(None, description="Planar footprint area in m2")
+    volume_cubic_m: Optional[float] = Field(None, description="Watertight polyhedral volume in m3")
+    surface_area_sqm: Optional[float] = Field(None, description="Outer surface area in m2")
+    geometry_status: Geometry3DStatus = Field(..., description="Status of 3D geometry generation")
+    geometry: Optional[Mesh3DCollection] = Field(None, description="Canonical 3D mesh collection for this unit")
+    warnings: List[str] = Field(default_factory=list, description="Validation warnings or notes")
+    provenance: Dict[str, Any] = Field(default_factory=dict, description="Metadata on elevation resolution and source")
+
+
+class GenerateUnits3DResponse(BaseModel):
+    """
+    Standard REST response for POST /api/v1/units/generate-3d.
+    """
+    schema_version: str = Field(SCHEMA_VERSION, description="Canonical 3D geometry contract version ('1.0')")
+    results: List[Unit3DResult] = Field(..., description="List of generated unit 3D solids")
+    summary: BatchSummary3D = Field(..., description="Batch summary statistics")

@@ -31,6 +31,8 @@ import {
   UnitBatchValidationResponse,
   UnitPropertyRecord,
   UnitFeatureCollection,
+  BatchUnit3DRequest,
+  GenerateUnits3DResponse,
 } from "@/types/cadastre";
 
 const BASE_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1").replace(/\/$/, "");
@@ -708,6 +710,41 @@ export const cadastreApi = {
     } catch (err) {
       if (err instanceof ApiError) throw err;
       throw new ApiError("Failed to fetch unit property record.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Step 17: Generates 3D solid meshes for a batch of units.
+   */
+  async generateUnits3D(payload: BatchUnit3DRequest): Promise<GenerateUnits3DResponse> {
+    try {
+      const response = await fetch(`${BASE_URL}/units/generate-3d`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      return await handleResponse<GenerateUnits3DResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Unable to connect to the 3D unit generation service.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Step 17: Fetches pre-computed 3D solids for demo apartment units.
+   */
+  async getDemoUnits3D(): Promise<GenerateUnits3DResponse> {
+    try {
+      const response = await fetch(`${BASE_URL}/units/demo-3d`, {
+        headers: { Accept: "application/json" },
+      });
+      return await handleResponse<GenerateUnits3DResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Unable to fetch demo 3D units.", 0, "NETWORK_UNAVAILABLE");
     }
   },
 };

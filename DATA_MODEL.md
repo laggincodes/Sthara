@@ -10,7 +10,9 @@ PROPERTY (Core Estate Unit)
 │   └── BASE ULPIN (2D Centroid Land Identifier)
 ├── BUILDING (Physical Superstructure Envelope)
 │   └── FLOORS (Vertical Slices / Structural Levels)
-├── PROPERTY VOLUMES (3D Stratified Polyhedral Units)
+│       └── UNITS (Horizontal Enclosed Compartments / Flats)
+├── PROPERTY VOLUMES (3D Stratified Polyhedral Units / Unit Aggregations)
+│   ├── Constituent Unit Solids / Floor Solids
 │   ├── Surface Parcel Column (SFC)
 │   ├── Above-Ground Units (ABV)
 │   └── Air Rights Envelope (AIR)
@@ -197,8 +199,47 @@ Represents an enclosed spatial compartment within a parent `Floor`, supporting h
 
 ---
 
+### 2.4B Unit-Level 3D Physical Extrusion (Entities: `Unit3DRequest`, `Unit3DResult`)
+Represents the physical 3D extruded volume of an individual apartment or unit, conforming strictly to the **Canonical 3D Geometry Contract v1.0**.
+
+#### `Unit3DRequest`
+| Field Name | Type | Description |
+|---|---|---|
+| `unit_id` | `string` | Canonical unit identifier (e.g., `"BLD-DEMO-002-FL05-U501"`) |
+| `unit_number` | `string` | Local unit number on floor (e.g., `"501"`) |
+| `floor_id` | `string` | Parent floor identifier (e.g., `"BLD-DEMO-002-FL05"`) |
+| `building_id` | `string` | Parent building identifier (e.g., `"BLD-DEMO-002"`) |
+| `footprint_geometry` | `dict` | GeoJSON Polygon or MultiPolygon representing unit boundary |
+| `base_elevation` | `float` (Nullable) | Base slab elevation in meters AMSL ($Z_{base}$) |
+| `top_elevation` | `float` (Nullable) | Ceiling slab elevation in meters AMSL ($Z_{top}$) |
+| `height` | `float` (Nullable) | Vertical unit height in meters |
+| `parent_floor_base` | `float` (Nullable) | Parent floor base elevation constraint in meters AMSL |
+| `parent_floor_top` | `float` (Nullable) | Parent floor top elevation constraint in meters AMSL |
+| `source_crs` | `string` | Source CRS (default: `"EPSG:4326"`) |
+| `target_crs` | `string` | Metric projection CRS (default: `"EPSG:32643"`) |
+
+#### `Unit3DResult`
+| Field Name | Type | Description |
+|---|---|---|
+| `unit_id` | `string` | Canonical unit identifier |
+| `unit_number` | `string` | Local unit number |
+| `floor_id` | `string` | Parent floor identifier |
+| `building_id` | `string` | Parent building identifier |
+| `geometry_status` | `enum` | `"VALID"`, `"DEGRADED"`, `"UNAVAILABLE"`, `"ERROR"` |
+| `unit` | `UnitSummary` | Compact unit metadata (elevations, height, footprint area) |
+| `geometry` | `Union[Mesh3D, Mesh3DCollection]` | Watertight 2-manifold closed mesh (`feature_type="UNIT"`) with CCW winding |
+| `warnings` | `List[string]` | Validation notices and geometric warnings |
+
+#### Extrusion Integrity Rules:
+1. **Watertight Solid**: Output mesh is 2-manifold closed ($V - E + F = 2$) with outward CCW normals.
+2. **MultiPolygon Decomposition**: MultiPolygon footprints are decomposed into discrete watertight `Mesh3D` parts inside a `Mesh3DCollection`.
+3. **Volume Cross-Validation**: Mesh volume computed via the Divergence Theorem is cross-checked against analytical prism volume ($A_{footprint} \times h$).
+4. **Party-Wall Tolerance**: Common party-wall boundary touching ($\text{Area} = 0$) is valid; positive-area footprint overlaps on the same floor ($\text{Area} > 10^{-10}\text{ deg}^2$) are rejected with `DUPLICATE_OR_OVERLAPPING_UNITS`.
+
+---
+
 ### 2.5 3D Cadastral Property Volume (Entity: `PropertyVolumeResult`)
-The fundamental 3D cadastral unit representing a discrete volumetric property right, associated with a parcel, building, and constituent floor solid(s).
+The fundamental 3D cadastral unit representing a discrete volumetric property right, associated with a parcel, building, and constituent floor solid(s) or unit solid(s).
 
 | Field Name | Type | Description |
 |---|---|---|
@@ -206,6 +247,7 @@ The fundamental 3D cadastral unit representing a discrete volumetric property ri
 | `parcel_id` | `string` (FK) | Reference to root `CadastralParcel` |
 | `building_id` | `string` (FK) | Reference to parent `BuildingStructure` |
 | `floor_ids` | `List[string]` | References to constituent `BuildingFloor` instances (single or multi-floor duplex) |
+| `unit_ids` | `List[string]` (Nullable) | Optional references to constituent `Unit` entities (unit-level property aggregation) |
 | `volume_type` | `enum` | `"PROPERTY_VOLUME"`, `"FLOOR"`, `"UNDERGROUND"`, `"AIRSPACE"` |
 | `unit_name` | `string` (Nullable) | Human-readable unit designation (e.g., `"Duplex Unit A (Floors 1-2)"`) |
 | `base_elevation` | `float` | Lowest floor base elevation in meters AMSL |

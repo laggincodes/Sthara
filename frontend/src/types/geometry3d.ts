@@ -11,7 +11,8 @@ export type FeatureType =
   | "BUILDING"
   | "FLOOR"
   | "PROPERTY_VOLUME"
-  | "UNDERGROUND";
+  | "UNDERGROUND"
+  | "UNIT";
 
 export type GeometryType = "SOLID" | "SOLID_COLLECTION";
 

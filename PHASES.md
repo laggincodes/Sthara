@@ -238,3 +238,33 @@ Prioritization tags:
   - Built 15 comprehensive unit tests (`backend/tests/test_unit_model.py`) — all 135 backend tests pass.
   - Added frontend TypeScript definitions, API client methods, hook integration, MapLibre layer with cyan polygon styling, and inspector card with SIH hierarchy chain and statutory non-ownership disclaimer.
   - Authored comprehensive documentation in `docs/UNIT_MODEL.md` and updated existing specs.
+
+---
+
+## Step 17: Implement Unit-Level 3D Property Volumes (Completed — Step 17)
+- **Priority**: **[MUST HAVE]** — **[COMPLETED]**
+- **Objective**: Implement physical 3D representation: `UNIT FOOTPRINT + BASE ELEVATION + TOP ELEVATION → UNIT 3D VOLUME` conforming strictly to Canonical 3D Geometry Contract v1.0.
+- **Tasks**:
+  1. Updated domain schemas (`backend/app/schemas/`):
+     - Added `FeatureType.UNIT` in `geometry_3d.py`.
+     - Added `unit_ids: List[str]` to `PropertyVolumeRequest`.
+     - Created `Unit3DRequest`, `BatchUnit3DRequest`, `Unit3DResult`, and `GenerateUnits3DResponse` in `unit.py`.
+  2. Implemented extrusion & validation logic in `backend/app/services/unit_service.py`:
+     - Vertical extent derivation & floor elevation bounds validation.
+     - Robust footprint parsing (`Polygon`, `MultiPolygon`, `GeometryCollection`).
+     - Delaunay triangulation cap generation + quad side walls forming watertight 2-manifold closed meshes with outward CCW winding.
+     - Independent mesh volume verification using Divergence Theorem against analytical prism volume ($A \times h$).
+     - Multi-unit party-wall tolerance: common boundary touching allowed ($\text{area} = 0$), positive overlap rejected (`inter.area > 1e-10`).
+  3. Extended `backend/app/services/floor_volume_service.py` to aggregate constituent units into `PROPERTY_VOLUME` collections without boolean union.
+  4. Exposed REST endpoints (`backend/app/api/routes/units.py`):
+     - `POST /api/v1/units/generate-3d`
+     - `GET /api/v1/units/demo-3d`
+  5. Built 10 unit 3D volume tests (`backend/tests/test_unit_3d_volume.py`) — all 145 backend tests pass.
+  6. Implemented frontend 3D viewing in `frontend/`:
+     - Created `<UnitObject>` with cyan wireframes, interactive selection, and height hover tooltips.
+     - Added `"units"` sub-view switcher, layer toggle, and explosion factor support.
+     - Integrated units into `useCadastre` demo sequence and 3D workspace page.
+  7. Authored technical documentation in `docs/UNIT_3D_VOLUME.md` and `UNIT_3D_VOLUME.md`.
+- **Expected Output**: Watertight 3D unit volumes rendered in 3D viewer and bound to cadastral property volumes.
+- **Acceptance Criteria**: Canonical 3D contract preserved; 0 TypeScript errors; 0 ESLint warnings; 145/145 tests pass.
+

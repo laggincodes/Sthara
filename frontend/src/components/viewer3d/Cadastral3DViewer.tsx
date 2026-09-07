@@ -10,12 +10,14 @@ import {
   Generate3DResponse,
   GenerateFloors3DResponse,
   GeneratePropertyVolumeResponse,
+  GenerateUnits3DResponse,
 } from "@/types/cadastre";
 import { computeCollectionBounds, calculateCameraFit } from "@/lib/viewer3d/coordinates";
 
 import { BuildingObject } from "./BuildingObject";
 import { FloorObject } from "./FloorObject";
 import { PropertyVolumeObject } from "./PropertyVolumeObject";
+import { UnitObject } from "./UnitObject";
 import { ViewerControls, ViewerLayers } from "./ViewerControls";
 import { ViewerLegend } from "./ViewerLegend";
 import { ViewerLoading } from "./ViewerLoading";
@@ -27,14 +29,17 @@ export interface Cadastral3DViewerProps {
   data: Generate3DResponse | null;
   floorsData?: GenerateFloors3DResponse | null;
   propertiesData?: GeneratePropertyVolumeResponse | null;
+  unitsData?: GenerateUnits3DResponse | null;
   selectedBuildingId: string | null;
   onSelectBuilding: (buildingId: string | null) => void;
   selectedFloorId?: string | null;
   onSelectFloor?: (floorId: string | null) => void;
   selectedPropertyId?: string | null;
   onSelectProperty?: (propertyId: string | null) => void;
-  subView?: "building" | "floors" | "property";
-  onChangeSubView?: (mode: "building" | "floors" | "property") => void;
+  selectedUnitId?: string | null;
+  onSelectUnit?: (unitId: string | null) => void;
+  subView?: "building" | "floors" | "property" | "units";
+  onChangeSubView?: (mode: "building" | "floors" | "property" | "units") => void;
   explodeDistance?: number;
   onChangeExplodeDistance?: (val: number) => void;
   isolatedFloorIndex?: number | null;
@@ -43,6 +48,7 @@ export interface Cadastral3DViewerProps {
   onGenerate3D?: () => void;
   onGenerateFloors?: () => void;
   onGenerateProperties?: () => void;
+  onGenerateUnits?: () => void;
   onSwitchTo2D?: () => void;
 }
 
@@ -82,12 +88,15 @@ export function Cadastral3DViewer({
   data,
   floorsData,
   propertiesData,
+  unitsData,
   selectedBuildingId,
   onSelectBuilding,
   selectedFloorId,
   onSelectFloor,
   selectedPropertyId,
   onSelectProperty,
+  selectedUnitId,
+  onSelectUnit,
   subView = "building",
   onChangeSubView,
   explodeDistance = 0,
@@ -96,6 +105,7 @@ export function Cadastral3DViewer({
   onGenerate3D,
   onGenerateFloors,
   onGenerateProperties,
+  onGenerateUnits,
   onSwitchTo2D,
 }: Cadastral3DViewerProps) {
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
@@ -118,11 +128,12 @@ export function Cadastral3DViewer({
     buildings: true,
     floors: true,
     properties: true,
+    units: true,
     grid: true,
   });
   const [fitTrigger, setFitTrigger] = useState<number>(0);
 
-  const handleSubViewChange = (mode: "building" | "floors" | "property") => {
+  const handleSubViewChange = (mode: "building" | "floors" | "property" | "units") => {
     onChangeSubView?.(mode);
   };
 
@@ -152,10 +163,14 @@ export function Cadastral3DViewer({
       propertiesData.results.forEach((p) => {
         if (p.geometry) geometriesToBound.push(p.geometry);
       });
+    } else if (subView === "units" && unitsData?.results) {
+      unitsData.results.forEach((u) => {
+        if (u.geometry) geometriesToBound.push(u.geometry);
+      });
     }
 
     return computeCollectionBounds(geometriesToBound);
-  }, [subView, data, floorsData, propertiesData]);
+  }, [subView, data, floorsData, propertiesData, unitsData]);
 
   const handleResetCamera = useCallback(() => {
     if (controlsRef.current) {
@@ -172,8 +187,9 @@ export function Cadastral3DViewer({
   const hasBuildingData = Boolean(data?.results && data.results.length > 0);
   const hasFloorsData = Boolean(floorsData?.results && floorsData.results.length > 0);
   const hasPropertiesData = Boolean(propertiesData?.results && propertiesData.results.length > 0);
+  const hasUnitsData = Boolean(unitsData?.results && unitsData.results.length > 0);
 
-  const hasAnyData = hasBuildingData || hasFloorsData || hasPropertiesData;
+  const hasAnyData = hasBuildingData || hasFloorsData || hasPropertiesData || hasUnitsData;
 
   if (!isLoading && !hasAnyData) {
     return (
@@ -181,12 +197,14 @@ export function Cadastral3DViewer({
         <ViewerError
           kind="NO_GEOMETRY"
           title="No 3D Models Available"
-          message="Extrude 3D building envelopes, stratified floor levels, or property volumes from the 2D cadastral layers."
+          message="Extrude 3D building envelopes, stratified floor levels, apartment units, or property volumes from the 2D cadastral layers."
           onRetry={
             subView === "floors"
               ? onGenerateFloors || onGenerate3D
               : subView === "property"
               ? onGenerateProperties || onGenerate3D
+              : subView === "units"
+              ? onGenerateUnits || onGenerate3D
               : onGenerate3D
           }
           onSwitchTo2D={onSwitchTo2D}
@@ -212,6 +230,7 @@ export function Cadastral3DViewer({
         onSwitchTo2D={onSwitchTo2D}
         hasFloorsData={hasFloorsData}
         hasPropertiesData={hasPropertiesData}
+        hasUnitsData={hasUnitsData}
       />
 
       {/* 2. Loading State Overlay */}
@@ -332,6 +351,28 @@ export function Cadastral3DViewer({
                 onSelectProperty?.(id === selectedPropertyId ? null : id);
                 if (prop.building_id && prop.building_id !== selectedBuildingId) {
                   onSelectBuilding(prop.building_id);
+                }
+              }}
+            />
+          ))}
+
+        {/* ------------------------------------------------------------- */}
+        {/* MODE D: 3D Unit / Apartment View */}
+        {/* ------------------------------------------------------------- */}
+        {subView === "units" &&
+          layers.units &&
+          unitsData?.results?.map((u) => (
+            <UnitObject
+              key={u.unit_id}
+              unit={u}
+              isSelected={selectedUnitId === u.unit_id}
+              isDimmed={Boolean(selectedUnitId && selectedUnitId !== u.unit_id)}
+              isWireframe={isWireframe}
+              explodeDistance={explodeDistance}
+              onSelect={(id) => {
+                onSelectUnit?.(id === selectedUnitId ? null : id);
+                if (u.building_id && u.building_id !== selectedBuildingId) {
+                  onSelectBuilding(u.building_id);
                 }
               }}
             />

@@ -21,6 +21,8 @@ import {
   Unit,
   UnitFeatureCollection,
   UnitPropertyRecord,
+  GenerateUnits3DResponse,
+  Unit3DResult,
 } from "@/types/cadastre";
 import { cadastreApi, ApiError } from "@/lib/api/client";
 
@@ -108,7 +110,7 @@ export function useCadastre() {
   const [isGeneratingULPIN, setIsGeneratingULPIN] = useState<boolean>(false);
   const [ulpinError, setUlpinError] = useState<string | null>(null);
 
-  const [subView3D, setSubView3D] = useState<"building" | "floors" | "property">("building");
+  const [subView3D, setSubView3D] = useState<"building" | "floors" | "property" | "units">("building");
   const [selectedFloorId, setSelectedFloorId] = useState<string | null>(null);
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
   const [explodeDistance, setExplodeDistance] = useState<number>(0);
@@ -122,6 +124,11 @@ export function useCadastre() {
   const [unitPropertyRecord, setUnitPropertyRecord] = useState<UnitPropertyRecord | null>(null);
   const [isLoadingUnits, setIsLoadingUnits] = useState<boolean>(false);
   const [unitError, setUnitError] = useState<string | null>(null);
+
+  // Step 17: 3D Unit Volume State
+  const [units3DData, setUnits3DData] = useState<GenerateUnits3DResponse | null>(null);
+  const [isGeneratingUnits3D, setIsGeneratingUnits3D] = useState<boolean>(false);
+  const [units3DError, setUnits3DError] = useState<string | null>(null);
 
   // Layer Visibility
   const [layerVisibility, setLayerVisibility] = useState<{ parcels: boolean; buildings: boolean; units: boolean }>({
@@ -812,6 +819,61 @@ export function useCadastre() {
     }
   }, []);
 
+  // Step 17: Generate 3D Unit Models
+  const generate3DUnitModels = useCallback(async () => {
+    setIsGeneratingUnits3D(true);
+    setUnits3DError(null);
+    try {
+      if (unitsDatasetName === "demo_units" || !unitsGeojson) {
+        const res = await cadastreApi.getDemoUnits3D();
+        setUnits3DData(res);
+        setViewMode("3d");
+        setSubView3D("units");
+      } else {
+        const requests = unitsGeojson.features.map((feat) => {
+          const props = feat.properties || {};
+          return {
+            unit_id: props.unit_id || String(feat.id),
+            property_id: props.property_id || null,
+            parcel_id: props.parcel_id || "PARCEL-DEMO-102",
+            building_id: props.building_id || "BLD-DEMO-002",
+            floor_id: props.floor_id || "BLD-DEMO-002-FL05",
+            unit_number: props.unit_number || "501",
+            unit_name: props.unit_name || null,
+            unit_type: props.unit_type || "APARTMENT_UNIT",
+            geometry_2d: feat.geometry,
+            base_elevation: props.base_elevation ?? null,
+            top_elevation: props.top_elevation ?? null,
+            height: props.height ?? 3.0,
+            parent_floor_base: 577.48,
+            parent_floor_top: 580.48,
+            source_crs: "EPSG:4326",
+            target_crs: "EPSG:32643",
+          };
+        });
+
+        const res = await cadastreApi.generateUnits3D({
+          units: requests,
+          target_crs: "EPSG:32643",
+          compute_shared_origin: true,
+        });
+        setUnits3DData(res);
+        setViewMode("3d");
+        setSubView3D("units");
+      }
+    } catch (err: unknown) {
+      const msg =
+        err instanceof ApiError
+          ? err.message
+          : err instanceof Error
+          ? err.message
+          : "Failed to generate 3D unit models.";
+      setUnits3DError(msg);
+    } finally {
+      setIsGeneratingUnits3D(false);
+    }
+  }, [unitsGeojson, unitsDatasetName]);
+
   // Step 15: Deterministic End-to-End Demo Runner & State Reset
   const resetDemo = useCallback(() => {
     setGeojson(null);
@@ -831,6 +893,8 @@ export function useCadastre() {
     setBuilding3DData(null);
     setFloors3DData(null);
     setProperty3DData(null);
+    setUnits3DData(null);
+    setUnits3DError(null);
     setUlpins3D({});
     setGeneralError(null);
     setValidationError(null);
@@ -975,11 +1039,13 @@ export function useCadastre() {
       });
       setUlpins3D(ulpinMap);
 
-      // Step 8b: Load Unit / Apartment Models
+      // Step 8b: Load Unit / Apartment Models & 3D Solids
       try {
         const unitsData = await cadastreApi.getDemoUnits();
         setUnitsGeojson(unitsData);
         setUnitsDatasetName("demo_units.geojson");
+        const units3DRes = await cadastreApi.getDemoUnits3D();
+        setUnits3DData(units3DRes);
       } catch {}
 
       // Auto-select primary demo parcel, building, and property volume
@@ -1239,6 +1305,12 @@ export function useCadastre() {
       .map((f) => f.properties);
   }, [unitsGeojson, selectedFloorId]);
 
+  // Step 17: Selected Unit 3D Result
+  const selectedUnit3D: Unit3DResult | null = useMemo(() => {
+    if (!units3DData || !selectedUnitId) return null;
+    return units3DData.results.find((u) => u.unit_id === selectedUnitId) || null;
+  }, [units3DData, selectedUnitId]);
+
   return {
     backendConnected,
     isLoading,
@@ -1328,6 +1400,11 @@ export function useCadastre() {
     isLoadingUnits,
     unitError,
     loadDemoUnits,
+    units3DData,
+    isGeneratingUnits3D,
+    units3DError,
+    selectedUnit3D,
+    generate3DUnitModels,
     setSelectedUnitId,
     setSelectedParcelId,
     setSelectedBuildingId,
