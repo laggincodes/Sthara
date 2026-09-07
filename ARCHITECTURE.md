@@ -413,3 +413,29 @@ In adherence to the SIH technical approach, the system maintains an absolute arc
    - Candidates must pass through `/api/v1/ai/validate-candidates`.
    - Rejects invalid polygons, out-of-parcel buildings, and overlapping units.
    - Flags low-confidence predictions ($< 0.60$) for human review.
+
+## 5D. Subsurface & Underground Spatial Modeling Architecture (Step 20)
+
+Conforming to the SIH technical presentation, the platform models subterranean assets with native vertical coordinate consistency and strict cadastral separation:
+
+1. **Native Z-Up Elevation Representation**:
+   - All spatial meshes store coordinates in native metric coordinates ($Z_\text{base} < Z_\text{top} \le Z_\text{ground}$).
+   - Subterranean depths are derived explicitly relative to the authoritative reference surface datum:
+     $$\text{depth\_to\_top} = Z_\text{ground} - Z_\text{top} \ge 0$$
+     $$\text{depth\_to\_base} = Z_\text{ground} - Z_\text{base} > 0$$
+   - Negative Z elevations are never used unless the asset physically lies below mean sea level.
+
+2. **Semantic Cadastral Separation**:
+   - **Basement Strata**: Structural components of building developments (`is_cadastral_property = True`). Tied to parent building IDs and parcel records; aggregatable into private 3D property volumes.
+   - **Infrastructure Utilities**: Public service conduits (water, telecom, power, sewer; `is_cadastral_property = False`). Modelled as 3D physical corridors without asserting private real estate ownership or generating property ULPINs.
+   - **Subsurface Volumes**: Public or zoned subterranean space parcels subject to statutory depth restrictions.
+
+3. **Subsurface 3D Clash & Easement Classification Engine**:
+   - Evaluates both 2D horizontal overlap ($A_\text{overlap} > 0$) and 1D vertical clearance ($Z_\text{clearance} < 0$).
+   - Categorizes physical intersections into:
+     - `ALLOWED_INTERSECTION`: Documented utility connections entering a basement with legal easement rights.
+     - `REVIEW_REQUIRED`: Proximity clearance $< 1.0\text{m}$ flagging safety/excavation hazards.
+     - `INVALID_OVERLAP`: Direct unauthorized physical collision between competing subterranean volumes.
+
+4. **Visual Cutaway & Subsurface Inspection**:
+   - The 3D viewport supports a dedicated **Cutaway Inspection Mode** where above-ground structures are rendered as semi-transparent silhouettes, allowing subterranean basements, pipe conduits, and duct banks to be visually inspected in spatial context.

@@ -1048,3 +1048,41 @@ Computes Intersection-over-Union (IoU), overlapping area, centroid offset, and b
 ### 11.8 SIH Presentation Demonstration Bundle
 `GET /api/v1/ai/demo`
 Returns reproducible deterministic candidates for Tower 1.
+
+---
+
+## 12. Underground & Subsurface Spatial Modeling Endpoints (Step 20)
+
+### 12.1 Retrieve Demo Underground Bundle
+- **Route**: `GET /api/v1/underground/demo`
+- **Purpose**: Returns complete synthetic subsurface demonstration bundle (Commercial Basement, Municipal Water Supply Trunk, Telecom Duct Bank) for Tower 1 & Parcel `DEMO-401/1`.
+- **Response**: `200 OK` (`DemoUndergroundResponse`)
+
+### 12.2 Retrieve Specific Subsurface Feature
+- **Route**: `GET /api/v1/underground/{feature_id}`
+- **Purpose**: Look up a registered underground feature by ID.
+- **Response**: `200 OK` (`UndergroundFeature`) or `404 Not Found`
+
+### 12.3 Validate Subsurface Feature
+- **Route**: `POST /api/v1/underground/validate`
+- **Purpose**: Audits elevation sanity, derived depths ($Z_\text{ground} - Z_\text{top}$), 2D geometry validity, and parent parcel boundary containment (`WITHIN`, `INTERSECTS`, `OUTSIDE`).
+- **Request**: `UndergroundValidationRequest`
+- **Response**: `200 OK` (`UndergroundValidationResponse`)
+
+### 12.4 Generate Canonical 3D Solid for Underground Feature
+- **Route**: `POST /api/v1/underground/generate-3d`
+- **Purpose**: Extrudes a 2D footprint or buffered linear corridor into a watertight 2-manifold `Mesh3D` solid adhering strictly to Canonical 3D Geometry Contract v1.0.
+- **Request**: `Underground3DRequest`
+- **Response**: `200 OK` (`Underground3DResult`)
+
+### 12.5 Batch Generate 3D Solids for Subsurface Features
+- **Route**: `POST /api/v1/underground/generate-3d/batch`
+- **Purpose**: Batch 3D solid extrusion for an array of underground features.
+- **Request**: `List[Underground3DRequest]`
+- **Response**: `200 OK` (`GenerateUnderground3DResponse`)
+
+### 12.6 Detect Subsurface Physical Clashes & Proximity Conflicts
+- **Route**: `POST /api/v1/underground/conflicts`
+- **Purpose**: Evaluates 3D physical clashes and clearance buffers between a candidate asset and existing underground features, classifying them into `ALLOWED_INTERSECTION`, `REVIEW_REQUIRED`, or `INVALID_OVERLAP`.
+- **Request**: `UndergroundConflictRequest`
+- **Response**: `200 OK` (`UndergroundConflictResponse`)

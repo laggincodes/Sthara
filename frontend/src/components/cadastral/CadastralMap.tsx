@@ -14,17 +14,20 @@ interface CadastralMapProps {
   geojson: GeoJSONFeatureCollection | null;
   buildingsGeojson?: GeoJSONFeatureCollection | null;
   unitsGeojson?: UnitFeatureCollection | null;
+  undergroundGeojson?: GeoJSONFeatureCollection | null;
   aiCandidatesGeojson?: GeoJSONFeatureCollection | null;
   selectedParcelId: string | null;
   selectedBuildingId?: string | null;
   selectedUnitId?: string | null;
+  selectedUndergroundId?: string | null;
   selectedAiCandidateId?: string | null;
   onSelectParcel: (parcelId: string | null) => void;
   onSelectBuilding?: (buildingId: string | null) => void;
   onSelectUnit?: (unitId: string | null) => void;
+  onSelectUnderground?: (undergroundId: string | null) => void;
   onSelectAiCandidate?: (candidateId: string | null) => void;
-  layerVisibility?: { parcels: boolean; buildings: boolean; units?: boolean; aiCandidates?: boolean };
-  onToggleLayer?: (layer: "parcels" | "buildings" | "units") => void;
+  layerVisibility?: { parcels: boolean; buildings: boolean; units?: boolean; underground?: boolean; aiCandidates?: boolean };
+  onToggleLayer?: (layer: "parcels" | "buildings" | "units" | "underground") => void;
   isActive?: boolean;
 }
 
@@ -589,20 +592,147 @@ function updateUnitsLayer(
   }
 }
 
+
+function updateUndergroundLayer(
+  map: maplibregl.Map,
+  data: GeoJSONFeatureCollection | null | undefined,
+  activeUndergroundId: string | null | undefined,
+  onSelectUnderground?: (id: string | null) => void,
+  visible: boolean = true
+) {
+  const sourceId = "underground-features";
+
+  if (!visible) {
+    ["underground-fill", "underground-line", "underground-selected-fill", "underground-selected-line"].forEach((layerId) => {
+      if (map.getLayer(layerId)) map.setLayoutProperty(layerId, "visibility", "none");
+    });
+    return;
+  } else {
+    ["underground-fill", "underground-line", "underground-selected-fill", "underground-selected-line"].forEach((layerId) => {
+      if (map.getLayer(layerId)) map.setLayoutProperty(layerId, "visibility", "visible");
+    });
+  }
+
+  if (!data || !data.features || data.features.length === 0) {
+    if (map.getSource(sourceId)) {
+      (map.getSource(sourceId) as maplibregl.GeoJSONSource).setData({
+        type: "FeatureCollection",
+        features: [],
+      });
+    }
+    return;
+  }
+
+  const enrichedCollection = {
+    ...data,
+    features: data.features.map((feat, index) => {
+      const uId = feat.properties?.underground_feature_id || feat.id || `UTL-${index + 1}`;
+      return {
+        ...feat,
+        id: String(uId),
+        properties: {
+          ...feat.properties,
+          __underground_id: String(uId),
+        },
+      };
+    }),
+  };
+
+  if (map.getSource(sourceId)) {
+    (map.getSource(sourceId) as maplibregl.GeoJSONSource).setData(
+      enrichedCollection as unknown as GeoJSON.GeoJSON
+    );
+  } else {
+    map.addSource(sourceId, {
+      type: "geojson",
+      data: enrichedCollection as unknown as GeoJSON.GeoJSON,
+    });
+
+    map.addLayer({
+      id: "underground-fill",
+      type: "fill",
+      source: sourceId,
+      paint: {
+        "fill-color": "#2563EB",
+        "fill-opacity": 0.35,
+      },
+    });
+
+    map.addLayer({
+      id: "underground-line",
+      type: "line",
+      source: sourceId,
+      paint: {
+        "line-color": "#60A5FA",
+        "line-width": 2.5,
+        "line-dasharray": [3, 2],
+      },
+    });
+
+    map.addLayer({
+      id: "underground-selected-fill",
+      type: "fill",
+      source: sourceId,
+      paint: {
+        "fill-color": "#F59E0B",
+        "fill-opacity": 0.65,
+      },
+      filter: ["==", ["get", "__underground_id"], activeUndergroundId || ""],
+    });
+
+    map.addLayer({
+      id: "underground-selected-line",
+      type: "line",
+      source: sourceId,
+      paint: {
+        "line-color": "#FCD34D",
+        "line-width": 3,
+      },
+      filter: ["==", ["get", "__underground_id"], activeUndergroundId || ""],
+    });
+
+    if (onSelectUnderground) {
+      map.on("click", "underground-fill", (e: maplibregl.MapLayerMouseEvent) => {
+        if (e.features && e.features.length > 0) {
+          const clickedId = e.features[0].properties?.__underground_id;
+          onSelectUnderground(clickedId ? String(clickedId) : null);
+        }
+      });
+    }
+
+    map.on("mouseenter", "underground-fill", () => {
+      map.getCanvas().style.cursor = "pointer";
+    });
+
+    map.on("mouseleave", "underground-fill", () => {
+      map.getCanvas().style.cursor = "";
+    });
+  }
+
+  if (map.getLayer("underground-selected-fill") && map.getLayer("underground-selected-line")) {
+    const filterExpr = ["==", ["get", "__underground_id"], activeUndergroundId || ""];
+    map.setFilter("underground-selected-fill", filterExpr as unknown as maplibregl.FilterSpecification);
+    map.setFilter("underground-selected-line", filterExpr as unknown as maplibregl.FilterSpecification);
+  }
+}
+
 export function CadastralMap({
   geojson,
   buildingsGeojson,
   unitsGeojson,
+  undergroundGeojson,
   aiCandidatesGeojson,
   selectedParcelId,
   selectedBuildingId,
   selectedUnitId,
+  selectedUndergroundId,
   selectedAiCandidateId,
   onSelectParcel,
   onSelectBuilding,
   onSelectUnit,
+  onSelectUnderground,
   onSelectAiCandidate,
-  layerVisibility = { parcels: true, buildings: true, units: true, aiCandidates: true },
+  layerVisibility = { parcels: true, buildings: true, units: true, underground: true, aiCandidates: true },
   onToggleLayer,
   isActive = true,
 }: CadastralMapProps) {
@@ -630,6 +760,13 @@ export function CadastralMap({
       if (onSelectUnit) onSelectUnit(id);
     },
     [onSelectUnit]
+  );
+
+  const onSelectUndergroundCallback = useCallback(
+    (id: string | null) => {
+      if (onSelectUnderground) onSelectUnderground(id);
+    },
+    [onSelectUnderground]
   );
 
   // 1. Initialize MapLibre GL
@@ -689,6 +826,13 @@ export function CadastralMap({
         selectedUnitId,
         onSelectUnitCallback,
         layerVisibility.units ?? true
+      );
+      updateUndergroundLayer(
+        mapInstance,
+        undergroundGeojson,
+        selectedUndergroundId,
+        onSelectUndergroundCallback,
+        layerVisibility.underground ?? true
       );
       fitMapToBounds(mapInstance, geojson, buildingsGeojson);
     };
@@ -769,6 +913,13 @@ export function CadastralMap({
         onSelectAiCandidate,
         layerVisibility.aiCandidates ?? localShowAiCandidates
       );
+      updateUndergroundLayer(
+        mapRef.current,
+        undergroundGeojson,
+        selectedUndergroundId,
+        onSelectUndergroundCallback,
+        layerVisibility.underground ?? true
+      );
     }
   }, [
     geojson,
@@ -788,6 +939,10 @@ export function CadastralMap({
     onSelectAiCandidate,
     layerVisibility.aiCandidates,
     localShowAiCandidates,
+    undergroundGeojson,
+    selectedUndergroundId,
+    onSelectUndergroundCallback,
+    layerVisibility.underground,
   ]);
 
   // 5. Fit bounds when new dataset arrives

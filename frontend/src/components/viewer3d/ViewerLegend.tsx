@@ -26,12 +26,20 @@ export function ViewerLegend() {
           <span className="text-slate-300">Apartment Unit</span>
         </div>
         <div className="flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-sm bg-blue-600/90 border border-blue-400" />
+          <span className="text-slate-300">Basement Strata</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-sm bg-amber-600/90 border border-amber-400" />
+          <span className="text-slate-300">Utility Conduit</span>
+        </div>
+        <div className="flex items-center gap-1.5">
           <span className="h-2.5 w-2.5 rounded-sm bg-amber-400 border border-amber-300" />
           <span className="text-amber-200">Selected / Active</span>
         </div>
       </div>
       <div className="text-[8px] font-mono text-slate-500 mt-1.5 pt-1 border-t border-slate-800">
-        Coordinates: Local metric offsets (Z-up)
+        Coordinates: Local metric offsets (Z-up) • Datum: EGM2008
       </div>
     </div>
   );

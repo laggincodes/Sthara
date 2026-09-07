@@ -1,3 +1,21 @@
+from app.schemas.underground import (
+    UndergroundFeatureType,
+    UtilityType,
+    UndergroundConflictClass,
+    UndergroundSpatialStatus,
+    UndergroundProvenance,
+    UndergroundFeature,
+    UndergroundValidationRequest,
+    UndergroundValidationResponse,
+    Underground3DRequest,
+    Underground3DResult,
+    GenerateUnderground3DResponse,
+    UndergroundConflictRecord,
+    UndergroundConflictRequest,
+    UndergroundConflictResponse,
+    DemoUndergroundResponse,
+)
+
 from app.schemas.unit import (
     Unit,
     UnitType,
@@ -107,6 +125,22 @@ __all__ = [
     "CandidateComparisonRequest",
     "CandidateComparisonResponse",
     "ModelRegistryResponse",
+    "UndergroundFeatureType",
+    "UtilityType",
+    "UndergroundConflictClass",
+    "UndergroundSpatialStatus",
+    "UndergroundProvenance",
+    "UndergroundFeature",
+    "UndergroundValidationRequest",
+    "UndergroundValidationResponse",
+    "Underground3DRequest",
+    "Underground3DResult",
+    "GenerateUnderground3DResponse",
+    "UndergroundConflictRecord",
+    "UndergroundConflictRequest",
+    "UndergroundConflictResponse",
+    "DemoUndergroundResponse",
+
 
 ]
 

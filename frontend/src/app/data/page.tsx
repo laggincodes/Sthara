@@ -6,6 +6,7 @@ import { useCadastreContext } from "@/context/CadastreContext";
 import { ValidationCard } from "@/components/cadastral/ValidationCard";
 import { DataFusionCard } from "@/components/cadastral/DataFusionCard";
 import { AiExtractionCard } from "@/components/cadastral/AiExtractionCard";
+import { UndergroundDataCard } from "@/components/cadastral/UndergroundDataCard";
 
 export default function DataWorkspacePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -405,6 +406,10 @@ export default function DataWorkspacePage() {
 
       {/* Stage 19: AI/ML Extraction Subsystem & Spatial Validation */}
       <AiExtractionCard />
+
+      {/* Stage 20: Underground / Subsurface Spatial Modeling */}
+      <UndergroundDataCard />
     </div>
   );
 }
+

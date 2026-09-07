@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
+import { GeoJSONFeatureCollection, GeoJSONFeature } from "@/types/cadastre";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCadastreContext } from "@/context/CadastreContext";
@@ -61,7 +62,32 @@ export default function Cadastral2DPage() {
     setSelectedPropertyId,
     setSelectedUnitId,
     setSubView3D,
+    undergroundBundle,
+    selectedUndergroundId,
+    setSelectedUndergroundId,
+    loadDemoUnderground,
   } = useCadastreContext();
+
+  const undergroundGeojson: GeoJSONFeatureCollection | null = useMemo(() => {
+    if (!undergroundBundle || !undergroundBundle.features) return null;
+    return {
+      type: "FeatureCollection",
+      features: undergroundBundle.features.map((feat) => ({
+        type: "Feature",
+        id: feat.underground_feature_id,
+        geometry: (feat.geometry_2d as GeoJSONFeature["geometry"]) || { type: "Polygon", coordinates: [] },
+        properties: {
+          underground_feature_id: feat.underground_feature_id,
+          name: feat.name,
+          feature_type: feat.feature_type,
+          utility_type: feat.utility_type,
+          depth_to_top_m: feat.depth_to_top_m,
+          depth_to_base_m: feat.depth_to_base_m,
+          is_cadastral_property: feat.is_cadastral_property,
+        },
+      })),
+    };
+  }, [undergroundBundle]);
 
   const crsString = validationResult?.crs || geojson?.crs?.properties?.name || "WGS 84 (EPSG:4326)";
   const hasData = (geojson && geojson.features.length > 0) || (buildingsGeojson && buildingsGeojson.features.length > 0);
@@ -113,6 +139,20 @@ export default function Cadastral2DPage() {
             >
               Units ({unitsGeojson?.features?.length || 0})
             </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (!undergroundBundle) loadDemoUnderground();
+                toggleLayer("underground");
+              }}
+              className={`px-2 py-1 rounded text-[11px] font-mono transition-colors ${
+                layerVisibility.underground
+                  ? "bg-blue-950/80 text-blue-300 border border-blue-500/40"
+                  : "bg-slate-900 text-slate-500 border border-slate-800"
+              }`}
+            >
+              Subsurface ({undergroundBundle?.total_features || 0})
+            </button>
           </div>
         </div>
 
@@ -158,12 +198,15 @@ export default function Cadastral2DPage() {
             geojson={geojson}
             buildingsGeojson={buildingsGeojson}
             unitsGeojson={unitsGeojson}
+            undergroundGeojson={undergroundGeojson}
             selectedParcelId={selectedParcelId}
             selectedBuildingId={selectedBuildingId}
             selectedUnitId={selectedUnitId}
+            selectedUndergroundId={selectedUndergroundId}
             onSelectParcel={setSelectedParcelId}
             onSelectBuilding={setSelectedBuildingId}
             onSelectUnit={setSelectedUnitId}
+            onSelectUnderground={setSelectedUndergroundId}
             layerVisibility={layerVisibility}
             onToggleLayer={toggleLayer}
             isActive={true}

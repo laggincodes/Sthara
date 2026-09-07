@@ -342,3 +342,42 @@ Prioritization tags:
   7. Authored technical documentation in `docs/AI_EXTRACTION.md` and `AI_EXTRACTION.md`.
 - **Expected Output**: Explainable candidate extraction pipeline that feeds candidate evidence into the deterministic 3D engine without bypassing topological validation or fabricating legal ownership.
 - **Acceptance Criteria**: 0 TypeScript errors; 0 ESLint warnings; 178/178 tests pass; Next.js production build succeeds; SIH architectural separation strictly preserved.
+
+---
+## Step 20: Underground / Subsurface Spatial Modeling (Completed — Step 20)
+- **Priority**: **[MUST HAVE]** — **[COMPLETED]**
+- **Objective**: Introduce deterministic subsurface spatial modeling conforming strictly to the SIH presentation requirements: `Basement`, `Underground Utility`, and `Subsurface Volume`.
+- **Tasks**:
+  1. Implemented domain schemas (`backend/app/schemas/underground.py`):
+     - `UndergroundFeatureType` (BASEMENT, UNDERGROUND_UTILITY, SUBSURFACE_VOLUME, PARKING_VAULT, METRO_TUNNEL, FOUNDATION_PIER, PEDESTRIAN_SUBWAY, OTHER_SUBSURFACE).
+     - `UtilityType` (WATER_SUPPLY, SEWERAGE, STORMWATER, ELECTRICITY_POWER, TELECOMMUNICATIONS, GAS_PIPELINE, DISTRICT_COOLING, OTHER_UTILITY).
+     - `UndergroundConflictClass` (ALLOWED_INTERSECTION, REVIEW_REQUIRED, INVALID_OVERLAP).
+     - `UndergroundSpatialStatus` (WITHIN, INTERSECTS, OUTSIDE, UNRESOLVED).
+     - `UndergroundProvenance`, `UndergroundFeature`, validation, 3D extrusion, and clash detection schemas.
+  2. Implemented Underground Service (`backend/app/services/underground_service.py`):
+     - Native Z-up elevation constraints ($Z_\text{base} < Z_\text{top} \le Z_\text{ground}$) and derived depth calculation.
+     - Watertight 2-manifold closed `Mesh3D` solid generation with outward CCW normals using canonical `ExtrusionService`.
+     - Deterministic 3D volume calculation via the Divergence Theorem.
+     - Spatial relationship auditing (parcel boundary containment and building footprint alignment for basements).
+     - 3D physical clash detection and proximity clearance buffer evaluation ($< 1.0\text{m}$).
+     - Calibrated synthetic demo testbed for Tower 1 & Parcel `DEMO-401/1` (Commercial Basement $9,900\,\text{m}^3$, Water Supply Trunk $132.98\,\text{m}^3$, Telecom Duct Bank $72.19\,\text{m}^3$).
+  3. Strict semantic separation:
+     - Basements marked `is_cadastral_property=True` (eligible for private cadastral property volume registration).
+     - Utilities marked `is_cadastral_property=False` (public infrastructure easement corridors; does not confer private ownership).
+  4. Exposed REST endpoints (`backend/app/api/routes/underground.py`):
+     - `GET /api/v1/underground/demo`
+     - `GET /api/v1/underground/{feature_id}`
+     - `POST /api/v1/underground/validate`
+     - `POST /api/v1/underground/generate-3d`
+     - `POST /api/v1/underground/generate-3d/batch`
+     - `POST /api/v1/underground/conflicts`
+  5. Built 18 comprehensive backend tests (`backend/tests/test_underground_model.py`) — all 196 backend tests pass.
+  6. Implemented frontend Underground UI:
+     - Created `UndergroundDataCard.tsx` with depth coordinate breakdown, validation runner, clash detection, and legal ownership callouts.
+     - Embedded in Data Workspace (`/data`).
+     - Created Three.js `UndergroundObject.tsx` with distinct thematic styling for basements vs utilities.
+     - Extended `Cadastral3DViewer.tsx` with dedicated "Subsurface" view mode, Cutaway Inspection View mode (semi-transparent buildings), and live Underground Inspector overlay.
+     - Added TypeScript definitions (`types/underground.ts`) and API client methods (`lib/api/client.ts`).
+  7. Authored technical documentation in `docs/UNDERGROUND_MODEL.md` and `UNDERGROUND_MODEL.md`.
+- **Expected Output**: Watertight subterranean solids, explicit depth coordinate math, transparent clash detection, and clear legal distinction between private strata and public infrastructure.
+- **Acceptance Criteria**: 0 TypeScript errors; 0 ESLint warnings; 196/196 tests pass; Next.js production build succeeds; SIH subsurface cadastre requirements fully satisfied.
