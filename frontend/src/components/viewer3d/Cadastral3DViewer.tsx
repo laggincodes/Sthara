@@ -11,6 +11,7 @@ import {
   GenerateFloors3DResponse,
   GeneratePropertyVolumeResponse,
   GenerateUnits3DResponse,
+  DemoUndergroundResponse,
 } from "@/types/cadastre";
 import { computeCollectionBounds, calculateCameraFit } from "@/lib/viewer3d/coordinates";
 
@@ -18,6 +19,7 @@ import { BuildingObject } from "./BuildingObject";
 import { FloorObject } from "./FloorObject";
 import { PropertyVolumeObject } from "./PropertyVolumeObject";
 import { UnitObject } from "./UnitObject";
+import { UndergroundObject } from "./UndergroundObject";
 import { ViewerControls, ViewerLayers } from "./ViewerControls";
 import { ViewerLegend } from "./ViewerLegend";
 import { ViewerLoading } from "./ViewerLoading";
@@ -30,6 +32,7 @@ export interface Cadastral3DViewerProps {
   floorsData?: GenerateFloors3DResponse | null;
   propertiesData?: GeneratePropertyVolumeResponse | null;
   unitsData?: GenerateUnits3DResponse | null;
+  undergroundData?: DemoUndergroundResponse | null;
   selectedBuildingId: string | null;
   onSelectBuilding: (buildingId: string | null) => void;
   selectedFloorId?: string | null;
@@ -38,8 +41,12 @@ export interface Cadastral3DViewerProps {
   onSelectProperty?: (propertyId: string | null) => void;
   selectedUnitId?: string | null;
   onSelectUnit?: (unitId: string | null) => void;
-  subView?: "building" | "floors" | "property" | "units";
-  onChangeSubView?: (mode: "building" | "floors" | "property" | "units") => void;
+  selectedUndergroundId?: string | null;
+  onSelectUnderground?: (featureId: string | null) => void;
+  subView?: "building" | "floors" | "property" | "units" | "underground";
+  onChangeSubView?: (mode: "building" | "floors" | "property" | "units" | "underground") => void;
+  cutawayMode?: boolean;
+  onToggleCutaway?: () => void;
   explodeDistance?: number;
   onChangeExplodeDistance?: (val: number) => void;
   isolatedFloorIndex?: number | null;
@@ -89,6 +96,7 @@ export function Cadastral3DViewer({
   floorsData,
   propertiesData,
   unitsData,
+  undergroundData,
   selectedBuildingId,
   onSelectBuilding,
   selectedFloorId,
@@ -97,8 +105,12 @@ export function Cadastral3DViewer({
   onSelectProperty,
   selectedUnitId,
   onSelectUnit,
+  selectedUndergroundId,
+  onSelectUnderground,
   subView = "building",
   onChangeSubView,
+  cutawayMode = false,
+  onToggleCutaway,
   explodeDistance = 0,
   onChangeExplodeDistance,
   isLoading = false,
@@ -129,11 +141,12 @@ export function Cadastral3DViewer({
     floors: true,
     properties: true,
     units: true,
+    underground: true,
     grid: true,
   });
   const [fitTrigger, setFitTrigger] = useState<number>(0);
 
-  const handleSubViewChange = (mode: "building" | "floors" | "property" | "units") => {
+  const handleSubViewChange = (mode: "building" | "floors" | "property" | "units" | "underground") => {
     onChangeSubView?.(mode);
   };
 
@@ -167,84 +180,160 @@ export function Cadastral3DViewer({
       unitsData.results.forEach((u) => {
         if (u.geometry) geometriesToBound.push(u.geometry);
       });
+    } else if (subView === "underground" && undergroundData?.features) {
+      undergroundData.features.forEach((feat) => {
+        if (feat.mesh_3d) geometriesToBound.push(feat.mesh_3d);
+      });
+    }
+
+    if (geometriesToBound.length === 0) {
+      return new THREE.Box3(new THREE.Vector3(-30, -30, -10), new THREE.Vector3(30, 30, 50));
     }
 
     return computeCollectionBounds(geometriesToBound);
-  }, [subView, data, floorsData, propertiesData, unitsData]);
+  }, [data, floorsData, propertiesData, unitsData, undergroundData, subView]);
 
   const handleResetCamera = useCallback(() => {
-    if (controlsRef.current) {
-      controlsRef.current.reset();
-    }
-    setFitTrigger((prev) => prev + 1);
+    if (!controlsRef.current) return;
+    controlsRef.current.reset();
+    setFitTrigger((c) => c + 1);
   }, []);
 
-  const handleFitView = useCallback(() => {
-    setFitTrigger((prev) => prev + 1);
+  const handleFitCamera = useCallback(() => {
+    setFitTrigger((c) => c + 1);
   }, []);
 
-  // Check Empty & Error States
-  const hasBuildingData = Boolean(data?.results && data.results.length > 0);
-  const hasFloorsData = Boolean(floorsData?.results && floorsData.results.length > 0);
-  const hasPropertiesData = Boolean(propertiesData?.results && propertiesData.results.length > 0);
-  const hasUnitsData = Boolean(unitsData?.results && unitsData.results.length > 0);
+  const hasFloors = Boolean(floorsData && floorsData.results.length > 0);
+  const hasProperties = Boolean(propertiesData && propertiesData.results.length > 0);
+  const hasUnits = Boolean(unitsData && unitsData.results.length > 0);
+  const hasUnderground = Boolean(undergroundData && undergroundData.features.length > 0);
 
-  const hasAnyData = hasBuildingData || hasFloorsData || hasPropertiesData || hasUnitsData;
-
-  if (!isLoading && !hasAnyData) {
+  const selectedUndergroundFeature = useMemo(() => {
+    if (!undergroundData || !selectedUndergroundId) return null;
     return (
-      <div className="relative w-full h-full min-h-[480px] bg-[#0B0F19]">
-        <ViewerError
-          kind="NO_GEOMETRY"
-          title="No 3D Models Available"
-          message="Extrude 3D building envelopes, stratified floor levels, apartment units, or property volumes from the 2D cadastral layers."
-          onRetry={
-            subView === "floors"
-              ? onGenerateFloors || onGenerate3D
-              : subView === "property"
-              ? onGenerateProperties || onGenerate3D
-              : subView === "units"
-              ? onGenerateUnits || onGenerate3D
-              : onGenerate3D
-          }
-          onSwitchTo2D={onSwitchTo2D}
-        />
-      </div>
+      undergroundData.features.find(
+        (f) => f.underground_feature_id === selectedUndergroundId
+      ) ?? null
     );
-  }
+  }, [undergroundData, selectedUndergroundId]);
 
   return (
-    <div className="relative w-full h-full min-h-[480px] bg-[#0B0F19] overflow-hidden select-none">
-      {/* 1. View & Navigation Controls Overlay */}
+    <div className="relative w-full h-full bg-[#0a0f1d] overflow-hidden select-none">
+      {/* HUD Controls */}
       <ViewerControls
         subView={subView}
         onChangeSubView={handleSubViewChange}
         layers={layers}
         onToggleLayer={handleToggleLayer}
         isWireframe={isWireframe}
-        onToggleWireframe={() => setIsWireframe((prev) => !prev)}
+        onToggleWireframe={() => setIsWireframe((w) => !w)}
+        cutawayMode={cutawayMode}
+        onToggleCutaway={onToggleCutaway}
         explodeDistance={explodeDistance}
         onChangeExplodeDistance={handleExplodeChange}
         onResetView={handleResetCamera}
-        onFitView={handleFitView}
+        onFitView={handleFitCamera}
         onSwitchTo2D={onSwitchTo2D}
-        hasFloorsData={hasFloorsData}
-        hasPropertiesData={hasPropertiesData}
-        hasUnitsData={hasUnitsData}
+        hasFloorsData={hasFloors}
+        hasPropertiesData={hasProperties}
+        hasUnitsData={hasUnits}
+        hasUndergroundData={hasUnderground}
       />
 
-      {/* 2. Loading State Overlay */}
-      {isLoading && <ViewerLoading />}
-
-      {/* 3. Entity Legend */}
+      {/* Cadastral Category Legend */}
       <ViewerLegend />
 
-      {/* 4. Core React Three Fiber Canvas */}
+      {/* Loading Overlay */}
+      {isLoading && <ViewerLoading message="Generating 3D cadastral geometries..." />}
+
+      {/* Empty States / Direct Action Prompts */}
+      {!isLoading && subView === "building" && (!data || data.results.length === 0) && (
+        <ViewerError
+          title="No 3D Buildings Generated"
+          message="Run 3D extrusion to generate canonical watertight solid models from 2D footprints."
+          onRetry={onGenerate3D}
+        />
+      )}
+
+      {!isLoading && subView === "floors" && !hasFloors && (
+        <ViewerError
+          title="No 3D Floor Strata Generated"
+          message="Floors must be stratified before 3D floor slabs can be visualized."
+          onRetry={onGenerateFloors}
+        />
+      )}
+
+      {!isLoading && subView === "property" && !hasProperties && (
+        <ViewerError
+          title="No 3D Property Volumes Generated"
+          message="Property volumes model legal 3D spaces bounded by floor strata and parcel extents."
+          onRetry={onGenerateProperties}
+        />
+      )}
+
+      {!isLoading && subView === "units" && !hasUnits && (
+        <ViewerError
+          title="No 3D Unit Volumes Available"
+          message="Generate 3D unit solids to inspect individual apartment parcels with canonical 3D geometry."
+          onRetry={onGenerateUnits}
+        />
+      )}
+
+      {/* Selected Underground Feature Inspector Overlay */}
+      {selectedUndergroundFeature && (
+        <div className="absolute bottom-4 right-4 z-20 w-80 rounded-xl border border-slate-700/80 bg-[#111827]/95 p-4 shadow-2xl backdrop-blur-md text-xs space-y-2.5">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+            <div className="flex items-center gap-1.5">
+              <span className={`w-2.5 h-2.5 rounded-full ${selectedUndergroundFeature.feature_type === "BASEMENT" ? "bg-blue-400" : "bg-amber-400"}`} />
+              <span className="font-mono font-bold text-white text-sm">
+                {selectedUndergroundFeature.underground_feature_id}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => onSelectUnderground?.(null)}
+              className="text-slate-400 hover:text-white p-0.5 rounded"
+            >
+              ✕
+            </button>
+          </div>
+          <div>
+            <div className="text-[11px] text-slate-300 font-medium">
+              {selectedUndergroundFeature.name}
+            </div>
+            <div className="text-[10px] font-mono text-slate-400 mt-0.5">
+              Type: {selectedUndergroundFeature.feature_type} {selectedUndergroundFeature.utility_type ? `(${selectedUndergroundFeature.utility_type})` : ""}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-1.5 p-2 rounded bg-slate-900/80 border border-slate-800 font-mono text-[10px]">
+            <div>
+              <span className="text-slate-500 block">Z Interval:</span>
+              <span className="text-cyan-400 font-semibold">{selectedUndergroundFeature.base_elevation_m}m - {selectedUndergroundFeature.top_elevation_m}m</span>
+            </div>
+            <div>
+              <span className="text-slate-500 block">Depth Horizon:</span>
+              <span className="text-emerald-400 font-semibold">{selectedUndergroundFeature.depth_to_top_m}m - {selectedUndergroundFeature.depth_to_base_m}m</span>
+            </div>
+            <div>
+              <span className="text-slate-500 block">Thickness:</span>
+              <span className="text-slate-300">{selectedUndergroundFeature.thickness_m}m</span>
+            </div>
+            <div>
+              <span className="text-slate-500 block">Property Title:</span>
+              <span className={selectedUndergroundFeature.is_cadastral_property ? "text-blue-400 font-semibold" : "text-amber-400"}>
+                {selectedUndergroundFeature.is_cadastral_property ? "Private Volume" : "Public Conduit"}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Main 3D Canvas */}
       <Canvas
         camera={{
-          position: [35, -35, 25],
+          position: [0, -60, 45],
+          up: [0, 0, 1], // Strict Z-up Cadastral Coordinate Convention
           fov: 45,
-          up: [0, 0, 1], // Z-up orientation matching GIS standard
           near: 0.1,
           far: 2000,
         }}
@@ -260,12 +349,12 @@ export function Cadastral3DViewer({
         }}
         className="w-full h-full"
       >
-        {/* Neutral Professional Lighting */}
+        {/* Lighting */}
         <ambientLight intensity={0.75} />
         <directionalLight position={[40, -50, 60]} intensity={1.2} />
         <directionalLight position={[-40, 50, -20]} intensity={0.35} />
 
-        {/* Orbit Controls (Z-up compatible) */}
+        {/* Orbit Controls (Z-up compatible with unrestricted polar angle in underground/cutaway mode) */}
         <OrbitControls
           ref={controlsRef}
           makeDefault
@@ -273,7 +362,7 @@ export function Cadastral3DViewer({
           dampingFactor={0.08}
           minDistance={2}
           maxDistance={500}
-          maxPolarAngle={Math.PI / 2 + 0.1} // Prevent looking completely from underside
+          maxPolarAngle={subView === "underground" || cutawayMode ? Math.PI : Math.PI / 2 + 0.1}
         />
 
         {/* Dynamic Camera Fitting */}
@@ -288,7 +377,7 @@ export function Cadastral3DViewer({
           <group position={[0, 0, -0.01]}>
             <gridHelper
               args={[120, 24, "#1e293b", "#0f172a"]}
-              rotation={[Math.PI / 2, 0, 0]} // Rotate from XZ to XY plane
+              rotation={[Math.PI / 2, 0, 0]}
             />
           </group>
         )}
@@ -296,15 +385,15 @@ export function Cadastral3DViewer({
         {/* ------------------------------------------------------------- */}
         {/* MODE A: Building Envelope View */}
         {/* ------------------------------------------------------------- */}
-        {subView === "building" &&
+        {(subView === "building" || cutawayMode) &&
           layers.buildings &&
           data?.results?.map((b) => (
             <BuildingObject
               key={b.building_id}
               building={b}
               isSelected={selectedBuildingId === b.building_id}
-              isDimmed={Boolean(selectedBuildingId && selectedBuildingId !== b.building_id)}
-              isWireframe={isWireframe}
+              isDimmed={Boolean((selectedBuildingId && selectedBuildingId !== b.building_id) || cutawayMode)}
+              isWireframe={isWireframe || cutawayMode}
               onSelect={(id) => onSelectBuilding(id === selectedBuildingId ? null : id)}
             />
           ))}
@@ -377,10 +466,25 @@ export function Cadastral3DViewer({
               }}
             />
           ))}
+
+        {/* ------------------------------------------------------------- */}
+        {/* MODE E: Underground / Subsurface Assets (Step 20) */}
+        {/* ------------------------------------------------------------- */}
+        {(subView === "underground" || cutawayMode || layers.underground) &&
+          undergroundData?.features?.map((feat) => (
+            <UndergroundObject
+              key={feat.underground_feature_id}
+              feature={feat}
+              isSelected={selectedUndergroundId === feat.underground_feature_id}
+              isDimmed={Boolean(selectedUndergroundId && selectedUndergroundId !== feat.underground_feature_id)}
+              isWireframe={isWireframe}
+              cutawayMode={cutawayMode}
+              onSelect={(id) => onSelectUnderground?.(id === selectedUndergroundId ? null : id)}
+            />
+          ))}
       </Canvas>
     </div>
   );
 }
 
 export default Cadastral3DViewer;
-

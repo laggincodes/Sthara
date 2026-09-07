@@ -448,3 +448,46 @@ Represents non-authoritative candidate physical features extracted by computer-v
 | `warnings` | `List[string]` | Integrity and boundary notices |
 
 AI candidates are strictly candidate evidence and cannot directly produce 3D property volumes without deterministic validation.
+
+## 2.11 Underground / Subsurface Spatial Entity (Step 20)
+
+### 2.11.1 Subsurface Spatial Feature (`UndergroundFeature`)
+Represents physical subterranean structures and infrastructure corridors:
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `underground_feature_id` | `string` | Deterministic identifier (e.g., `BSM-DEMO-101`, `UTL-DEMO-001`) |
+| `feature_type` | `UndergroundFeatureType` | `BASEMENT`, `UNDERGROUND_UTILITY`, `SUBSURFACE_VOLUME`, `PARKING_VAULT`, `METRO_TUNNEL`, etc. |
+| `utility_type` | `UtilityType \| null` | `WATER_SUPPLY`, `SEWERAGE`, `STORMWATER`, `ELECTRICITY_POWER`, `TELECOMMUNICATIONS`, etc. |
+| `parcel_id` | `string` | Associated surface cadastral parcel identifier |
+| `building_id` | `string \| null` | Associated parent building structure (required for `BASEMENT`) |
+| `property_id` | `string \| null` | Associated legal property record (for property volume basements) |
+| `name` | `string` | Descriptive title |
+| `ground_elevation_m` | `float` | Authoritative surface ground elevation datum ASL ($Z_\text{ground}$) |
+| `top_elevation_m` | `float` | Upper solid elevation boundary ASL ($Z_\text{top} \le Z_\text{ground}$) |
+| `base_elevation_m` | `float` | Lower solid elevation boundary ASL ($Z_\text{base} < Z_\text{top}$) |
+| `depth_to_top_m` | `float` | Non-negative derived depth to upper boundary ($Z_\text{ground} - Z_\text{top}$) |
+| `depth_to_base_m` | `float` | Non-negative derived depth to lower boundary ($Z_\text{ground} - Z_\text{base}$) |
+| `thickness_m` | `float` | Vertical solid thickness ($Z_\text{top} - Z_\text{base}$) |
+| `geometry_2d` | `GeoJSON Polygon \| LineString` | Footprint perimeter or buffered corridor |
+| `mesh_3d` | `Mesh3D \| Mesh3DCollection \| null` | Canonical watertight closed 2-manifold 3D solid |
+| `geometry_status` | `Geometry3DStatus` | `VALID`, `INVALID`, `UNAVAILABLE` |
+| `spatial_status` | `UndergroundSpatialStatus` | `WITHIN`, `INTERSECTS`, `OUTSIDE`, `UNRESOLVED` |
+| `is_cadastral_property` | `bool` | `True` for private property volume components; `False` for public utilities |
+| `provenance` | `UndergroundProvenance` | Origin survey method, dataset, vertical datum, CRS |
+| `warnings` | `List[string]` | Subsurface notices and clash warnings |
+
+### 2.11.2 Subsurface Conflict Record (`UndergroundConflictRecord`)
+Represents 3D physical clash or proximity encroachment between subterranean assets:
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `feature_a_id` | `string` | First feature identifier |
+| `feature_b_id` | `string` | Second feature identifier |
+| `feature_a_type` | `UndergroundFeatureType` | Type of feature A |
+| `feature_b_type` | `UndergroundFeatureType` | Type of feature B |
+| `conflict_class` | `UndergroundConflictClass` | `ALLOWED_INTERSECTION`, `REVIEW_REQUIRED`, `INVALID_OVERLAP` |
+| `horizontal_overlap_area_m2` | `float` | 2D footprint intersection area |
+| `vertical_clearance_m` | `float` | Distance between vertical elevation intervals (negative if overlapping) |
+| `is_3d_clash` | `bool` | True if both 2D horizontal and 1D vertical intervals overlap |
+| `resolution_recommendation` | `string` | Engineering recommendation for cadastre records |

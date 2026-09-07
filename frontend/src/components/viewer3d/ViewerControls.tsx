@@ -7,16 +7,19 @@ export interface ViewerLayers {
   floors: boolean;
   properties: boolean;
   units: boolean;
+  underground: boolean;
   grid: boolean;
 }
 
 export interface ViewerControlsProps {
-  subView: "building" | "floors" | "property" | "units";
-  onChangeSubView: (mode: "building" | "floors" | "property" | "units") => void;
+  subView: "building" | "floors" | "property" | "units" | "underground";
+  onChangeSubView: (mode: "building" | "floors" | "property" | "units" | "underground") => void;
   layers: ViewerLayers;
   onToggleLayer: (layer: keyof ViewerLayers) => void;
   isWireframe: boolean;
   onToggleWireframe: () => void;
+  cutawayMode?: boolean;
+  onToggleCutaway?: () => void;
   explodeDistance: number;
   onChangeExplodeDistance: (val: number) => void;
   onResetView: () => void;
@@ -25,6 +28,7 @@ export interface ViewerControlsProps {
   hasFloorsData: boolean;
   hasPropertiesData: boolean;
   hasUnitsData?: boolean;
+  hasUndergroundData?: boolean;
 }
 
 export function ViewerControls({
@@ -34,6 +38,8 @@ export function ViewerControls({
   onToggleLayer,
   isWireframe,
   onToggleWireframe,
+  cutawayMode = false,
+  onToggleCutaway,
   explodeDistance,
   onChangeExplodeDistance,
   onResetView,
@@ -42,6 +48,7 @@ export function ViewerControls({
   hasFloorsData,
   hasPropertiesData,
   hasUnitsData = false,
+  hasUndergroundData = true,
 }: ViewerControlsProps) {
   return (
     <div className="absolute top-3 left-3 right-3 z-10 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
@@ -96,9 +103,37 @@ export function ViewerControls({
           >
             Apartment Units
           </button>
+          <button
+            type="button"
+            onClick={() => onChangeSubView("underground")}
+            disabled={!hasUndergroundData}
+            className={`px-2.5 py-1 rounded transition-colors font-medium disabled:opacity-40 ${
+              subView === "underground"
+                ? "bg-blue-600 text-white shadow-sm"
+                : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            Subsurface
+          </button>
         </div>
 
         <div className="h-4 w-px bg-slate-800 mx-0.5" />
+
+        {/* Cutaway Inspection Mode Toggle */}
+        {onToggleCutaway && (
+          <button
+            type="button"
+            onClick={onToggleCutaway}
+            className={`flex items-center gap-1 px-2 py-1 rounded text-[10px] font-mono border transition-colors ${
+              cutawayMode
+                ? "bg-cyan-950/80 border-cyan-500/60 text-cyan-300 shadow-sm"
+                : "bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200"
+            }`}
+            title="Toggle Cutaway View (semi-transparent buildings to inspect underground assets)"
+          >
+            <span>{cutawayMode ? "Cutaway ON" : "Cutaway View"}</span>
+          </button>
+        )}
 
         {/* Shading Mode Toggle (Solid / Wireframe) */}
         <button
@@ -129,6 +164,18 @@ export function ViewerControls({
           title="Toggle ground datum reference grid"
         >
           Grid
+        </button>
+        <button
+          type="button"
+          onClick={() => onToggleLayer("underground")}
+          className={`px-1.5 py-1 rounded text-[10px] font-mono border transition-colors ${
+            layers.underground
+              ? "bg-slate-800 border-slate-700 text-blue-300"
+              : "bg-slate-900/40 border-slate-800 text-slate-600"
+          }`}
+          title="Toggle subsurface utility & basement layer"
+        >
+          Subsurface
         </button>
 
         {/* Exploded Floor Slider (Visible in Floors, Property & Units modes) */}

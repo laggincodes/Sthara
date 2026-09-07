@@ -46,6 +46,15 @@ import {
   CandidateComparisonRequest,
   CandidateComparisonResponse,
   DemoAiExtractionResponse,
+  UndergroundFeature,
+  UndergroundValidationRequest,
+  UndergroundValidationResponse,
+  Underground3DRequest,
+  Underground3DResult,
+  GenerateUnderground3DResponse,
+  UndergroundConflictRequest,
+  UndergroundConflictResponse,
+  DemoUndergroundResponse,
 } from "@/types/cadastre";
 
 const BASE_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1").replace(/\/$/, "");
@@ -1016,4 +1025,111 @@ export const cadastreApi = {
       throw new ApiError("Unable to fetch demo AI extraction bundle.", 0, "NETWORK_UNAVAILABLE");
     }
   },
+
+  /**
+   * Step 20: Retrieves the synthetic demo underground bundle.
+   */
+  async getUndergroundDemo(): Promise<DemoUndergroundResponse> {
+    try {
+      const response = await fetch(`${BASE_URL}/underground/demo`, {
+        headers: { Accept: "application/json" },
+      });
+      return await handleResponse<DemoUndergroundResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Unable to fetch demo underground bundle.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Step 20: Retrieves a specific underground feature by ID.
+   */
+  async getUndergroundFeature(featureId: string): Promise<UndergroundFeature> {
+    try {
+      const response = await fetch(`${BASE_URL}/underground/${encodeURIComponent(featureId)}`, {
+        headers: { Accept: "application/json" },
+      });
+      return await handleResponse<UndergroundFeature>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError(`Unable to fetch underground feature ${featureId}.`, 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Step 20: Validates underground feature geometry and depth sanity.
+   */
+  async validateUndergroundFeature(
+    payload: UndergroundValidationRequest
+  ): Promise<UndergroundValidationResponse> {
+    try {
+      const response = await fetch(`${BASE_URL}/underground/validate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(payload),
+      });
+      return await handleResponse<UndergroundValidationResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Unable to validate underground feature.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Step 20: Generates a 3D solid Mesh3D for an underground feature.
+   */
+  async generateUnderground3D(
+    payload: Underground3DRequest
+  ): Promise<Underground3DResult> {
+    try {
+      const response = await fetch(`${BASE_URL}/underground/generate-3d`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(payload),
+      });
+      return await handleResponse<Underground3DResult>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Unable to extrude underground 3D solid.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Step 20: Batch generates 3D solids for multiple underground features.
+   */
+  async generateUnderground3DBatch(
+    requests: Underground3DRequest[]
+  ): Promise<GenerateUnderground3DResponse> {
+    try {
+      const response = await fetch(`${BASE_URL}/underground/generate-3d/batch`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(requests),
+      });
+      return await handleResponse<GenerateUnderground3DResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Unable to extrude underground 3D batch.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Step 20: Evaluates clashes and proximity conflicts between subsurface features.
+   */
+  async evaluateUndergroundConflicts(
+    payload: UndergroundConflictRequest
+  ): Promise<UndergroundConflictResponse> {
+    try {
+      const response = await fetch(`${BASE_URL}/underground/conflicts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(payload),
+      });
+      return await handleResponse<UndergroundConflictResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Unable to evaluate underground conflicts.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
 };
+

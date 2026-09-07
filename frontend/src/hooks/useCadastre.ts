@@ -23,6 +23,7 @@ import {
   UnitPropertyRecord,
   GenerateUnits3DResponse,
   Unit3DResult,
+  DemoUndergroundResponse,
 } from "@/types/cadastre";
 import { cadastreApi, ApiError } from "@/lib/api/client";
 
@@ -110,7 +111,7 @@ export function useCadastre() {
   const [isGeneratingULPIN, setIsGeneratingULPIN] = useState<boolean>(false);
   const [ulpinError, setUlpinError] = useState<string | null>(null);
 
-  const [subView3D, setSubView3D] = useState<"building" | "floors" | "property" | "units">("building");
+  const [subView3D, setSubView3D] = useState<"building" | "floors" | "property" | "units" | "underground">("building");
   const [selectedFloorId, setSelectedFloorId] = useState<string | null>(null);
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
   const [explodeDistance, setExplodeDistance] = useState<number>(0);
@@ -130,14 +131,27 @@ export function useCadastre() {
   const [isGeneratingUnits3D, setIsGeneratingUnits3D] = useState<boolean>(false);
   const [units3DError, setUnits3DError] = useState<string | null>(null);
 
+  // Step 20: Underground / Subsurface Modeling State
+  const [undergroundBundle, setUndergroundBundle] = useState<DemoUndergroundResponse | null>(null);
+  const [selectedUndergroundId, setSelectedUndergroundId] = useState<string | null>(null);
+  const [isLoadingUnderground, setIsLoadingUnderground] = useState<boolean>(false);
+  const [undergroundError, setUndergroundError] = useState<string | null>(null);
+  const [cutawayMode, setCutawayMode] = useState<boolean>(false);
+
   // Layer Visibility
-  const [layerVisibility, setLayerVisibility] = useState<{ parcels: boolean; buildings: boolean; units: boolean }>({
+  const [layerVisibility, setLayerVisibility] = useState<{
+    parcels: boolean;
+    buildings: boolean;
+    units: boolean;
+    underground: boolean;
+  }>({
     parcels: true,
     buildings: true,
     units: true,
+    underground: true,
   });
 
-  const toggleLayer = useCallback((layer: "parcels" | "buildings" | "units") => {
+  const toggleLayer = useCallback((layer: "parcels" | "buildings" | "units" | "underground") => {
     setLayerVisibility((prev) => ({
       ...prev,
       [layer]: !prev[layer],
@@ -288,6 +302,27 @@ export function useCadastre() {
       }
     } finally {
       setIsLoadingUnits(false);
+    }
+  }, []);
+
+  // 2e. Step 20: Load Demo Underground Assets
+  const loadDemoUnderground = useCallback(async () => {
+    setIsLoadingUnderground(true);
+    setUndergroundError(null);
+    try {
+      const data = await cadastreApi.getUndergroundDemo();
+      setUndergroundBundle(data);
+      if (data.features.length > 0) {
+        setSelectedUndergroundId(data.features[0].underground_feature_id);
+      }
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setUndergroundError(err.message);
+      } else {
+        setUndergroundError("Unable to load synthetic underground assets.");
+      }
+    } finally {
+      setIsLoadingUnderground(false);
     }
   }, []);
 
@@ -1411,8 +1446,17 @@ export function useCadastre() {
     isDemoRunning,
     runEndToEndDemo,
     resetDemo,
+    undergroundBundle,
+    selectedUndergroundId,
+    setSelectedUndergroundId,
+    isLoadingUnderground,
+    undergroundError,
+    cutawayMode,
+    setCutawayMode,
+    loadDemoUnderground,
     pipelineSteps,
   };
 }
+
 
 

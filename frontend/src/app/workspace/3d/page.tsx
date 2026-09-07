@@ -85,13 +85,21 @@ export default function Cadastral3DPage() {
     setSelectedParcelId,
     setSelectedBuildingId,
     setSelectedUnitId,
+    undergroundBundle,
+    selectedUndergroundId,
+    setSelectedUndergroundId,
+    cutawayMode,
+    setCutawayMode,
+    isLoadingUnderground,
+    loadDemoUnderground,
   } = useCadastreContext();
 
   const crsString = validationResult?.crs || geojson?.crs?.properties?.name || "WGS 84 (EPSG:4326)";
   const hasAny3D = (building3DData && building3DData.summary.successful > 0) ||
     (floors3DData && floors3DData.summary.successful > 0) ||
     (property3DData && property3DData.summary.successful > 0) ||
-    (units3DData && units3DData.summary.successful > 0);
+    (units3DData && units3DData.summary.successful > 0) ||
+    (undergroundBundle && undergroundBundle.total_features > 0);
 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden relative">
@@ -150,6 +158,20 @@ export default function Cadastral3DPage() {
               }`}
             >
               Units ({units3DData?.summary.successful || 0})
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (!undergroundBundle) loadDemoUnderground();
+                setSubView3D("underground");
+              }}
+              className={`px-2.5 py-1 rounded-md text-[11px] font-mono transition-colors ${
+                subView3D === "underground"
+                  ? "bg-blue-600 text-white font-semibold"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              Subsurface ({undergroundBundle?.total_features || 0})
             </button>
           </div>
 
@@ -240,8 +262,11 @@ export default function Cadastral3DPage() {
               floorsData={floors3DData}
               propertiesData={property3DData}
               unitsData={units3DData}
+              undergroundData={undergroundBundle}
               subView={subView3D}
               onChangeSubView={setSubView3D}
+              cutawayMode={cutawayMode}
+              onToggleCutaway={() => setCutawayMode(!cutawayMode)}
               selectedBuildingId={selectedBuildingId}
               onSelectBuilding={setSelectedBuildingId}
               selectedFloorId={selectedFloorId}
@@ -250,11 +275,13 @@ export default function Cadastral3DPage() {
               onSelectProperty={setSelectedPropertyId}
               selectedUnitId={selectedUnitId}
               onSelectUnit={setSelectedUnitId}
+              selectedUndergroundId={selectedUndergroundId}
+              onSelectUnderground={setSelectedUndergroundId}
               explodeDistance={explodeDistance}
               onChangeExplodeDistance={setExplodeDistance}
               isolatedFloorIndex={isolatedFloorIndex}
               onSelectIsolatedFloorIndex={setIsolatedFloorIndex}
-              isLoading={isGenerating3D || isGeneratingFloors3D || isGeneratingProperty3D || isGeneratingUnits3D}
+              isLoading={isGenerating3D || isGeneratingFloors3D || isGeneratingProperty3D || isGeneratingUnits3D || isLoadingUnderground}
               onGenerate3D={generate3DBuildingModels}
               onGenerateFloors={generate3DFloorModels}
               onGenerateProperties={generate3DPropertyModels}
