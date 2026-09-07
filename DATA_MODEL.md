@@ -106,7 +106,7 @@ Represents the physical architectural shell occupying the parcel, connecting 2D 
 ---
 
 ### 2.3b Canonical 3D Geometry Contract (Entities: `Mesh3D` & `Mesh3DCollection`)
-*Authoritative Reference: See [`3D_GEOMETRY_CONTRACT.md`](file:///C:/Users/Yatha/.gemini/antigravity/scratch/3d-cadastral-intelligence/3D_GEOMETRY_CONTRACT.md) for full JSON schema, vertex/face contracts, winding rules, and Three.js integration.*
+*Authoritative Reference: See [`3D_GEOMETRY_CONTRACT.md`](3D_GEOMETRY_CONTRACT.md) for full JSON schema, vertex/face contracts, winding rules, and Three.js integration.*
 
 Represents the authoritative, closed 3D boundary representation (B-Rep) of an extruded building structure or property volume. Each individual building part is represented as a watertight `Mesh3D` solid. MultiPolygon footprints or disjoint parts are represented as a `Mesh3DCollection`.
 
