@@ -788,12 +788,20 @@ function UnitInspectorCard({
               </span>
             </div>
 
-            {/* PPT Canonical Identity Chain Badge */}
-            <div className="rounded bg-slate-950 border border-slate-800 p-1.5 font-mono text-[9px] flex items-center justify-between">
-              <span className="text-slate-500 uppercase tracking-wider text-[8px]">Identity Chain:</span>
-              <span className="text-amber-400 font-bold">
-                {unitPropertyRecord?.canonical_path || "P001 → B01 → F05 → U501"}
-              </span>
+            {/* PPT Canonical Identity Chain & Reference Badge */}
+            <div className="rounded bg-slate-950 border border-slate-800 p-2 font-mono text-[9px] space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500 uppercase tracking-wider text-[8px]">Property Record Reference:</span>
+                <span className="text-amber-400 font-bold">
+                  {unitPropertyRecord?.property_record_reference || "P001-B01-FL05-U501"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-[8px] text-slate-400 border-t border-slate-900 pt-1">
+                <span className="text-slate-500 uppercase tracking-wider">Identity Chain:</span>
+                <span className="text-cyan-300">
+                  {unitPropertyRecord?.canonical_path || "P001 → B01 → F05 → U501"}
+                </span>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-1.5 text-[10px] font-mono">
@@ -852,8 +860,8 @@ function UnitInspectorCard({
               </span>
             </div>
 
-            {/* 3D ULPIN Prototype (SIH PPT Presentation Specification) */}
-            <div className="rounded bg-slate-900/90 border border-cyan-500/30 p-2 space-y-1 font-mono text-[9px]">
+            {/* 3D ULPIN Prototype (Authoritative Versioned SHA-256 Spatial Hash) */}
+            <div className="rounded bg-slate-900/90 border border-cyan-500/30 p-2 space-y-1.5 font-mono text-[9px]">
               <div className="flex items-center justify-between">
                 <span className="text-cyan-400 uppercase font-bold text-[9px]">
                   3D ULPIN PROTOTYPE (RESEARCH IMPLEMENTATION)
@@ -865,10 +873,10 @@ function UnitInspectorCard({
               <div className="rounded bg-slate-950 border border-slate-800 p-1.5 text-[8px] text-cyan-300 break-all select-all font-mono">
                 {unitPropertyRecord?.ulpin_prototype ||
                   ulpins3D?.[activeUnit.property_id || activeUnit.unit_id]?.ulpin ||
-                  "3DULPIN-V1-P001-B01-FL05-U501"}
+                  "3DULPIN-V1-UNAVAILABLE"}
               </div>
-              <div className="text-[7.5px] text-slate-500 italic">
-                Deterministic spatial identifier prototype derived from 3D centroid, bounding cube, and parcel ID. Not an official government registration.
+              <div className="text-[7.5px] text-slate-400 leading-tight">
+                Deterministic prototype identifier generated from the canonical property identity and provenance payload using versioned SHA-256 hashing. Not an official government registration.
               </div>
             </div>
 

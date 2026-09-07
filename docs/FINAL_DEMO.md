@@ -132,7 +132,7 @@ Demonstrate the honest boundary between real geospatial datasets and synthetic c
 *Answer:* "The SIH mandate explicitly defines the separation: AI = EXTRACTION, 3D ENGINE = MODELLING, TOPOLOGY = VALIDATION. Our AI/ML layer provides explainable vertical height delineation and candidate unit segmentation gating. We strictly avoid black-box hallucinating LLMs for geometry."
 
 **Q2: Is this 3D ULPIN recognized by the Ministry?**  
-*Answer:* "No. The 3D ULPIN generated here is a research prototype implementing a deterministic SHA-256 spatial hash of 3D benchmark coordinates, bounding cube, and parcel ID. It is clearly flagged as non-official in every UI card and API response."
+*Answer:* "No. The 3D ULPIN generated here is a research prototype implementing a deterministic SHA-256 spatial hash of normalized property entity components (parcel, building, floor, property ID). Raw geometric coordinates (centroids, bounding cubes, mesh vertices) are explicitly excluded to prevent floating-point instability. It is clearly flagged as non-official in every UI card and API response."
 
 **Q3: Does your 3D model grant legal ownership?**  
 *Answer:* "No. Our 3D model represents an authoritative physical and spatial volume conforming to Canonical 3D Geometry Contract v1.0. Legal conveyance requires deed registration and statutory government authority."

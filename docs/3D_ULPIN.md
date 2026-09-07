@@ -111,8 +111,29 @@ For property `PROP-DEMO-101-U01` on parcel `PARCEL-DEMO-101`, building `BLD-DEMO
   ```
 - **Generated 3D ULPIN Prototype**:
   ```text
-  3DULPIN-V1-9457DE1DBBBEB319BAE64DA99B35C83FEA80A6C289569BF383B38A82A5BC6C6F
+  3DULPIN-V1-84858AEA396AF0DC75907857A1A138D6247900F164ECAB9565CA7F3BDFB2CDD8
   ```
+
+---
+
+## 5.1 Canonical 3D ULPIN vs. Property Record Reference
+
+To preserve complete semantic clarity and prevent confusion during hackathon evaluations, the system strictly separates the **cryptographic spatial identifier** from the **human-readable presentation reference**:
+
+| Characteristic | Canonical 3D ULPIN Prototype | Property Record Reference |
+| :--- | :--- | :--- |
+| **Field Name** | `ulpin_prototype` / `canonical_ulpin` | `property_record_reference` / `canonical_path` |
+| **Format** | `3DULPIN-V1-<64_HEX_SHA256_DIGEST>` | `P001-B01-FL05-U501` or `P001/B01/05/501` |
+| **Generation** | `ULPINService.generate_3d_ulpin()` / `generate_for_unit()` | String interpolation of presentation aliases |
+| **Purpose** | Deterministic, immutable, cryptographically verifiable spatial identifier | Human-readable strata hierarchy navigation |
+| **Verifiable** | **YES** (via `POST /api/v1/ulpin/verify`) | **NO** (rejected as non-hash by verification service) |
+| **UI Badge** | `DETERMINISTIC HASH` | `Property Record Reference` |
+
+### Unit-Level Delegation Rule:
+Units/apartments are first-class strata property entities. In `UnitService.create_property_record()`, the system maps the unit to its canonical property payload (`property_id`, `parcel_id`, `building_id`, `floor_id`) and delegates exclusively to `ULPINService.generate_for_unit()`. No duplicate hashing algorithms or pseudo-hashes exist in the codebase.
+
+### Strict Exclusion of Raw Geometry:
+The canonical identity hash explicitly **excludes** 3D centroids, bounding cubes, mesh vertices, surface areas, and continuous volumes. Hashing raw floating-point metrics introduces rounding and platform-dependent discrepancies. The ULPIN remains strictly stable across any visual representation (mesh, wireframe, low-poly, or BIM).
 
 ---
 
