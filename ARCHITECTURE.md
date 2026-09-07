@@ -152,6 +152,8 @@ backend/
 │       ├── building_height_service.py # Structural height subtraction & deterministic floor slicing
 │       ├── floor_volume_service.py   # 3D floor solid extrusion, priority 1-3 elevation slicing, watertight verification, and property volume aggregation
 │       ├── unit_service.py           # Unit validation, party-wall touching analysis, and watertight 3D solid extrusion
+│       ├── georeferencing_service.py # CRS inspection, target projection selection, reversible reprojection
+│       ├── fusion_service.py         # Multi-source alignment, evidence integration, conflict detection
 │       ├── parcel_normalizer.py  # Authoritative ID extraction & centroid derivation
 │       ├── crs_service.py        # CRS validation, UTM projection, metric conversion
 │       ├── extrusion_service.py  # 2D polygon to 3D polyhedral mesh computation
@@ -185,6 +187,50 @@ backend/
        ▼
 [Mesh Serialization]
        │ (Normalized centroid relative coordinates for Three.js client)
+```
+
+---
+
+## 5B. Multi-Source Spatial Data Fusion Architecture (Step 18)
+
+Following the SIH Technical Approach (01 Ingestion → 02 Geo-ref → 03 Fusion):
+
+```
++-------------------------------------------------------------------------------+
+|                        MULTI-SOURCE INGESTION LAYER                           |
+|  - Cadastral GIS (Parcels)             - Physical Buildings (Synthetic & OSM) |
+|  - Digital Elevation Models (DEM)      - LiDAR Point Clouds (LAS/LAZ)         |
+|  - Floor Strata Schedules              - Apartment Units / Floor Plans        |
+|  - GNSS / CORS Geodetic Monuments      - Aerial Drone Orthomosaics            |
++-------------------------------------------------------------------------------+
+                                        │
+                                        ▼
++-------------------------------------------------------------------------------+
+|                     GEOREFERENCING & NORMALIZATION LAYER                      |
+|  - GeoreferencingService: inspects source CRS, validates with PROJ            |
+|  - Target Project CRS Selection: EPSG:32643 (UTM 43N) or centroid derivation  |
+|  - Explicit pyproj transformation: preserves native coordinates in properties |
+|  - Reversible metadata: _source_crs, _target_crs, _source_geometry, timestamp |
++-------------------------------------------------------------------------------+
+                                        │
+                                        ▼
++-------------------------------------------------------------------------------+
+|                      SPATIAL FUSION & ASSOCIATION ENGINE                      |
+|  - STRtree Spatial Index: Building <-> Parcel containment and overlap area     |
+|  - DEM Raster Sampling: terrain plinth ground elevations (Z_ground)           |
+|  - LiDAR Evidence Extraction: pulse density (pts/m²), classification returns   |
+|  - Floor & Unit Modeling: horizontal/vertical containment, party-wall touching|
+|  - Non-Cadastral Guardrail: real OSM tagged as UNVERIFIED_PHYSICAL_SURFACE     |
++-------------------------------------------------------------------------------+
+                                        │
+                                        ▼
++-------------------------------------------------------------------------------+
+|                 UNIFIED FUSED PROPERTY CONTEXT & CONFLICT AUDIT               |
+|  - FusedPropertyContext: comprehensive multi-source spatial relationship model |
+|  - Conflict Register: encroachment, overhangs, NoData, unverified observations|
+|  - Evidence Readiness Score: FULL / PARTIAL / LIMITED / INVALID               |
+|  - Fusion Integrity Status: VALID / WARNING / PARTIAL / INVALID               |
++-------------------------------------------------------------------------------+
 ```
 
 ---

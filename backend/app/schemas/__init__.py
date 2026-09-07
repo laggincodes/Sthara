@@ -15,6 +15,27 @@ from app.schemas.unit import (
     GenerateUnits3DResponse,
 )
 
+from app.schemas.fusion import (
+    SourceType,
+    SourceStatus,
+    FusionStatus,
+    FusionQualityLevel,
+    ConflictSeverity,
+    TransformationRecord,
+    DatasetMetadata,
+    GNSSReferencePoint,
+    LiDARSourceReference,
+    SpatialConflict,
+    FusedBuildingContext,
+    FusedPropertyContext,
+    FusionValidateRequest,
+    FusionValidateResponse,
+    FusionNormalizeRequest,
+    FusionNormalizeResponse,
+    PropertyContextRequest,
+    PropertyContextResponse,
+)
+
 __all__ = [
     "Unit",
     "UnitType",
@@ -30,4 +51,23 @@ __all__ = [
     "BatchUnit3DRequest",
     "Unit3DResult",
     "GenerateUnits3DResponse",
+    "SourceType",
+    "SourceStatus",
+    "FusionStatus",
+    "FusionQualityLevel",
+    "ConflictSeverity",
+    "TransformationRecord",
+    "DatasetMetadata",
+    "GNSSReferencePoint",
+    "LiDARSourceReference",
+    "SpatialConflict",
+    "FusedBuildingContext",
+    "FusedPropertyContext",
+    "FusionValidateRequest",
+    "FusionValidateResponse",
+    "FusionNormalizeRequest",
+    "FusionNormalizeResponse",
+    "PropertyContextRequest",
+    "PropertyContextResponse",
 ]
+

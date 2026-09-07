@@ -33,6 +33,12 @@ import {
   UnitFeatureCollection,
   BatchUnit3DRequest,
   GenerateUnits3DResponse,
+  FusionValidateRequest,
+  FusionValidateResponse,
+  FusionNormalizeRequest,
+  FusionNormalizeResponse,
+  PropertyContextRequest,
+  PropertyContextResponse,
 } from "@/types/cadastre";
 
 const BASE_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1").replace(/\/$/, "");
@@ -747,7 +753,104 @@ export const cadastreApi = {
       throw new ApiError("Unable to fetch demo 3D units.", 0, "NETWORK_UNAVAILABLE");
     }
   },
+
+  /**
+   * Step 18: Retrieves the unified multi-source fused spatial property context for the demo dataset.
+   */
+  async getDemoFusion(targetCrs: string = "EPSG:32643", parcelId?: string): Promise<PropertyContextResponse> {
+    try {
+      const url = new URL(`${BASE_URL}/fusion/demo`);
+      url.searchParams.set("target_crs", targetCrs);
+      if (parcelId) url.searchParams.set("parcel_id", parcelId);
+      const response = await fetch(url.toString(), {
+        headers: { Accept: "application/json" },
+      });
+      return await handleResponse<PropertyContextResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Unable to load demo spatial fusion context.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Step 18: Normalizes real OSM building footprints into target project CRS and reports fusion status.
+   */
+  async getRealOsmFusion(targetCrs: string = "EPSG:32643", maxBuildings: number = 15): Promise<PropertyContextResponse> {
+    try {
+      const url = new URL(`${BASE_URL}/fusion/real-osm`);
+      url.searchParams.set("target_crs", targetCrs);
+      url.searchParams.set("max_buildings", String(maxBuildings));
+      const response = await fetch(url.toString(), {
+        headers: { Accept: "application/json" },
+      });
+      return await handleResponse<PropertyContextResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Unable to normalize real OSM building data.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Step 18: Validates multi-source dataset metadata and CRS compatibility.
+   */
+  async validateFusion(payload: FusionValidateRequest): Promise<FusionValidateResponse> {
+    try {
+      const response = await fetch(`${BASE_URL}/fusion/validate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      return await handleResponse<FusionValidateResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Unable to validate spatial fusion datasets.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Step 18: Normalizes GeoJSON features to target project CRS while preserving source geometry.
+   */
+  async normalizeFeatures(payload: FusionNormalizeRequest): Promise<FusionNormalizeResponse> {
+    try {
+      const response = await fetch(`${BASE_URL}/fusion/normalize`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      return await handleResponse<FusionNormalizeResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Unable to normalize spatial features.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Step 18: Generates a unified multi-source fused property context.
+   */
+  async getPropertyContext(payload: PropertyContextRequest): Promise<PropertyContextResponse> {
+    try {
+      const response = await fetch(`${BASE_URL}/fusion/property-context`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      return await handleResponse<PropertyContextResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Unable to assemble spatial property context.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
 };
+
 
 
 

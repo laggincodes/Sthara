@@ -982,3 +982,38 @@ Base URL: `http://localhost:8000/api/v1`
 - **Request**: None
 - **Response**: `200 OK` (`GenerateUnits3DResponse`)
 
+---
+
+## 10. Multi-Source Georeferencing & Spatial Data Fusion Endpoints
+
+### 10.1 Validate Multi-Source Datasets
+- **Route**: `POST /fusion/validate`
+- **Purpose**: Validates coordinate reference systems, compatibility, and availability across an inventory of heterogeneous spatial datasets.
+- **Request**: `FusionValidateRequest`
+- **Response**: `200 OK` (`FusionValidateResponse`)
+
+### 10.2 Normalize Spatial Features to Project CRS
+- **Route**: `POST /fusion/normalize`
+- **Purpose**: Reprojects GeoJSON features into common metric project CRS, strictly preserving native coordinates in `properties._source_geometry` and appending transformation audit metadata.
+- **Request**: `FusionNormalizeRequest`
+- **Response**: `200 OK` (`FusionNormalizeResponse`)
+
+### 10.3 Synthesize Fused Property Context
+- **Route**: `POST /fusion/property-context`
+- **Purpose**: Orchestrates cadastral parcel boundaries, physical building footprints, ground elevations, LiDAR point evidence, floor storeys, and units into a unified property context.
+- **Request**: `PropertyContextRequest`
+- **Response**: `200 OK` (`PropertyContextResponse`)
+
+### 10.4 Get Pre-Fused Demo Spatial Context
+- **Route**: `GET /fusion/demo`
+- **Purpose**: Returns pre-fused multi-source context linking Parcel 101, Towers 1 & 2, DEM terrain plinths, LiDAR evidence, floor levels, Units 501–504, and CORS GNSS geodetic control point.
+- **Query Params**: `target_crs` (default: `"EPSG:32643"`), `parcel_id` (optional).
+- **Response**: `200 OK` (`PropertyContextResponse`)
+
+### 10.5 Inspect Real OSM Building Normalization
+- **Route**: `GET /fusion/real-osm`
+- **Purpose**: Reprojects real OpenStreetMap building footprints into target project CRS, preserving non-cadastral physical observation status without fabricating land ownership.
+- **Query Params**: `target_crs` (default: `"EPSG:32643"`), `max_buildings` (default: `15`).
+- **Response**: `200 OK` (`PropertyContextResponse`)
+
+

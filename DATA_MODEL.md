@@ -351,3 +351,80 @@ IND-CAD-<BaseGeohash>-<Stratum>-<Zmin_dm>-<Zmax_dm>-<UnitID>
 | **UnitID** | 4 | Level / Unit sequence identifier | `FL02` |
 
 **Full Prototype String**: `IND-CAD-TS09W12A-ABV-0030-0060-FL02`
+
+---
+
+### 2.9 Multi-Source Spatial Data Fusion & Georeferencing Models
+
+Represents the data relationship orchestration layer aligning multi-source observations into a common metric project spatial frame without destroying source coordinates.
+
+#### 2.9.1 Source Dataset Metadata (`DatasetMetadata`)
+| Field Name | Type | Description |
+|---|---|---|
+| `dataset_id` | `string` | Unique dataset identifier |
+| `source_type` | `enum` | `CADASTRAL_GIS`, `BUILDING_FOOTPRINT`, `OSM`, `DEM`, `DSM`, `LIDAR`, `FLOOR_PLAN`, `GNSS_CORS`, `DRONE_AERIAL` |
+| `source_format` | `string` | Data encoding (e.g., `"GeoJSON"`, `"GeoTIFF"`, `"OSM XML"`, `"LAS/LAZ"`) |
+| `source_crs` | `string` | Native coordinate reference system (e.g., `"EPSG:4326"`) |
+| `target_crs` | `string` (Nullable) | Projected metric CRS (e.g., `"EPSG:32643"`) |
+| `bounds` | `Tuple[4 floats]` (Nullable) | Bounding box in source coordinates |
+| `units` | `Dict[str, str]` | Unit declarations (`{"horizontal": "degrees", "vertical": "meters"}`) |
+| `is_cadastral` | `bool` | True only for legal land administration records; False for physical observations (OSM) |
+| `status` | `enum` | `AVAILABLE`, `LOADED`, `VALIDATED`, `UNAVAILABLE`, `ERROR` |
+
+#### 2.9.2 GNSS / CORS Geodetic Reference (`GNSSReferencePoint`)
+| Field Name | Type | Description |
+|---|---|---|
+| `station_id` | `string` | CORS or survey monument identifier (e.g., `"CORS-DL-01"`) |
+| `name` | `string` (Nullable) | Monument or benchmark name |
+| `coordinates` | `List[float]` | `[longitude, latitude]` or `[x, y]` |
+| `elevation` | `float` (Nullable) | Elevation in meters AMSL |
+| `elevation_reference`| `string` (Nullable) | Vertical datum reference (e.g., `"AMSL"`, `"EGM96"`) |
+| `crs` | `string` | Geodetic horizontal CRS |
+| `status` | `string` | Operational state (`"ACTIVE"`, `"BENCHMARK"`, `"SIMULATED"`) |
+
+#### 2.9.3 LiDAR Point Cloud Source Reference (`LiDARSourceReference`)
+| Field Name | Type | Description |
+|---|---|---|
+| `source_id` | `string` | Point cloud source or flight line identifier |
+| `crs` | `string` | Native point cloud CRS |
+| `total_points` | `int` | Point count within footprint / tile |
+| `classifications` | `List[string]` | ASPRS classification returns (`"GROUND"`, `"BUILDING"`) |
+| `point_density_per_sqm` | `float` (Nullable) | Average pulse/point density |
+| `vertical_reference` | `string` (Nullable) | Height reference datum |
+
+#### 2.9.4 Fused Building Context (`FusedBuildingContext`)
+| Field Name | Type | Description |
+|---|---|---|
+| `building_id` | `string` | Unique building structure identifier |
+| `is_cadastral` | `bool` | Cadastral registration flag |
+| `legal_status` | `string` | Administrative legal status (`"VALIDATED_CADASTRE_REGISTERED"`, `"UNVERIFIED_PHYSICAL_SURFACE"`) |
+| `source_type` | `enum` | Origin source (`BUILDING_FOOTPRINT`, `OSM`) |
+| `source_crs` | `string` | Original coordinate system |
+| `source_geometry` | `dict` | Unaltered 2D GeoJSON boundary |
+| `project_crs` | `string` | Normalized metric CRS |
+| `projected_geometry` | `dict` | Projected 2D GeoJSON boundary |
+| `associated_parcel_id`| `string` (Nullable) | Matched cadastral land parcel ID |
+| `association_status`| `string` (Nullable) | Spatial relationship (`"WITHIN"`, `"INTERSECTS"`, `"OUTSIDE"`, `"UNRESOLVED"`) |
+| `ground_elevation` | `float` (Nullable) | Sampled terrain plinth elevation in meters AMSL |
+| `lidar_evidence` | `dict` (Nullable) | Extracted LiDAR roof return and density |
+| `building_height` | `float` (Nullable) | Structural height in meters |
+| `floors` | `List[dict]` | Constituent floor strata |
+| `units` | `List[dict]` | Constituent apartment units |
+
+#### 2.9.5 Unified Fused Property Context (`FusedPropertyContext`)
+| Field Name | Type | Description |
+|---|---|---|
+| `context_id` | `string` | Unique session or context identifier |
+| `schema_version` | `string` | Version (`"1.0"`) |
+| `target_project_crs`| `string` | Target metric project CRS |
+| `parcel` | `dict` (Nullable) | Associated cadastral parcel record |
+| `buildings` | `List[FusedBuildingContext]` | Array of fused physical building contexts |
+| `elevation_source` | `dict` (Nullable) | DEM raster metadata |
+| `lidar_source` | `LiDARSourceReference` (Nullable) | Active LiDAR point cloud source |
+| `gnss_reference` | `GNSSReferencePoint` (Nullable) | Geodetic control monument reference |
+| `source_alignment` | `Dict[str, bool]` | Layer availability indicators |
+| `fusion_status` | `enum` | Overall status: `VALID`, `PARTIAL`, `WARNING`, `INVALID` |
+| `quality_level` | `enum` | Evidence readiness: `FULL`, `PARTIAL`, `LIMITED`, `INVALID` |
+| `conflicts` | `List[SpatialConflict]` | Detected topological or administrative conflicts |
+| `provenance` | `List[dict]` | Audit trail of all transformation steps |
+
