@@ -66,6 +66,10 @@ export default function Cadastral2DPage() {
     selectedUndergroundId,
     setSelectedUndergroundId,
     loadDemoUnderground,
+    topologyData,
+    isAuditingTopology,
+    runTopologyAudit,
+    loadDemoTopology,
   } = useCadastreContext();
 
   const undergroundGeojson: GeoJSONFeatureCollection | null = useMemo(() => {
@@ -320,6 +324,10 @@ export default function Cadastral2DPage() {
                 setSubView3D("property");
                 router.push("/workspace/3d");
               }}
+              topologyData={topologyData}
+              isAuditingTopology={isAuditingTopology}
+              onRunTopologyAudit={runTopologyAudit}
+              onLoadDemoTopology={loadDemoTopology}
             />
           </aside>
         )}

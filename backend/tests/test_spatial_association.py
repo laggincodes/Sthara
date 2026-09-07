@@ -198,10 +198,15 @@ def test_crs_handling_and_reprojection():
     assert res.associations[0].building_area_sqm > 50.0
 
 
+from pathlib import Path
+
+DEMO_DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "processed"
+
+
 def test_api_associate_buildings_endpoint_success():
-    with open("../data/processed/demo_parcels.geojson", "r", encoding="utf-8-sig") as f:
+    with open(DEMO_DATA_DIR / "demo_parcels.geojson", "r", encoding="utf-8-sig") as f:
         demo_parcels = json.load(f)
-    with open("../data/processed/demo_buildings.geojson", "r", encoding="utf-8-sig") as f:
+    with open(DEMO_DATA_DIR / "demo_buildings.geojson", "r", encoding="utf-8-sig") as f:
         demo_buildings = json.load(f)
 
     response = client.post(
@@ -226,7 +231,7 @@ def test_api_associate_buildings_endpoint_invalid_geometry():
             "geometry": {"type": "Polygon", "coordinates": [[[0, 0], [1, 1], [0, 1], [1, 0], [0, 0]]]}
         }
     ])
-    with open("../data/processed/demo_parcels.geojson", "r", encoding="utf-8-sig") as f:
+    with open(DEMO_DATA_DIR / "demo_parcels.geojson", "r", encoding="utf-8-sig") as f:
         demo_parcels = json.load(f)
 
     response = client.post(

@@ -1086,3 +1086,18 @@ Returns reproducible deterministic candidates for Tower 1.
 - **Purpose**: Evaluates 3D physical clashes and clearance buffers between a candidate asset and existing underground features, classifying them into `ALLOWED_INTERSECTION`, `REVIEW_REQUIRED`, or `INVALID_OVERLAP`.
 - **Request**: `UndergroundConflictRequest`
 - **Response**: `200 OK` (`UndergroundConflictResponse`)
+
+---
+
+## 13. Unified Topology & Spatial Conflict Endpoints (Step 22)
+
+### 13.1 Retrieve Demo Topology Bundle
+- **Route**: `GET /api/v1/topology/demo`
+- **Purpose**: Returns an end-to-end multi-tier cadastral scene for Tower 1 and Parcel DEMO-401/1, demonstrating mutual non-overlap between adjacent units, party-wall contact, vertical interval consistency, and benchmark spatial conflict detection.
+- **Response**: `200 OK` (`DemoTopologyResponse`)
+
+### 13.2 Execute Full Topological Audit
+- **Route**: `POST /api/v1/topology/validate`
+- **Purpose**: Evaluates topological integrity across 2D non-overlap, 2D footprint containment, vertical elevation intervals, duplicate entity IDs and duplicate geometries, canonical 3D mesh watertightness (Contract v1.0), subsurface clashes, and hierarchical parent-child references.
+- **Request**: `TopologyValidationRequest`
+- **Response**: `200 OK` (`TopologyValidationResponse`)

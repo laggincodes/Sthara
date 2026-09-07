@@ -491,3 +491,55 @@ Represents 3D physical clash or proximity encroachment between subterranean asse
 | `vertical_clearance_m` | `float` | Distance between vertical elevation intervals (negative if overlapping) |
 | `is_3d_clash` | `bool` | True if both 2D horizontal and 1D vertical intervals overlap |
 | `resolution_recommendation` | `string` | Engineering recommendation for cadastre records |
+
+## 2.12 Unified Topology & Spatial Conflict Model (Step 22)
+
+### 2.12.1 Topology Conflict Record (`TopologyConflictRecord`)
+Represents an individual spatial or geometric invalidity identified across the cadastral hierarchy:
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `conflict_id` | `string` | Deterministic unique identifier (e.g. `CONF-OVL-2D-UNIT-U101-U102`) |
+| `conflict_type` | `TopologyConflictType` | Taxonomy: `DUPLICATE_ID`, `DUPLICATE_GEOMETRY`, `POSITIVE_AREA_OVERLAP`, `PARTIAL_CONTAINMENT`, `OUTSIDE_PARENT`, `VERTICAL_OVERLAP`, `VERTICAL_OUTSIDE_PARENT`, `INVALID_MESH`, `MISSING_REFERENCE` |
+| `severity` | `TopologySeverity` | Impact category: `INFO`, `WARNING`, `ERROR` |
+| `primary_entity_id` | `string` | Principal entity in conflict |
+| `primary_entity_type` | `EntityType` | Cadastral tier (`PARCEL`, `BUILDING`, `FLOOR`, `UNIT`, `PROPERTY_VOLUME`, `UNDERGROUND`) |
+| `secondary_entity_id` | `string \| null` | Secondary entity involved in pairwise relationship |
+| `secondary_entity_type` | `EntityType \| null` | Secondary entity tier |
+| `description` | `string` | Diagnostic description of the spatial condition |
+| `overlap_metric` | `float \| null` | Quantified measurement (area in $\text{m}^2$, depth in $\text{m}$, or volume in $\text{m}^3$) |
+| `conflict_geometry` | `GeoJSON Polygon \| null` | Geometry of the intersecting region |
+| `recommendation` | `string` | Actionable cadastral / engineering remedy |
+
+### 2.12.2 Topology Check Record (`TopologyCheckRecord`)
+Audit log entry of an individual topological rule evaluated:
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `check_id` | `string` | Unique deterministic check ID (e.g. `CHK-OVL-2D-PARCEL-P1-P2`) |
+| `check_type` | `TopologyCheckType` | `DUPLICATE_CHECK`, `CONTAINMENT_2D`, `OVERLAP_2D`, `VERTICAL_INTERVAL`, `MESH_3D_INTEGRITY`, `HIERARCHY_INTEGRITY`, `UNDERGROUND_CLASH` |
+| `entity_type` | `EntityType` | Domain entity tier |
+| `entity_ids` | `List[string]` | Lexicographically sorted participating entities |
+| `status` | `TopologyStatus` | `VALID`, `WARNING`, `CONFLICT`, `UNAVAILABLE` |
+| `severity` | `TopologySeverity` | `INFO`, `WARNING`, `ERROR` |
+| `message` | `string` | Diagnostic message |
+| `measured_value` | `float \| null` | Measurement (area $\text{m}^2$, thickness, distance) |
+| `tolerance_used` | `float \| null` | Engineering tolerance applied |
+
+### 2.12.3 Topology Summary (`TopologySummary`)
+Aggregated metrics reflecting overall cadastral health:
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `overall_status` | `TopologyStatus` | Composite status (`VALID`, `WARNING`, `CONFLICT`, `UNAVAILABLE`) |
+| `total_checks` | `int` | Total evaluated checks |
+| `passed_checks` | `int` | Count of rules satisfied within tolerance |
+| `warning_checks` | `int` | Count of informational warnings |
+| `conflict_checks` | `int` | Count of critical spatial collisions |
+| `unavailable_checks` | `int` | Count of checks skipped due to missing geometry |
+| `duplicates_found` | `int` | Count of duplicate ID or identical geometry conflicts |
+| `overlaps_found` | `int` | Count of positive-area overlap conflicts |
+| `containment_violations` | `int` | Count of containment boundary violations |
+| `mesh_issues_found` | `int` | Count of non-manifold or open 3D meshes |
+| `hierarchy_issues_found` | `int` | Count of broken parent-child references |
+| `tolerances` | `TopologyTolerances` | Configured engineering tolerances |

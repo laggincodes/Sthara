@@ -55,6 +55,9 @@ import {
   UndergroundConflictRequest,
   UndergroundConflictResponse,
   DemoUndergroundResponse,
+  TopologyValidationRequest,
+  TopologyValidationResponse,
+  DemoTopologyResponse,
 } from "@/types/cadastre";
 
 const BASE_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1").replace(/\/$/, "");
@@ -1129,6 +1132,41 @@ export const cadastreApi = {
     } catch (err) {
       if (err instanceof ApiError) throw err;
       throw new ApiError("Unable to evaluate underground conflicts.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Step 22: Retrieves multi-tier demonstration scene with benchmark topology checks.
+   */
+  async getDemoTopology(): Promise<DemoTopologyResponse> {
+    try {
+      const response = await fetch(`${BASE_URL}/topology/demo`, {
+        method: "GET",
+        headers: { Accept: "application/json" },
+      });
+      return await handleResponse<DemoTopologyResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Unable to retrieve demo topology scene.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Step 22: Executes comprehensive topological and spatial conflict audit across cadastral tiers.
+   */
+  async validateTopology(
+    payload: TopologyValidationRequest
+  ): Promise<TopologyValidationResponse> {
+    try {
+      const response = await fetch(`${BASE_URL}/topology/validate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(payload),
+      });
+      return await handleResponse<TopologyValidationResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Unable to validate spatial topology.", 0, "NETWORK_UNAVAILABLE");
     }
   },
 };

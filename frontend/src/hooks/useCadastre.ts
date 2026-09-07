@@ -24,6 +24,8 @@ import {
   GenerateUnits3DResponse,
   Unit3DResult,
   DemoUndergroundResponse,
+  TopologyValidationResponse,
+  TopologyValidationRequest,
 } from "@/types/cadastre";
 import { cadastreApi, ApiError } from "@/lib/api/client";
 
@@ -137,6 +139,11 @@ export function useCadastre() {
   const [isLoadingUnderground, setIsLoadingUnderground] = useState<boolean>(false);
   const [undergroundError, setUndergroundError] = useState<string | null>(null);
   const [cutawayMode, setCutawayMode] = useState<boolean>(false);
+
+  // Step 22: Unified Topology & Spatial Conflict Engine State
+  const [topologyData, setTopologyData] = useState<TopologyValidationResponse | null>(null);
+  const [isAuditingTopology, setIsAuditingTopology] = useState<boolean>(false);
+  const [topologyError, setTopologyError] = useState<string | null>(null);
 
   // Layer Visibility
   const [layerVisibility, setLayerVisibility] = useState<{
@@ -323,6 +330,48 @@ export function useCadastre() {
       }
     } finally {
       setIsLoadingUnderground(false);
+    }
+  }, []);
+
+  // 2f. Step 22: Run Full Cadastral Topology Audit
+  const runTopologyAudit = useCallback(async () => {
+    setIsAuditingTopology(true);
+    setTopologyError(null);
+    try {
+      const payload: TopologyValidationRequest = {
+        parcels: geojson ? ((geojson as unknown) as Record<string, unknown>) : null,
+        buildings: buildingsGeojson ? ((buildingsGeojson as unknown) as Record<string, unknown>) : null,
+        units: unitsGeojson ? (((unitsGeojson.features.map((f) => f.properties)) as unknown) as Record<string, unknown>[]) : null,
+        underground_features: undergroundBundle ? (((undergroundBundle.features) as unknown) as Record<string, unknown>[]) : null,
+      };
+      const res = await cadastreApi.validateTopology(payload);
+      setTopologyData(res);
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setTopologyError(err.message);
+      } else {
+        setTopologyError("Unable to execute spatial topology audit.");
+      }
+    } finally {
+      setIsAuditingTopology(false);
+    }
+  }, [geojson, buildingsGeojson, unitsGeojson, undergroundBundle]);
+
+  // 2g. Step 22: Load Demonstration Scene with Benchmark Topology Checks
+  const loadDemoTopology = useCallback(async () => {
+    setIsAuditingTopology(true);
+    setTopologyError(null);
+    try {
+      const demoRes = await cadastreApi.getDemoTopology();
+      setTopologyData(demoRes.validation_result);
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setTopologyError(err.message);
+      } else {
+        setTopologyError("Unable to load demo topology scene.");
+      }
+    } finally {
+      setIsAuditingTopology(false);
     }
   }, []);
 
@@ -1083,6 +1132,12 @@ export function useCadastre() {
         setUnits3DData(units3DRes);
       } catch {}
 
+      // Step 8c: Load Topology Demonstration Scene
+      try {
+        const topoDemo = await cadastreApi.getDemoTopology();
+        setTopologyData(topoDemo.validation_result);
+      } catch {}
+
       // Auto-select primary demo parcel, building, and property volume
       setSelectedParcelId("PARCEL-DEMO-101");
       setSelectedBuildingId("BLD-DEMO-001");
@@ -1185,6 +1240,23 @@ export function useCadastre() {
       s8Detail = `${validCount} Verified`;
     }
 
+    // Step 9: Topology & Spatial Conflict Engine
+    let s9Status: import("@/components/cadastral/PipelineStatus").PipelineStepStatus = "NOT_STARTED";
+    let s9Detail = "";
+    if (isAuditingTopology) s9Status = "PROCESSING";
+    else if (topologyData) {
+      if (topologyData.summary.overall_status === "VALID") {
+        s9Status = "COMPLETE";
+        s9Detail = `${topologyData.summary.passed_checks} Valid`;
+      } else if (topologyData.summary.overall_status === "WARNING") {
+        s9Status = "WARNING";
+        s9Detail = `${topologyData.summary.warning_checks} Warnings`;
+      } else {
+        s9Status = "ERROR";
+        s9Detail = `${topologyData.summary.conflict_checks} Conflicts`;
+      }
+    }
+
     return [
       {
         id: "data-sources",
@@ -1258,6 +1330,15 @@ export function useCadastre() {
         status: s8Status,
         detail: s8Detail,
       },
+      {
+        id: "topology-engine",
+        stepNumber: "09",
+        title: "Topology Engine",
+        description: "Overlap check, containment, duplicates & 3D mesh manifold audit.",
+        provenance: "SIH Stage 06",
+        status: s9Status,
+        detail: s9Detail,
+      },
     ];
   }, [
     geojson,
@@ -1277,6 +1358,8 @@ export function useCadastre() {
     property3DData,
     isGeneratingULPIN,
     ulpins3D,
+    isAuditingTopology,
+    topologyData,
   ]);
 
     // Find currently selected normalized parcel
@@ -1454,6 +1537,11 @@ export function useCadastre() {
     cutawayMode,
     setCutawayMode,
     loadDemoUnderground,
+    topologyData,
+    isAuditingTopology,
+    topologyError,
+    runTopologyAudit,
+    loadDemoTopology,
     pipelineSteps,
   };
 }

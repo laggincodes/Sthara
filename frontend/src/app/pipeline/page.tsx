@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useCadastreContext } from "@/context/CadastreContext";
 import { PipelineStepStatus } from "@/components/cadastral/PipelineStatus";
+import { TopologyCard } from "@/components/cadastral/TopologyCard";
 
 export default function PipelineAuditPage() {
   const [selectedStageId, setSelectedStageId] = useState<string | null>(null);
@@ -28,6 +29,10 @@ export default function PipelineAuditPage() {
     generate3DBuildingModels,
     generate3DFloorModels,
     generate3DPropertyModels,
+    topologyData,
+    isAuditingTopology,
+    runTopologyAudit,
+    loadDemoTopology,
   } = useCadastreContext();
 
   const completedCount = pipelineSteps.filter((s) => s.status === "COMPLETE").length;
@@ -331,6 +336,31 @@ export default function PipelineAuditPage() {
                     </div>
                   )}
 
+                  {(selectedStep.id === "topology-engine" || selectedStep.id.includes("topology")) && (
+                    <div className="space-y-2 text-xs">
+                      <div className="flex justify-between border-b border-slate-800/80 py-1 text-slate-400">
+                        <span>Engine Status:</span>
+                        <span className="text-cyan-400 font-mono">
+                          {topologyData?.summary.overall_status || "NOT_AUDITED"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between border-b border-slate-800/80 py-1 text-slate-400">
+                        <span>Checks Evaluated:</span>
+                        <span className="text-white font-mono">{topologyData?.summary.total_checks || 0} checks</span>
+                      </div>
+                      <div className="flex justify-between border-b border-slate-800/80 py-1 text-slate-400">
+                        <span>Active Conflicts:</span>
+                        <span className="text-rose-400 font-mono font-bold">{topologyData?.summary.conflict_checks || 0}</span>
+                      </div>
+                      <div className="flex justify-between py-1 text-slate-400">
+                        <span>Overlaps / Duplicates:</span>
+                        <span className="text-amber-400 font-mono">
+                          {(topologyData?.summary.overlaps_found || 0) + (topologyData?.summary.duplicates_found || 0)}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
                   {selectedStep.id === "08-deterministic-3d-ulpin" && (
                     <div className="space-y-2 text-xs">
                       <div className="flex justify-between border-b border-slate-800/80 py-1 text-slate-400">
@@ -385,6 +415,17 @@ export default function PipelineAuditPage() {
                         Generate 3D Buildings
                       </button>
                     )}
+                    {(selectedStep.id === "topology-engine" || selectedStep.id.includes("topology")) && (
+                      <button
+                        type="button"
+                        onClick={runTopologyAudit}
+                        disabled={isAuditingTopology}
+                        className="rounded bg-indigo-600 hover:bg-indigo-500 px-3 py-1.5 text-xs font-semibold text-white transition-colors disabled:opacity-50"
+                      >
+                        {isAuditingTopology ? "Auditing..." : "Audit Topology"}
+                      </button>
+                    )}
+
                     {selectedStep.id === "07-stratified-volumes" && (
                       <button
                         type="button"
@@ -414,6 +455,15 @@ export default function PipelineAuditPage() {
               </>
             )}
           </div>
+        </div>
+        {/* Step 22: Unified Topology & Spatial Conflict Engine Panel */}
+        <div className="mt-8">
+          <TopologyCard
+            topologyData={topologyData}
+            isAuditing={isAuditingTopology}
+            onRunAudit={runTopologyAudit}
+            onLoadDemo={loadDemoTopology}
+          />
         </div>
       </div>
     </div>
