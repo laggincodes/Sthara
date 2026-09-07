@@ -163,6 +163,40 @@ Represents an individual structural level within a building structure, materiali
 
 ---
 
+### 2.4A Unit / Apartment Entity (Entity: `Unit`)
+Represents an enclosed spatial compartment within a parent `Floor`, supporting horizontal stratification of multi-unit buildings.
+
+| Field Name | Type | Description |
+|---|---|---|
+| `unit_id` | `string` | Canonical deterministic ID: `BLD-{bld}-FL{fl}-U{num}` (e.g. `BLD-DEMO-002-FL05-U501`) |
+| `parcel_id` | `string` (FK) | Reference to root `CadastralParcel` |
+| `building_id` | `string` (FK) | Reference to parent `BuildingStructure` |
+| `floor_id` | `string` (FK) | Reference to parent `BuildingFloor` |
+| `unit_number` | `string` | Local unit number on floor (e.g., `"501"`) |
+| `unit_name` | `string` (Nullable) | Human-readable unit designation (e.g., `"Apartment 501"`) |
+| `unit_type` | `enum` | `"APARTMENT_UNIT"`, `"RESIDENTIAL_UNIT"`, `"OFFICE"`, `"SHOP"`, `"OTHER"` |
+| `geometry_2d` | `Polygon` (Nullable) | GeoJSON footprint of unit floor plan subdivision |
+| `base_elevation` | `float` | Base elevation in meters AMSL |
+| `top_elevation` | `float` | Ceiling elevation in meters AMSL |
+| `height` | `float` | Vertical unit height ($Z_{top} - Z_{base}$) in meters |
+| `footprint_area` | `float` | Planar footprint area in $m^2$ |
+| `volume_cubic_m` | `float` | Volumetric cubature in $m^3$ |
+| `source` | `string` | Origin file or reference dataset |
+| `source_type` | `enum` | `"FLOOR_PLAN"`, `"SURVEY"`, `"BUILDING_MODEL"`, `"DERIVED"`, `"DEMO"`, `"DRONE"`, `"LIDAR"` |
+| `status` | `enum` | `"VALID"`, `"INVALID"`, `"UNAVAILABLE"` |
+| `warnings` | `List[string]` | Geometric or topological validation warnings |
+| `provenance` | `dict` | Audit metadata and processing timestamps |
+
+#### Unit Integrity Constraints:
+1. **Vertical Bounds**: Unit height must be positive ($H \ge 1.0\text{ m}$) and lie strictly within parent floor bounds $[Z_{base}, Z_{top}]$ within $0.05\text{ m}$ tolerance.
+2. **Horizontal Containment**: Unit 2D polygon must be contained within parent building footprint polygon ($0.01\text{ m}^2$ tolerance).
+3. **Mutual Non-Overlap**: Units on the same floor must not overlap in area ($\text{Area} \le 10^{-6}\text{ m}^2$); common party-wall touching is valid.
+4. **Unique Unit Number**: Unit numbers must be unique across the same floor.
+5. **Common Circulation**: Floor area does NOT need to equal sum of unit areas; corridors and shared spaces remain legitimately unassigned.
+6. **Statutory Notice**: Physical unit modeling does NOT establish legal ownership.
+
+---
+
 ### 2.5 3D Cadastral Property Volume (Entity: `PropertyVolumeResult`)
 The fundamental 3D cadastral unit representing a discrete volumetric property right, associated with a parcel, building, and constituent floor solid(s).
 

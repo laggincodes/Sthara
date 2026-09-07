@@ -26,6 +26,11 @@ import {
   ULPINResult,
   ULPINVerificationRequest,
   ULPINVerificationResult,
+  Unit,
+  UnitValidationResult,
+  UnitBatchValidationResponse,
+  UnitPropertyRecord,
+  UnitFeatureCollection,
 } from "@/types/cadastre";
 
 const BASE_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1").replace(/\/$/, "");
@@ -598,6 +603,111 @@ export const cadastreApi = {
         0,
         "NETWORK_UNAVAILABLE"
       );
+    }
+  },
+
+  /**
+   * Step 16: Retrieves synthetic demo units (GeoJSON FeatureCollection).
+   */
+  async getDemoUnits(): Promise<UnitFeatureCollection> {
+    try {
+      const response = await fetch(`${BASE_URL}/units/demo`, {
+        headers: { Accept: "application/json" },
+      });
+      return await handleResponse<UnitFeatureCollection>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Failed to fetch demo units.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Step 16: Validates a single unit entity against spatial rules.
+   */
+  async validateUnit(payload: {
+    unit: Unit;
+    parent_floor?: unknown;
+    parent_building?: unknown;
+    parent_parcel?: unknown;
+    sibling_units?: Unit[];
+  }): Promise<UnitValidationResult> {
+    try {
+      const response = await fetch(`${BASE_URL}/units/validate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(payload),
+      });
+      return await handleResponse<UnitValidationResult>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Failed to validate unit.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Step 16: Validates a batch of units.
+   */
+  async validateUnitsBatch(payload: {
+    units: Unit[];
+    floors?: unknown[];
+    buildings?: unknown[];
+    parcels?: unknown[];
+  }): Promise<UnitBatchValidationResponse> {
+    try {
+      const response = await fetch(`${BASE_URL}/units/validate-batch`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(payload),
+      });
+      return await handleResponse<UnitBatchValidationResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Failed to validate units batch.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Step 16: Retrieves units for a building.
+   */
+  async getUnitsByBuilding(buildingId: string): Promise<Unit[]> {
+    try {
+      const response = await fetch(`${BASE_URL}/units/building/${encodeURIComponent(buildingId)}`, {
+        headers: { Accept: "application/json" },
+      });
+      return await handleResponse<Unit[]>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Failed to fetch units for building.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Step 16: Retrieves units for a floor.
+   */
+  async getUnitsByFloor(floorId: string): Promise<Unit[]> {
+    try {
+      const response = await fetch(`${BASE_URL}/units/floor/${encodeURIComponent(floorId)}`, {
+        headers: { Accept: "application/json" },
+      });
+      return await handleResponse<Unit[]>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Failed to fetch units for floor.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Step 16: Retrieves a conceptual 3D property record for a unit.
+   */
+  async getUnitPropertyRecord(unitId: string): Promise<UnitPropertyRecord> {
+    try {
+      const response = await fetch(`${BASE_URL}/units/property-record/${encodeURIComponent(unitId)}`, {
+        headers: { Accept: "application/json" },
+      });
+      return await handleResponse<UnitPropertyRecord>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Failed to fetch unit property record.", 0, "NETWORK_UNAVAILABLE");
     }
   },
 };

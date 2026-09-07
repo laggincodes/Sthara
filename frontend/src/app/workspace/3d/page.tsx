@@ -69,6 +69,9 @@ export default function Cadastral3DPage() {
     selectedBuildingSpec,
     selectedBuilding3D,
     selectedBuildingFloors3D,
+    unitsGeojson,
+    selectedUnitId,
+    unitPropertyRecord,
     sampleActiveElevation,
     calculateSelectedBuildingHeight,
     generateSelectedBuildingFloors,
@@ -77,6 +80,7 @@ export default function Cadastral3DPage() {
     generate3DPropertyModels,
     setSelectedParcelId,
     setSelectedBuildingId,
+    setSelectedUnitId,
   } = useCadastreContext();
 
   const crsString = validationResult?.crs || geojson?.crs?.properties?.name || "WGS 84 (EPSG:4326)";
@@ -293,8 +297,11 @@ export default function Cadastral3DPage() {
               buildingFloors3D={selectedBuildingFloors3D}
               properties3D={property3DData?.results}
               ulpins3D={ulpins3D}
+              units={unitsGeojson?.features?.map((f) => f.properties)}
               selectedFloorId={selectedFloorId}
               selectedPropertyId={selectedPropertyId}
+              selectedUnitId={selectedUnitId}
+              unitPropertyRecord={unitPropertyRecord}
               demMetadata={demMetadata}
               isSamplingElevation={isSamplingElevation}
               isCalculatingHeight={isCalculatingHeight}
@@ -303,6 +310,7 @@ export default function Cadastral3DPage() {
               onSelectBuildingId={setSelectedBuildingId}
               onSelectFloorId={setSelectedFloorId}
               onSelectPropertyId={setSelectedPropertyId}
+              onSelectUnitId={setSelectedUnitId}
               onSampleElevation={sampleActiveElevation}
               onCalculateHeight={calculateSelectedBuildingHeight}
               onGenerateFloors={generateSelectedBuildingFloors}

@@ -24,6 +24,7 @@ export default function Cadastral2DPage() {
     floorError,
     geojson,
     buildingsGeojson,
+    unitsGeojson,
     validationResult,
     associationData,
     demMetadata,
@@ -43,11 +44,14 @@ export default function Cadastral2DPage() {
     selectedBuildingFloors3D,
     selectedFloorId,
     selectedPropertyId,
+    selectedUnitId,
+    unitPropertyRecord,
     layerVisibility,
     toggleLayer,
     loadDemoParcels,
     loadDemoBuildings,
     loadRealOSMBuildings,
+    loadDemoUnits,
     sampleActiveElevation,
     calculateSelectedBuildingHeight,
     generateSelectedBuildingFloors,
@@ -55,6 +59,7 @@ export default function Cadastral2DPage() {
     setSelectedBuildingId,
     setSelectedFloorId,
     setSelectedPropertyId,
+    setSelectedUnitId,
     setSubView3D,
   } = useCadastreContext();
 
@@ -96,6 +101,17 @@ export default function Cadastral2DPage() {
               }`}
             >
               Buildings ({buildingsGeojson?.features?.length || 0})
+            </button>
+            <button
+              type="button"
+              onClick={() => toggleLayer("units")}
+              className={`px-2 py-1 rounded text-[11px] font-mono transition-colors ${
+                layerVisibility.units
+                  ? "bg-cyan-950/80 text-cyan-300 border border-cyan-500/40"
+                  : "bg-slate-900 text-slate-500 border border-slate-800"
+              }`}
+            >
+              Units ({unitsGeojson?.features?.length || 0})
             </button>
           </div>
         </div>
@@ -141,10 +157,13 @@ export default function Cadastral2DPage() {
           <CadastralMap
             geojson={geojson}
             buildingsGeojson={buildingsGeojson}
+            unitsGeojson={unitsGeojson}
             selectedParcelId={selectedParcelId}
             selectedBuildingId={selectedBuildingId}
+            selectedUnitId={selectedUnitId}
             onSelectParcel={setSelectedParcelId}
             onSelectBuilding={setSelectedBuildingId}
+            onSelectUnit={setSelectedUnitId}
             layerVisibility={layerVisibility}
             onToggleLayer={toggleLayer}
             isActive={true}
@@ -163,7 +182,7 @@ export default function Cadastral2DPage() {
                 <p className="text-xs text-slate-400 mb-6 leading-relaxed">
                   Load synthetic cadastral parcels, building footprints, or real OpenStreetMap data to visualize boundaries.
                 </p>
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5">
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 flex-wrap">
                   <button
                     type="button"
                     onClick={loadDemoParcels}
@@ -184,6 +203,13 @@ export default function Cadastral2DPage() {
                     className="w-full sm:w-auto inline-flex items-center justify-center text-xs font-semibold text-amber-300 bg-amber-950/60 hover:bg-amber-900/70 border border-amber-500/40 px-3.5 py-2 rounded-lg transition-colors"
                   >
                     Load Real OSM
+                  </button>
+                  <button
+                    type="button"
+                    onClick={loadDemoUnits}
+                    className="w-full sm:w-auto inline-flex items-center justify-center text-xs font-semibold text-cyan-300 bg-cyan-950/60 hover:bg-cyan-900/70 border border-cyan-500/40 px-3.5 py-2 rounded-lg transition-colors"
+                  >
+                    Load Units
                   </button>
                 </div>
               </div>
@@ -222,8 +248,11 @@ export default function Cadastral2DPage() {
               buildingFloors3D={selectedBuildingFloors3D}
               properties3D={property3DData?.results}
               ulpins3D={ulpins3D}
+              units={unitsGeojson?.features?.map((f) => f.properties)}
               selectedFloorId={selectedFloorId}
               selectedPropertyId={selectedPropertyId}
+              selectedUnitId={selectedUnitId}
+              unitPropertyRecord={unitPropertyRecord}
               demMetadata={demMetadata}
               isSamplingElevation={isSamplingElevation}
               isCalculatingHeight={isCalculatingHeight}
@@ -232,6 +261,7 @@ export default function Cadastral2DPage() {
               onSelectBuildingId={setSelectedBuildingId}
               onSelectFloorId={setSelectedFloorId}
               onSelectPropertyId={setSelectedPropertyId}
+              onSelectUnitId={setSelectedUnitId}
               onSampleElevation={sampleActiveElevation}
               onCalculateHeight={calculateSelectedBuildingHeight}
               onGenerateFloors={generateSelectedBuildingFloors}
