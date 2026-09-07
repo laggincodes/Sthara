@@ -303,5 +303,42 @@ Prioritization tags:
   7. Authored technical documentation in `docs/DATA_FUSION.md` and `DATA_FUSION.md`.
 - **Expected Output**: Reversible multi-source spatial alignment connecting all 7 data layers without silent coordinate changes or fictitious ownership claims.
 - **Acceptance Criteria**: 0 TypeScript errors; 0 ESLint warnings; 158/158 tests pass; real OSM supported with non-cadastral honesty.
-
-
+---
+## Step 19: AI/ML Extraction Layer & Spatial Validation Gate (Completed — Step 19)
+- **Priority**: **[MUST HAVE]** — **[COMPLETED]**
+- **Objective**: Implement a real, explainable AI/ML candidate extraction subsystem adhering strictly to SIH separation of concerns: `AI = Candidate Extraction`, `3D Engine = Modelling`, `Topology Engine = Validation`, `Cadastre = Authoritative Records`.
+- **Tasks**:
+  1. Implemented AI extraction schemas (`backend/app/schemas/ai_extraction.py`):
+     - `ExtractionType` (BUILDING, FLOOR, UNIT, VERTICAL_FEATURE).
+     - `CandidateStatus` (CANDIDATE, ACCEPTED, REJECTED, REVIEW_REQUIRED, UNAVAILABLE).
+     - `ConfidenceLevel` (HIGH, MEDIUM, LOW, UNAVAILABLE) and `ExtractionMethod`.
+     - `ModelMetadata`, `ExtractionProvenance`, `CandidateFeature`, `ExtractionResult`.
+     - Validation and Spatial Comparison request/response schemas.
+  2. Implemented Model Registry (`backend/app/services/model_registry.py`):
+     - Registers classical CV (`bld_cv_otsu_v1`), 1D elevation density (`flr_hist_cluster_v1`), orthogonal partitioning (`unit_partition_v1`), vertical coordination (`vert_delineator_v1`), and SIH demo benchmark (`sih_benchmark_demo_v1`).
+     - Deep learning models (`pytorch_mask_rcnn_v1`, `open3d_pointnet_v1`) honestly report `MODEL_UNAVAILABLE` when heavy dependencies are absent.
+  3. Implemented AI Extraction Service (`backend/app/services/ai_extraction_service.py`):
+     - Classical Otsu raster thresholding, contour vectorization, and compactness scoring.
+     - 1D floor strata elevation interval clustering.
+     - Unit interior delineation with honest `UNIT_EXTRACTION_UNAVAILABLE` fallback when floor geometry is missing.
+     - Coordinated vertical strata delineation.
+     - Deterministic candidate validation gate checking geometry validity, parcel boundary containment, multi-unit non-overlap, and confidence thresholds.
+     - Spatial comparison engine calculating live IoU ($\\frac{A \\cap B}{A \\cup B}$), overlapping area, centroid offset, and boundary discrepancies.
+  4. Exposed REST endpoints (`backend/app/api/routes/ai_extraction.py`):
+     - `GET /api/v1/ai/models`
+     - `POST /api/v1/ai/extract/buildings`
+     - `POST /api/v1/ai/extract/floors`
+     - `POST /api/v1/ai/extract/units`
+     - `POST /api/v1/ai/extract/vertical`
+     - `POST /api/v1/ai/validate-candidates`
+     - `POST /api/v1/ai/compare`
+     - `GET /api/v1/ai/demo`
+  5. Built 20 unit and integration tests (`backend/tests/test_ai_extraction.py`) — all 178 backend tests pass.
+  6. Implemented frontend AI Extraction Workbench in `frontend/`:
+     - Created `AiExtractionCard.tsx` with 4 task rows, candidate inspector with prominent `CANDIDATE — NOT YET AUTHORITATIVE` badges, deterministic validation runner, live IoU comparison widget, and model registry viewer.
+     - Embedded `AiExtractionCard` in Data Workspace (`/data`).
+     - Added amber dashed AI Candidates layer support to `CadastralMap.tsx`.
+     - Added strict TypeScript types (`types/ai_extraction.ts`) and API client methods (`lib/api/client.ts`).
+  7. Authored technical documentation in `docs/AI_EXTRACTION.md` and `AI_EXTRACTION.md`.
+- **Expected Output**: Explainable candidate extraction pipeline that feeds candidate evidence into the deterministic 3D engine without bypassing topological validation or fabricating legal ownership.
+- **Acceptance Criteria**: 0 TypeScript errors; 0 ESLint warnings; 178/178 tests pass; Next.js production build succeeds; SIH architectural separation strictly preserved.

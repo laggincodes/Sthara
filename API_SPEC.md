@@ -1015,5 +1015,36 @@ Base URL: `http://localhost:8000/api/v1`
 - **Purpose**: Reprojects real OpenStreetMap building footprints into target project CRS, preserving non-cadastral physical observation status without fabricating land ownership.
 - **Query Params**: `target_crs` (default: `"EPSG:32643"`), `max_buildings` (default: `15`).
 - **Response**: `200 OK` (`PropertyContextResponse`)
+## 11. AI/ML Extraction Endpoints (Step 19)
 
+### 11.1 List Extraction Models
+`GET /api/v1/ai/models`
+Returns registered models, tasks, frameworks, availability, and documented limitations.
 
+### 11.2 Extract Building Footprints
+`POST /api/v1/ai/extract/buildings`
+Runs classical CV or benchmark extraction and returns candidate building footprint polygons.
+
+### 11.3 Segment Floor Strata
+`POST /api/v1/ai/extract/floors`
+Runs 1D elevation density stratification and outputs candidate floor strata intervals.
+
+### 11.4 Delineate Apartment Units
+`POST /api/v1/ai/extract/units`
+Partitions floor boundaries into candidate units with party-wall verification. Returns `UNIT_EXTRACTION_UNAVAILABLE` if interior evidence is missing.
+
+### 11.5 Extract Vertical Envelopes
+`POST /api/v1/ai/extract/vertical`
+Outputs coordinated base-to-roof elevation bounds for structural strata.
+
+### 11.6 Deterministic Candidate Validation Gate
+`POST /api/v1/ai/validate-candidates`
+Validates candidate features against geometry validity, parcel boundary containment, unit non-overlap, and confidence policies before 3D extrusion.
+
+### 11.7 Spatial Candidate Comparison (IoU)
+`POST /api/v1/ai/compare`
+Computes Intersection-over-Union (IoU), overlapping area, centroid offset, and boundary discrepancies between AI candidates and source reference.
+
+### 11.8 SIH Presentation Demonstration Bundle
+`GET /api/v1/ai/demo`
+Returns reproducible deterministic candidates for Tower 1.

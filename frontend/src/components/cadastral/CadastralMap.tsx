@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { GeoJSONFeatureCollection, UnitFeatureCollection } from "@/types/cadastre";
@@ -14,13 +14,16 @@ interface CadastralMapProps {
   geojson: GeoJSONFeatureCollection | null;
   buildingsGeojson?: GeoJSONFeatureCollection | null;
   unitsGeojson?: UnitFeatureCollection | null;
+  aiCandidatesGeojson?: GeoJSONFeatureCollection | null;
   selectedParcelId: string | null;
   selectedBuildingId?: string | null;
   selectedUnitId?: string | null;
+  selectedAiCandidateId?: string | null;
   onSelectParcel: (parcelId: string | null) => void;
   onSelectBuilding?: (buildingId: string | null) => void;
   onSelectUnit?: (unitId: string | null) => void;
-  layerVisibility?: { parcels: boolean; buildings: boolean; units?: boolean };
+  onSelectAiCandidate?: (candidateId: string | null) => void;
+  layerVisibility?: { parcels: boolean; buildings: boolean; units?: boolean; aiCandidates?: boolean };
   onToggleLayer?: (layer: "parcels" | "buildings" | "units") => void;
   isActive?: boolean;
 }
@@ -372,6 +375,93 @@ function updateBuildingsLayer(
   }
 }
 
+function updateAiCandidatesLayer(
+  map: maplibregl.Map,
+  data: GeoJSONFeatureCollection | null | undefined,
+  activeCandidateId: string | null | undefined,
+  onSelectCandidate?: (id: string | null) => void,
+  visible: boolean = true
+) {
+  const sourceId = "ai-candidates";
+
+  if (!visible) {
+    ["ai-candidates-fill", "ai-candidates-line"].forEach((layerId) => {
+      if (map.getLayer(layerId)) map.setLayoutProperty(layerId, "visibility", "none");
+    });
+    return;
+  } else {
+    ["ai-candidates-fill", "ai-candidates-line"].forEach((layerId) => {
+      if (map.getLayer(layerId)) map.setLayoutProperty(layerId, "visibility", "visible");
+    });
+  }
+
+  if (!data || !data.features || data.features.length === 0) {
+    if (map.getSource(sourceId)) {
+      (map.getSource(sourceId) as maplibregl.GeoJSONSource).setData({
+        type: "FeatureCollection",
+        features: [],
+      });
+    }
+    return;
+  }
+
+  const enrichedCollection = {
+    ...data,
+    features: data.features.map((feat, index) => {
+      const cId = feat.properties?.candidate_id || feat.id || `AI-CAND-${index + 1}`;
+      return {
+        ...feat,
+        id: String(cId),
+        properties: {
+          ...feat.properties,
+          __candidate_id: String(cId),
+        },
+      };
+    }),
+  };
+
+  if (map.getSource(sourceId)) {
+    (map.getSource(sourceId) as maplibregl.GeoJSONSource).setData(
+      enrichedCollection as unknown as GeoJSON.GeoJSON
+    );
+  } else {
+    map.addSource(sourceId, {
+      type: "geojson",
+      data: enrichedCollection as unknown as GeoJSON.GeoJSON,
+    });
+
+    map.addLayer({
+      id: "ai-candidates-fill",
+      type: "fill",
+      source: sourceId,
+      paint: {
+        "fill-color": "#D97706",
+        "fill-opacity": 0.25,
+      },
+    });
+
+    map.addLayer({
+      id: "ai-candidates-line",
+      type: "line",
+      source: sourceId,
+      paint: {
+        "line-color": "#F59E0B",
+        "line-width": 2.5,
+        "line-dasharray": [3, 2],
+      },
+    });
+
+    if (onSelectCandidate) {
+      map.on("click", "ai-candidates-fill", (e: maplibregl.MapLayerMouseEvent) => {
+        if (e.features && e.features.length > 0) {
+          const clickedId = e.features[0].properties?.__candidate_id;
+          onSelectCandidate(clickedId ? String(clickedId) : null);
+        }
+      });
+    }
+  }
+}
+
 function updateUnitsLayer(
   map: maplibregl.Map,
   data: UnitFeatureCollection | null | undefined,
@@ -503,16 +593,20 @@ export function CadastralMap({
   geojson,
   buildingsGeojson,
   unitsGeojson,
+  aiCandidatesGeojson,
   selectedParcelId,
   selectedBuildingId,
   selectedUnitId,
+  selectedAiCandidateId,
   onSelectParcel,
   onSelectBuilding,
   onSelectUnit,
-  layerVisibility = { parcels: true, buildings: true, units: true },
+  onSelectAiCandidate,
+  layerVisibility = { parcels: true, buildings: true, units: true, aiCandidates: true },
   onToggleLayer,
   isActive = true,
 }: CadastralMapProps) {
+  const [localShowAiCandidates, setLocalShowAiCandidates] = useState(true);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const isLoadedRef = useRef<boolean>(false);
@@ -668,6 +762,13 @@ export function CadastralMap({
         onSelectUnitCallback,
         layerVisibility.units ?? true
       );
+      updateAiCandidatesLayer(
+        mapRef.current,
+        aiCandidatesGeojson,
+        selectedAiCandidateId,
+        onSelectAiCandidate,
+        layerVisibility.aiCandidates ?? localShowAiCandidates
+      );
     }
   }, [
     geojson,
@@ -682,6 +783,11 @@ export function CadastralMap({
     onSelectParcelCallback,
     onSelectBuildingCallback,
     onSelectUnitCallback,
+    aiCandidatesGeojson,
+    selectedAiCandidateId,
+    onSelectAiCandidate,
+    layerVisibility.aiCandidates,
+    localShowAiCandidates,
   ]);
 
   // 5. Fit bounds when new dataset arrives
@@ -739,6 +845,19 @@ export function CadastralMap({
               Apartment Units ({unitsGeojson?.features?.length || 0})
             </span>
           </label>
+
+          <label className="flex items-center gap-2 cursor-pointer text-slate-300 hover:text-white transition-colors">
+            <input
+              type="checkbox"
+              checked={layerVisibility.aiCandidates ?? localShowAiCandidates}
+              onChange={() => setLocalShowAiCandidates((prev) => !prev)}
+              className="rounded border-slate-700 bg-slate-800 text-amber-500 focus:ring-0 focus:ring-offset-0"
+            />
+            <span className="flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-sm bg-amber-500/40 border border-amber-400 border-dashed inline-block" />
+              AI Candidates ({aiCandidatesGeojson?.features?.length || 0})
+            </span>
+          </label>
         </div>
       </div>
 
@@ -759,6 +878,10 @@ export function CadastralMap({
           <div className="flex items-center gap-1.5">
             <span className="h-2 w-3 rounded-xs border border-cyan-400 bg-cyan-900/50 inline-block" />
             <span>Apartment Unit</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="h-2 w-3 rounded-xs border border-amber-400 border-dashed bg-amber-500/30 inline-block" />
+            <span>AI Candidate</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="h-2 w-3 rounded-xs border border-amber-300 bg-amber-500/70 inline-block" />

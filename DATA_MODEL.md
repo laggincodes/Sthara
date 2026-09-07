@@ -427,4 +427,24 @@ Represents the data relationship orchestration layer aligning multi-source obser
 | `quality_level` | `enum` | Evidence readiness: `FULL`, `PARTIAL`, `LIMITED`, `INVALID` |
 | `conflicts` | `List[SpatialConflict]` | Detected topological or administrative conflicts |
 | `provenance` | `List[dict]` | Audit trail of all transformation steps |
+## 2.10 AI/ML Candidate Feature Model & Provenance (Step 19)
 
+### CandidateFeature Envelope
+Represents non-authoritative candidate physical features extracted by computer-vision or statistical models:
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `candidate_id` | `string` | Unique identifier (e.g. `AI-BLD-CAND-001`, `AI-FLR-CAND-001`) |
+| `feature_type` | `ExtractionType` | `BUILDING`, `FLOOR`, `UNIT`, or `VERTICAL_FEATURE` |
+| `source_reference` | `string` | Parent source or building reference |
+| `geometry_2d` | `GeoJSON Polygon` | Candidate 2D boundary (if spatial feature) |
+| `estimated_attributes` | `Record<string, unknown>` | Candidate attributes (`base_elevation_m`, `top_elevation_m`, `height_m`, etc.) |
+| `confidence` | `float \| null` | Calibrated numeric score $[0.0, 1.0]$; `null` if uncalibrated |
+| `confidence_level` | `ConfidenceLevel` | `HIGH`, `MEDIUM`, `LOW`, or `UNAVAILABLE` |
+| `confidence_threshold` | `float` | Minimum confidence required for automatic acceptance (default 0.60) |
+| `extraction_method` | `ExtractionMethod` | `SOURCE_DATA`, `AI_CV_MORPHOLOGICAL`, `AI_NDSM_SEGMENTATION`, etc. |
+| `status` | `CandidateStatus` | `CANDIDATE`, `ACCEPTED`, `REJECTED`, `REVIEW_REQUIRED`, `UNAVAILABLE` |
+| `provenance` | `ExtractionProvenance` | Source dataset, model ID, version, execution timestamp, CRS |
+| `warnings` | `List[string]` | Integrity and boundary notices |
+
+AI candidates are strictly candidate evidence and cannot directly produce 3D property volumes without deterministic validation.

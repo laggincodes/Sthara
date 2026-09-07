@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useCadastreContext } from "@/context/CadastreContext";
 import { ValidationCard } from "@/components/cadastral/ValidationCard";
 import { DataFusionCard } from "@/components/cadastral/DataFusionCard";
+import { AiExtractionCard } from "@/components/cadastral/AiExtractionCard";
 
 export default function DataWorkspacePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -401,6 +402,9 @@ export default function DataWorkspacePage() {
 
       {/* Stage 18: Multi-Source Spatial Data Fusion & Georeferencing */}
       <DataFusionCard />
+
+      {/* Stage 19: AI/ML Extraction Subsystem & Spatial Validation */}
+      <AiExtractionCard />
     </div>
   );
 }
