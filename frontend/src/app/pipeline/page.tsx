@@ -127,7 +127,7 @@ export default function PipelineAuditPage() {
               </>
             ) : (
               <>
-                <span>▶ Run Full Pipeline</span>
+                <span>▶ Run SIH Demo</span>
               </>
             )}
           </button>
@@ -466,8 +466,15 @@ export default function PipelineAuditPage() {
                         </button>
                         <button
                           type="button"
-                          onClick={loadDemoTopology}
-                          className="rounded border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white transition-colors"
+                          onClick={() => loadDemoTopology("valid")}
+                          className="rounded border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-semibold text-emerald-300 hover:text-white transition-colors"
+                        >
+                          Load Valid Scene
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => loadDemoTopology("conflict")}
+                          className="rounded border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-semibold text-rose-300 hover:text-white transition-colors"
                         >
                           Load Conflict Scene
                         </button>

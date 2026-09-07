@@ -148,12 +148,18 @@ class UnitPropertyRecord(BaseModel):
     unit_id: str = Field(..., description="Internal deterministic unit identifier")
     unit_number: str = Field(..., description="Unit number designation")
     unit_name: Optional[str] = Field(None, description="Descriptive unit name")
+    canonical_parcel_id: str = Field(default="P001", description="SIH Presentation canonical parcel alias")
+    canonical_building_id: str = Field(default="B01", description="SIH Presentation canonical building alias")
+    canonical_floor_id: str = Field(default="05", description="SIH Presentation canonical floor alias")
+    canonical_unit_id: str = Field(default="501", description="SIH Presentation canonical unit alias")
+    canonical_path: str = Field(default="P001/B01/05/501", description="SIH hierarchical chain: PARCEL -> BUILDING -> FLOOR -> UNIT")
     z_range_amsl: Dict[str, float] = Field(..., description="Vertical range in meters AMSL: {'min_z': float, 'max_z': float}")
     volume_cubic_m: Optional[float] = Field(None, description="Exact mathematical volume in m3")
     footprint_area_sqm: Optional[float] = Field(None, description="Footprint area in m2")
     status: UnitStatus = Field(UnitStatus.VALID, description="Status of spatial evidence")
+    ulpin_prototype: Optional[str] = Field(default=None, description="Prototype 3D-ULPIN spatial hash")
     disclaimer: str = Field(
-        "CONCEPTUAL 3D PROPERTY RECORD FOR PROTOTYPE DEMONSTRATION. NOT AN OFFICIAL GOVERNMENT TITLE OR LEGAL OWNERSHIP CLAIM.",
+        "CONCEPTUAL 3D PROPERTY RECORD · 3D ULPIN PROTOTYPE (RESEARCH IMPLEMENTATION). NOT AN OFFICIAL GOVERNMENT TITLE OR LEGAL OWNERSHIP CLAIM.",
         description="Statutory disclaimer"
     )
 

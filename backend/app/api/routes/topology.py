@@ -19,19 +19,26 @@ from app.services.topology_service import TopologyService
 router = APIRouter(prefix="/topology", tags=["Topology & Spatial Conflicts"])
 
 
+from fastapi import Query
+
 @router.get(
     "/demo",
     response_model=DemoTopologyResponse,
     status_code=status.HTTP_200_OK,
     summary="Retrieve realistic multi-tier demonstration scene with benchmark topology checks",
 )
-async def get_demo_topology_bundle() -> DemoTopologyResponse:
+async def get_demo_topology_bundle(
+    scenario: str = Query(
+        default="conflict",
+        description="Scenario: 'valid' (clean party-wall units, 0 conflicts) or 'conflict'/'invalid' (positive-volume overlap detected)",
+    ),
+) -> DemoTopologyResponse:
     """
-    Returns an end-to-end multi-tier cadastral scene for Tower 1 and Parcel DEMO-401/1,
-    demonstrating mutual non-overlap between adjacent units, party-wall contact,
-    vertical interval consistency, and benchmark spatial conflict detection.
+    Returns an end-to-end multi-tier cadastral scene demonstrating:
+    - 'valid': Clean units 101 & 102 with valid party-wall contact and 0 conflicts
+    - 'conflict': Deliberate positive-volume encroachment (Unit 103 overlapping Unit 102)
     """
-    return TopologyService.get_demo_topology_bundle()
+    return TopologyService.get_demo_topology_bundle(scenario=scenario)
 
 
 @router.post(

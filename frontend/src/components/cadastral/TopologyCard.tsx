@@ -11,7 +11,7 @@ interface TopologyCardProps {
   topologyData?: TopologyValidationResponse | null;
   isAuditing?: boolean;
   onRunAudit?: () => void;
-  onLoadDemo?: () => void;
+  onLoadDemo?: (scenario?: "valid" | "conflict") => void;
   onSelectEntity?: (entityId: string) => void;
 }
 
@@ -114,13 +114,28 @@ export function TopologyCard({
         {/* Action Controls */}
         <div className="flex items-center gap-2">
           {onLoadDemo && (
-            <button
-              onClick={onLoadDemo}
-              disabled={isAuditing}
-              className="rounded-lg border border-slate-700 bg-slate-800/70 px-2.5 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-700 transition disabled:opacity-50"
-            >
-              Load Demo Scene
-            </button>
+            <div className="flex items-center gap-1 bg-slate-900 border border-slate-700/80 rounded-lg p-0.5">
+              <button
+                type="button"
+                onClick={() => onLoadDemo("valid")}
+                disabled={isAuditing}
+                className="rounded px-2.5 py-1 text-xs font-mono font-medium text-emerald-300 hover:bg-emerald-950/60 hover:border-emerald-500/40 border border-transparent transition disabled:opacity-50 flex items-center gap-1"
+                title="Party wall clean match: 0 conflicts"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                Valid Scene (0 Conflicts)
+              </button>
+              <button
+                type="button"
+                onClick={() => onLoadDemo("conflict")}
+                disabled={isAuditing}
+                className="rounded px-2.5 py-1 text-xs font-mono font-medium text-rose-300 hover:bg-rose-950/60 hover:border-rose-500/40 border border-transparent transition disabled:opacity-50 flex items-center gap-1"
+                title="Encroachment scene: Unit 103 overlaps 40.0 m² into Units 101 & 102"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
+                Conflict Scene (Encroachment)
+              </button>
+            </div>
           )}
           {onRunAudit && (
             <button

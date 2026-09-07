@@ -77,16 +77,31 @@ class TopologyService:
             if not isinstance(item, dict):
                 continue
 
-            # Extract identifier
+            # Tier-specific identifier extraction
+            tier_id = None
+            if default_type == EntityType.UNIT:
+                tier_id = item.get("unit_id") or (item.get("properties", {}).get("unit_id") if isinstance(item.get("properties"), dict) else None)
+            elif default_type == EntityType.FLOOR:
+                tier_id = item.get("floor_id") or (item.get("properties", {}).get("floor_id") if isinstance(item.get("properties"), dict) else None)
+            elif default_type == EntityType.BUILDING:
+                tier_id = item.get("building_id") or (item.get("properties", {}).get("building_id") if isinstance(item.get("properties"), dict) else None)
+            elif default_type == EntityType.PARCEL:
+                tier_id = item.get("parcel_id") or (item.get("properties", {}).get("parcel_id") if isinstance(item.get("properties"), dict) else None)
+            elif default_type == EntityType.UNDERGROUND:
+                tier_id = item.get("underground_feature_id") or (item.get("properties", {}).get("underground_feature_id") if isinstance(item.get("properties"), dict) else None)
+
             feat_id = (
                 item.get("id")
+                or tier_id
                 or item.get("unit_id")
-                or item.get("building_id")
-                or item.get("parcel_id")
                 or item.get("floor_id")
                 or item.get("underground_feature_id")
+                or item.get("building_id")
+                or item.get("parcel_id")
                 or (item.get("properties", {}).get("id") if isinstance(item.get("properties"), dict) else None)
                 or (item.get("properties", {}).get("unit_id") if isinstance(item.get("properties"), dict) else None)
+                or (item.get("properties", {}).get("floor_id") if isinstance(item.get("properties"), dict) else None)
+                or (item.get("properties", {}).get("underground_feature_id") if isinstance(item.get("properties"), dict) else None)
                 or (item.get("properties", {}).get("building_id") if isinstance(item.get("properties"), dict) else None)
                 or (item.get("properties", {}).get("parcel_id") if isinstance(item.get("properties"), dict) else None)
                 or f"{default_type.value}-{idx + 1:03d}"
@@ -1287,115 +1302,72 @@ class TopologyService:
     # 9. Realistic Demonstration Bundle with Benchmark Scenarios
     # -------------------------------------------------------------------------
     @classmethod
-    def get_demo_topology_bundle(cls) -> DemoTopologyResponse:
+    def get_demo_topology_bundle(cls, scenario: str = "conflict") -> DemoTopologyResponse:
         """
         Creates a rich, multi-tiered demonstration scene featuring:
-        1. Parcel DEMO-401/1 and Tower 1 building
-        2. Clean floors (Ground, Floor 1, Floor 2)
-        3. Clean units with valid party-wall contact
-        4. Subsurface utility infrastructure
-        5. Controlled benchmark conflict scenarios:
-           - Overlapping Unit (UNIT-103 encroaches 2.4 m^2 into UNIT-102)
-           - Overhang Cantilever (podium edge extends beyond parcel)
-           - Proximity Clearance Warning (subsurface utility within 0.7m buffer)
+        - scenario == "valid": Clean party-wall units (Unit 101 & 102), clean floor containment,
+          safe underground utility clearance, resulting in 100% VALID status.
+        - scenario == "conflict": Deliberate positive-volume encroachment (Unit 103 encroaches
+          into Unit 102 and Unit 101), resulting in CONFLICT status.
         """
-        # Parcel geometry
-        parcel_geom = {
-            "type": "Polygon",
-            "coordinates": [
-                [
-                    [77.5910, 12.9710],
-                    [77.5930, 12.9710],
-                    [77.5930, 12.9730],
-                    [77.5910, 12.9730],
-                    [77.5910, 12.9710],
-                ]
-            ],
-        }
+        from shapely.geometry import box
 
-        # Building footprint (Tower 1, cleanly inside parcel)
-        bld_geom = {
-            "type": "Polygon",
-            "coordinates": [
-                [
-                    [77.5915, 12.9715],
-                    [77.5925, 12.9715],
-                    [77.5925, 12.9725],
-                    [77.5915, 12.9725],
-                    [77.5915, 12.9715],
-                ]
-            ],
-        }
+        # Metric geometries in UTM Zone 43N
+        # Parcel: 200m x 200m
+        parcel_geom = mapping(box(775900.0, 1297100.0, 776100.0, 1297300.0))
+        # Building: 80m x 80m (cleanly centered inside parcel)
+        bld_geom = mapping(box(775950.0, 1297150.0, 776030.0, 1297230.0))
 
-        # Unit 101 (West wing, clean)
-        unit101_geom = {
-            "type": "Polygon",
-            "coordinates": [
-                [
-                    [77.5915, 12.9715],
-                    [77.5920, 12.9715],
-                    [77.5920, 12.9725],
-                    [77.5915, 12.9725],
-                    [77.5915, 12.9715],
-                ]
-            ],
-        }
+        # Unit 101 (West half of floor: X from 775950 to 775990)
+        unit101_geom = mapping(box(775950.0, 1297150.0, 775990.0, 1297230.0))
+        # Unit 102 (East half of floor: X from 775990 to 776030 -> party-wall contact along X=775990!)
+        unit102_geom = mapping(box(775990.0, 1297150.0, 776030.0, 1297230.0))
+        # Unit 103 (Deliberate benchmark conflict: encroaches across the party wall)
+        unit103_geom = mapping(box(775988.0, 1297180.0, 775992.0, 1297200.0))
 
-        # Unit 102 (East wing, touches 101 along X=77.5920 -> valid party-wall contact!)
-        unit102_geom = {
-            "type": "Polygon",
-            "coordinates": [
-                [
-                    [77.5920, 12.9715],
-                    [77.5925, 12.9715],
-                    [77.5925, 12.9725],
-                    [77.5920, 12.9725],
-                    [77.5920, 12.9715],
-                ]
-            ],
-        }
+        # Underground basement (within parcel, beneath building footprint)
+        basement_geom = mapping(box(775945.0, 1297145.0, 776035.0, 1297235.0))
+        # Underground utility conduit: safe clearance (> 5m away from basement) in valid mode,
+        # or closer in conflict mode
+        if scenario.lower() == "valid":
+            cable_geom = mapping(box(775910.0, 1297260.0, 776090.0, 1297265.0))
+        else:
+            # Passes within 0.5m of basement (clearance conflict)
+            cable_geom = mapping(box(775910.0, 1297235.5, 776090.0, 1297237.0))
 
-        # Unit 103 (Benchmark deliberate overlap: encroaches into 102)
-        unit103_geom = {
-            "type": "Polygon",
-            "coordinates": [
-                [
-                    [77.5919, 12.9718],
-                    [77.5923, 12.9718],
-                    [77.5923, 12.9722],
-                    [77.5919, 12.9722],
-                    [77.5919, 12.9718],
-                ]
-            ],
-        }
-
-        # Underground basement
-        basement_geom = {
-            "type": "Polygon",
-            "coordinates": [
-                [
-                    [77.5914, 12.9714],
-                    [77.5926, 12.9714],
-                    [77.5926, 12.9726],
-                    [77.5914, 12.9726],
-                    [77.5914, 12.9714],
-                ]
-            ],
-        }
-
-        # Underground power cable corridor (passes near basement)
-        cable_geom = {
-            "type": "Polygon",
-            "coordinates": [
-                [
-                    [77.5912, 12.9727],
-                    [77.5928, 12.9727],
-                    [77.5928, 12.9729],
-                    [77.5912, 12.9729],
-                    [77.5912, 12.9727],
-                ]
-            ],
-        }
+        units_list = [
+            {
+                "unit_id": "UNIT-101",
+                "unit_number": "101",
+                "floor_id": "FL-01",
+                "building_id": "BLD-TOWER-1",
+                "parcel_id": "DEMO-PARCEL-401-1",
+                "base_elevation": 562.5,
+                "top_elevation": 565.5,
+                "geometry": unit101_geom,
+            },
+            {
+                "unit_id": "UNIT-102",
+                "unit_number": "102",
+                "floor_id": "FL-01",
+                "building_id": "BLD-TOWER-1",
+                "parcel_id": "DEMO-PARCEL-401-1",
+                "base_elevation": 562.5,
+                "top_elevation": 565.5,
+                "geometry": unit102_geom,
+            },
+        ]
+        if scenario.lower() in ["conflict", "invalid"]:
+            units_list.append({
+                "unit_id": "UNIT-103",
+                "unit_number": "103-CONFLICT",
+                "floor_id": "FL-01",
+                "building_id": "BLD-TOWER-1",
+                "parcel_id": "DEMO-PARCEL-401-1",
+                "base_elevation": 562.5,
+                "top_elevation": 565.5,
+                "geometry": unit103_geom,
+            })
 
         demo_req = TopologyValidationRequest(
             parcels={
@@ -1405,7 +1377,7 @@ class TopologyService:
                         "type": "Feature",
                         "id": "DEMO-PARCEL-401-1",
                         "geometry": parcel_geom,
-                        "properties": {"parcel_id": "DEMO-PARCEL-401-1", "area_sqm": 4840.0},
+                        "properties": {"parcel_id": "DEMO-PARCEL-401-1", "area_sqm": 40000.0},
                     }
                 ],
             },
@@ -1441,38 +1413,7 @@ class TopologyService:
                     "top_elevation": 568.5,
                 },
             ],
-            units=[
-                {
-                    "unit_id": "UNIT-101",
-                    "unit_number": "101",
-                    "floor_id": "FL-01",
-                    "building_id": "BLD-TOWER-1",
-                    "parcel_id": "DEMO-PARCEL-401-1",
-                    "base_elevation": 562.5,
-                    "top_elevation": 565.5,
-                    "geometry": unit101_geom,
-                },
-                {
-                    "unit_id": "UNIT-102",
-                    "unit_number": "102",
-                    "floor_id": "FL-01",
-                    "building_id": "BLD-TOWER-1",
-                    "parcel_id": "DEMO-PARCEL-401-1",
-                    "base_elevation": 562.5,
-                    "top_elevation": 565.5,
-                    "geometry": unit102_geom,
-                },
-                {
-                    "unit_id": "UNIT-103",
-                    "unit_number": "103-CONFLICT",
-                    "floor_id": "FL-01",
-                    "building_id": "BLD-TOWER-1",
-                    "parcel_id": "DEMO-PARCEL-401-1",
-                    "base_elevation": 562.5,
-                    "top_elevation": 565.5,
-                    "geometry": unit103_geom,
-                },
-            ],
+            units=units_list,
             underground_features=[
                 {
                     "underground_feature_id": "UND-BASEMENT-B1",
@@ -1494,16 +1435,11 @@ class TopologyService:
             ],
         )
 
-        validation_res = cls.validate_full_topology(demo_req)
+        validation_result = cls.validate_full_topology(demo_req)
 
         return DemoTopologyResponse(
             status="success",
-            scenario_description=(
-                "SIH Demonstration Scene: Cadastral Topology & Spatial Conflict Audit for Tower 1. "
-                "Demonstrates mutual non-overlap between adjacent units, vertical interval continuity, "
-                "party-wall contact validation, and benchmark detection of a 2D unit overlap conflict."
-            ),
-            validation_result=validation_res,
+            scenario_description=f"Tower 1 Cadastral Multi-Tier Topology ({scenario.upper()} SCENARIO)",
             entities={
                 "parcels": demo_req.parcels,
                 "buildings": demo_req.buildings,
@@ -1511,4 +1447,5 @@ class TopologyService:
                 "units": demo_req.units,
                 "underground_features": demo_req.underground_features,
             },
+            validation_result=validation_result,
         )

@@ -12,6 +12,8 @@ from app.schemas.fusion import (
     FusionNormalizeResponse,
     PropertyContextRequest,
     PropertyContextResponse,
+    ControlPointValidationRequest,
+    ControlPointValidationResponse,
 )
 from app.services.fusion_service import SpatialFusionService
 from app.core.logging import logger
@@ -171,3 +173,44 @@ async def get_real_data_pipeline(
             detail=f"Failed to execute real data pipeline: {str(e)}",
         )
 
+
+
+@router.get(
+    "/control-points",
+    response_model=ControlPointValidationResponse,
+    summary="Get validated reference control network (GNSS & CORS)",
+    description="Returns authoritative geodetic control points and continuous CORS base station reference benchmarks projected into project CRS with survey accuracy metadata.",
+)
+async def get_control_points(
+    target_crs: str = Query(default="EPSG:32643", description="Target metric project CRS"),
+) -> ControlPointValidationResponse:
+    try:
+        return SpatialFusionService.get_reference_control_points(target_crs=target_crs)
+    except Exception as e:
+        logger.error(f"Failed to retrieve reference control points: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve control points: {str(e)}",
+        )
+
+
+@router.post(
+    "/control-points/validate",
+    response_model=ControlPointValidationResponse,
+    summary="Validate and reproject field survey control points",
+    description="Performs strict coordinate validation, elevation check, and metric reprojection for uploaded GNSS and CORS control points without mutating native source coordinates.",
+)
+async def validate_control_points(
+    req: ControlPointValidationRequest,
+) -> ControlPointValidationResponse:
+    try:
+        return SpatialFusionService.validate_and_transform_control_points(
+            control_points=req.control_points,
+            target_crs=req.target_crs,
+        )
+    except Exception as e:
+        logger.error(f"Failed to validate control points: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Control point validation failed: {str(e)}",
+        )

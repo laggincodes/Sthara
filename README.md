@@ -252,3 +252,7 @@ The platform is 100% aligned with the official Smart India Hackathon (SIH) Prese
 - **Canonical Demo Unit:** `PARCEL-DEMO-101` → `BLD-DEMO-002` → `FL05` → `BLD-DEMO-002-FL05-U501`
 - **Controlled Conflict Demo:** Intentional overlap detection between `UNIT-102` and `UNIT-103-CONFLICT` ($\Delta = 24.5	ext{ m}^2$) without silent geometry repair.
 - **Complete Runbook:** See [docs/FINAL_DEMO.md](docs/FINAL_DEMO.md) and [docs/PPT_ALIGNMENT_MATRIX.md](docs/PPT_ALIGNMENT_MATRIX.md).
+
+
+## SIH Presentation Alignment & Truthful Capability Status
+For a full 18-point capability audit matching the SIH presentation claims against the running codebase, refer to [docs/SIH_CAPABILITY_STATUS.md](docs/SIH_CAPABILITY_STATUS.md).

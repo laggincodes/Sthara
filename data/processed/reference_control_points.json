@@ -1,0 +1,75 @@
+{
+  "schema_version": "1.0.0",
+  "description": "Authoritative Reference Control Network (CORS Base Station & Cadastral Ground Control Point)",
+  "target_project_crs": "EPSG:32643",
+  "control_points": [
+    {
+      "station_id": "CORS-MH-PUN-01",
+      "control_point_id": "CORS-MH-PUN-01",
+      "name": "Pune Central Geodetic CORS Station",
+      "coordinate": [
+        73.85652,
+        18.52025
+      ],
+      "coordinates": [
+        73.85652,
+        18.52025
+      ],
+      "elevation": 562.48,
+      "elevation_reference": "AMSL",
+      "crs": "EPSG:4326",
+      "source": "SURVEY_OF_INDIA_CORS_NETWORK",
+      "reference_type": "CORS_REFERENCE",
+      "accuracy_metadata": {
+        "horizontal_accuracy_m": 0.008,
+        "vertical_accuracy_m": 0.015,
+        "solution_type": "CONTINUOUS_NETWORK_FIXED",
+        "pdop": 1.2
+      },
+      "status": "ACTIVE",
+      "source_info": {
+        "operating_agency": "Survey of India (Simulated Reference Benchmark)",
+        "receiver_model": "Trimble Alloy GNSS Reference Receiver",
+        "tracking_constellations": [
+          "GPS",
+          "GLONASS",
+          "GALILEO",
+          "NavIC"
+        ],
+        "update_rate_hz": 1.0,
+        "legal_disclaimer": "REFERENCE CONTROL BENCHMARK FOR DEMONSTRATION AND TESTING ONLY."
+      }
+    },
+    {
+      "station_id": "GCP-PUN-CADASTRAL-01",
+      "control_point_id": "GCP-PUN-CADASTRAL-01",
+      "name": "Shivajinagar Cadastral Ground Control Monument 01",
+      "coordinate": [
+        73.85595,
+        18.51982
+      ],
+      "coordinates": [
+        73.85595,
+        18.51982
+      ],
+      "elevation": 561.92,
+      "elevation_reference": "AMSL",
+      "crs": "EPSG:4326",
+      "source": "GROUND_CADASTRAL_RTK_SURVEY",
+      "reference_type": "GNSS_CONTROL_POINT",
+      "accuracy_metadata": {
+        "horizontal_accuracy_m": 0.012,
+        "vertical_accuracy_m": 0.02,
+        "solution_type": "RTK_FIXED",
+        "pdop": 1.4
+      },
+      "status": "BENCHMARK",
+      "source_info": {
+        "monument_type": "Brass Plaque in Reinforced Concrete Monument",
+        "survey_date": "2026-02-18",
+        "tied_to_cors": "CORS-MH-PUN-01",
+        "legal_disclaimer": "GROUND CONTROL BENCHMARK FOR DEMONSTRATION AND TESTING ONLY."
+      }
+    }
+  ]
+}
