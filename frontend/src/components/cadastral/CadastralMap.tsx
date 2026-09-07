@@ -5,6 +5,11 @@ import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { GeoJSONFeatureCollection } from "@/types/cadastre";
 
+// Configure worker URL explicitly so the browser loads the static asset with proper JS MIME type
+if (typeof window !== "undefined") {
+  maplibregl.setWorkerUrl("/maplibre-gl-worker.mjs");
+}
+
 interface CadastralMapProps {
   geojson: GeoJSONFeatureCollection | null;
   buildingsGeojson?: GeoJSONFeatureCollection | null;
@@ -14,6 +19,7 @@ interface CadastralMapProps {
   onSelectBuilding?: (buildingId: string | null) => void;
   layerVisibility?: { parcels: boolean; buildings: boolean };
   onToggleLayer?: (layer: "parcels" | "buildings") => void;
+  isActive?: boolean;
 }
 
 // Free CartoDB Dark Matter basemap style (no API key required)
@@ -40,7 +46,17 @@ function extractPoints(coordinates: unknown): [number, number][] {
   const points: [number, number][] = [];
   function recurse(arr: unknown) {
     if (Array.isArray(arr)) {
-      if (arr.length >= 2 && typeof arr[0] === "number" && typeof arr[1] === "number") {
+      if (
+        arr.length >= 2 &&
+        typeof arr[0] === "number" &&
+        typeof arr[1] === "number" &&
+        !isNaN(arr[0]) &&
+        !isNaN(arr[1]) &&
+        arr[0] >= -180 &&
+        arr[0] <= 180 &&
+        arr[1] >= -90 &&
+        arr[1] <= 90
+      ) {
         points.push([arr[0], arr[1]]);
       } else {
         arr.forEach(recurse);
@@ -81,10 +97,11 @@ function fitMapToBounds(
     }
 
     if (hasPoints) {
+      map.resize();
       map.fitBounds(bounds, {
         padding: 70,
         maxZoom: 18,
-        duration: 800,
+        duration: 500,
       });
     }
   } catch {
@@ -361,6 +378,7 @@ export function CadastralMap({
   onSelectBuilding,
   layerVisibility = { parcels: true, buildings: true },
   onToggleLayer,
+  isActive = true,
 }: CadastralMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -413,7 +431,8 @@ export function CadastralMap({
       "bottom-right"
     );
 
-    mapInstance.on("load", () => {
+    const setupLayers = () => {
+      if (!mapInstance.isStyleLoaded()) return;
       isLoadedRef.current = true;
       mapRef.current = mapInstance;
       updateParcelsLayer(
@@ -431,7 +450,10 @@ export function CadastralMap({
         layerVisibility.buildings
       );
       fitMapToBounds(mapInstance, geojson, buildingsGeojson);
-    });
+    };
+
+    mapInstance.on("load", setupLayers);
+    mapInstance.on("style.load", setupLayers);
 
     mapInstance.on("error", (e: { error?: { message?: string } }) => {
       if (e.error?.message && e.error.message.includes("style")) {
@@ -453,7 +475,29 @@ export function CadastralMap({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 2. Update Map Layers on Data or Selection Changes
+  // 2. Resize observer for viewport responsiveness and display transitions
+  useEffect(() => {
+    if (!mapContainerRef.current) return;
+    const observer = new ResizeObserver(() => {
+      if (mapRef.current && isLoadedRef.current) {
+        mapRef.current.resize();
+      }
+    });
+    observer.observe(mapContainerRef.current);
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  // 3. React to isActive view mode transition
+  useEffect(() => {
+    if (isActive && mapRef.current && isLoadedRef.current) {
+      mapRef.current.resize();
+      fitMapToBounds(mapRef.current, geojson, buildingsGeojson);
+    }
+  }, [isActive, geojson, buildingsGeojson]);
+
+  // 4. Update Map Layers on Data or Selection Changes
   useEffect(() => {
     if (mapRef.current && isLoadedRef.current) {
       updateParcelsLayer(
@@ -482,7 +526,7 @@ export function CadastralMap({
     onSelectBuildingCallback,
   ]);
 
-  // Fit bounds when new dataset arrives
+  // 5. Fit bounds when new dataset arrives
   useEffect(() => {
     if (mapRef.current && isLoadedRef.current) {
       fitMapToBounds(mapRef.current, geojson, buildingsGeojson);

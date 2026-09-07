@@ -1,0 +1,608 @@
+import {
+  ApiResponse,
+  ApiErrorResponse,
+  DatasetSummary,
+  GeoJSONFeatureCollection,
+  NormalizedParcelDataset,
+  GeoJSONValidationResult,
+  SpatialAssociationResponse,
+  SpatialAssociationRequest,
+  DEMMetadata,
+  ElevationBatchSampleRequest,
+  ElevationBatchSampleResponse,
+  HeightCalculationRequest,
+  HeightCalculationResult,
+  FloorGenerationRequest,
+  FloorGenerationResponse,
+  BuildingVerticalSpec,
+  BatchBuilding3DRequest,
+  Generate3DResponse,
+  BatchBuildingFloors3DRequest,
+  GenerateFloors3DResponse,
+  BatchPropertyVolumeRequest,
+  PropertyVolumeRequest,
+  GeneratePropertyVolumeResponse,
+  ULPINRequest,
+  ULPINResult,
+  ULPINVerificationRequest,
+  ULPINVerificationResult,
+} from "@/types/cadastre";
+
+const BASE_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1").replace(/\/$/, "");
+
+export class ApiError extends Error {
+  errorCode: string;
+  statusCode: number;
+  validationData?: GeoJSONValidationResult;
+
+  constructor(
+    message: string,
+    statusCode: number = 500,
+    errorCode: string = "API_ERROR",
+    validationData?: GeoJSONValidationResult
+  ) {
+    super(message);
+    this.name = "ApiError";
+    this.statusCode = statusCode;
+    this.errorCode = errorCode;
+    this.validationData = validationData;
+  }
+}
+
+async function handleResponse<T>(response: Response): Promise<T> {
+  if (!response.ok) {
+    let errorData: ApiErrorResponse | null = null;
+    try {
+      errorData = await response.json();
+    } catch {
+      // Non-JSON response
+    }
+
+    if (errorData) {
+      throw new ApiError(
+        errorData.message || `Request failed with status ${response.status}`,
+        response.status,
+        errorData.error_code || "HTTP_ERROR",
+        errorData.data?.validation
+      );
+    }
+
+    if (response.status === 404) {
+      throw new ApiError("Requested cadastral resource was not found.", 404, "NOT_FOUND");
+    }
+
+    throw new ApiError(
+      `Server returned HTTP ${response.status}: ${response.statusText}`,
+      response.status,
+      "SERVER_ERROR"
+    );
+  }
+
+  const json: ApiResponse<T> = await response.json();
+  return json.data !== undefined ? json.data : (json as unknown as T);
+}
+
+export const cadastreApi = {
+  /**
+   * Diagnostic health check for FastAPI backend.
+   */
+  async checkHealth(): Promise<{ status: string; service: string }> {
+    try {
+      const response = await fetch(`${BASE_URL}/health`, {
+        method: "GET",
+        headers: { Accept: "application/json" },
+      });
+      return await response.json();
+    } catch {
+      throw new ApiError(
+        "Unable to connect to the geospatial processing service.",
+        0,
+        "NETWORK_UNAVAILABLE"
+      );
+    }
+  },
+
+  /**
+   * Lists available demo & uploaded datasets.
+   */
+  async listDatasets(): Promise<DatasetSummary[]> {
+    try {
+      const response = await fetch(`${BASE_URL}/datasets`, {
+        method: "GET",
+        headers: { Accept: "application/json" },
+      });
+      return await handleResponse<DatasetSummary[]>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError(
+        "Unable to connect to the geospatial processing service.",
+        0,
+        "NETWORK_UNAVAILABLE"
+      );
+    }
+  },
+
+  /**
+   * Fetches raw GeoJSON for a dataset by ID.
+   */
+  async getDataset(datasetId: string): Promise<{ dataset_id: string; raw_geojson: GeoJSONFeatureCollection }> {
+    try {
+      const response = await fetch(`${BASE_URL}/datasets/${datasetId}`, {
+        method: "GET",
+        headers: { Accept: "application/json" },
+      });
+      return await handleResponse<{ dataset_id: string; raw_geojson: GeoJSONFeatureCollection }>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError(
+        "Unable to connect to the geospatial processing service.",
+        0,
+        "NETWORK_UNAVAILABLE"
+      );
+    }
+  },
+
+  /**
+   * Submits a raw GeoJSON FeatureCollection for deterministic validation and normalization.
+   */
+  async validateGeoJSON(
+    payload: GeoJSONFeatureCollection
+  ): Promise<{ validation: GeoJSONValidationResult; normalized_dataset: NormalizedParcelDataset }> {
+    try {
+      const response = await fetch(`${BASE_URL}/datasets/validate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      return await handleResponse<{
+        validation: GeoJSONValidationResult;
+        normalized_dataset: NormalizedParcelDataset;
+      }>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError(
+        "Unable to connect to the geospatial processing service.",
+        0,
+        "NETWORK_UNAVAILABLE"
+      );
+    }
+  },
+
+  /**
+   * Uploads an untrusted GeoJSON file to the backend validation endpoint.
+   */
+  async uploadDataset(file: File): Promise<NormalizedParcelDataset> {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await fetch(`${BASE_URL}/datasets/upload`, {
+        method: "POST",
+        body: formData,
+      });
+      return await handleResponse<NormalizedParcelDataset>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError(
+        "Unable to connect to the geospatial processing service.",
+        0,
+        "NETWORK_UNAVAILABLE"
+      );
+    }
+  },
+
+  /**
+   * Loads the preloaded synthetic demo building footprints dataset.
+   */
+  async getDemoBuildings(): Promise<{ dataset_id: string; raw_geojson: GeoJSONFeatureCollection }> {
+    return this.getDataset("demo_buildings");
+  },
+
+  /**
+   * Loads the real OpenStreetMap building footprints dataset.
+   */
+  async getRealOSMBuildings(): Promise<{ dataset_id: string; raw_geojson: GeoJSONFeatureCollection; is_cadastral: boolean }> {
+    const res = await this.getDataset("real_osm_buildings");
+    return { ...res, is_cadastral: false };
+  },
+
+  /**
+   * Triggers re-extraction and conversion of raw map.osm into processed GeoJSON.
+   */
+  async importOSMBuildings(): Promise<{ status: string; message: string; data: Record<string, unknown> }> {
+    const response = await fetch(`${BASE_URL}/buildings/import-osm`, {
+      method: "POST",
+      headers: { Accept: "application/json" },
+    });
+    return await handleResponse<{ status: string; message: string; data: Record<string, unknown> }>(response);
+  },
+
+  /**
+   * Deterministically analyzes spatial overlap and associates building footprints
+   * with parent cadastral land parcels.
+   */
+  async associateBuildings(
+    payload: SpatialAssociationRequest
+  ): Promise<SpatialAssociationResponse> {
+    try {
+      const response = await fetch(`${BASE_URL}/spatial/associate-buildings`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      return await handleResponse<SpatialAssociationResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError(
+        "Unable to connect to the geospatial processing service.",
+        0,
+        "NETWORK_UNAVAILABLE"
+      );
+    }
+  },
+
+  /**
+   * Inspects active GeoTIFF DEM metadata and elevation statistics.
+   */
+  async getDEMInfo(demName?: string): Promise<DEMMetadata> {
+    const url = demName
+      ? `${BASE_URL}/elevation/info?dem_name=${encodeURIComponent(demName)}`
+      : `${BASE_URL}/elevation/info`;
+
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: { Accept: "application/json" },
+      });
+      return await handleResponse<DEMMetadata>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError(
+        "Unable to connect to the geospatial processing service.",
+        0,
+        "NETWORK_UNAVAILABLE"
+      );
+    }
+  },
+
+  /**
+   * Deterministically samples ground elevation values at queried coordinates.
+   */
+  async sampleElevation(
+    payload: ElevationBatchSampleRequest
+  ): Promise<ElevationBatchSampleResponse> {
+    try {
+      const response = await fetch(`${BASE_URL}/elevation/sample`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      return await handleResponse<ElevationBatchSampleResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError(
+        "Unable to connect to the geospatial processing service.",
+        0,
+        "NETWORK_UNAVAILABLE"
+      );
+    }
+  },
+
+  /**
+   * Step 9: Calculates structural building height = roof_elevation - ground_elevation.
+   */
+  async calculateBuildingHeight(
+    payload: HeightCalculationRequest
+  ): Promise<HeightCalculationResult> {
+    try {
+      const response = await fetch(`${BASE_URL}/buildings/calculate-height`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      return await handleResponse<HeightCalculationResult>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError(
+        "Unable to connect to the building height calculation service.",
+        0,
+        "NETWORK_UNAVAILABLE"
+      );
+    }
+  },
+
+  /**
+   * Step 9: Generates deterministic floor levels from building height.
+   */
+  async generateFloors(
+    payload: FloorGenerationRequest
+  ): Promise<FloorGenerationResponse> {
+    try {
+      const response = await fetch(`${BASE_URL}/buildings/generate-floors`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      return await handleResponse<FloorGenerationResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError(
+        "Unable to connect to the floor generation service.",
+        0,
+        "NETWORK_UNAVAILABLE"
+      );
+    }
+  },
+
+  /**
+   * Step 9: Fetches pre-configured synthetic vertical specs for demo buildings.
+   */
+  async getDemoBuildingSpecs(): Promise<BuildingVerticalSpec[]> {
+    try {
+      const response = await fetch(`${BASE_URL}/buildings/demo-specs`, {
+        method: "GET",
+        headers: { Accept: "application/json" },
+      });
+      return await handleResponse<BuildingVerticalSpec[]>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError(
+        "Unable to connect to the building specification service.",
+        0,
+        "NETWORK_UNAVAILABLE"
+      );
+    }
+  },
+
+  /**
+   * Step 11: Extrudes building footprints into closed 3D polyhedral meshes.
+   */
+  async generate3DBuildings(
+    payload: BatchBuilding3DRequest
+  ): Promise<Generate3DResponse> {
+    try {
+      const response = await fetch(`${BASE_URL}/buildings/generate-3d`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      return await handleResponse<Generate3DResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError(
+        "Unable to connect to the 3D building generation service.",
+        0,
+        "NETWORK_UNAVAILABLE"
+      );
+    }
+  },
+
+  /**
+   * Step 11: Extrudes all preloaded demo buildings into 3D meshes using sampled DEM elevations.
+   */
+  async extrudeDemoBuildings(): Promise<Generate3DResponse> {
+    try {
+      const response = await fetch(`${BASE_URL}/buildings/extrude-demo`, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+        },
+      });
+      return await handleResponse<Generate3DResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError(
+        "Unable to connect to the demo 3D extrusion service.",
+        0,
+        "NETWORK_UNAVAILABLE"
+      );
+    }
+  },
+
+  /**
+   * Step 12: Generates 3D floor solids for a batch of building footprints.
+   */
+  async generate3DFloors(
+    payload: BatchBuildingFloors3DRequest
+  ): Promise<GenerateFloors3DResponse> {
+    try {
+      const response = await fetch(`${BASE_URL}/buildings/generate-floors-3d`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      return await handleResponse<GenerateFloors3DResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError(
+        "Unable to connect to the 3D floor generation service.",
+        0,
+        "NETWORK_UNAVAILABLE"
+      );
+    }
+  },
+
+  /**
+   * Step 12: Extrudes 3D floor solids for all preloaded demo buildings.
+   */
+  async extrudeDemoFloors(): Promise<GenerateFloors3DResponse> {
+    try {
+      const response = await fetch(`${BASE_URL}/buildings/extrude-demo-floors`, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+        },
+      });
+      return await handleResponse<GenerateFloors3DResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError(
+        "Unable to connect to the demo 3D floor extrusion service.",
+        0,
+        "NETWORK_UNAVAILABLE"
+      );
+    }
+  },
+
+  /**
+   * Step 12: Retrieves pre-configured synthetic demo property volume specifications.
+   */
+  async getDemoProperties(): Promise<PropertyVolumeRequest[]> {
+    try {
+      const response = await fetch(`${BASE_URL}/properties/demo-properties`, {
+        method: "GET",
+        headers: { Accept: "application/json" },
+      });
+      return await handleResponse<PropertyVolumeRequest[]>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError(
+        "Unable to retrieve demo property specifications.",
+        0,
+        "NETWORK_UNAVAILABLE"
+      );
+    }
+  },
+
+  /**
+   * Step 12: Generates 3D property volumes from parcel, building, and floor references.
+   */
+  async generate3DPropertyVolumes(
+    payload: BatchPropertyVolumeRequest
+  ): Promise<GeneratePropertyVolumeResponse> {
+    try {
+      const response = await fetch(`${BASE_URL}/properties/generate-volume-3d`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      return await handleResponse<GeneratePropertyVolumeResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError(
+        "Unable to connect to the 3D property volume generation service.",
+        0,
+        "NETWORK_UNAVAILABLE"
+      );
+    }
+  },
+
+  /**
+   * Step 12: Extrudes all preloaded demo property volumes.
+   */
+  async extrudeDemoProperties(): Promise<GeneratePropertyVolumeResponse> {
+    try {
+      const response = await fetch(`${BASE_URL}/properties/extrude-demo-properties`, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+        },
+      });
+      return await handleResponse<GeneratePropertyVolumeResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError(
+        "Unable to connect to the demo 3D property extrusion service.",
+        0,
+        "NETWORK_UNAVAILABLE"
+      );
+    }
+  },
+
+  /**
+   * Step 13: Retrieves deterministic 3D ULPIN prototypes for all pre-defined demo properties.
+   */
+  async getDemoULPINs(): Promise<ULPINResult[]> {
+    try {
+      const response = await fetch(`${BASE_URL}/properties/demo-ulpins`, {
+        method: "GET",
+        headers: { Accept: "application/json" },
+      });
+      return await handleResponse<ULPINResult[]>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError(
+        "Unable to retrieve demo 3D ULPIN prototypes.",
+        0,
+        "NETWORK_UNAVAILABLE"
+      );
+    }
+  },
+
+  /**
+   * Step 13: Generates a deterministic 3D ULPIN prototype for a single property entity.
+   */
+  async generateULPIN(payload: ULPINRequest): Promise<ULPINResult> {
+    try {
+      const response = await fetch(`${BASE_URL}/properties/generate-ulpin`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      return await handleResponse<ULPINResult>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError(
+        "Unable to generate 3D ULPIN prototype.",
+        0,
+        "NETWORK_UNAVAILABLE"
+      );
+    }
+  },
+
+  /**
+   * Step 13: Verifies a 3D ULPIN string against canonical property identity.
+   */
+  async verifyULPIN(payload: ULPINVerificationRequest): Promise<ULPINVerificationResult> {
+    try {
+      const response = await fetch(`${BASE_URL}/properties/verify-ulpin`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      return await handleResponse<ULPINVerificationResult>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError(
+        "Unable to verify 3D ULPIN prototype.",
+        0,
+        "NETWORK_UNAVAILABLE"
+      );
+    }
+  },
+};
+
+
+
+
+
