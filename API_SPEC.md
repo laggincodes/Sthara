@@ -868,3 +868,37 @@ Base URL: `http://localhost:8000/api/v1`
     }
   }
   ```
+
+## 9. Unit / Apartment Domain Entity Endpoints
+
+### 9.1 Validate Unit Entity
+- **Route**: `POST /units/validate`
+- **Purpose**: Validates structural hierarchy, vertical containment within parent floor, footprint containment within parent building, and footprint validity.
+- **Request**: `UnitValidationRequest` (unit entity, optional parent floor spec and building footprint)
+- **Response**: `UnitValidationResult` (`valid: boolean`, `status: VALID | INVALID`, `errors: []`, `warnings: []`)
+
+### 9.2 Batch Validate Units
+- **Route**: `POST /units/validate-batch`
+- **Purpose**: Validates multiple units on a floor, checking mutual non-overlap and duplicate unit numbers.
+- **Request**: `UnitBatchValidationRequest`
+- **Response**: `UnitBatchValidationResponse` (summary counts and individual results)
+
+### 9.3 Get Reference Demo Units
+- **Route**: `GET /units/demo`
+- **Purpose**: Returns GeoJSON FeatureCollection of reference synthetic demo units (`demo_units.geojson`) on Floor 5 of `BLD-DEMO-002`.
+- **Response**: GeoJSON FeatureCollection with `Unit` properties and CRS metadata.
+
+### 9.4 Query Units by Building
+- **Route**: `GET /units/building/{building_id}`
+- **Purpose**: Retrieves all units mapped under a specific building.
+- **Response**: List of `Unit` objects.
+
+### 9.5 Query Units by Floor
+- **Route**: `GET /units/floor/{floor_id}`
+- **Purpose**: Retrieves all units mapped under a specific floor stratum.
+- **Response**: List of `Unit` objects.
+
+### 9.6 Get Conceptual 3D Property Record
+- **Route**: `GET /units/property-record/{unit_id}`
+- **Purpose**: Generates a conceptual 3D Property Record for an apartment unit with explicit non-ownership legal disclaimer.
+- **Response**: `UnitPropertyRecord`

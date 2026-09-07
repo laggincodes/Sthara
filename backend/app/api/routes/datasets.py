@@ -91,6 +91,23 @@ async def list_datasets():
         except Exception as e:
             logger.warning(f"Failed to load real/osm_buildings.geojson from disk: {e}")
 
+    # 3b. Check disk for demo_units.geojson
+    demo_units_file = DATA_PROCESSED_DIR / "demo_units.geojson"
+    if demo_units_file.exists():
+        try:
+            with open(demo_units_file, "r", encoding="utf-8-sig") as f:
+                units_data = json.load(f)
+            datasets_list.append({
+                "dataset_id": "demo_units",
+                "name": "DEMO DATA — 3D Cadastral Apartment Units",
+                "description": "Synthetic unit/apartment subdivisions on Floor 5 of Residential Tower 1 for vertical property mapping.",
+                "feature_count": len(units_data.get("features", [])),
+                "is_demo": True,
+                "source": "filesystem_preloaded",
+            })
+        except Exception as e:
+            logger.warning(f"Failed to load demo_units.geojson from disk: {e}")
+
     # 4. Add in-memory uploaded datasets
     for ds_id, ds in IN_MEMORY_DATASET_STORE.items():
         datasets_list.append({

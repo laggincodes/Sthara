@@ -18,6 +18,9 @@ import {
   ULPINResult,
   ULPINRequest,
   ULPINVerificationRequest,
+  Unit,
+  UnitFeatureCollection,
+  UnitPropertyRecord,
 } from "@/types/cadastre";
 import { cadastreApi, ApiError } from "@/lib/api/client";
 
@@ -112,13 +115,22 @@ export function useCadastre() {
   const [isDemoRunning, setIsDemoRunning] = useState<boolean>(false);
   const [isolatedFloorIndex, setIsolatedFloorIndex] = useState<number | null>(null);
 
+  // Step 16: Unit / Apartment Entity State
+  const [unitsGeojson, setUnitsGeojson] = useState<UnitFeatureCollection | null>(null);
+  const [unitsDatasetName, setUnitsDatasetName] = useState<string | null>(null);
+  const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
+  const [unitPropertyRecord, setUnitPropertyRecord] = useState<UnitPropertyRecord | null>(null);
+  const [isLoadingUnits, setIsLoadingUnits] = useState<boolean>(false);
+  const [unitError, setUnitError] = useState<string | null>(null);
+
   // Layer Visibility
-  const [layerVisibility, setLayerVisibility] = useState<{ parcels: boolean; buildings: boolean }>({
+  const [layerVisibility, setLayerVisibility] = useState<{ parcels: boolean; buildings: boolean; units: boolean }>({
     parcels: true,
     buildings: true,
+    units: true,
   });
 
-  const toggleLayer = useCallback((layer: "parcels" | "buildings") => {
+  const toggleLayer = useCallback((layer: "parcels" | "buildings" | "units") => {
     setLayerVisibility((prev) => ({
       ...prev,
       [layer]: !prev[layer],
@@ -233,6 +245,11 @@ export function useCadastre() {
         const bId = (firstBld.properties?.building_id as string) || (firstBld.id ? String(firstBld.id) : null);
         if (bId) setSelectedBuildingId(bId);
       }
+      // Also preload demo units for Floor 5 of BLD-DEMO-002
+      cadastreApi.getDemoUnits().then((units) => {
+        setUnitsGeojson(units);
+        setUnitsDatasetName("demo_units.geojson");
+      }).catch(() => {});
     } catch (err) {
       if (err instanceof ApiError) {
         setGeneralError(err.message);
@@ -243,6 +260,51 @@ export function useCadastre() {
       setIsLoading(false);
     }
   }, []);
+
+  // 2d. Step 16: Load Demo Units from FastAPI Backend
+  const loadDemoUnits = useCallback(async () => {
+    setIsLoadingUnits(true);
+    setUnitError(null);
+
+    try {
+      const data = await cadastreApi.getDemoUnits();
+      setUnitsGeojson(data);
+      setUnitsDatasetName("demo_units.geojson (Synthetic Apartment Units)");
+      if (data.features.length > 0) {
+        setSelectedUnitId(data.features[0].properties.unit_id);
+      }
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setUnitError(err.message);
+      } else {
+        setUnitError("Unable to load synthetic apartment units.");
+      }
+    } finally {
+      setIsLoadingUnits(false);
+    }
+  }, []);
+
+  // Fetch unit property record when unit selection changes
+  useEffect(() => {
+    let isMounted = true;
+    if (!selectedUnitId) {
+      Promise.resolve().then(() => {
+        if (isMounted) setUnitPropertyRecord(null);
+      });
+      return;
+    }
+    cadastreApi
+      .getUnitPropertyRecord(selectedUnitId)
+      .then((rec) => {
+        if (isMounted) setUnitPropertyRecord(rec);
+      })
+      .catch(() => {
+        if (isMounted) setUnitPropertyRecord(null);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedUnitId]);
 
   // 3. Upload User GeoJSON File
   const uploadGeoJson = useCallback(async (file: File) => {
@@ -779,7 +841,11 @@ export function useCadastre() {
     setBuilding3DError(null);
     setFloors3DError(null);
     setProperty3DError(null);
-    setUlpinError(null);
+    setUnitsGeojson(null);
+    setUnitsDatasetName(null);
+    setSelectedUnitId(null);
+    setUnitPropertyRecord(null);
+    setUnitError(null);
     setExplodeDistance(0);
     setIsolatedFloorIndex(null);
     setViewMode("2d");
@@ -908,6 +974,13 @@ export function useCadastre() {
         ulpinMap[u.property_id] = u;
       });
       setUlpins3D(ulpinMap);
+
+      // Step 8b: Load Unit / Apartment Models
+      try {
+        const unitsData = await cadastreApi.getDemoUnits();
+        setUnitsGeojson(unitsData);
+        setUnitsDatasetName("demo_units.geojson");
+      } catch {}
 
       // Auto-select primary demo parcel, building, and property volume
       setSelectedParcelId("PARCEL-DEMO-101");
@@ -1151,6 +1224,21 @@ export function useCadastre() {
   const selectedProperty3D: PropertyVolumeResult | null =
     (selectedPropertyId && property3DData?.results.find((p) => p.property_id === selectedPropertyId)) || null;
 
+  // Step 16: Selected Unit
+  const selectedUnit: Unit | null = useMemo(() => {
+    if (!unitsGeojson || !selectedUnitId) return null;
+    const feat = unitsGeojson.features.find((f) => f.properties.unit_id === selectedUnitId);
+    return feat ? feat.properties : null;
+  }, [unitsGeojson, selectedUnitId]);
+
+  // Step 16: Units for the currently selected floor
+  const selectedFloorUnits: Unit[] = useMemo(() => {
+    if (!unitsGeojson || !selectedFloorId) return [];
+    return unitsGeojson.features
+      .filter((f) => f.properties.floor_id === selectedFloorId)
+      .map((f) => f.properties);
+  }, [unitsGeojson, selectedFloorId]);
+
   return {
     backendConnected,
     isLoading,
@@ -1231,6 +1319,16 @@ export function useCadastre() {
     fetchDemoULPINs,
     generateULPINForProperty,
     verifyULPIN,
+    unitsGeojson,
+    unitsDatasetName,
+    selectedUnitId,
+    selectedUnit,
+    selectedFloorUnits,
+    unitPropertyRecord,
+    isLoadingUnits,
+    unitError,
+    loadDemoUnits,
+    setSelectedUnitId,
     setSelectedParcelId,
     setSelectedBuildingId,
     isDemoRunning,

@@ -11,6 +11,7 @@ from app.api.routes import (
     elevation,
     buildings,
     properties,
+    units,
 )
 
 api_router = APIRouter()
@@ -24,6 +25,7 @@ api_router.include_router(spatial.router)
 api_router.include_router(elevation.router)
 api_router.include_router(buildings.router)
 api_router.include_router(properties.router)
+api_router.include_router(units.router)
 api_router.include_router(parcels.router)
 api_router.include_router(volumes.router)
 api_router.include_router(validation.router)

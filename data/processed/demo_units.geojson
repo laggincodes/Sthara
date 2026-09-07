@@ -1,0 +1,160 @@
+{
+  "type": "FeatureCollection",
+  "name": "demo_units",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+    }
+  },
+  "metadata": {
+    "dataset_name": "DEMO DATA — 3D Cadastral Intelligence Synthetic Unit / Apartment Dataset",
+    "description": "Deterministic synthetic apartment units on Floor 5 of Residential Tower 1 (BLD-DEMO-002) for vertical 3D property mapping tests.",
+    "is_demo": true,
+    "source_type": "DEMO",
+    "provenance": "SYNTHETIC BENCHMARK FOR SIH 3D CADASTRAL PROTOTYPE",
+    "legal_disclaimer": "SYNTHETIC DEMO DATA FOR RESEARCH AND TESTING ONLY. NOT OFFICIAL GOVERNMENT CADASTRAL RECORDS. DOES NOT CONSTITUTE LEGAL TITLE OR OWNERSHIP."
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "id": "BLD-DEMO-002-FL05-U501",
+      "properties": {
+        "unit_id": "BLD-DEMO-002-FL05-U501",
+        "property_id": "PROP-DEMO-102-U501",
+        "parcel_id": "PARCEL-DEMO-102",
+        "building_id": "BLD-DEMO-002",
+        "floor_id": "BLD-DEMO-002-FL05",
+        "unit_number": "501",
+        "unit_name": "Apartment 501 (2BHK North-West)",
+        "unit_type": "APARTMENT_UNIT",
+        "base_elevation": 577.48,
+        "top_elevation": 580.48,
+        "height": 3.0,
+        "footprint_area": 44.5,
+        "volume_cubic_m": 133.5,
+        "source": "SYNTHETIC_DEMO",
+        "source_type": "DEMO",
+        "status": "VALID",
+        "notes": "North-West corner 2BHK apartment with independent boundary and shared corridor access."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [73.85637, 18.52013],
+            [73.85646, 18.52013],
+            [73.85646, 18.52017],
+            [73.85637, 18.52017],
+            [73.85637, 18.52013]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "BLD-DEMO-002-FL05-U502",
+      "properties": {
+        "unit_id": "BLD-DEMO-002-FL05-U502",
+        "property_id": "PROP-DEMO-102-U502",
+        "parcel_id": "PARCEL-DEMO-102",
+        "building_id": "BLD-DEMO-002",
+        "floor_id": "BLD-DEMO-002-FL05",
+        "unit_number": "502",
+        "unit_name": "Apartment 502 (2BHK North-East)",
+        "unit_type": "APARTMENT_UNIT",
+        "base_elevation": 577.48,
+        "top_elevation": 580.48,
+        "height": 3.0,
+        "footprint_area": 44.5,
+        "volume_cubic_m": 133.5,
+        "source": "SYNTHETIC_DEMO",
+        "source_type": "DEMO",
+        "status": "VALID",
+        "notes": "North-East corner 2BHK apartment with independent boundary and shared corridor access."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [73.85648, 18.52013],
+            [73.85657, 18.52013],
+            [73.85657, 18.52017],
+            [73.85648, 18.52017],
+            [73.85648, 18.52013]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "BLD-DEMO-002-FL05-U503",
+      "properties": {
+        "unit_id": "BLD-DEMO-002-FL05-U503",
+        "property_id": "PROP-DEMO-102-U503",
+        "parcel_id": "PARCEL-DEMO-102",
+        "building_id": "BLD-DEMO-002",
+        "floor_id": "BLD-DEMO-002-FL05",
+        "unit_number": "503",
+        "unit_name": "Apartment 503 (2BHK South-West)",
+        "unit_type": "APARTMENT_UNIT",
+        "base_elevation": 577.48,
+        "top_elevation": 580.48,
+        "height": 3.0,
+        "footprint_area": 44.5,
+        "volume_cubic_m": 133.5,
+        "source": "SYNTHETIC_DEMO",
+        "source_type": "DEMO",
+        "status": "VALID",
+        "notes": "South-West corner 2BHK apartment with independent boundary and shared corridor access."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [73.85637, 18.52007],
+            [73.85646, 18.52007],
+            [73.85646, 18.52011],
+            [73.85637, 18.52011],
+            [73.85637, 18.52007]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "BLD-DEMO-002-FL05-U504",
+      "properties": {
+        "unit_id": "BLD-DEMO-002-FL05-U504",
+        "property_id": "PROP-DEMO-102-U504",
+        "parcel_id": "PARCEL-DEMO-102",
+        "building_id": "BLD-DEMO-002",
+        "floor_id": "BLD-DEMO-002-FL05",
+        "unit_number": "504",
+        "unit_name": "Apartment 504 (2BHK South-East)",
+        "unit_type": "APARTMENT_UNIT",
+        "base_elevation": 577.48,
+        "top_elevation": 580.48,
+        "height": 3.0,
+        "footprint_area": 44.5,
+        "volume_cubic_m": 133.5,
+        "source": "SYNTHETIC_DEMO",
+        "source_type": "DEMO",
+        "status": "VALID",
+        "notes": "South-East corner 2BHK apartment with independent boundary and shared corridor access."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [73.85648, 18.52007],
+            [73.85657, 18.52007],
+            [73.85657, 18.52011],
+            [73.85648, 18.52011],
+            [73.85648, 18.52007]
+          ]
+        ]
+      }
+    }
+  ]
+}

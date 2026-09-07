@@ -13,6 +13,8 @@ import {
   BuildingFloors3DResult,
   PropertyVolumeResult,
   ULPINResult,
+  Unit,
+  UnitPropertyRecord,
 } from "@/types/cadastre";
 
 interface ParcelInspectorProps {
@@ -30,8 +32,11 @@ interface ParcelInspectorProps {
   buildingFloors3D?: BuildingFloors3DResult | null;
   properties3D?: PropertyVolumeResult[] | null;
   ulpins3D?: Record<string, ULPINResult> | null;
+  units?: Unit[] | null;
   selectedFloorId?: string | null;
   selectedPropertyId?: string | null;
+  selectedUnitId?: string | null;
+  unitPropertyRecord?: UnitPropertyRecord | null;
   demMetadata?: DEMMetadata | null;
   isSamplingElevation?: boolean;
   isCalculatingHeight?: boolean;
@@ -40,6 +45,7 @@ interface ParcelInspectorProps {
   onSelectBuildingId?: (id: string) => void;
   onSelectFloorId?: (floorId: string) => void;
   onSelectPropertyId?: (propertyId: string) => void;
+  onSelectUnitId?: (unitId: string) => void;
   onSampleElevation?: () => void;
   onCalculateHeight?: () => void;
   onGenerateFloors?: () => void;
@@ -630,6 +636,162 @@ function Property3DVolumeCard({
   );
 }
 
+function UnitInspectorCard({
+  units,
+  selectedFloorId,
+  selectedUnitId,
+  unitPropertyRecord,
+  onSelectUnitId,
+}: {
+  units?: Unit[] | null;
+  selectedFloorId?: string | null;
+  selectedUnitId?: string | null;
+  unitPropertyRecord?: UnitPropertyRecord | null;
+  onSelectUnitId?: (unitId: string) => void;
+}) {
+  if (!units || units.length === 0) {
+    return (
+      <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-2.5">
+        <div className="flex items-center justify-between mb-1.5">
+          <div className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-cyan-400" />
+            <span className="text-[10px] font-mono uppercase text-slate-400 font-semibold tracking-wider">
+              Apartment Units
+            </span>
+          </div>
+          <span className="rounded border border-slate-700 bg-slate-800 px-1.5 py-0.5 text-[9px] font-mono text-slate-400">
+            NO UNITS LOADED
+          </span>
+        </div>
+        <p className="text-[11px] text-slate-500 font-mono">
+          Load demo units to inspect internal floor subdivisions, vertical unit intervals, and 3D property models.
+        </p>
+      </div>
+    );
+  }
+
+  const filteredUnits = selectedFloorId
+    ? units.filter((u) => u.floor_id === selectedFloorId)
+    : units;
+
+  const displayUnits = filteredUnits.length > 0 ? filteredUnits : units;
+  const activeUnit = units.find((u) => u.unit_id === selectedUnitId) || displayUnits[0];
+
+  return (
+    <div className="rounded-lg border border-cyan-500/40 bg-cyan-950/20 p-2.5">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-1.5">
+          <span className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse" />
+          <span className="text-[10px] font-mono uppercase text-cyan-300 font-semibold tracking-wider">
+            Apartment Units ({displayUnits.length} UNITS)
+          </span>
+        </div>
+        <span className="rounded border border-cyan-500/30 bg-cyan-950/60 px-1.5 py-0.5 text-[9px] font-mono text-cyan-300">
+          STAGE 16 DOMAIN
+        </span>
+      </div>
+
+      <div className="flex flex-wrap gap-1.5 mb-2.5">
+        {displayUnits.map((u) => {
+          const isSelected = (selectedUnitId || displayUnits[0]?.unit_id) === u.unit_id;
+          return (
+            <button
+              key={u.unit_id}
+              type="button"
+              onClick={() => onSelectUnitId && onSelectUnitId(u.unit_id)}
+              className={`px-2 py-1 rounded text-[10px] font-mono border transition-all flex items-center gap-1.5 ${
+                isSelected
+                  ? "bg-cyan-600 text-white font-bold border-cyan-400 shadow-sm shadow-cyan-950"
+                  : "bg-slate-900/60 hover:bg-slate-800 text-slate-300 border-slate-800"
+              }`}
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-cyan-300" />
+              <span>Unit {u.unit_number}</span>
+              <span className="text-[8px] opacity-75">({u.status})</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {activeUnit && (
+        <div className="rounded-md border border-slate-800 bg-slate-900/80 p-2.5 space-y-2 font-mono text-[10px]">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
+            <div>
+              <span className="text-cyan-400 font-bold">{activeUnit.unit_id}</span>
+              <div className="text-[9px] text-slate-400">{activeUnit.unit_name || `Unit ${activeUnit.unit_number}`}</div>
+            </div>
+            <span
+              className={`px-1.5 py-0.5 rounded text-[8px] font-bold border ${
+                activeUnit.status === "VALID"
+                  ? "bg-emerald-950/80 text-emerald-300 border-emerald-500/40"
+                  : "bg-amber-950/80 text-amber-300 border-amber-500/40"
+              }`}
+            >
+              {activeUnit.status}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-1.5 text-slate-300">
+            <div>
+              <span className="text-slate-500 block text-[9px]">PARENT FLOOR</span>
+              <span className="text-purple-300">{activeUnit.floor_id}</span>
+            </div>
+            <div>
+              <span className="text-slate-500 block text-[9px]">PARENT BUILDING</span>
+              <span>{activeUnit.building_id}</span>
+            </div>
+            <div>
+              <span className="text-slate-500 block text-[9px]">Z-SPAN (AMSL)</span>
+              <span>{activeUnit.base_elevation?.toFixed(2)}m – {activeUnit.top_elevation?.toFixed(2)}m</span>
+            </div>
+            <div>
+              <span className="text-slate-500 block text-[9px]">HEIGHT</span>
+              <span className="text-cyan-300 font-semibold">{activeUnit.height?.toFixed(2)}m</span>
+            </div>
+            <div>
+              <span className="text-slate-500 block text-[9px]">FOOTPRINT AREA</span>
+              <span>{activeUnit.footprint_area?.toFixed(1)} m²</span>
+            </div>
+            <div>
+              <span className="text-slate-500 block text-[9px]">VOLUME</span>
+              <span className="text-cyan-300 font-bold">{activeUnit.volume_cubic_m?.toFixed(1)} m³</span>
+            </div>
+          </div>
+
+          {unitPropertyRecord && unitPropertyRecord.unit_id === activeUnit.unit_id && (
+            <div className="pt-2 border-t border-slate-800 space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] text-amber-400 font-bold uppercase tracking-wider">
+                  3D Property Record
+                </span>
+                <span className="text-[8px] text-slate-500">SIH PPT Model</span>
+              </div>
+              <div className="rounded bg-amber-950/20 border border-amber-500/30 p-1.5 space-y-0.5 text-[9px]">
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Parcel:</span>
+                  <span className="text-emerald-300">{unitPropertyRecord.parcel_id}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Building / Floor:</span>
+                  <span className="text-purple-300">{unitPropertyRecord.building_id} / {unitPropertyRecord.floor_id}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Volume:</span>
+                  <span className="text-amber-300 font-semibold">{unitPropertyRecord.volume_cubic_m} m³</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="pt-1.5 text-[8px] text-slate-500 border-t border-slate-800/60 leading-tight">
+            Physical unit geometry represents spatial modeling and does not establish legal ownership.
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ElevationCard({
   elevation,
   isSampling = false,
@@ -766,8 +928,11 @@ export function ParcelInspector({
   buildingFloors3D,
   properties3D,
   ulpins3D,
+  units,
   selectedFloorId,
   selectedPropertyId,
+  selectedUnitId,
+  unitPropertyRecord,
   demMetadata,
   isSamplingElevation = false,
   isCalculatingHeight = false,
@@ -776,6 +941,7 @@ export function ParcelInspector({
   onSelectBuildingId,
   onSelectFloorId,
   onSelectPropertyId,
+  onSelectUnitId,
   onSampleElevation,
   onCalculateHeight,
   onGenerateFloors,
@@ -784,11 +950,11 @@ export function ParcelInspector({
   onSwitchToProperty3D,
 }: ParcelInspectorProps) {
   const [userSelectedTab, setUserSelectedTab] = React.useState<
-    "parcel" | "building" | "summary" | null
+    "parcel" | "building" | "units" | "summary" | null
   >(null);
 
   // Derive active tab cleanly without an effect
-  const activeTab: "parcel" | "building" | "summary" =
+  const activeTab: "parcel" | "building" | "units" | "summary" =
     userSelectedTab ?? (selectedBuilding && !selectedParcel ? "building" : "parcel");
 
   return (
@@ -818,6 +984,20 @@ export function ParcelInspector({
         >
           Building {selectedBuilding ? "(Active)" : ""}
         </button>
+
+        {units && units.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setUserSelectedTab("units")}
+            className={`flex-1 rounded py-1 font-medium transition-colors ${
+              activeTab === "units"
+                ? "bg-cyan-950/60 text-cyan-400 border border-cyan-500/30"
+                : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            Units ({units.length})
+          </button>
+        )}
 
         {(associationSummary || demMetadata) && (
           <button
@@ -1151,6 +1331,46 @@ export function ParcelInspector({
                     onSwitchToProperty3D={onSwitchToProperty3D}
                   />
 
+                  {/* STEP 16: Apartment / Unit Breakdown */}
+                  {units && units.length > 0 && (
+                    <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-2.5">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-1.5">
+                          <span className="h-2 w-2 rounded-full bg-cyan-400" />
+                          <span className="text-[10px] font-mono uppercase text-slate-400 font-semibold tracking-wider">
+                            Units / Apartments ({units.length})
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setUserSelectedTab("units")}
+                          className="text-[10px] font-mono text-cyan-400 hover:underline"
+                        >
+                          View All Units →
+                        </button>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {units.map((u) => (
+                          <button
+                            key={u.unit_id}
+                            type="button"
+                            onClick={() => {
+                              if (onSelectUnitId) onSelectUnitId(u.unit_id);
+                              setUserSelectedTab("units");
+                            }}
+                            className={`px-2 py-1 rounded text-[10px] font-mono border transition-colors ${
+                              selectedUnitId === u.unit_id
+                                ? "bg-amber-950/60 border-amber-500 text-amber-300 font-bold"
+                                : "bg-slate-800/80 border-slate-700 text-slate-300 hover:border-slate-500"
+                            }`}
+                          >
+                            Unit {u.unit_number} ({u.unit_type.replace("_", " ")})
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Overlaps breakdown if multi-parcel */}
                   {assoc && assoc.overlaps && assoc.overlaps.length > 1 && (
                     <div className="rounded-lg border border-amber-900/40 bg-amber-950/20 p-2">
@@ -1195,6 +1415,16 @@ export function ParcelInspector({
             })()
           )}
         </>
+      )}
+
+      {/* TAB: APARTMENT UNITS */}
+      {activeTab === "units" && (
+        <UnitInspectorCard
+          units={units}
+          selectedUnitId={selectedUnitId}
+          unitPropertyRecord={unitPropertyRecord}
+          onSelectUnitId={onSelectUnitId}
+        />
       )}
 
       {/* TAB 3: SPATIAL ASSOCIATION & DEM SUMMARY */}

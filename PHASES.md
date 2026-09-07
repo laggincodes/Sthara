@@ -227,3 +227,14 @@ Prioritization tags:
 - **Expected Output**: 155 real building footprints extracted from New Delhi (Tagore Garden) OSM dataset, 100% topologically valid, ready for multi-layer cadastral analysis.
 - **Dependencies**: PHASE 3, PHASE 7.
 - **Acceptance Criteria**: 100% valid polygon topology; zero fabricated heights/levels; 120/120 backend tests passing; zero build errors.
+
+## Step 16: Unit / Apartment Entity & Vertical Property Model
+- **Status**: Completed
+- **Deliverables**:
+  - Implemented `Unit` and `UnitPropertyRecord` domain models (`backend/app/schemas/unit.py`).
+  - Implemented `UnitService` with deterministic ID generation (`BLD-{bld}-FL{fl}-U{num}`), vertical extent containment check, Shapely polygon containment check, mutual non-overlap validation (allowing common party-wall touching), and unassigned circulation support (`backend/app/services/unit_service.py`).
+  - Created synthetic reference unit dataset for Tower 1 Floor 5 (`data/processed/demo_units.geojson`).
+  - Added REST API routes for unit validation, batch validation, querying by building/floor, demo retrieval, and 3D property records (`backend/app/api/routes/units.py`).
+  - Built 15 comprehensive unit tests (`backend/tests/test_unit_model.py`) — all 135 backend tests pass.
+  - Added frontend TypeScript definitions, API client methods, hook integration, MapLibre layer with cyan polygon styling, and inspector card with SIH hierarchy chain and statutory non-ownership disclaimer.
+  - Authored comprehensive documentation in `docs/UNIT_MODEL.md` and updated existing specs.
