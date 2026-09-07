@@ -21,6 +21,34 @@ import {
 } from "@/types/cadastre";
 import { cadastreApi, ApiError } from "@/lib/api/client";
 
+function extractCentroid(geom: unknown): [number, number] | null {
+  if (!geom || typeof geom !== "object") return null;
+  const coords = (geom as { coordinates?: unknown }).coordinates;
+  if (!coords) return null;
+  const pts: [number, number][] = [];
+  function recurse(arr: unknown) {
+    if (Array.isArray(arr)) {
+      if (
+        arr.length >= 2 &&
+        typeof arr[0] === "number" &&
+        typeof arr[1] === "number" &&
+        !isNaN(arr[0]) &&
+        !isNaN(arr[1])
+      ) {
+        pts.push([arr[0], arr[1]]);
+      } else {
+        arr.forEach(recurse);
+      }
+    }
+  }
+  recurse(coords);
+  if (pts.length === 0) return null;
+  const cLon = pts.reduce((acc, p) => acc + p[0], 0) / pts.length;
+  const cLat = pts.reduce((acc, p) => acc + p[1], 0) / pts.length;
+  if (isNaN(cLon) || isNaN(cLat)) return null;
+  return [cLon, cLat];
+}
+
 export function useCadastre() {
   const [backendConnected, setBackendConnected] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -344,30 +372,33 @@ export function useCadastre() {
     } else if (buildingsGeojson?.features) {
       buildingsGeojson.features.forEach((b, idx) => {
         const bId = (b.properties?.building_id as string) || (b.id ? String(b.id) : `BLD-SYS-${idx + 1}`);
-        // Calculate rough centroid from first coordinate ring
-        const coords = b.geometry?.coordinates;
-        let cLon = 73.856, cLat = 18.52;
-        if (Array.isArray(coords) && Array.isArray(coords[0]) && Array.isArray(coords[0][0])) {
-          const ring = coords[0] as [number, number][];
-          cLon = ring.reduce((acc, pt) => acc + pt[0], 0) / ring.length;
-          cLat = ring.reduce((acc, pt) => acc + pt[1], 0) / ring.length;
+        const centroid = extractCentroid(b.geometry);
+        if (centroid && !isNaN(centroid[0]) && !isNaN(centroid[1])) {
+          points.push({
+            feature_id: bId,
+            longitude: centroid[0],
+            latitude: centroid[1],
+            crs: "EPSG:4326",
+          });
         }
-        points.push({
-          feature_id: bId,
-          longitude: cLon,
-          latitude: cLat,
-          crs: "EPSG:4326",
-        });
       });
     }
 
-    if (points.length === 0) return;
+    const validPoints = points.filter(
+      (pt) =>
+        typeof pt.longitude === "number" &&
+        !isNaN(pt.longitude) &&
+        typeof pt.latitude === "number" &&
+        !isNaN(pt.latitude)
+    );
+
+    if (validPoints.length === 0) return;
 
     setIsSamplingElevation(true);
     setElevationError(null);
 
     try {
-      const resp = await cadastreApi.sampleElevation({ points });
+      const resp = await cadastreApi.sampleElevation({ points: validPoints });
       setElevationResults((prev) => {
         const next = { ...prev };
         resp.results.forEach((r) => {
@@ -380,14 +411,18 @@ export function useCadastre() {
 
       // Also ensure DEM metadata is loaded
       if (!demMetadata) {
-        const meta = await cadastreApi.getDEMInfo();
-        setDemMetadata(meta);
+        try {
+          const meta = await cadastreApi.getDEMInfo();
+          setDemMetadata(meta);
+        } catch {
+          // Non-blocking DEM metadata fetch
+        }
       }
     } catch (err) {
       if (err instanceof ApiError) {
         setElevationError(err.message);
       } else {
-        setElevationError("Unable to connect to the geospatial processing service.");
+        setElevationError("Elevation sampling unavailable for active dataset coordinates.");
       }
     } finally {
       setIsSamplingElevation(false);
@@ -800,8 +835,15 @@ export function useCadastre() {
       });
 
       const sampledElevMap: Record<string, import("@/types/cadastre").ElevationSampleResult> = {};
-      if (points.length > 0) {
-        const elevResp = await cadastreApi.sampleElevation({ points });
+      const validPoints = points.filter(
+        (pt) =>
+          typeof pt.longitude === "number" &&
+          !isNaN(pt.longitude) &&
+          typeof pt.latitude === "number" &&
+          !isNaN(pt.latitude)
+      );
+      if (validPoints.length > 0) {
+        const elevResp = await cadastreApi.sampleElevation({ points: validPoints });
         elevResp.results.forEach((r) => {
           if (r.feature_id) {
             sampledElevMap[r.feature_id] = r;

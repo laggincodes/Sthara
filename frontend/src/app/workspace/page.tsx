@@ -194,8 +194,12 @@ export default function WorkspacePage() {
           aria-label={viewMode === "3d" ? "3D Cadastral Stage Viewport" : "2D Cadastral Map Viewport"}
           className="flex-1 h-full min-h-[350px] relative border-b lg:border-b-0 lg:border-r border-slate-800"
         >
-          {/* Dynamic 2D / 3D Viewport Component */}
-          {viewMode === "3d" ? (
+          {/* Dynamic 2D / 3D Viewport Layers */}
+          <div
+            className={`absolute inset-0 w-full h-full transition-opacity duration-150 ${
+              viewMode === "3d" ? "z-10 opacity-100 pointer-events-auto" : "z-0 opacity-0 pointer-events-none"
+            }`}
+          >
             <ErrorBoundary
               fallbackTitle="3D Cadastral Stage Fault"
               onReset={() => {
@@ -203,29 +207,35 @@ export default function WorkspacePage() {
               }}
             >
               <Cadastral3DViewer
-              data={building3DData}
-              floorsData={floors3DData}
-              propertiesData={property3DData}
-              subView={subView3D}
-              onChangeSubView={setSubView3D}
-              selectedBuildingId={selectedBuildingId}
-              onSelectBuilding={setSelectedBuildingId}
-              selectedFloorId={selectedFloorId}
-              onSelectFloor={setSelectedFloorId}
-              selectedPropertyId={selectedPropertyId}
-              onSelectProperty={setSelectedPropertyId}
-              explodeDistance={explodeDistance}
-              onChangeExplodeDistance={setExplodeDistance}
-              isolatedFloorIndex={isolatedFloorIndex}
-              onSelectIsolatedFloorIndex={setIsolatedFloorIndex}
-              isLoading={isGenerating3D || isGeneratingFloors3D || isGeneratingProperty3D}
-              onGenerate3D={generate3DBuildingModels}
-              onGenerateFloors={generate3DFloorModels}
-              onGenerateProperties={generate3DPropertyModels}
-              onSwitchTo2D={() => setViewMode("2d")}
-            />
+                data={building3DData}
+                floorsData={floors3DData}
+                propertiesData={property3DData}
+                subView={subView3D}
+                onChangeSubView={setSubView3D}
+                selectedBuildingId={selectedBuildingId}
+                onSelectBuilding={setSelectedBuildingId}
+                selectedFloorId={selectedFloorId}
+                onSelectFloor={setSelectedFloorId}
+                selectedPropertyId={selectedPropertyId}
+                onSelectProperty={setSelectedPropertyId}
+                explodeDistance={explodeDistance}
+                onChangeExplodeDistance={setExplodeDistance}
+                isolatedFloorIndex={isolatedFloorIndex}
+                onSelectIsolatedFloorIndex={setIsolatedFloorIndex}
+                isLoading={isGenerating3D || isGeneratingFloors3D || isGeneratingProperty3D}
+                onGenerate3D={generate3DBuildingModels}
+                onGenerateFloors={generate3DFloorModels}
+                onGenerateProperties={generate3DPropertyModels}
+                onSwitchTo2D={() => setViewMode("2d")}
+              />
             </ErrorBoundary>
-          ) : (
+          </div>
+
+          <div
+            className={`absolute inset-0 w-full h-full transition-opacity duration-150 ${
+              viewMode === "2d" ? "z-10 opacity-100 pointer-events-auto" : "z-0 opacity-0 pointer-events-none"
+            }`}
+          >
             <CadastralMap
               geojson={geojson}
               buildingsGeojson={buildingsGeojson}
@@ -235,8 +245,9 @@ export default function WorkspacePage() {
               onSelectBuilding={setSelectedBuildingId}
               layerVisibility={layerVisibility}
               onToggleLayer={toggleLayer}
+              isActive={viewMode === "2d"}
             />
-          )}
+          </div>
 
           {/* Empty State Overlay when no dataset is loaded */}
           {(!geojson || geojson.features.length === 0) &&

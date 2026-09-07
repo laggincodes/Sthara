@@ -100,6 +100,18 @@ export function Cadastral3DViewer({
 }: Cadastral3DViewerProps) {
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
 
+  // Suppress Three.js r185 THREE.Clock deprecation warning from upstream OrbitControls
+  useEffect(() => {
+    const origWarn = console.warn;
+    console.warn = (...args: unknown[]) => {
+      if (typeof args[0] === "string" && args[0].includes("THREE.Clock")) return;
+      origWarn.apply(console, args);
+    };
+    return () => {
+      console.warn = origWarn;
+    };
+  }, []);
+
   // View States
   const [isWireframe, setIsWireframe] = useState<boolean>(false);
   const [layers, setLayers] = useState<ViewerLayers>({
@@ -221,6 +233,11 @@ export function Cadastral3DViewer({
           antialias: true,
           alpha: false,
           powerPreference: "high-performance",
+        }}
+        onCreated={({ gl }) => {
+          gl.domElement.addEventListener("webglcontextlost", (event) => {
+            event.preventDefault();
+          });
         }}
         className="w-full h-full"
       >

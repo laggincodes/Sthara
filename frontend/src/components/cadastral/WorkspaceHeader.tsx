@@ -85,7 +85,6 @@ export function WorkspaceHeader({
                 alt="3D Cadastral Mark"
                 width={18}
                 height={18}
-                priority
               />
             </div>
             <span className="text-xs font-bold uppercase tracking-wider text-slate-300 font-mono">
