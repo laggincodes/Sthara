@@ -456,7 +456,7 @@ Base URL: `http://localhost:8000/api/v1`
     "compute_shared_origin": true
   }
   ```
-- **Response**: `200 OK` (Conforms to [`3D_GEOMETRY_CONTRACT.md`](file:///C:/Users/Yatha/.gemini/antigravity/scratch/3d-cadastral-intelligence/3D_GEOMETRY_CONTRACT.md) Schema Version `1.0`)
+- **Response**: `200 OK` (Conforms to [`3D_GEOMETRY_CONTRACT.md`](3D_GEOMETRY_CONTRACT.md) Schema Version `1.0`)
   ```json
   {
     "schema_version": "1.0",

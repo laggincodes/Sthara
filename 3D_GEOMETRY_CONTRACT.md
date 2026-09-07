@@ -2,8 +2,8 @@
 
 **Status**: Canonical & Production-Ready  
 **Schema Version**: `1.0`  
-**Authoritative Backend Schema**: [`backend/app/schemas/geometry_3d.py`](file:///C:/Users/Yatha/.gemini/antigravity/scratch/3d-cadastral-intelligence/backend/app/schemas/geometry_3d.py)  
-**Authoritative Frontend Type Definition**: [`frontend/src/types/geometry3d.ts`](file:///C:/Users/Yatha/.gemini/antigravity/scratch/3d-cadastral-intelligence/frontend/src/types/geometry3d.ts)  
+**Authoritative Backend Schema**: [`backend/app/schemas/geometry_3d.py`](backend/app/schemas/geometry_3d.py)  
+**Authoritative Frontend Type Definition**: [`frontend/src/types/geometry3d.ts`](frontend/src/types/geometry3d.ts)  
 
 ---
 
