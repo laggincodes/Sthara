@@ -1,5 +1,5 @@
 {
-  "dataset_id": "ds_tagore_garden_map_osm",
+  "dataset_id": "ds_map_1846037b",
   "source_file": "map.osm",
   "target_crs": "EPSG:32643",
   "viewer_origin": [

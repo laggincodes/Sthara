@@ -19,6 +19,7 @@ export default function ImportDataPage() {
     conversionStages,
     runOsm3DConversion,
     uploadAndConvertOsmFile,
+    selectOsmFile,
     activeProjectName,
     buildingDatasetName,
   } = useCadastreContext();
@@ -50,12 +51,15 @@ export default function ImportDataPage() {
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const file = e.dataTransfer.files[0];
       setSelectedFile(file);
+      selectOsmFile(file);
     }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      setSelectedFile(e.target.files[0]);
+      const file = e.target.files[0];
+      setSelectedFile(file);
+      selectOsmFile(file);
     }
   };
 
@@ -128,7 +132,7 @@ export default function ImportDataPage() {
             Source: <strong className="text-white">{selectedFile ? selectedFile.name : defaultFileName}</strong>
           </span>
           <span className="px-2.5 py-1 rounded-md bg-slate-800/90 text-slate-300 border border-slate-700">
-            Buildings: <strong className="text-cyan-300">{defaultFeatureCount}</strong>
+            Buildings: <strong className="text-cyan-300">{selectedFile ? "Pending 3D Extrusion" : defaultFeatureCount}</strong>
           </span>
           <span className="px-2.5 py-1 rounded-md bg-slate-800/90 text-slate-300 border border-slate-700">
             CRS: <strong className="text-emerald-300">{defaultDetectedCrs}</strong>

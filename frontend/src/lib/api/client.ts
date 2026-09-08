@@ -63,6 +63,7 @@ import {
   OsmUploadResult,
   Osm3DConversionConfig,
   Osm3DConversionResponse,
+  OsmDatasetItem,
   DataMeetLayerInfo,
   DataMeetAlignmentResponse,
   DataMeetMetadataResponse,
@@ -286,6 +287,32 @@ export const cadastreApi = {
   },
 
   /**
+   * Uploads an OSM/GeoJSON file to register it in the dataset store without immediate conversion.
+   */
+  async uploadOsmDataset(file: File): Promise<OsmDatasetItem> {
+    const formData = new FormData();
+    formData.append("file", file, file.name);
+
+    const response = await fetch(`${BASE_URL}/osm/upload`, {
+      method: "POST",
+      headers: { Accept: "application/json" },
+      body: formData,
+    });
+    return await handleResponse<OsmDatasetItem>(response);
+  },
+
+  /**
+   * Lists all registered OSM/GeoJSON datasets.
+   */
+  async listOsmDatasets(): Promise<OsmDatasetItem[]> {
+    const response = await fetch(`${BASE_URL}/osm/datasets`, {
+      method: "GET",
+      headers: { Accept: "application/json" },
+    });
+    return await handleResponse<OsmDatasetItem[]>(response);
+  },
+
+  /**
    * Executes the full end-to-end OSM -> 3D conversion pipeline with configurable parameters.
    */
   async convertOsmTo3D(config: Osm3DConversionConfig): Promise<Osm3DConversionResponse> {
@@ -324,14 +351,27 @@ export const cadastreApi = {
   },
 
   /**
-   * Retrieves the diagnostics and stage performance report from the latest 3D conversion.
+   * Retrieves the diagnostics and stage performance report from the last or specific 3D conversion.
    */
-  async getConversionStatus(): Promise<{ status: string; data: Osm3DConversionResponse }> {
-    const response = await fetch(`${BASE_URL}/osm/conversion-status`, {
+  async getConversionStatus(datasetId?: string): Promise<{ status: string; data: Osm3DConversionResponse }> {
+    const query = datasetId ? `?dataset_id=${encodeURIComponent(datasetId)}` : "";
+    const response = await fetch(`${BASE_URL}/osm/conversion-status${query}`, {
       method: "GET",
       headers: { Accept: "application/json" },
     });
     return await handleResponse<{ status: string; data: Osm3DConversionResponse }>(response);
+  },
+
+  getGlbUrl(datasetId: string = "latest"): string {
+    return `${BASE_URL}/export/glb/${datasetId}`;
+  },
+
+  getGltfUrl(datasetId: string = "latest"): string {
+    return `${BASE_URL}/export/gltf/${datasetId}`;
+  },
+
+  getMetadataUrl(datasetId: string = "latest"): string {
+    return `${BASE_URL}/export/metadata/${datasetId}`;
   },
 
   getLatestGlbUrl(): string {

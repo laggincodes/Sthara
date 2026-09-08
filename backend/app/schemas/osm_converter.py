@@ -14,6 +14,10 @@ class ExportFormatOption(str, Enum):
     BOTH = "both"
 
 class Osm3DConversionConfig(BaseModel):
+    dataset_id: Optional[str] = Field(
+        default=None,
+        description="Unique identifier of registered dataset to convert (e.g. ds_tagore_garden or ds_<hash>)."
+    )
     source_file: Optional[str] = Field(
         default=None,
         description="Path or identifier of the source OSM file. Defaults to active raw map.osm."
@@ -90,7 +94,11 @@ class Osm3DConversionSummary(BaseModel):
 
 class Osm3DConversionResponse(BaseModel):
     success: bool
+    dataset_id: str = Field(default="ds_tagore_garden_map_osm", description="Unique identifier of converted dataset")
+    dataset_name: str = Field(default="map.osm", description="Human-readable filename / dataset name")
     source_name: str
+    content_hash: Optional[str] = Field(default=None, description="SHA-256 hash of dataset content")
+    converted_at: Optional[str] = Field(default=None, description="ISO timestamp of conversion completion")
     target_crs: str
     viewer_origin: List[float]
     summary: Osm3DConversionSummary
@@ -101,3 +109,15 @@ class Osm3DConversionResponse(BaseModel):
     buildings_metadata: List[BuildingMetadataItem]
     # Full geometry response for immediate Three.js rendering
     mesh_data: Optional[Dict[str, Any]] = None
+
+class OsmDatasetItem(BaseModel):
+    dataset_id: str
+    dataset_name: str
+    source_type: str = "osm"
+    file_size_bytes: int
+    feature_count: int
+    content_hash: str
+    source_crs: str = "EPSG:4326 (WGS 84)"
+    is_converted: bool = False
+    created_at: str
+

@@ -1,0 +1,55 @@
+{
+  "dataset_id": "ds_custom_area_b_430675d0",
+  "source_file": "custom_area_b.osm",
+  "target_crs": "EPSG:32643",
+  "viewer_origin": [
+    706438.9040099336,
+    3170147.6484737108,
+    0.0
+  ],
+  "buildings_count": 1,
+  "vertices_count": 8,
+  "faces_count": 12,
+  "surface_area_sqm": 99228.71,
+  "volume_cubic_m": 650332.35,
+  "buildings": [
+    {
+      "building_id": "OSM-BUILDING-WAY-101",
+      "osm_id": "101",
+      "name": "Test Villa",
+      "parcel_id": "PARCEL-UNREGISTERED",
+      "height": 15.0,
+      "z_min": 0.0,
+      "z_max": 15.0,
+      "levels": 5,
+      "floor_unit_available": false,
+      "height_source": "OSM_HEIGHT_TAG",
+      "area_sqm": 43355.49,
+      "volume_cubic_m": 650332.35,
+      "source": "OpenStreetMap",
+      "is_cadastral": false,
+      "validation_status": "PASS",
+      "watertight": true,
+      "duplicate_check": "PASS",
+      "topology_status": "PASS",
+      "prototype_3d_ulpin": "DL-OSM-WAY-101-001",
+      "bounding_box": {
+        "min": [
+          -99.73,
+          -112.55,
+          0.0
+        ],
+        "max": [
+          99.73,
+          112.55,
+          15.0
+        ]
+      },
+      "centroid": [
+        -0.0,
+        -0.0,
+        7.5
+      ]
+    }
+  ]
+}

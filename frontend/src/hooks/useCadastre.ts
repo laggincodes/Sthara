@@ -506,6 +506,12 @@ export function useCadastre() {
     setOsmUploadResult(null);
     if (file) {
       setOsmUploadPhase("selected");
+      // Invalidate stale 3D conversion state immediately so old dataset is never displayed
+      setConversionResult(null);
+      setConversionStages([]);
+      setBuilding3DData(null);
+      setBuildingDatasetName(`${file.name} (Pending 3D Conversion)`);
+      setActiveProjectName(file.name.replace(/\.[^/.]+$/, "") + " 3D City");
     } else {
       setOsmUploadPhase("idle");
     }
@@ -559,7 +565,13 @@ export function useCadastre() {
       setConversionError(null);
 
       try {
-        const resp = await cadastreApi.convertOsmTo3D(activeCfg);
+        let resp: Osm3DConversionResponse;
+        if (osmUploadFile) {
+          resp = await cadastreApi.uploadAndConvertOsm(osmUploadFile, activeCfg);
+        } else {
+          resp = await cadastreApi.convertOsmTo3D(activeCfg);
+        }
+
         setConversionResult(resp);
         setConversionStages(resp.stages || []);
 
@@ -589,7 +601,7 @@ export function useCadastre() {
         setIsConverting(false);
       }
     },
-    [conversionConfig]
+    [conversionConfig, osmUploadFile]
   );
 
   // 3f. Direct Upload and Convert
@@ -599,6 +611,10 @@ export function useCadastre() {
       setIsConverting(true);
       setConversionError(null);
       setOsmUploadFile(file);
+      // Invalidate previous conversion data immediately
+      setConversionResult(null);
+      setConversionStages([]);
+      setBuilding3DData(null);
 
       try {
         const resp = await cadastreApi.uploadAndConvertOsm(file, activeCfg);
