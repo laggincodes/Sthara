@@ -1,10 +1,10 @@
-# Step 18 — Multi-Source Georeferencing & Spatial Data Fusion
+﻿# Step 18 — Multi-Source Georeferencing & Spatial Data Fusion
 
 ## 1. Overview & Objective
 
 In modern 3D cadastral intelligence systems, physical building observations, administrative land boundaries, sensor point clouds, and geodetic reference networks originate from disparate sources with varying coordinate reference systems, measurement resolutions, and legal authority.
 
-The objective of Step 18 is to establish a deterministic, transparent, and reversible **Multi-Source Spatial Data Fusion Layer** following the SIH technical paradigm:
+The objective of Step 18 is to establish a deterministic, transparent, and reversible **Multi-Source Spatial Data Fusion Layer** following the STHARA technical paradigm:
 
 ```text
 01 INGESTION  ───►  02 GEO-REFERENCING  ───►  03 SPATIAL FUSION

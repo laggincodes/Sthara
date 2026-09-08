@@ -8,7 +8,7 @@
 
 ### 1.2 Strict Scope Adherence
 - Do not implement features, views, or endpoints outside of the PRD and API_SPEC without explicit user approval.
-- Unnecessary feature creep jeopardizes SIH demo stability.
+- Unnecessary feature creep jeopardizes platform demo stability.
 
 ### 1.3 Strict Separation of Deterministic Math and AI
 - **Rule of Deterministic Primacy**: All coordinate transformations, spatial polygon intersections, buffer generation, 3D polyhedral extrusions, geometric clash tests, volume calculations, and 3D ULPIN codes MUST be computed with deterministic mathematical algorithms (`Shapely`, `GeoPandas`, `PyProj`).

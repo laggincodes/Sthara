@@ -1,8 +1,8 @@
-# AI/ML Extraction Subsystem & Deterministic Validation Boundary
+﻿# AI/ML Extraction Subsystem & Deterministic Validation Boundary
 
-## 1. Executive Summary & SIH Architectural Principle
+## 1. Executive Summary & STHARA Architectural Principle
 
-The **AI/ML Extraction Subsystem** in **3D Cadastral Intelligence** conforms strictly to the core architectural separation defined in the Smart India Hackathon (SIH) technical approach:
+The **AI/ML Extraction Subsystem** in **3D Cadastral Intelligence** conforms strictly to the core architectural separation defined in the STHARA technical approach:
 
 $$\\mathbf{AI/ML} = \\textbf{Candidate Feature Extraction}$$
 $$\\mathbf{3D\\ Engine} = \\textbf{Deterministic Modelling}$$
@@ -79,7 +79,7 @@ The subsystem includes an explicit **Model Registry** (`backend/app/services/mod
 | `flr_hist_cluster_v1` | 1.0.0 | FLOOR | `numpy 1D clustering` | **AVAILABLE** | 1D elevation density peak detection. Uniform architectural strata fallback if vertical return signal is sparse. |
 | `unit_partition_v1` | 1.0.0 | UNIT | `shapely partitioning` | **AVAILABLE** | Orthogonal unit subdivision with central circulation corridor buffer. Requires floor layout; returns `UNIT_EXTRACTION_UNAVAILABLE` if missing. |
 | `vert_delineator_v1` | 1.0.0 | VERTICAL_FEATURE | `deterministic stratification` | **AVAILABLE** | Coordinated base and top elevation strata envelopes. Candidate evidence only; requires surveyor endorsement. |
-| `sih_benchmark_demo_v1` | 1.0.0 | BUILDING | `calibrated benchmark` | **AVAILABLE** | Pre-calibrated high-confidence benchmark for Tower 1 in UTM 43N. Used for deterministic SIH offline presentations. |
+| `cadastral_benchmark_demo_v1` | 1.0.0 | BUILDING | `calibrated benchmark` | **AVAILABLE** | Pre-calibrated high-confidence benchmark for Tower 1 in UTM 43N. Used for deterministic deterministic offline demonstrations. |
 | `pytorch_mask_rcnn_v1` | 2.1.0 | BUILDING | `PyTorch + torchvision` | **MODEL_UNAVAILABLE** | Deep learning instance segmentation from high-res drone RGB. Weights not bundled in lightweight local runtime. |
 | `open3d_pointnet_v1` | 1.2.0 | VERTICAL_FEATURE | `Open3D + PointNet` | **MODEL_UNAVAILABLE** | 3D point cloud semantic segmentation. Open3D C++ binaries not bundled; system falls back to ElevationService. |
 

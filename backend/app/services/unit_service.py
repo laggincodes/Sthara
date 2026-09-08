@@ -1,4 +1,4 @@
-import math
+﻿import math
 from typing import List, Optional, Dict, Any, Tuple
 from shapely.geometry import shape, mapping, Polygon, MultiPolygon, GeometryCollection
 from shapely.validation import explain_validity, make_valid
@@ -321,12 +321,12 @@ class UnitService:
     def create_property_record(cls, unit: Unit) -> UnitPropertyRecord:
         """
         Creates a conceptual 3D Property Record for an individual unit conforming
-        to the SIH Presentation specification (P001 -> B01 -> F05 -> U501).
+        to the canonical hierarchy specification (P001 -> B01 -> F05 -> U501).
         """
         base_z = unit.base_elevation or 577.48
         top_z = unit.top_elevation or (base_z + (unit.height or 3.0))
 
-        # Extract or resolve canonical SIH aliases
+        # Extract or resolve canonical hierarchy aliases
         clean_unit_num = str(unit.unit_number).strip().lstrip("U")
         canonical_p = "P001" if "101" in unit.parcel_id or "102" in unit.parcel_id or unit.parcel_id == "P001" else unit.parcel_id
         canonical_b = "B01" if "001" in unit.building_id or "002" in unit.building_id or unit.building_id == "B01" else unit.building_id

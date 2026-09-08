@@ -1,9 +1,9 @@
-# Interactive 3D Cadastral Viewer Architecture & Specification (v1.0)
+﻿# Interactive 3D Cadastral Viewer Architecture & Specification (v1.0)
 
 > [!IMPORTANT]
 > **CANONICAL ARCHITECTURAL BOUNDARY & PROTOTYPE NOTICE**  
 > 1. **Backend Geometry Authority**: The backend remains the sole authoritative source for computational geometry, topological validation, coordinate projection, and volumetric generation. The 3D viewer performs **no geometry generation, mesh repair, face closure, winding alteration, or boolean union**.  
-> 2. **3D ULPIN Prototype**: The 3D ULPIN displayed in the viewer and inspector is a **project-specific deterministic prototype design** created for the Smart India Hackathon (SIH) prototype. It is **NOT** an official Government of India ULPIN standard.
+> 2. **3D ULPIN Prototype**: The 3D ULPIN displayed in the viewer and inspector is a **project-specific deterministic prototype design** created for the STHARA prototype. It is **NOT** an official Government of India ULPIN standard.
 
 ---
 

@@ -14,20 +14,35 @@ export default function ProjectsPage() {
   } = useCadastreContext();
 
   return (
-    <div className="h-full overflow-y-auto p-6 space-y-8 max-w-6xl mx-auto">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+    <div
+      className="h-full overflow-y-auto p-6 space-y-8 max-w-6xl mx-auto"
+      style={{ fontFamily: "var(--font-sans)", color: "var(--sth-text)" }}
+    >
+      {/* ── Page Header ────────────────────────────────────────────── */}
+      <div
+        className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4"
+        style={{ borderBottom: "1px solid var(--sth-border)" }}
+      >
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">
+          <h1
+            className="text-2xl font-bold tracking-tight"
+            style={{ fontFamily: "var(--font-heading)", color: "#252622" }}
+          >
             Projects &amp; Datasets Directory
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs mt-1" style={{ color: "#62635D" }}>
             Manage local geospatial projects, OpenStreetMap building footprints, and 3D cadastral registries.
           </p>
         </div>
 
         <Link
           href="/data"
-          className="inline-flex items-center gap-2 text-xs font-semibold text-white bg-cyan-600 hover:bg-cyan-500 px-4 py-2.5 rounded-lg shadow transition-colors"
+          className="inline-flex items-center gap-2 text-xs font-semibold px-4 py-2.5 rounded-md shadow-sm transition-colors"
+          style={{
+            backgroundColor: "#A85D48",
+            color: "#FFFFFF",
+            fontFamily: "var(--font-sans)",
+          }}
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.5v15m7.5-7.5h-15" />
@@ -36,43 +51,92 @@ export default function ProjectsPage() {
         </Link>
       </div>
 
+      {/* ── Dataset Cards Grid ─────────────────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Project 1: Delhi Test Area */}
-        <div className="rounded-xl border border-cyan-500/30 bg-slate-900/60 p-6 space-y-4 hover:border-cyan-500/60 transition-all shadow-xl">
-          <div className="flex items-start justify-between">
+        {/* Project 1: Delhi Test Area (Active) */}
+        <div
+          className="rounded-md p-6 space-y-4 transition-all"
+          style={{
+            backgroundColor: "#F8F6F0",
+            border: "1px solid #A85D48",
+          }}
+        >
+          <div className="flex items-start justify-between gap-2">
             <div>
-              <span className="inline-block text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-500/40 mb-2">
+              <span
+                className="inline-block text-[10px] px-2.5 py-0.5 rounded font-semibold mb-2"
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  backgroundColor: "#E2E8DF",
+                  color: "#526052",
+                  border: "1px solid #C8D0C5",
+                }}
+              >
                 REAL OPENSTREETMAP DATASET
               </span>
-              <h2 className="text-lg font-bold text-white">Delhi Test Area</h2>
-              <p className="text-xs text-slate-400 mt-1">
+              <h2
+                className="text-lg font-bold"
+                style={{ fontFamily: "var(--font-heading)", color: "#252622" }}
+              >
+                Delhi Test Area
+              </h2>
+              <p className="text-xs mt-1 leading-relaxed" style={{ color: "#62635D" }}>
                 Tagore Garden, New Delhi, India. 155 physical building footprints extruded to 3D.
               </p>
             </div>
-            <span className="text-xs font-mono text-emerald-400 font-bold bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded">
+            <span
+              className="text-xs font-semibold px-2 py-0.5 rounded shrink-0"
+              style={{
+                fontFamily: "var(--font-mono)",
+                backgroundColor: "#E4E8DF",
+                color: "#4F5D4F",
+                border: "1px solid #C7D0C4",
+              }}
+            >
               Active 3D
             </span>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 py-3 px-3.5 rounded-lg bg-slate-950/80 border border-slate-800 text-xs font-mono">
+          {/* Light Matte Metadata Panel */}
+          <div
+            className="grid grid-cols-3 gap-2 py-3 px-3.5 rounded-md text-xs"
+            style={{
+              backgroundColor: "#E9E5DA",
+              border: "1px solid #D7D4CB",
+              fontFamily: "var(--font-mono)",
+            }}
+          >
             <div>
-              <div className="text-[10px] text-slate-500">BUILDINGS</div>
-              <div className="text-sm font-bold text-white mt-0.5">155</div>
+              <div className="text-[10px] font-semibold uppercase" style={{ color: "#77786F" }}>
+                BUILDINGS
+              </div>
+              <div className="text-sm font-bold mt-0.5" style={{ color: "#252622" }}>
+                155
+              </div>
             </div>
             <div>
-              <div className="text-[10px] text-slate-500">CRS</div>
-              <div className="text-sm font-bold text-cyan-300 mt-0.5">EPSG:32643</div>
+              <div className="text-[10px] font-semibold uppercase" style={{ color: "#77786F" }}>
+                CRS
+              </div>
+              <div className="text-sm font-bold mt-0.5" style={{ color: "#252622" }}>
+                EPSG:32643
+              </div>
             </div>
             <div>
-              <div className="text-[10px] text-slate-500">FORMAT</div>
-              <div className="text-sm font-bold text-purple-300 mt-0.5">GLB 2.0</div>
+              <div className="text-[10px] font-semibold uppercase" style={{ color: "#77786F" }}>
+                FORMAT
+              </div>
+              <div className="text-sm font-bold mt-0.5" style={{ color: "#252622" }}>
+                GLB 2.0
+              </div>
             </div>
           </div>
 
           <div className="flex items-center justify-between pt-2">
             <Link
               href="/workspace/3d"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-cyan-300 hover:text-white"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold transition-colors"
+              style={{ color: "#A85D48" }}
             >
               <span>Open in 3D Workspace &rarr;</span>
             </Link>
@@ -80,55 +144,105 @@ export default function ProjectsPage() {
             <a
               href="http://localhost:8000/api/v1/export/glb/latest"
               download="city_model_3d.glb"
-              className="text-xs font-mono text-slate-400 hover:text-slate-200"
+              className="text-xs font-medium transition-colors"
+              style={{ color: "#252622", fontFamily: "var(--font-mono)" }}
             >
               Download GLB
             </a>
           </div>
         </div>
 
-        {/* Project 2: Pune Cadastral Benchmark */}
-        <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-6 space-y-4 hover:border-slate-700 transition-all shadow-xl">
-          <div className="flex items-start justify-between">
+        {/* Project 2: Pune Cadastral Benchmark (Fully Readable Inactive/Benchmark Card) */}
+        <div
+          className="rounded-md p-6 space-y-4 transition-all"
+          style={{
+            backgroundColor: "#F8F6F0",
+            border: "1px solid #D7D4CB",
+          }}
+        >
+          <div className="flex items-start justify-between gap-2">
             <div>
-              <span className="inline-block text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-purple-950 text-purple-300 border border-purple-500/40 mb-2">
+              <span
+                className="inline-block text-[10px] px-2.5 py-0.5 rounded font-semibold mb-2"
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  backgroundColor: "#E9E1D5",
+                  color: "#766044",
+                  border: "1px solid #D8CBB8",
+                }}
+              >
                 SYNTHETIC CADASTRAL BENCHMARK
               </span>
-              <h2 className="text-lg font-bold text-white">Pune Cadastral Benchmark</h2>
-              <p className="text-xs text-slate-400 mt-1">
+              <h2
+                className="text-lg font-bold"
+                style={{ fontFamily: "var(--font-heading)", color: "#252622" }}
+              >
+                Pune Cadastral Benchmark
+              </h2>
+              <p className="text-xs mt-1 leading-relaxed" style={{ color: "#62635D" }}>
                 Kothrud, Pune, Maharashtra. Multi-tier land parcels with DEM ground elevation and 3D ULPIN registry.
               </p>
             </div>
-            <span className="text-xs font-mono text-slate-500 bg-slate-800/80 px-2 py-0.5 rounded">
+            <span
+              className="text-xs font-semibold px-2 py-0.5 rounded shrink-0"
+              style={{
+                fontFamily: "var(--font-mono)",
+                backgroundColor: "#E9E5DA",
+                color: "#6F7069",
+                border: "1px solid #D7D4CB",
+              }}
+            >
               Benchmark
             </span>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 py-3 px-3.5 rounded-lg bg-slate-950/80 border border-slate-800 text-xs font-mono">
+          {/* Light Matte Metadata Panel */}
+          <div
+            className="grid grid-cols-3 gap-2 py-3 px-3.5 rounded-md text-xs"
+            style={{
+              backgroundColor: "#E9E5DA",
+              border: "1px solid #D7D4CB",
+              fontFamily: "var(--font-mono)",
+            }}
+          >
             <div>
-              <div className="text-[10px] text-slate-500">PARCELS</div>
-              <div className="text-sm font-bold text-white mt-0.5">4 Parcels</div>
+              <div className="text-[10px] font-semibold uppercase" style={{ color: "#77786F" }}>
+                PARCELS
+              </div>
+              <div className="text-sm font-bold mt-0.5" style={{ color: "#252622" }}>
+                4 Parcels
+              </div>
             </div>
             <div>
-              <div className="text-[10px] text-slate-500">CRS</div>
-              <div className="text-sm font-bold text-cyan-300 mt-0.5">EPSG:32643</div>
+              <div className="text-[10px] font-semibold uppercase" style={{ color: "#77786F" }}>
+                CRS
+              </div>
+              <div className="text-sm font-bold mt-0.5" style={{ color: "#252622" }}>
+                EPSG:32643
+              </div>
             </div>
             <div>
-              <div className="text-[10px] text-slate-500">REGISTRY</div>
-              <div className="text-sm font-bold text-emerald-300 mt-0.5">3D ULPIN</div>
+              <div className="text-[10px] font-semibold uppercase" style={{ color: "#77786F" }}>
+                REGISTRY
+              </div>
+              <div className="text-sm font-bold mt-0.5" style={{ color: "#252622" }}>
+                3D ULPIN
+              </div>
             </div>
           </div>
 
           <div className="flex items-center justify-between pt-2">
             <Link
               href="/workspace/2d"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-purple-300 hover:text-white"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold transition-colors"
+              style={{ color: "#A85D48" }}
             >
               <span>Open in 2D GIS Map &rarr;</span>
             </Link>
             <Link
               href="/pipeline"
-              className="text-xs font-mono text-slate-400 hover:text-slate-200"
+              className="text-xs font-medium transition-colors"
+              style={{ color: "#252622", fontFamily: "var(--font-mono)" }}
             >
               View Verification Audit
             </Link>

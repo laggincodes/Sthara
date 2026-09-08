@@ -1,4 +1,4 @@
-# System Architecture Document
+﻿# System Architecture Document
 
 ## 1. Architectural Principles & Vision
 **3D Cadastral Intelligence** is designed upon the foundational principle of **Deterministic Geometric Authority**:
@@ -68,7 +68,7 @@
 
 ### Database & Storage Architecture
 - **Production Mode**: PostgreSQL 16 with **PostGIS 3.4** extension (spatial indexes, 3D geometry types).
-- **SIH Hackathon Fast-Track Mode**: Local in-memory GeoDataFrame cache and file-backed GeoJSON store (`data/processed/sih_sample_cadastre.geojson`). Guarantees zero installation friction during live evaluation while strictly conforming to PostGIS schemas.
+- **STHARA Fast-Track Mode**: Local in-memory GeoDataFrame cache and file-backed GeoJSON store (`data/processed/sthara_sample_cadastre.geojson`). Guarantees zero installation friction during live evaluation while strictly conforming to PostGIS schemas.
 
 ### AI Assistance (Optional)
 - **Provider**: Google Gemini Flash API (`google-genai` Python SDK).
@@ -193,7 +193,7 @@ backend/
 
 ## 5B. Multi-Source Spatial Data Fusion Architecture (Step 18)
 
-Following the SIH Technical Approach (01 Ingestion → 02 Geo-ref → 03 Fusion):
+Following the STHARA Technical Approach (01 Ingestion → 02 Geo-ref → 03 Fusion):
 
 ```
 +-------------------------------------------------------------------------------+
@@ -269,8 +269,8 @@ The data architecture is designed for dual-mode deployment:
   - `property_volumes`: Stores polyhedral volumes in `GEOMETRY(PolyhedralSurfaceZ, 4326)`, vertical intervals, stratum types, and assigned 3D ULPINs.
   - `validation_logs`: Stores historical validation audit trails and detected clash geometries.
 
-### Mode 2: Hackathon Zero-Config (In-Memory + GeoJSON Cache)
-- Fast-track file store located at `data/processed/sih_sample_cadastre.geojson`.
+### Mode 2: Zero-Config (In-Memory + GeoJSON Cache)
+- Fast-track file store located at `data/processed/sthara_sample_cadastre.geojson`.
 - Loaded into memory during FastAPI startup lifespan event.
 - Instant query response without requiring PostgreSQL service configuration on demo machines.
 
@@ -397,7 +397,7 @@ Changing visual appearance, moving the camera, or reordering geometry arrays nev
 | Regulatory Recommendations | `gemini_advisor.py` | **Permitted**: Suggests municipal reference bylaws |
 ## 5C. AI/ML Extraction Subsystem & Deterministic Boundary (Step 19)
 
-In adherence to the SIH technical approach, the system maintains an absolute architectural boundary between AI/ML extraction and deterministic geometry:
+In adherence to the STHARA Technical Approach, the system maintains an absolute architectural boundary between AI/ML extraction and deterministic geometry:
 
 1. **Separation of Responsibilities**:
    - **AI/ML Layer**: Proposes candidate physical features (footprints, floor strata, unit partitions, vertical envelopes).
@@ -416,7 +416,7 @@ In adherence to the SIH technical approach, the system maintains an absolute arc
 
 ## 5D. Subsurface & Underground Spatial Modeling Architecture (Step 20)
 
-Conforming to the SIH technical presentation, the platform models subterranean assets with native vertical coordinate consistency and strict cadastral separation:
+Conforming to the STHARA technical approach, the platform models subterranean assets with native vertical coordinate consistency and strict cadastral separation:
 
 1. **Native Z-Up Elevation Representation**:
    - All spatial meshes store coordinates in native metric coordinates ($Z_\text{base} < Z_\text{top} \le Z_\text{ground}$).
@@ -442,7 +442,7 @@ Conforming to the SIH technical presentation, the platform models subterranean a
 
 ## 5E. Unified Topology & Spatial Conflict Engine Architecture (Step 22)
 
-Conforming to Stage 06 of the SIH technical approach (06 TOPOLOGY: Overlap Check, Containment, Duplicates), the system consolidates all geometric verification into a single, deterministic, tolerance-aware engine:
+Conforming to Stage 06 of the STHARA Technical Approach (06 TOPOLOGY: Overlap Check, Containment, Duplicates), the system consolidates all geometric verification into a single, deterministic, tolerance-aware engine:
 
 1. **Multi-Tier Hierarchical Validation**:
    - Spans the complete cadastral stack: $\text{PARCEL} \rightarrow \text{BUILDING} \rightarrow \text{FLOOR} \rightarrow \text{UNIT} \rightarrow \text{PROPERTY\_VOLUME} \rightarrow \text{UNDERGROUND}$.

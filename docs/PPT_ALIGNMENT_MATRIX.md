@@ -1,15 +1,15 @@
-# SIH Presentation Alignment & Truthful Capability Matrix
+﻿# Platform Capability Alignment & Truthful Capability Matrix
 
 **Document Version:** 1.0.0  
 **Date:** September 2026  
 **Status:** Canonical Benchmark Audit  
-**Author:** 3D Cadastral Intelligence Team (SIH Prototype)  
+**Author:** 3D Cadastral Intelligence Team (STHARA Prototype)  
 
 ---
 
 ## 1. Executive Summary & Audit Mandate
 
-This document provides a comprehensive, stage-by-stage audit comparing the **3D Cadastral Intelligence Platform** implementation against the claims and specifications in the official **Smart India Hackathon (SIH) Presentation**.
+This document provides a comprehensive, stage-by-stage audit comparing the **3D Cadastral Intelligence Platform** implementation against the claims and specifications in the official **STHARA Presentation**.
 
 ### Guiding Principles of Truthful Demonstration:
 1. **Zero Hallucination / Fake AI:** AI/ML components are implemented as explainable heuristic delineators and candidate gating layers. Where deep models are not running live, the system explicitly gates them as candidate extraction filters.
@@ -32,9 +32,9 @@ Every feature and PPT claim is audited under one of five definitive status categ
 
 ---
 
-## 3. SIH PPT 8 Technical Stages Alignment
+## 3. STHARA specification 8 Technical Stages Alignment
 
-The SIH presentation defines an 8-stage pipeline:
+The STHARA platform defines an 8-stage pipeline:
 `
 GIS + Drone/Aerial + LiDAR + DEM/DSM + Floor Plans + GNSS/CORS
                          ↓
@@ -70,7 +70,7 @@ GIS + Drone/Aerial + LiDAR + DEM/DSM + Floor Plans + GNSS/CORS
 
 ## 4. Problem Statement Alignment
 
-| Problem Claimed in SIH PPT | How Real World Fails | Platform Solution Implemented | Status |
+| Problem Claimed in STHARA specification | How Real World Fails | Platform Solution Implemented | Status |
 | :--- | :--- | :--- | :--- |
 | **2D Limitation for High-Rise Assets** | Multiple owners occupy identical 2D (X,Y) parcel coordinates; 2D maps cannot represent vertical strata titles. | Extrudes stratified 3D floor slabs and apartment unit volumes with unique metric Z-extents and volumes (m3). | COMPLETE |
 | **Overlapping Rights & Disputed Boundaries** | Uncoordinated municipal and private surveys cause boundary overlaps and title litigation. | Unified Topology Engine detects mutual overlaps (> 0.01 sqm) and duplicate geometries, producing diagnostic conflict reports with spatial coordinates. | COMPLETE |

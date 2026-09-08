@@ -1,8 +1,8 @@
-# 3D Cadastral Intelligence — Final End-to-End Demo Guide & Runbook
+﻿# 3D Cadastral Intelligence — Final End-to-End Demo Guide & Runbook
 
 **Document Version:** 1.0.0  
 **Date:** September 2026  
-**Audience:** SIH Evaluators, Hackathon Jury, Government Land Records Authorities  
+**Audience:** Platform Evaluators, Technical Evaluators, Government Land Records Authorities  
 **System Status:** Production-Ready Presentation Candidate  
 
 ---
@@ -38,12 +38,12 @@ npm run dev
 ### Stage 1: The Problem (00:00 - 01:00)
 - **Visual:** Open `http://localhost:3000/workspace/2d`.
 - **Narrative:**
-  > "Traditional Indian land administration (Bhu-Naksha / 2D ULPIN) relies strictly on 2D surface parcels. When a 30-storey tower is built, dozens of owners occupy the exact same 2D footprint. 2D maps cannot represent vertical ownership, cannot prevent horizontal floor encroachments, and completely ignore underground metro corridors, basements, and utility trunks. Our project implements the 3D Cadastral Intelligence Platform specified in the SIH mandate."
+  > "Traditional Indian land administration (Bhu-Naksha / 2D ULPIN) relies strictly on 2D surface parcels. When a 30-storey tower is built, dozens of owners occupy the exact same 2D footprint. 2D maps cannot represent vertical ownership, cannot prevent horizontal floor encroachments, and completely ignore underground metro corridors, basements, and utility trunks. Our project implements the 3D Cadastral Intelligence Platform specified in the STHARA mandate."
 
 ### Stage 2: 1-Click End-to-End Pipeline Execution (01:00 - 02:30)
-- **Action:** Click **"Run Demo"** on the persistent top audit bar, or navigate to `http://localhost:3000/pipeline` and click **"▶ Run SIH Demo"**.
+- **Action:** Click **"Run Demo"** on the persistent top audit bar, or navigate to `http://localhost:3000/pipeline` and click **"▶ Run platform demo"**.
 - **Observation:**
-  - The pipeline audit console executes all **8 SIH technical stages** synchronously:
+  - The pipeline audit console executes all **8 STHARA technical stages** synchronously:
     1. `01 INGESTION`: Ingests parcels (`demo_parcels.geojson`), footprints (`demo_buildings.geojson`), Copernicus DEM raster, and unit floor plans.
     2. `02 GEO-REF`: Verifies topological integrity and projects coordinates to EPSG:32643 metric grid.
     3. `03 FUSION`: Associates footprints with parent parcels and samples Copernicus DEM orthometric elevations.
@@ -129,7 +129,7 @@ Demonstrate the honest boundary between real geospatial datasets and synthetic c
 ## 6. Live Demo FAQ & Defense Strategy
 
 **Q1: Did you build the AI/ML extraction layer?**  
-*Answer:* "The SIH mandate explicitly defines the separation: AI = EXTRACTION, 3D ENGINE = MODELLING, TOPOLOGY = VALIDATION. Our AI/ML layer provides explainable vertical height delineation and candidate unit segmentation gating. We strictly avoid black-box hallucinating LLMs for geometry."
+*Answer:* "The STHARA mandate explicitly defines the separation: AI = EXTRACTION, 3D ENGINE = MODELLING, TOPOLOGY = VALIDATION. Our AI/ML layer provides explainable vertical height delineation and candidate unit segmentation gating. We strictly avoid black-box hallucinating LLMs for geometry."
 
 **Q2: Is this 3D ULPIN recognized by the Ministry?**  
 *Answer:* "No. The 3D ULPIN generated here is a research prototype implementing a deterministic SHA-256 spatial hash of normalized property entity components (parcel, building, floor, property ID). Raw geometric coordinates (centroids, bounding cubes, mesh vertices) are explicitly excluded to prevent floating-point instability. It is clearly flagged as non-official in every UI card and API response."

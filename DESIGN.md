@@ -1,7 +1,7 @@
 ﻿# UI/UX Design System Specification
 
 ## 1. Design Philosophy & Aesthetic
-**3D Cadastral Intelligence** adopts a high-precision, technical geospatial aesthetic tailored for a high-impact Smart India Hackathon (SIH) live presentation. The user experience is modeled after professional defense, aerospace, and GIS command consoles (such as Sentinel, Cesium ion, and ArcGIS Pro Web), balancing deep analytical density with clean, modern clarity.
+**3D Cadastral Intelligence** adopts a high-precision, technical geospatial aesthetic tailored for a high-impact STHARA live presentation. The user experience is modeled after professional defense, aerospace, and GIS command consoles (such as Sentinel, Cesium ion, and ArcGIS Pro Web), balancing deep analytical density with clean, modern clarity.
 
 Key Tenets:
 - **Spatial Immersion First**: The 2D map and 3D WebGL viewport command the center of attention. Analytical controls, validation badges, and property inspector drawers frame the spatial viewport without obscuring coordinates or boundaries.

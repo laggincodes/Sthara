@@ -1,8 +1,8 @@
-# Unit-Level 3D Property Volumes & Physical Extrusion
+﻿# Unit-Level 3D Property Volumes & Physical Extrusion
 
-## 1. Overview & SIH Context
+## 1. Overview & Overview
 
-Step 17 implements the physical 3D representation for the Unit / Apartment domain entity introduced in Step 16, completing the full five-tier cadastral hierarchy required by the Smart India Hackathon (SIH) presentation:
+Step 17 implements the physical 3D representation for the Unit / Apartment domain entity introduced in Step 16, completing the full five-tier cadastral hierarchy required by the STHARA presentation:
 
 ```text
 PARCEL

@@ -1,4 +1,4 @@
-"""
+﻿"""
 Underground & Subsurface Spatial Modeling API Routes.
 
 Exposes REST endpoints for:
@@ -8,7 +8,7 @@ Exposes REST endpoints for:
 4. Demonstration bundle retrieval (/demo)
 5. Single feature lookup (/{feature_id})
 
-Adheres strictly to Canonical 3D Geometry Contract v1.0, SIH spatial hierarchy,
+Adheres strictly to Canonical 3D Geometry Contract v1.0, STHARA spatial hierarchy,
 and strict distinction between private property volumes (Basements) and public infrastructure (Utilities).
 """
 

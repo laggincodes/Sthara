@@ -4,7 +4,7 @@
   "dataset_name": "map.osm",
   "source_name": "map.osm",
   "content_hash": "1846037bde2a16493a51a23ab6717d04ebe67c270b5c0f27c334a07cd6b6ee70",
-  "converted_at": "2026-09-08T21:04:07.509251Z",
+  "converted_at": "2026-09-09T00:11:31.769513Z",
   "target_crs": "EPSG:32643",
   "viewer_origin": [
     706452.2555607692,
@@ -17,7 +17,7 @@
     "faces": 1896,
     "surface_area_sqm": 123756.23,
     "volume_cubic_m": 228534.23,
-    "processing_time_s": 0.366,
+    "processing_time_s": 0.612,
     "bounding_box": {
       "min": [
         -175.679,
@@ -46,7 +46,7 @@
       "features": null,
       "vertices": null,
       "faces": null,
-      "duration_ms": 0.09,
+      "duration_ms": 0.19,
       "details": {
         "source_type": "file_path",
         "path": "C:\\Users\\Yatha\\.gemini\\antigravity\\scratch\\3d-cadastral-intelligence\\data\\raw\\real\\map.osm",
@@ -61,7 +61,7 @@
       "features": null,
       "vertices": null,
       "faces": null,
-      "duration_ms": 4.69,
+      "duration_ms": 11.09,
       "details": {
         "nodes_count": 719,
         "ways_count": 183,
@@ -76,7 +76,7 @@
       "features": 155,
       "vertices": null,
       "faces": null,
-      "duration_ms": 4.05,
+      "duration_ms": 12.85,
       "details": {
         "extracted_buildings": 155,
         "degenerate_count": 0
@@ -89,7 +89,7 @@
       "features": null,
       "vertices": null,
       "faces": null,
-      "duration_ms": 20.28,
+      "duration_ms": 38.31,
       "details": {
         "source_crs": "EPSG:4326",
         "target_crs": "EPSG:32643",
@@ -109,7 +109,7 @@
       "features": null,
       "vertices": null,
       "faces": null,
-      "duration_ms": 4.99,
+      "duration_ms": 10.89,
       "details": {
         "explicit_osm_heights": 0,
         "levels_derived_heights": 0,
@@ -125,7 +125,7 @@
       "features": 155,
       "vertices": 1260,
       "faces": 1896,
-      "duration_ms": 64.82,
+      "duration_ms": 112.75,
       "details": {
         "solids_count": 155,
         "total_vertices": 1260,
@@ -140,7 +140,7 @@
       "features": null,
       "vertices": null,
       "faces": null,
-      "duration_ms": 7.35,
+      "duration_ms": 10.24,
       "details": {
         "valid_solids": 155,
         "invalid_solids": 0
@@ -153,7 +153,7 @@
       "features": null,
       "vertices": null,
       "faces": null,
-      "duration_ms": 204.61,
+      "duration_ms": 317.9,
       "details": {
         "dataset_id": "ds_map_1846037b",
         "glb_bytes": 96260,
@@ -32580,4 +32580,4 @@
       "failed": 0
     }
   }
-}
+}}

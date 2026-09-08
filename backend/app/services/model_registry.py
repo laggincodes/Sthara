@@ -1,8 +1,8 @@
-"""
+﻿"""
 Model Registry for AI/ML and Computer Vision Extraction Subsystems.
 
 Provides registry tracking for all extraction models, algorithms, and
-benchmarks. In accordance with SIH criteria and rigorous engineering standards,
+benchmarks. In accordance with rigorous engineering standards,
 models document their framework, input requirements, limitations, and
 actual local availability status.
 

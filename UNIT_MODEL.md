@@ -1,10 +1,10 @@
-# Unit / Apartment Domain Entity & Vertical Property Model
+﻿# Unit / Apartment Domain Entity & Vertical Property Model
 
-## 1. Overview & SIH Context
+## 1. Overview & Overview
 
 In multi-storey urban cadastral environments, land parcels and whole-building envelopes alone cannot adequately represent distinct vertical spatial properties. Under high-density urban residential and commercial developments, multiple distinct private entities (apartments, flats, commercial suites, offices) occupy the same horizontal planar footprint at different elevations.
 
-To satisfy the Smart India Hackathon (SIH) prototype requirements, the 3D Cadastral Intelligence pipeline extends the core spatial hierarchy:
+To satisfy the STHARA prototype requirements, the 3D Cadastral Intelligence pipeline extends the core spatial hierarchy:
 
 ```text
 PARCEL
@@ -118,7 +118,7 @@ The `UnitService` enforces strict spatial consistency rules before admitting any
 
 ## 5. Conceptual 3D Property Record Mapping
 
-In accordance with the SIH presentation model, validated units can be mapped into **Conceptual 3D Property Records**:
+In accordance with the STHARA platform model, validated units can be mapped into **Conceptual 3D Property Records**:
 
 ```json
 {

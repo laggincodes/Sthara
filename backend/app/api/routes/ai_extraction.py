@@ -1,4 +1,4 @@
-"""
+﻿"""
 AI/ML Extraction API Routes for 3D Cadastral Intelligence.
 
 Exposes REST endpoints for:
@@ -11,7 +11,7 @@ Exposes REST endpoints for:
 7. Spatial comparison vs source/OSM (/compare)
 8. Reproducible demonstration extraction bundle (/demo)
 
-Adheres strictly to the SIH Separation of Concerns:
+Adheres strictly to the STHARA Separation of Concerns:
 - AI extracts candidate evidence only.
 - Deterministic geometry engine validates and builds models.
 - Legal cadastre requires authoritative registration.

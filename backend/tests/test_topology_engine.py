@@ -1,7 +1,7 @@
-"""
+﻿"""
 Comprehensive Unit & Integration Test Suite for the Unified Topology & Spatial Conflict Engine.
 
-Conforms to SIH PPT 06 TOPOLOGY:
+Conforms to STHARA Stage 06 TOPOLOGY:
 - Overlap Check
 - Containment
 - Duplicates

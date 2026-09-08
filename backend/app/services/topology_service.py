@@ -1,7 +1,7 @@
-"""
+﻿"""
 Unified Topology & Spatial Conflict Engine Service.
 
-Conforms strictly to SIH PPT 06 TOPOLOGY:
+Conforms strictly to STHARA Stage 06 TOPOLOGY:
 - Overlap Check (2D positive-area overlap vs valid party-wall touch, 3D vertical/volume clashes)
 - Containment (Footprint containment, vertical interval containment, basement/parcel containment)
 - Duplicates (Duplicate IDs, Same-ID different geometry, Duplicate geometry with distinct IDs)

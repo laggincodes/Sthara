@@ -1,11 +1,11 @@
-# Implementation Roadmap & Phases
+﻿# Implementation Roadmap & Phases
 
 This document outlines the step-by-step development roadmap for **3D Cadastral Intelligence**. 
 
 Prioritization tags:
-- **[MUST HAVE]**: Essential for the core Monday SIH live demonstration. Non-negotiable.
+- **[MUST HAVE]**: Essential for the core Monday live demonstration. Non-negotiable.
 - **[NICE TO HAVE]**: High-value enhancements to implement if time permits after core MVP verification.
-- **[FUTURE]**: Post-hackathon commercial / enterprise roadmap items.
+- **[FUTURE]**: Post-platform commercial / enterprise roadmap items.
 
 ---
 
@@ -52,7 +52,7 @@ Prioritization tags:
 
 ## PHASE 3 — Spatial Data Ingestion & Bundled Datasets
 - **Priority**: **[MUST HAVE]**
-- **Objective**: Ingest multi-source cadastral datasets, validate CRSs, and prepare realistic SIH demo fixtures.
+- **Objective**: Ingest multi-source cadastral datasets, validate CRSs, and prepare realistic platform demo fixtures.
 - **Tasks**:
   1. Create realistic sample GeoJSON files in `data/processed/`:
      - `urban_parcel_standard.geojson`: A legal parcel polygon with a 4-storey building and 1 basement floor (Compliant case).
@@ -198,7 +198,7 @@ Prioritization tags:
 
 ## PHASE 12 — Demo Polish & Presentation Hardening (Completed — Step 15)
 - **Priority**: **[MUST HAVE]** — **[COMPLETED]**
-- **Objective**: Polish UI presentation, optimize animations, and harden presets for a flawless live hackathon demo.
+- **Objective**: Polish UI presentation, optimize animations, and harden presets for a flawless live platform demo.
 - **Tasks**:
   1. Implement single-click **"Run Demo"** action in `WorkspaceHeader` and `useCadastre`, sequentially executing and lighting up the 8-stage pipeline before transitioning smoothly to the 3D property view.
   2. Implement **"Reset Demo"** action clearing selections and restoring clean demo baseline.
@@ -236,7 +236,7 @@ Prioritization tags:
   - Created synthetic reference unit dataset for Tower 1 Floor 5 (`data/processed/demo_units.geojson`).
   - Added REST API routes for unit validation, batch validation, querying by building/floor, demo retrieval, and 3D property records (`backend/app/api/routes/units.py`).
   - Built 15 comprehensive unit tests (`backend/tests/test_unit_model.py`) — all 135 backend tests pass.
-  - Added frontend TypeScript definitions, API client methods, hook integration, MapLibre layer with cyan polygon styling, and inspector card with SIH hierarchy chain and statutory non-ownership disclaimer.
+  - Added frontend TypeScript definitions, API client methods, hook integration, MapLibre layer with cyan polygon styling, and inspector card with cadastral hierarchy chain and statutory non-ownership disclaimer.
   - Authored comprehensive documentation in `docs/UNIT_MODEL.md` and updated existing specs.
 
 ---
@@ -306,7 +306,7 @@ Prioritization tags:
 ---
 ## Step 19: AI/ML Extraction Layer & Spatial Validation Gate (Completed — Step 19)
 - **Priority**: **[MUST HAVE]** — **[COMPLETED]**
-- **Objective**: Implement a real, explainable AI/ML candidate extraction subsystem adhering strictly to SIH separation of concerns: `AI = Candidate Extraction`, `3D Engine = Modelling`, `Topology Engine = Validation`, `Cadastre = Authoritative Records`.
+- **Objective**: Implement a real, explainable AI/ML candidate extraction subsystem adhering strictly to STHARA Separation of Concerns: `AI = Candidate Extraction`, `3D Engine = Modelling`, `Topology Engine = Validation`, `Cadastre = Authoritative Records`.
 - **Tasks**:
   1. Implemented AI extraction schemas (`backend/app/schemas/ai_extraction.py`):
      - `ExtractionType` (BUILDING, FLOOR, UNIT, VERTICAL_FEATURE).
@@ -315,7 +315,7 @@ Prioritization tags:
      - `ModelMetadata`, `ExtractionProvenance`, `CandidateFeature`, `ExtractionResult`.
      - Validation and Spatial Comparison request/response schemas.
   2. Implemented Model Registry (`backend/app/services/model_registry.py`):
-     - Registers classical CV (`bld_cv_otsu_v1`), 1D elevation density (`flr_hist_cluster_v1`), orthogonal partitioning (`unit_partition_v1`), vertical coordination (`vert_delineator_v1`), and SIH demo benchmark (`sih_benchmark_demo_v1`).
+     - Registers classical CV (`bld_cv_otsu_v1`), 1D elevation density (`flr_hist_cluster_v1`), orthogonal partitioning (`unit_partition_v1`), vertical coordination (`vert_delineator_v1`), and platform demo benchmark (`cadastral_benchmark_demo_v1`).
      - Deep learning models (`pytorch_mask_rcnn_v1`, `open3d_pointnet_v1`) honestly report `MODEL_UNAVAILABLE` when heavy dependencies are absent.
   3. Implemented AI Extraction Service (`backend/app/services/ai_extraction_service.py`):
      - Classical Otsu raster thresholding, contour vectorization, and compactness scoring.
@@ -341,12 +341,12 @@ Prioritization tags:
      - Added strict TypeScript types (`types/ai_extraction.ts`) and API client methods (`lib/api/client.ts`).
   7. Authored technical documentation in `docs/AI_EXTRACTION.md` and `AI_EXTRACTION.md`.
 - **Expected Output**: Explainable candidate extraction pipeline that feeds candidate evidence into the deterministic 3D engine without bypassing topological validation or fabricating legal ownership.
-- **Acceptance Criteria**: 0 TypeScript errors; 0 ESLint warnings; 178/178 tests pass; Next.js production build succeeds; SIH architectural separation strictly preserved.
+- **Acceptance Criteria**: 0 TypeScript errors; 0 ESLint warnings; 178/178 tests pass; Next.js production build succeeds; STHARA Architectural Separation strictly preserved.
 
 ---
 ## Step 20: Underground / Subsurface Spatial Modeling (Completed — Step 20)
 - **Priority**: **[MUST HAVE]** — **[COMPLETED]**
-- **Objective**: Introduce deterministic subsurface spatial modeling conforming strictly to the SIH presentation requirements: `Basement`, `Underground Utility`, and `Subsurface Volume`.
+- **Objective**: Introduce deterministic subsurface spatial modeling conforming strictly to the STHARA platform requirements: `Basement`, `Underground Utility`, and `Subsurface Volume`.
 - **Tasks**:
   1. Implemented domain schemas (`backend/app/schemas/underground.py`):
      - `UndergroundFeatureType` (BASEMENT, UNDERGROUND_UTILITY, SUBSURFACE_VOLUME, PARKING_VAULT, METRO_TUNNEL, FOUNDATION_PIER, PEDESTRIAN_SUBWAY, OTHER_SUBSURFACE).
@@ -380,13 +380,13 @@ Prioritization tags:
      - Added TypeScript definitions (`types/underground.ts`) and API client methods (`lib/api/client.ts`).
   7. Authored technical documentation in `docs/UNDERGROUND_MODEL.md` and `UNDERGROUND_MODEL.md`.
 - **Expected Output**: Watertight subterranean solids, explicit depth coordinate math, transparent clash detection, and clear legal distinction between private strata and public infrastructure.
-- **Acceptance Criteria**: 0 TypeScript errors; 0 ESLint warnings; 196/196 tests pass; Next.js production build succeeds; SIH subsurface cadastre requirements fully satisfied.
+- **Acceptance Criteria**: 0 TypeScript errors; 0 ESLint warnings; 196/196 tests pass; Next.js production build succeeds; STHARA subsurface cadastre requirements fully satisfied.
 
 ---
 
 ## Step 22: Unified Topology & Spatial Conflict Engine (Completed — Step 22)
 - **Priority**: **[MUST HAVE]** — **[COMPLETED]**
-- **Objective**: Consolidate and harden all existing spatial and geometric checks across the full cadastral hierarchy (`PARCEL → BUILDING → FLOOR → UNIT → PROPERTY_VOLUME → UNDERGROUND`) into one coherent, deterministic, tolerance-aware Topology & Spatial Conflict Engine conforming to SIH PPT 06 TOPOLOGY: Overlap Check, Containment, Duplicates.
+- **Objective**: Consolidate and harden all existing spatial and geometric checks across the full cadastral hierarchy (`PARCEL → BUILDING → FLOOR → UNIT → PROPERTY_VOLUME → UNDERGROUND`) into one coherent, deterministic, tolerance-aware Topology & Spatial Conflict Engine conforming to STHARA Stage 06 TOPOLOGY: Overlap Check, Containment, Duplicates.
 - **Tasks**:
   1. Implemented domain schemas (`backend/app/schemas/topology.py`):
      - Enums: `TopologyStatus` (VALID, WARNING, CONFLICT, UNAVAILABLE), `TopologySeverity` (INFO, WARNING, ERROR), `TopologyCheckType` (DUPLICATE_CHECK, CONTAINMENT_2D, OVERLAP_2D, VERTICAL_INTERVAL, MESH_3D_INTEGRITY, HIERARCHY_INTEGRITY, UNDERGROUND_CLASH), `TopologyConflictType` (DUPLICATE_ID, SAME_ID_DIFFERENT_GEOMETRY, DUPLICATE_GEOMETRY, OUTSIDE_PARENT, PARTIAL_CONTAINMENT, POSITIVE_AREA_OVERLAP, POSITIVE_VOLUME_OVERLAP, VERTICAL_OVERLAP, VERTICAL_OUTSIDE_PARENT, INVALID_MESH, MISSING_REFERENCE), and `EntityType`.
@@ -415,13 +415,13 @@ Prioritization tags:
      - Integrated into Pipeline Audit Page (`/pipeline`) and Property Inspector (`ParcelInspector.tsx`) across 2D and 3D workspaces (`/workspace/2d`, `/workspace/3d`).
   6. Authored comprehensive documentation in `docs/TOPOLOGY.md` and updated `ARCHITECTURE.md`, `DATA_MODEL.md`, `API_SPEC.md`, `PHASES.md`.
 - **Expected Output**: Unified, deterministic, tolerance-aware spatial conflict engine covering all cadastral tiers without duplicate validation logic.
-- **Acceptance Criteria**: 0 TypeScript errors; 0 ESLint warnings; 215/215 backend tests pass; Next.js production build succeeds; SIH Stage 06 TOPOLOGY requirements fully satisfied.
+- **Acceptance Criteria**: 0 TypeScript errors; 0 ESLint warnings; 215/215 backend tests pass; Next.js production build succeeds; platform stage 06 TOPOLOGY requirements fully satisfied.
 
 ---
 
 ## Step 23: Real Multi-Source End-to-End Validation (Completed — Step 23)
 - **Priority**: **[MUST HAVE]** — **[COMPLETED]**
-- **Objective**: Prove that the existing system can execute the intended multi-source 3D cadastral pipeline end-to-end with real and synthetic data without silently fabricating missing information, adhering to SIH PPT technical approach.
+- **Objective**: Prove that the existing system can execute the intended multi-source 3D cadastral pipeline end-to-end with real and synthetic data without silently fabricating missing information, adhering to STHARA specification technical approach.
 - **Tasks**:
   1. Developed Real Data Pipeline Orchestrator (`backend/app/integration/real_data_pipeline.py`):
      - Stage 01 (Ingestion): Discovered and inventoried real crowd-sourced OpenStreetMap data in New Delhi (155 building footprints, `map.osm` & `osm_buildings.geojson`) alongside synthetic Pune demo datasets. Honestly declared absent sources (real LiDAR `.las/.laz`, architectural CAD/BIM floor plans, GNSS RINEX logs, subsurface registers, and Delhi parcel cadastre) as `UNAVAILABLE`, yielding pipeline status `PARTIAL`.

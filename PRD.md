@@ -1,4 +1,4 @@
-# Product Requirements Document (PRD)
+﻿# Product Requirements Document (PRD)
 
 ## 1. Project Name
 **3D Cadastral Intelligence**  
@@ -19,7 +19,7 @@ Traditional cadastre and land administration systems represent property boundari
 ## 3. Problem Context
 Under modern land governance initiatives (such as India's Digital India Land Records Modernization Programme - DILRMP and the SVAMITVA Scheme), significant progress has been made in drone mapping and 2D GIS cadastral mapping. However, high-density urban growth demands moving towards a **3D Cadastre conforming to international standards like ISO 19152 (Land Administration Domain Model - LADM)**.
 
-During the Smart India Hackathon (SIH), a practical, deterministic, high-impact demonstration is needed to show how existing spatial data (GIS parcel boundaries, drone/aerial imagery, LiDAR/DSM/DEM, floor plans, and GNSS coordinates) can be ingested, validated, extruded into legal/physical property volumes, assigned stratified **Prototype 3D ULPINs**, and inspected in an interactive geospatial web viewer.
+During the STHARA, a practical, deterministic, high-impact demonstration is needed to show how existing spatial data (GIS parcel boundaries, drone/aerial imagery, LiDAR/DSM/DEM, floor plans, and GNSS coordinates) can be ingested, validated, extruded into legal/physical property volumes, assigned stratified **Prototype 3D ULPINs**, and inspected in an interactive geospatial web viewer.
 
 ---
 
@@ -48,13 +48,13 @@ During the Smart India Hackathon (SIH), a practical, deterministic, high-impact 
 2. **Automated Cadastral Validation**: Detect boundary violations (containment checks, vertical boundary exceedance, parcel overhang, and volumetric overlap) using deterministic spatial algorithms.
 3. **Prototype 3D ULPIN Generation**: Formulate and assign reproducible, coordinate-and-elevation-indexed 3D ULPIN strings for surface, above-ground, and underground volumes.
 4. **Seamless 2D/3D Geospatial Visualization**: Provide zero-lag, intuitive browser-based 2D map views and 3D volumetric inspection.
-5. **Hackathon Demo Readiness**: Guarantee an end-to-end executable pipeline with realistic bundled sample datasets demonstrating the entire lifecycle in under 60 seconds.
+5. **platform demo Readiness**: Guarantee an end-to-end executable pipeline with realistic bundled sample datasets demonstrating the entire lifecycle in under 60 seconds.
 
 ---
 
 ## 7. MVP Scope
 
-### In-Scope (Must Have for SIH MVP)
+### In-Scope (Must Have for Platform MVP)
 - Ingestion of 2D cadastral parcel layers (GeoJSON format with defined EPSG).
 - Ingestion of building footprint layers with vertical attribution (number of floors, ground elevation, floor height, roof height).
 - Synthetic/realistic sample datasets representing urban mixed-use plots:
@@ -129,7 +129,7 @@ oof_height) | Defines extruded footprint & vertical slicing | Supported directly
 | **LiDAR / 3D Point Data** | LAS / LAZ / Pre-extracted Height Mesh | Roof/building height extraction | Pre-processed into height attributes for MVP |
 | **GNSS / CORS Coordinates** | EPSG projected coordinates | Georeferencing & spatial consistency | Reprojected to target projected CRS (e.g., UTM) |
 
-*Note for MVP*: The pipeline demonstrates complete end-to-end flow using realistic pre-processed GeoJSON with embedded height and vertical stratification attributes, eliminating heavy GIS server overhead during short hackathon demonstrations.
+*Note for MVP*: The pipeline demonstrates complete end-to-end flow using realistic pre-processed GeoJSON with embedded height and vertical stratification attributes, eliminating heavy GIS server overhead during short live demonstrations.
 
 ---
 
@@ -208,7 +208,7 @@ Where:
 - **Z_min / Z_max**: Elevation in decimeters relative to datum (e.g., AMSL or local ground datum).
 - **Unit Index**: Sub-unit identifier within that level.
 
-*Note for Hackathon*: The generated 3D ULPIN is explicitly documented as a **Prototype Specification** demonstrating vertical cadastral indexing.
+*Note for platform*: The generated 3D ULPIN is explicitly documented as a **Prototype Specification** demonstrating vertical cadastral indexing.
 
 ---
 

@@ -66,24 +66,30 @@ export function RealPipelineCard() {
   const stages = pipelineData?.stages ? Object.entries(pipelineData.stages) : [];
 
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-6 backdrop-blur-sm space-y-6">
+    <div className="rounded-md p-6 space-y-6 shadow-sm" style={{ backgroundColor: "#F8F6F0", border: "1px solid #D7D4CB", fontFamily: "var(--font-sans)", color: "#252622" }}>
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4" style={{ borderBottom: "1px solid #D7D4CB" }}>
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="inline-flex items-center rounded bg-emerald-950/80 px-2 py-0.5 text-[11px] font-mono font-medium text-emerald-400 border border-emerald-500/30">
+            <span
+              className="inline-flex items-center rounded px-2 py-0.5 text-[11px] font-semibold"
+              style={{ fontFamily: "var(--font-mono)", backgroundColor: "#EFF2EE", color: "#788575", border: "1px solid #C0CAC0" }}
+            >
               STEP 23: REAL MULTI-SOURCE E2E VALIDATION
             </span>
             {pipelineData && (
-              <span className="inline-flex items-center rounded bg-amber-950/80 px-2 py-0.5 text-[11px] font-mono font-medium text-amber-400 border border-amber-500/30">
+              <span
+                className="inline-flex items-center rounded px-2 py-0.5 text-[11px] font-semibold"
+                style={{ fontFamily: "var(--font-mono)", backgroundColor: "#F5EFE3", color: "#B28A52", border: "1px solid #D8C8A8" }}
+              >
                 STATUS: {pipelineData.fusion_status}
               </span>
             )}
           </div>
-          <h2 className="text-xl font-bold text-slate-100">
+          <h2 className="text-xl font-bold" style={{ fontFamily: "var(--font-heading)", color: "#252622" }}>
             Real Multi-Source Cadastral Pipeline Verification
           </h2>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-sm mt-1" style={{ color: "#62635D" }}>
             Authentic end-to-end execution combining 155 real OSM buildings (Delhi) and synthetic cadastre (Pune).
             Refuses data fabrication; reports missing LiDAR/BIM as unavailable and enforces honest geographic separation.
           </p>
@@ -94,7 +100,8 @@ export function RealPipelineCard() {
             type="button"
             onClick={() => fetchPipelineResult(false)}
             disabled={loading}
-            className="rounded bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-300 transition-colors disabled:opacity-50"
+            className="rounded-md px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer"
+            style={{ backgroundColor: "#E9E5DA", color: "#252622", border: "1px solid #D7D4CB" }}
           >
             {loading ? "Loading..." : "Load Cached Report"}
           </button>
@@ -102,7 +109,8 @@ export function RealPipelineCard() {
             type="button"
             onClick={() => fetchPipelineResult(true)}
             disabled={loading}
-            className="rounded bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-white transition-colors disabled:opacity-50"
+            className="rounded-md px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer"
+            style={{ backgroundColor: "#A85D48", color: "#FFFFFF" }}
           >
             {loading ? "Executing Pipeline..." : "Execute Fresh Validation"}
           </button>
@@ -110,7 +118,7 @@ export function RealPipelineCard() {
       </div>
 
       {error && (
-        <div className="rounded-lg bg-rose-950/40 border border-rose-800/40 p-4 text-sm text-rose-300">
+        <div className="rounded-md p-4 text-sm font-semibold" style={{ backgroundColor: "#FAF0EE", color: "#C05040", border: "1px solid #DDBCB4" }}>
           ⚠️ {error}
         </div>
       )}
@@ -118,40 +126,40 @@ export function RealPipelineCard() {
       {/* Metrics Row */}
       {pipelineData && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-          <div className="rounded-lg bg-slate-950/60 border border-slate-800 p-3">
-            <span className="text-[10px] uppercase font-mono text-slate-500">Pipeline Verdict</span>
-            <div className="text-sm font-bold text-emerald-400 mt-1">
+          <div className="rounded-md p-3" style={{ backgroundColor: "#E9E5DA", border: "1px solid #D7D4CB" }}>
+            <span className="text-[10px] uppercase font-semibold block" style={{ fontFamily: "var(--font-mono)", color: "#77786F" }}>Pipeline Verdict</span>
+            <div className="text-sm font-bold mt-1" style={{ fontFamily: "var(--font-mono)", color: "#788575" }}>
               {pipelineData.pipeline_verdict}
             </div>
           </div>
-          <div className="rounded-lg bg-slate-950/60 border border-slate-800 p-3">
-            <span className="text-[10px] uppercase font-mono text-slate-500">Target CRS</span>
-            <div className="text-sm font-mono text-cyan-400 mt-1">
+          <div className="rounded-md p-3" style={{ backgroundColor: "#E9E5DA", border: "1px solid #D7D4CB" }}>
+            <span className="text-[10px] uppercase font-semibold block" style={{ fontFamily: "var(--font-mono)", color: "#77786F" }}>Target CRS</span>
+            <div className="text-sm font-bold mt-1" style={{ fontFamily: "var(--font-mono)", color: "#A85D48" }}>
               {pipelineData.target_crs}
             </div>
           </div>
-          <div className="rounded-lg bg-slate-950/60 border border-slate-800 p-3">
-            <span className="text-[10px] uppercase font-mono text-slate-500">Duration</span>
-            <div className="text-sm font-mono text-slate-300 mt-1">
+          <div className="rounded-md p-3" style={{ backgroundColor: "#E9E5DA", border: "1px solid #D7D4CB" }}>
+            <span className="text-[10px] uppercase font-semibold block" style={{ fontFamily: "var(--font-mono)", color: "#77786F" }}>Duration</span>
+            <div className="text-sm font-bold mt-1" style={{ fontFamily: "var(--font-mono)", color: "#252622" }}>
               {pipelineData.execution_duration_sec}s
             </div>
           </div>
-          <div className="rounded-lg bg-slate-950/60 border border-slate-800 p-3">
-            <span className="text-[10px] uppercase font-mono text-slate-500">Quality Level</span>
-            <div className="text-sm font-medium text-amber-300 mt-1">
+          <div className="rounded-md p-3" style={{ backgroundColor: "#E9E5DA", border: "1px solid #D7D4CB" }}>
+            <span className="text-[10px] uppercase font-semibold block" style={{ fontFamily: "var(--font-mono)", color: "#77786F" }}>Quality Level</span>
+            <div className="text-sm font-bold mt-1" style={{ fontFamily: "var(--font-mono)", color: "#B28A52" }}>
               {pipelineData.quality_level}
             </div>
           </div>
-          <div className="rounded-lg bg-slate-950/60 border border-slate-800 p-3">
-            <span className="text-[10px] uppercase font-mono text-slate-500">Regional Distance</span>
-            <div className="text-sm font-mono text-purple-300 mt-1">
+          <div className="rounded-md p-3" style={{ backgroundColor: "#E9E5DA", border: "1px solid #D7D4CB" }}>
+            <span className="text-[10px] uppercase font-semibold block" style={{ fontFamily: "var(--font-mono)", color: "#77786F" }}>Regional Distance</span>
+            <div className="text-sm font-bold mt-1" style={{ fontFamily: "var(--font-mono)", color: "#A85D48" }}>
               {pipelineData.stages?.["03_fusion_and_spatial_coverage"]?.separation_distance_km || 1173.86} km
             </div>
           </div>
-          <div className="rounded-lg bg-slate-950/60 border border-slate-800 p-3">
-            <span className="text-[10px] uppercase font-mono text-slate-500">Canonical 3D Contract</span>
-            <div className="text-sm font-bold text-emerald-400 mt-1">
-              v1.0 (COMPLIANT)
+          <div className="rounded-md p-3" style={{ backgroundColor: "#E9E5DA", border: "1px solid #D7D4CB" }}>
+            <span className="text-[10px] uppercase font-semibold block" style={{ fontFamily: "var(--font-mono)", color: "#77786F" }}>Canonical Contract</span>
+            <div className="text-sm font-bold mt-1" style={{ fontFamily: "var(--font-mono)", color: "#788575" }}>
+              v1.0 COMPLIANT
             </div>
           </div>
         </div>
@@ -159,32 +167,32 @@ export function RealPipelineCard() {
 
       {/* Principles & Safeguards Banner */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-        <div className="rounded-lg bg-slate-950/80 border border-slate-800/80 p-3">
-          <div className="font-semibold text-slate-200 mb-1 flex items-center gap-1.5">
-            <span className="text-emerald-400">●</span> Non-Cadastral OSM Isolation
+        <div className="rounded-md p-3 space-y-1" style={{ backgroundColor: "#E9E5DA", border: "1px solid #D7D4CB" }}>
+          <div className="font-semibold mb-1 flex items-center gap-1.5" style={{ color: "#252622" }}>
+            <span style={{ color: "#788575" }}>●</span> Non-Cadastral OSM Isolation
           </div>
-          <p className="text-slate-400">
+          <p style={{ color: "#62635D" }}>
             Real OSM buildings from Tagore Garden (Delhi) represent crowd-sourced surface observations.
-            They are tagged <code className="text-cyan-300">is_cadastral=False</code> and strictly barred from receiving cadastral ULPINs.
+            They are tagged <code style={{ color: "#A85D48", fontFamily: "var(--font-mono)" }}>is_cadastral=False</code> and strictly barred from receiving cadastral ULPINs.
           </p>
         </div>
 
-        <div className="rounded-lg bg-slate-950/80 border border-slate-800/80 p-3">
-          <div className="font-semibold text-slate-200 mb-1 flex items-center gap-1.5">
-            <span className="text-purple-400">●</span> Honest Disjoint Separation
+        <div className="rounded-md p-3 space-y-1" style={{ backgroundColor: "#E9E5DA", border: "1px solid #D7D4CB" }}>
+          <div className="font-semibold mb-1 flex items-center gap-1.5" style={{ color: "#252622" }}>
+            <span style={{ color: "#B28A52" }}>●</span> Honest Disjoint Separation
           </div>
-          <p className="text-slate-400">
-            Delhi and Pune testbeds are ~1174 km apart. The system reports <code className="text-amber-300">NO_OVERLAP</code> and
+          <p style={{ color: "#62635D" }}>
+            Delhi and Pune testbeds are ~1174 km apart. The system reports <code style={{ color: "#B28A52", fontFamily: "var(--font-mono)" }}>NO_OVERLAP</code> and
             strictly refrains from fabricating artificial coordinate shifts to force synthetic intersection.
           </p>
         </div>
 
-        <div className="rounded-lg bg-slate-950/80 border border-slate-800/80 p-3">
-          <div className="font-semibold text-slate-200 mb-1 flex items-center gap-1.5">
-            <span className="text-cyan-400">●</span> Transparent Model Availability
+        <div className="rounded-md p-3 space-y-1" style={{ backgroundColor: "#E9E5DA", border: "1px solid #D7D4CB" }}>
+          <div className="font-semibold mb-1 flex items-center gap-1.5" style={{ color: "#252622" }}>
+            <span style={{ color: "#A85D48" }}>●</span> Transparent Model Availability
           </div>
-          <p className="text-slate-400">
-            Heavy deep learning models (PyTorch Mask-RCNN, Open3D PointNet) report <code className="text-amber-300">MODEL_UNAVAILABLE</code> when
+          <p style={{ color: "#62635D" }}>
+            Heavy deep learning models (PyTorch Mask-RCNN, Open3D PointNet) report <code style={{ color: "#B28A52", fontFamily: "var(--font-mono)" }}>MODEL_UNAVAILABLE</code> when
             weights are absent, preventing fake AI simulation while utilizing deterministic CV extractors.
           </p>
         </div>
@@ -193,7 +201,7 @@ export function RealPipelineCard() {
       {/* Stage-by-Stage Breakdown */}
       {pipelineData && (
         <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider font-mono">
+          <h3 className="text-sm font-semibold uppercase tracking-wider" style={{ fontFamily: "var(--font-mono)", color: "#77786F" }}>
             Pipeline Stage Verification Log
           </h3>
 
@@ -203,33 +211,35 @@ export function RealPipelineCard() {
               return (
                 <div
                   key={key}
-                  className="rounded-lg border border-slate-800 bg-slate-950/40 overflow-hidden"
+                  className="rounded-md border overflow-hidden transition-all"
+                  style={{ backgroundColor: "#E9E5DA", border: "1px solid #D7D4CB" }}
                 >
                   <button
                     type="button"
                     onClick={() => setExpandedStage(isExpanded ? null : key)}
-                    className="w-full flex items-center justify-between p-3.5 text-left hover:bg-slate-900/50 transition-colors"
+                    className="w-full flex items-center justify-between p-3.5 text-left transition-colors cursor-pointer"
+                    style={{ backgroundColor: isExpanded ? "#F8F6F0" : "#E9E5DA" }}
                   >
                     <div className="flex items-center gap-3">
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-xs font-bold">
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold" style={{ backgroundColor: "#EFF2EE", color: "#788575", border: "1px solid #C0CAC0" }}>
                         ✓
                       </span>
-                      <span className="font-mono text-xs font-bold text-slate-200 uppercase">
+                      <span className="font-bold text-xs uppercase" style={{ fontFamily: "var(--font-mono)", color: "#252622" }}>
                         {key.replace(/_/g, " ")}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-mono text-slate-500">
+                      <span className="text-[11px] font-semibold" style={{ fontFamily: "var(--font-mono)", color: "#77786F" }}>
                         {st?.status || "COMPLETED"}
                       </span>
-                      <span className="text-slate-500 text-xs">{isExpanded ? "▲" : "▼"}</span>
+                      <span className="text-xs" style={{ color: "#77786F" }}>{isExpanded ? "▲" : "▼"}</span>
                     </div>
                   </button>
 
                   {isExpanded && (
-                    <div className="p-4 pt-0 border-t border-slate-800/60 text-xs text-slate-300 bg-slate-950/80">
-                      <pre className="p-3 bg-slate-900 rounded font-mono text-[11px] text-slate-300 overflow-x-auto max-h-64">
+                    <div className="p-4 pt-2 text-xs" style={{ borderTop: "1px solid #D7D4CB", backgroundColor: "#F8F6F0" }}>
+                      <pre className="p-3 rounded font-mono text-[11px] overflow-x-auto max-h-64" style={{ backgroundColor: "#E9E5DA", color: "#252622", border: "1px solid #D7D4CB" }}>
                         {JSON.stringify(st, null, 2)}
                       </pre>
                     </div>

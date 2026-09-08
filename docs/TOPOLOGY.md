@@ -1,12 +1,12 @@
-# Unified Topology & Spatial Conflict Engine
+﻿# Unified Topology & Spatial Conflict Engine
 
-## 1. Executive Summary & SIH Architectural Principle
+## 1. Executive Summary & STHARA Architectural Principle
 
-The **Unified Topology & Spatial Conflict Engine** in **3D Cadastral Intelligence** implements Stage 06 of the Smart India Hackathon (SIH) technical approach:
+The **Unified Topology & Spatial Conflict Engine** in **3D Cadastral Intelligence** implements Stage 06 of the STHARA technical approach:
 
 $$\mathbf{01\ Ingestion} \rightarrow \mathbf{02\ Geo\text{-}Ref} \rightarrow \mathbf{03\ Fusion} \rightarrow \mathbf{04\ Extraction} \rightarrow \mathbf{05\ 3D\ Engine} \rightarrow \mathbf{06\ Topology} \rightarrow \mathbf{07\ 3D\ ULPIN}$$
 
-The SIH specification mandates explicit topological validation:
+The STHARA specification mandates explicit topological validation:
 - **Overlap Check**: Deterministic detection of positive-area horizontal overlaps, 3D vertical collisions, and shared party-wall contacts.
 - **Containment**: Strict verification of child entities within parent footprint boundaries and vertical elevation horizons.
 - **Duplicates**: Identification of duplicate entity IDs, duplicate identical geometries, and same-ID different geometry anomalies.
@@ -46,7 +46,7 @@ $$\text{PARCEL} \longrightarrow \text{BUILDING} \longrightarrow \text{FLOOR} \lo
 
 All topological evaluations adhere to centralized, configurable engineering tolerances:
 
-| Parameter | Default Value | SIH Cadastral Rationale |
+| Parameter | Default Value | STHARA Cadastral Rationale |
 | :--- | :--- | :--- |
 | `area_tolerance_sqm` | $0.0001\,\text{m}^2$ ($1\,\text{cm}^2$) | Distinguishes touching boundary lines from true polygon area overlaps. |
 | `geometry_equality_tolerance_m` | $0.001\,\text{m}$ ($1\,\text{mm}$) | Hausdorff distance limit for identifying duplicate spatial footprints. |
