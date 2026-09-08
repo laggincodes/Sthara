@@ -22,6 +22,7 @@ export function AppHeader() {
     property3DError,
     isDemoRunning,
     runEndToEndDemo,
+    activeProjectName,
   } = useCadastreContext();
 
   const currentError =
@@ -34,23 +35,26 @@ export function AppHeader() {
     floors3DError ||
     property3DError;
 
-  const getBreadcrumbs = () => {
-    if (pathname === "/") return "Dashboard";
-    if (pathname === "/data") return "Data Workspace";
-    if (pathname === "/workspace/2d") return "2D Cadastral GIS";
-    if (pathname === "/workspace/3d") return "3D Cadastre Stage";
-    if (pathname === "/pipeline") return "Pipeline Audit";
-    if (pathname.startsWith("/workspace")) return "Cadastral Workspace";
-    return "STHARA";
+  const getBreadcrumbItems = () => {
+    const project = activeProjectName || "Delhi Test Area";
+    if (pathname === "/") return ["Projects", project, "Dashboard"];
+    if (pathname === "/data") return ["Projects", project, "Import & Convert"];
+    if (pathname === "/workspace/3d") return ["Projects", project, "3D Workspace"];
+    if (pathname === "/workspace/2d") return ["Projects", project, "2D Footprints"];
+    if (pathname === "/projects") return ["Projects Directory"];
+    if (pathname === "/pipeline") return ["Projects", project, "Audit & Diagnostics"];
+    return ["Projects", project, "Workspace"];
   };
 
   const navLinks = [
     { name: "Dashboard", href: "/" },
-    { name: "Data", href: "/data" },
-    { name: "2D Map", href: "/workspace/2d" },
-    { name: "3D Cadastre", href: "/workspace/3d" },
-    { name: "Pipeline Audit", href: "/pipeline" },
+    { name: "Import", href: "/data" },
+    { name: "3D Workspace", href: "/workspace/3d" },
+    { name: "Projects", href: "/projects" },
+    { name: "Audit", href: "/pipeline" },
   ];
+
+  const breadcrumbs = getBreadcrumbItems();
 
   return (
     <header className="border-b border-slate-800/80 bg-[#111827]/90 backdrop-blur-md z-30 shrink-0 select-none">
@@ -68,10 +72,22 @@ export function AppHeader() {
             </svg>
           </button>
 
-          <div className="flex items-center gap-2 text-xs font-mono">
-            <span className="text-slate-500 hidden sm:inline">STHARA</span>
-            <span className="text-slate-700 hidden sm:inline">/</span>
-            <span className="text-white font-semibold">{getBreadcrumbs()}</span>
+          <div className="flex items-center gap-1.5 text-xs font-mono">
+            <span className="text-cyan-400 font-bold">STHARA</span>
+            {breadcrumbs.map((crumb, idx) => (
+              <React.Fragment key={idx}>
+                <span className="text-slate-700">/</span>
+                <span
+                  className={
+                    idx === breadcrumbs.length - 1
+                      ? "text-white font-semibold"
+                      : "text-slate-400 hidden sm:inline"
+                  }
+                >
+                  {crumb}
+                </span>
+              </React.Fragment>
+            ))}
           </div>
 
           {/* Active Dataset Provenance Chips */}

@@ -28,6 +28,10 @@ import {
   TopologyValidationRequest,
   OsmUploadResult,
   OsmUploadSummary,
+  Osm3DConversionConfig,
+  Osm3DConversionResponse,
+  ConversionStageReport,
+  BuildingMetadataItem,
 } from "@/types/cadastre";
 import { cadastreApi, ApiError } from "@/lib/api/client";
 
@@ -153,6 +157,20 @@ export function useCadastre() {
   const [osmUploadFile, setOsmUploadFile] = useState<File | null>(null);
   const [osmUploadResult, setOsmUploadResult] = useState<OsmUploadSummary | null>(null);
   const [osmUploadError, setOsmUploadError] = useState<string | null>(null);
+
+  // Real OSM -> 3D Pipeline & Export State
+  const [conversionConfig, setConversionConfigState] = useState<Osm3DConversionConfig>({
+    height_source: "automatic",
+    default_floor_height_m: 3.0,
+    default_building_height_m: 9.0,
+    target_crs: "auto",
+    export_format: "both",
+  });
+  const [isConverting, setIsConverting] = useState<boolean>(false);
+  const [conversionError, setConversionError] = useState<string | null>(null);
+  const [conversionResult, setConversionResult] = useState<Osm3DConversionResponse | null>(null);
+  const [conversionStages, setConversionStages] = useState<ConversionStageReport[]>([]);
+  const [activeProjectName, setActiveProjectName] = useState<string>("Delhi Test Area");
 
   // Layer Visibility
   const [layerVisibility, setLayerVisibility] = useState<{
@@ -508,6 +526,92 @@ export function useCadastre() {
       setOsmUploadPhase("error");
     }
   }, [osmUploadFile]);
+
+  // 3d. Set Conversion Configuration
+  const setConversionConfig = useCallback((cfg: Partial<Osm3DConversionConfig>) => {
+    setConversionConfigState((prev) => ({ ...prev, ...cfg }));
+  }, []);
+
+  // 3e. Execute Full OSM -> 3D Conversion Pipeline
+  const runOsm3DConversion = useCallback(
+    async (cfgOverride?: Partial<Osm3DConversionConfig>) => {
+      const activeCfg = { ...conversionConfig, ...(cfgOverride || {}) };
+      setIsConverting(true);
+      setConversionError(null);
+
+      try {
+        const resp = await cadastreApi.convertOsmTo3D(activeCfg);
+        setConversionResult(resp);
+        setConversionStages(resp.stages || []);
+
+        if (resp.mesh_data) {
+          setBuilding3DData(resp.mesh_data);
+          setViewMode("3d");
+          setSubView3D("building");
+        }
+
+        if (resp.source_name) {
+          setBuildingDatasetName(`${resp.source_name} (3D Converted)`);
+          setActiveProjectName(resp.source_name.replace(/\.[^/.]+$/, "") + " 3D City");
+        }
+
+        if (resp.buildings_metadata && resp.buildings_metadata.length > 0) {
+          setSelectedBuildingId(resp.buildings_metadata[0].building_id);
+        }
+      } catch (err: unknown) {
+        const msg =
+          err instanceof ApiError
+            ? err.message
+            : err instanceof Error
+            ? err.message
+            : "OSM -> 3D conversion pipeline failed.";
+        setConversionError(msg);
+      } finally {
+        setIsConverting(false);
+      }
+    },
+    [conversionConfig]
+  );
+
+  // 3f. Direct Upload and Convert
+  const uploadAndConvertOsmFile = useCallback(
+    async (file: File, cfgOverride?: Partial<Osm3DConversionConfig>) => {
+      const activeCfg = { ...conversionConfig, ...(cfgOverride || {}) };
+      setIsConverting(true);
+      setConversionError(null);
+      setOsmUploadFile(file);
+
+      try {
+        const resp = await cadastreApi.uploadAndConvertOsm(file, activeCfg);
+        setConversionResult(resp);
+        setConversionStages(resp.stages || []);
+
+        if (resp.mesh_data) {
+          setBuilding3DData(resp.mesh_data);
+          setViewMode("3d");
+          setSubView3D("building");
+        }
+
+        setBuildingDatasetName(`${file.name} (3D Converted)`);
+        setActiveProjectName(file.name.replace(/\.[^/.]+$/, "") + " 3D City");
+
+        if (resp.buildings_metadata && resp.buildings_metadata.length > 0) {
+          setSelectedBuildingId(resp.buildings_metadata[0].building_id);
+        }
+      } catch (err: unknown) {
+        const msg =
+          err instanceof ApiError
+            ? err.message
+            : err instanceof Error
+            ? err.message
+            : "Direct OSM upload and conversion failed.";
+        setConversionError(msg);
+      } finally {
+        setIsConverting(false);
+      }
+    },
+    [conversionConfig]
+  );
 
   // 4. Trigger Explicit Backend Validation
   const runValidation = useCallback(async () => {
@@ -1524,6 +1628,16 @@ export function useCadastre() {
     return units3DData.results.find((u) => u.unit_id === selectedUnitId) || null;
   }, [units3DData, selectedUnitId]);
 
+  // Selected Building Metadata from OSM Conversion
+  const selectedBuildingMetadata = useMemo<BuildingMetadataItem | null>(() => {
+    if (!selectedBuildingId || !conversionResult?.buildings_metadata) return null;
+    return (
+      conversionResult.buildings_metadata.find(
+        (b) => b.building_id === selectedBuildingId || b.osm_id === selectedBuildingId
+      ) || null
+    );
+  }, [selectedBuildingId, conversionResult]);
+
   return {
     backendConnected,
     isLoading,
@@ -1645,6 +1759,18 @@ export function useCadastre() {
     osmUploadError,
     selectOsmFile,
     importOsmFile,
+    // Real OSM -> 3D Pipeline & Export
+    conversionConfig,
+    setConversionConfig,
+    isConverting,
+    conversionError,
+    conversionResult,
+    conversionStages,
+    runOsm3DConversion,
+    uploadAndConvertOsmFile,
+    activeProjectName,
+    setActiveProjectName,
+    selectedBuildingMetadata,
   };
 }
 

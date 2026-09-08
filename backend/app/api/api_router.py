@@ -15,6 +15,7 @@ from app.api.routes import (
     fusion,
     underground,
     topology,
+    osm_converter,
 )
 
 api_router = APIRouter()
@@ -27,6 +28,8 @@ api_router.include_router(datasets.router)
 api_router.include_router(spatial.router)
 api_router.include_router(elevation.router)
 api_router.include_router(buildings.router)
+api_router.include_router(osm_converter.router)
+api_router.include_router(osm_converter.export_router)
 api_router.include_router(properties.router)
 api_router.include_router(units.router)
 api_router.include_router(fusion.router)

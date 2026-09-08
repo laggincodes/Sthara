@@ -61,6 +61,8 @@ import {
   ControlPointValidationRequest,
   ControlPointValidationResponse,
   OsmUploadResult,
+  Osm3DConversionConfig,
+  Osm3DConversionResponse,
 } from "@/types/cadastre";
 
 const BASE_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1").replace(/\/$/, "");
@@ -278,6 +280,67 @@ export const cadastreApi = {
       );
     }
     return await handleResponse<OsmUploadResult>(response);
+  },
+
+  /**
+   * Executes the full end-to-end OSM -> 3D conversion pipeline with configurable parameters.
+   */
+  async convertOsmTo3D(config: Osm3DConversionConfig): Promise<Osm3DConversionResponse> {
+    const response = await fetch(`${BASE_URL}/osm/convert-3d`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(config),
+    });
+    return await handleResponse<Osm3DConversionResponse>(response);
+  },
+
+  /**
+   * Uploads an OSM/GeoJSON file and executes immediate 3D conversion.
+   */
+  async uploadAndConvertOsm(
+    file: File,
+    config: Osm3DConversionConfig
+  ): Promise<Osm3DConversionResponse> {
+    const formData = new FormData();
+    formData.append("file", file, file.name);
+    formData.append("height_source", config.height_source);
+    formData.append("default_floor_height_m", String(config.default_floor_height_m));
+    formData.append("default_building_height_m", String(config.default_building_height_m));
+    formData.append("target_crs", config.target_crs);
+    formData.append("export_format", config.export_format);
+
+    const response = await fetch(`${BASE_URL}/osm/upload-and-convert`, {
+      method: "POST",
+      headers: { Accept: "application/json" },
+      body: formData,
+    });
+    return await handleResponse<Osm3DConversionResponse>(response);
+  },
+
+  /**
+   * Retrieves the diagnostics and stage performance report from the latest 3D conversion.
+   */
+  async getConversionStatus(): Promise<{ status: string; data: Osm3DConversionResponse }> {
+    const response = await fetch(`${BASE_URL}/osm/conversion-status`, {
+      method: "GET",
+      headers: { Accept: "application/json" },
+    });
+    return await handleResponse<{ status: string; data: Osm3DConversionResponse }>(response);
+  },
+
+  getLatestGlbUrl(): string {
+    return `${BASE_URL}/export/glb/latest`;
+  },
+
+  getLatestGltfUrl(): string {
+    return `${BASE_URL}/export/gltf/latest`;
+  },
+
+  getLatestMetadataUrl(): string {
+    return `${BASE_URL}/export/metadata/latest`;
   },
 
   /**

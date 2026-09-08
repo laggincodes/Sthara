@@ -1,0 +1,354 @@
+{
+  "success": true,
+  "source_name": "test_upload.osm",
+  "target_crs": "EPSG:32643",
+  "viewer_origin": [
+    706438.9,
+    3170147.65,
+    0.0
+  ],
+  "summary": {
+    "buildings": 1,
+    "vertices": 8,
+    "faces": 12,
+    "surface_area_sqm": 99228.71,
+    "volume_cubic_m": 650332.35,
+    "processing_time_s": 0.014,
+    "bounding_box": {
+      "min": [
+        -99.725,
+        -112.556,
+        0.0
+      ],
+      "max": [
+        99.733,
+        112.553,
+        15.0
+      ]
+    },
+    "target_crs": "EPSG:32643",
+    "source_crs": "EPSG:4326",
+    "viewer_origin": [
+      706438.9,
+      3170147.65,
+      0.0
+    ]
+  },
+  "stages": [
+    {
+      "stage": "import",
+      "status": "complete",
+      "message": "Dataset 'test_upload.osm' loaded (0.6 KB).",
+      "features": null,
+      "vertices": null,
+      "faces": null,
+      "duration_ms": 0.01,
+      "details": {
+        "source_type": "memory_buffer",
+        "size_bytes": 569
+      }
+    },
+    {
+      "stage": "parse",
+      "status": "complete",
+      "message": "OSM XML parsed: 4 nodes, 1 ways, 0 relations.",
+      "features": null,
+      "vertices": null,
+      "faces": null,
+      "duration_ms": 0.1,
+      "details": {
+        "nodes_count": 4,
+        "ways_count": 1,
+        "relations_count": 0,
+        "geojson_features_count": 0
+      }
+    },
+    {
+      "stage": "feature_extraction",
+      "status": "complete",
+      "message": "Discovered 1 valid closed footprint(s) (skipped 0).",
+      "features": 1,
+      "vertices": null,
+      "faces": null,
+      "duration_ms": 0.23,
+      "details": {
+        "valid_buildings": 1,
+        "skipped": 0
+      }
+    },
+    {
+      "stage": "crs_transformation",
+      "status": "complete",
+      "message": "Reprojected from EPSG:4326 into metric EPSG:32643 (Origin: [706438.9, 3170147.65]).",
+      "features": null,
+      "vertices": null,
+      "faces": null,
+      "duration_ms": 6.06,
+      "details": {
+        "source_crs": "EPSG:4326",
+        "target_crs": "EPSG:32643",
+        "viewer_origin": [
+          706438.9,
+          3170147.65,
+          0.0
+        ],
+        "center_longitude": 77.112,
+        "center_latitude": 28.642
+      }
+    },
+    {
+      "stage": "height_extraction",
+      "status": "complete",
+      "message": "Determined heights: 1 from OSM tags, 0 from floor levels, 0 default.",
+      "features": null,
+      "vertices": null,
+      "faces": null,
+      "duration_ms": 0.04,
+      "details": {
+        "explicit_osm_heights": 1,
+        "levels_derived_heights": 0,
+        "default_fallback_heights": 0,
+        "default_floor_height_m": 3.0,
+        "default_building_height_m": 9.0
+      }
+    },
+    {
+      "stage": "geometry_generation",
+      "status": "complete",
+      "message": "Generated 1 3D solids (8 vertices, 12 triangular faces).",
+      "features": 1,
+      "vertices": 8,
+      "faces": 12,
+      "duration_ms": 1.83,
+      "details": {
+        "solids_count": 1,
+        "total_vertices": 8,
+        "total_faces": 12,
+        "total_volume_cubic_m": 650332.35
+      }
+    },
+    {
+      "stage": "mesh_validation",
+      "status": "complete",
+      "message": "Mesh audit passed: 1/1 watertight closed solid(s).",
+      "features": null,
+      "vertices": null,
+      "faces": null,
+      "duration_ms": 0.12,
+      "details": {
+        "valid_solids": 1,
+        "invalid_solids": 0
+      }
+    },
+    {
+      "stage": "export_3d",
+      "status": "complete",
+      "message": "Exported standard Binary GLB 2.0 (1.2 KB) & glTF (0.0 KB).",
+      "features": null,
+      "vertices": null,
+      "faces": null,
+      "duration_ms": 5.42,
+      "details": {
+        "glb_bytes": 1256,
+        "gltf_bytes": 0,
+        "glb_path": "C:\\Users\\Yatha\\.gemini\\antigravity\\scratch\\3d-cadastral-intelligence\\data\\processed\\real\\model_3d.glb"
+      }
+    }
+  ],
+  "glb_url": "/api/v1/export/glb/latest",
+  "gltf_url": "/api/v1/export/gltf/latest",
+  "metadata_url": "/api/v1/export/metadata/latest",
+  "buildings_metadata": [
+    {
+      "building_id": "OSM-BUILDING-WAY-101",
+      "osm_id": "101",
+      "name": "Test Villa",
+      "height": 15.0,
+      "levels": 5,
+      "height_source": "OSM_HEIGHT_TAG",
+      "area_sqm": 43355.49,
+      "volume_cubic_m": 650332.35,
+      "source": "OpenStreetMap",
+      "is_cadastral": false
+    }
+  ],
+  "mesh_data": {
+    "schema_version": "1.0",
+    "results": [
+      {
+        "building_id": "OSM-BUILDING-WAY-101",
+        "geometry_status": "VALID",
+        "building": {
+          "building_id": "OSM-BUILDING-WAY-101",
+          "parcel_id": null,
+          "base_elevation": 0.0,
+          "top_elevation": 15.0,
+          "height": 15.0,
+          "height_source": "OSM_HEIGHT_TAG"
+        },
+        "geometry": {
+          "parts": [
+            {
+              "feature_id": "OSM-BUILDING-WAY-101",
+              "feature_type": "BUILDING",
+              "geometry_type": "SOLID",
+              "vertices": [
+                [
+                  -95.8086,
+                  -112.5563,
+                  0.0
+                ],
+                [
+                  99.7329,
+                  -109.0999,
+                  0.0
+                ],
+                [
+                  -95.8086,
+                  -112.5563,
+                  15.0
+                ],
+                [
+                  99.7329,
+                  -109.0999,
+                  15.0
+                ],
+                [
+                  95.8129,
+                  112.5533,
+                  0.0
+                ],
+                [
+                  95.8129,
+                  112.5533,
+                  15.0
+                ],
+                [
+                  -99.7249,
+                  109.0966,
+                  0.0
+                ],
+                [
+                  -99.7249,
+                  109.0966,
+                  15.0
+                ]
+              ],
+              "faces": [
+                [
+                  0,
+                  1,
+                  3
+                ],
+                [
+                  0,
+                  3,
+                  2
+                ],
+                [
+                  1,
+                  4,
+                  5
+                ],
+                [
+                  1,
+                  5,
+                  3
+                ],
+                [
+                  4,
+                  6,
+                  7
+                ],
+                [
+                  4,
+                  7,
+                  5
+                ],
+                [
+                  6,
+                  0,
+                  2
+                ],
+                [
+                  6,
+                  2,
+                  7
+                ],
+                [
+                  7,
+                  2,
+                  5
+                ],
+                [
+                  6,
+                  4,
+                  0
+                ],
+                [
+                  5,
+                  2,
+                  3
+                ],
+                [
+                  4,
+                  1,
+                  0
+                ]
+              ],
+              "coordinate_reference": {
+                "horizontal_crs": "EPSG:32643",
+                "vertical_reference": "Local Ground (0m AMSL base)",
+                "source_crs": "EPSG:4326",
+                "viewer_origin": [
+                  706438.9,
+                  3170147.65,
+                  0.0
+                ]
+              },
+              "units": {
+                "horizontal_unit": "meter",
+                "vertical_unit": "meter"
+              },
+              "bounds": {
+                "min": [
+                  -99.725,
+                  -112.556,
+                  0.0
+                ],
+                "max": [
+                  99.733,
+                  112.553,
+                  15.0
+                ]
+              },
+              "winding": "COUNTER_CLOCKWISE",
+              "surface_area_sqm": 99228.715,
+              "volume_cubic_m": 650332.354
+            }
+          ],
+          "bounds": {
+            "min": [
+              -99.725,
+              -112.556,
+              0.0
+            ],
+            "max": [
+              99.733,
+              112.553,
+              15.0
+            ]
+          },
+          "total_volume_cubic_m": 650332.35,
+          "total_surface_area_sqm": 99228.71
+        },
+        "warnings": []
+      }
+    ],
+    "summary": {
+      "requested": 1,
+      "successful": 1,
+      "failed": 0
+    }
+  }
+}
