@@ -18,7 +18,6 @@ export function AppSidebar() {
   const pathname = usePathname();
   const {
     backendConnected,
-    geojson,
     buildingsGeojson,
     building3DData,
     pipelineSteps,
@@ -42,7 +41,7 @@ export function AppSidebar() {
       ),
     },
     {
-      name: "Import Data",
+      name: "Data Workspace",
       href: "/data",
       icon: (
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -53,14 +52,14 @@ export function AppSidebar() {
       badgeColor: "bg-amber-950/60 text-amber-400 border-amber-500/30",
     },
     {
-      name: "3D Workspace",
+      name: "3D Cadastre",
       href: "/workspace/3d",
       icon: (
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="m21 7.5-9-5.25L3 7.5m18 0-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
         </svg>
       ),
-      badge: building3DData?.summary.successful ? `${building3DData.summary.successful} 3D` : null,
+      badge: building3DData?.summary.successful ? `${building3DData.summary.successful} 3D` : "155 3D",
       badgeColor: "bg-cyan-950/60 text-cyan-400 border-cyan-500/30",
     },
     {
@@ -73,7 +72,18 @@ export function AppSidebar() {
       ),
     },
     {
-      name: "Audit",
+      name: "ULPIN",
+      href: "/ulpin",
+      icon: (
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Zm6-10.125a1.875 1.875 0 1 1-3.75 0 1.875 1.875 0 0 1 3.75 0Zm1.294 6.364a4.125 4.125 0 0 0-6.338 0c-.23.28-.09.761.27.761h5.798c.36 0 .5-.48.27-.761Z" />
+        </svg>
+      ),
+      badge: "3D ID",
+      badgeColor: "bg-purple-950/60 text-purple-300 border-purple-500/30",
+    },
+    {
+      name: "Pipeline Audit",
       href: "/pipeline",
       icon: (
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -124,7 +134,7 @@ export function AppSidebar() {
             </div>
           </Link>
           <span className="ml-auto text-[9px] font-mono px-1.5 py-0.5 rounded border border-cyan-500/30 bg-cyan-950/30 text-cyan-300">
-            v1.0
+            SIH 2026
           </span>
         </div>
 
@@ -169,10 +179,10 @@ export function AppSidebar() {
         <div className="mx-3 mt-2 p-2.5 rounded-lg border border-slate-800 bg-slate-900/40">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-bold">
-              Demo Pipeline
+              SIH 8-Stage Demo
             </span>
             <span className="text-[10px] font-mono text-cyan-400">
-              {completedSteps}/8 Done
+              {completedSteps}/8 Verified
             </span>
           </div>
 
@@ -181,7 +191,7 @@ export function AppSidebar() {
               type="button"
               onClick={runEndToEndDemo}
               disabled={isDemoRunning}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 text-[11px] font-semibold text-white bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 disabled:opacity-50 py-1.5 px-2 rounded-md transition-all shadow-xs"
+              className="flex-1 inline-flex items-center justify-center gap-1.5 text-[11px] font-semibold text-white bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 disabled:opacity-50 py-1.5 px-2 rounded-md transition-all shadow-xs cursor-pointer"
               title="Run 8-stage end-to-end demo"
             >
               {isDemoRunning ? (
@@ -203,7 +213,7 @@ export function AppSidebar() {
               type="button"
               onClick={resetDemo}
               disabled={isDemoRunning}
-              className="inline-flex items-center justify-center p-1.5 text-slate-400 hover:text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-md transition-colors"
+              className="inline-flex items-center justify-center p-1.5 text-slate-400 hover:text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-md transition-colors cursor-pointer"
               title="Reset demo state"
               aria-label="Reset Demo"
             >

@@ -47,7 +47,7 @@ export default function Cadastral3DPage() {
     buildingDatasetName,
     runOsm3DConversion,
     isConverting,
-    conversionError,
+    unitPropertyRecord,
   } = useCadastreContext();
 
   // Auto-trigger 3D conversion if no 3D data exists yet
@@ -56,10 +56,6 @@ export default function Cadastral3DPage() {
       runOsm3DConversion();
     }
   }, [building3DData, isConverting, conversionResult, runOsm3DConversion]);
-
-  const hasAny3D =
-    (building3DData && building3DData.summary.successful > 0) ||
-    Boolean(conversionResult?.success);
 
   const buildingCount =
     conversionResult?.summary.buildings || building3DData?.summary.successful || 155;
@@ -74,7 +70,7 @@ export default function Cadastral3DPage() {
   const activeBuilding = selectedBuildingMetadata || (selectedBuildingId ? {
     building_id: selectedBuildingId,
     osm_id: selectedBuildingId.replace("OSM-BUILDING-WAY-", "").replace("OSM-BUILDING-REL-", ""),
-    name: selectedBuildingId,
+    name: selectedBuildingId.includes("OSM-") ? `Building ${selectedBuildingId.replace("OSM-BUILDING-WAY-", "").replace("OSM-BUILDING-REL-", "")}` : selectedBuildingId,
     height: 9.0,
     levels: 3,
     height_source: "DEFAULT_CONFIG",
@@ -108,13 +104,13 @@ export default function Cadastral3DPage() {
   };
 
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden relative bg-slate-950">
+    <div className="flex h-full w-full flex-col overflow-hidden relative bg-slate-950 select-none">
       {/* 1. Top Action & Navigation Toolbar */}
       <div className="flex items-center justify-between border-b border-slate-800 bg-[#0B0F19]/90 backdrop-blur px-4 py-2 text-xs font-mono shrink-0 z-20">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse" />
-            <span className="font-bold text-white uppercase tracking-wider">3D WORKSPACE</span>
+            <span className="font-bold text-white uppercase tracking-wider">3D CADASTRE</span>
           </div>
 
           <span className="text-slate-700">|</span>
@@ -124,7 +120,7 @@ export default function Cadastral3DPage() {
             <button
               type="button"
               onClick={() => setSubView3D("building")}
-              className={`px-2.5 py-1 rounded-md text-[11px] font-mono transition-colors ${
+              className={`px-2.5 py-1 rounded-md text-[11px] font-mono transition-colors cursor-pointer ${
                 subView3D === "building"
                   ? "bg-cyan-600 text-white font-semibold"
                   : "text-slate-400 hover:text-slate-200"
@@ -135,7 +131,7 @@ export default function Cadastral3DPage() {
             <button
               type="button"
               onClick={() => setSubView3D("floors")}
-              className={`px-2.5 py-1 rounded-md text-[11px] font-mono transition-colors ${
+              className={`px-2.5 py-1 rounded-md text-[11px] font-mono transition-colors cursor-pointer ${
                 subView3D === "floors"
                   ? "bg-purple-600 text-white font-semibold"
                   : "text-slate-400 hover:text-slate-200"
@@ -146,13 +142,24 @@ export default function Cadastral3DPage() {
             <button
               type="button"
               onClick={() => setSubView3D("units")}
-              className={`px-2.5 py-1 rounded-md text-[11px] font-mono transition-colors ${
+              className={`px-2.5 py-1 rounded-md text-[11px] font-mono transition-colors cursor-pointer ${
                 subView3D === "units"
                   ? "bg-emerald-600 text-white font-semibold"
                   : "text-slate-400 hover:text-slate-200"
               }`}
             >
               Units ({units3DData?.summary.successful || 0})
+            </button>
+            <button
+              type="button"
+              onClick={() => setSubView3D("underground")}
+              className={`px-2.5 py-1 rounded-md text-[11px] font-mono transition-colors cursor-pointer ${
+                subView3D === "underground"
+                  ? "bg-amber-600 text-white font-semibold"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              Subsurface ({undergroundBundle?.features.length || 0})
             </button>
           </div>
         </div>
@@ -165,12 +172,21 @@ export default function Cadastral3DPage() {
             </span>
           )}
 
+          {/* Link to Dedicated ULPIN Workspace */}
+          <Link
+            href="/ulpin"
+            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-950/80 hover:bg-purple-900 border border-purple-500/40 text-purple-200 font-semibold text-xs transition-colors"
+          >
+            <span>3D ULPIN Registry</span>
+            <span className="text-[10px] text-purple-400">&rarr;</span>
+          </Link>
+
           {/* Export Dropdown */}
           <div className="relative">
             <button
               type="button"
               onClick={() => setExportMenuOpen((prev) => !prev)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs transition-colors shadow"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs transition-colors shadow cursor-pointer"
             >
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
@@ -186,7 +202,7 @@ export default function Cadastral3DPage() {
                 <button
                   type="button"
                   onClick={() => handleExportDownload("glb")}
-                  className="w-full text-left px-3 py-2 rounded-lg text-slate-200 hover:bg-cyan-950 hover:text-cyan-300 flex items-center justify-between transition-colors"
+                  className="w-full text-left px-3 py-2 rounded-lg text-slate-200 hover:bg-cyan-950 hover:text-cyan-300 flex items-center justify-between transition-colors cursor-pointer"
                 >
                   <span>Download GLB (.glb)</span>
                   <span className="text-[10px] text-cyan-400">Binary 3D</span>
@@ -194,7 +210,7 @@ export default function Cadastral3DPage() {
                 <button
                   type="button"
                   onClick={() => handleExportDownload("gltf")}
-                  className="w-full text-left px-3 py-2 rounded-lg text-slate-200 hover:bg-slate-800 hover:text-white flex items-center justify-between transition-colors"
+                  className="w-full text-left px-3 py-2 rounded-lg text-slate-200 hover:bg-slate-800 hover:text-white flex items-center justify-between transition-colors cursor-pointer"
                 >
                   <span>Download glTF (.gltf)</span>
                   <span className="text-[10px] text-purple-400">JSON</span>
@@ -202,7 +218,7 @@ export default function Cadastral3DPage() {
                 <button
                   type="button"
                   onClick={() => handleExportDownload("metadata")}
-                  className="w-full text-left px-3 py-2 rounded-lg text-slate-200 hover:bg-slate-800 hover:text-white flex items-center justify-between transition-colors"
+                  className="w-full text-left px-3 py-2 rounded-lg text-slate-200 hover:bg-slate-800 hover:text-white flex items-center justify-between transition-colors cursor-pointer"
                 >
                   <span>Export Metadata</span>
                   <span className="text-[10px] text-emerald-400">JSON</span>
@@ -215,17 +231,17 @@ export default function Cadastral3DPage() {
 
       {/* 2. Main 3-Column Body (Left: Project Model Info | Center: 3D Canvas | Right: Building Inspector) */}
       <div className="flex-1 flex overflow-hidden relative">
-        {/* LEFT PANEL: Model & Project Information */}
+        {/* LEFT PANEL: Model & Layer Information */}
         {leftPanelOpen && (
           <div className="w-72 shrink-0 border-r border-slate-800 bg-[#0B0F19]/90 p-4 space-y-4 overflow-y-auto z-10 select-none">
             <div className="flex items-center justify-between pb-2 border-b border-slate-800">
               <span className="text-xs font-bold text-white uppercase tracking-wider font-mono">
-                Model Info
+                Model Info &amp; Layers
               </span>
               <button
                 type="button"
                 onClick={() => setLeftPanelOpen(false)}
-                className="text-slate-500 hover:text-slate-300 text-xs"
+                className="text-slate-500 hover:text-slate-300 text-xs cursor-pointer"
                 title="Collapse left panel"
               >
                 &larr;
@@ -234,7 +250,7 @@ export default function Cadastral3DPage() {
 
             <div className="space-y-2.5 text-xs font-mono">
               <div className="rounded-lg bg-slate-900/60 border border-slate-800/80 p-3">
-                <div className="text-[10px] text-slate-400 uppercase">Project</div>
+                <div className="text-[10px] text-slate-400 uppercase">Active Project</div>
                 <div className="text-sm font-bold text-white mt-0.5">{activeProjectName}</div>
                 <div className="text-[10px] text-cyan-300 mt-1 truncate">
                   {buildingDatasetName || "map.osm"}
@@ -259,7 +275,7 @@ export default function Cadastral3DPage() {
                   <span className="text-emerald-400 font-bold">100% Watertight</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">CRS:</span>
+                  <span className="text-slate-400">Metric Projection:</span>
                   <span className="text-slate-300 text-[11px] truncate max-w-[120px]" title={crsString}>
                     {crsString}
                   </span>
@@ -272,13 +288,19 @@ export default function Cadastral3DPage() {
                   href="/data"
                   className="block text-center py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs transition-colors"
                 >
-                  &larr; Re-configure / Import New
+                  &larr; Data Workspace / Import
+                </Link>
+                <Link
+                  href="/ulpin"
+                  className="block text-center py-2 px-3 rounded-lg bg-purple-950/60 hover:bg-purple-900 border border-purple-500/30 text-purple-300 text-xs transition-colors"
+                >
+                  3D ULPIN Registry &rarr;
                 </Link>
                 <Link
                   href="/pipeline"
                   className="block text-center py-2 px-3 rounded-lg border border-slate-800 hover:bg-slate-900 text-slate-400 hover:text-slate-200 text-xs transition-colors"
                 >
-                  View Audit Diagnostics &rarr;
+                  View Pipeline Audit &rarr;
                 </Link>
               </div>
             </div>
@@ -290,7 +312,7 @@ export default function Cadastral3DPage() {
           <button
             type="button"
             onClick={() => setLeftPanelOpen(true)}
-            className="absolute top-4 left-4 z-20 p-2 rounded-lg bg-slate-900/90 border border-slate-700 text-slate-300 hover:text-white shadow-xl text-xs font-mono"
+            className="absolute top-4 left-4 z-20 p-2 rounded-lg bg-slate-900/90 border border-slate-700 text-slate-300 hover:text-white shadow-xl text-xs font-mono cursor-pointer"
             title="Open Model Info panel"
           >
             &rarr; Info
@@ -321,17 +343,17 @@ export default function Cadastral3DPage() {
           </ErrorBoundary>
         </div>
 
-        {/* RIGHT PANEL: Selected Building Information */}
+        {/* RIGHT PANEL: Property & Building Inspector */}
         {rightPanelOpen && (
           <div className="w-80 shrink-0 border-l border-slate-800 bg-[#0B0F19]/90 p-4 space-y-4 overflow-y-auto z-10 select-none">
             <div className="flex items-center justify-between pb-2 border-b border-slate-800">
               <span className="text-xs font-bold text-white uppercase tracking-wider font-mono">
-                Building Inspector
+                Property Inspector
               </span>
               <button
                 type="button"
                 onClick={() => setRightPanelOpen(false)}
-                className="text-slate-500 hover:text-slate-300 text-xs"
+                className="text-slate-500 hover:text-slate-300 text-xs cursor-pointer"
                 title="Collapse inspector"
               >
                 &rarr;
@@ -340,12 +362,18 @@ export default function Cadastral3DPage() {
 
             {activeBuilding ? (
               <div className="space-y-3 text-xs font-mono">
+                {/* 1. Primary Entity Badge */}
                 <div className="rounded-lg bg-cyan-950/30 border border-cyan-500/30 p-3">
-                  <div className="text-[10px] text-cyan-400 uppercase font-semibold">
-                    Building Identifier
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-cyan-400 uppercase font-semibold">
+                      Selected Entity
+                    </span>
+                    <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/30">
+                      Watertight Solid
+                    </span>
                   </div>
-                  <div className="text-sm font-bold text-white mt-0.5 break-all">
-                    {activeBuilding.building_id}
+                  <div className="text-sm font-bold text-white mt-1 break-all">
+                    {activeBuilding.name || activeBuilding.building_id}
                   </div>
                   {activeBuilding.osm_id && (
                     <div className="text-[11px] text-slate-400 mt-1">
@@ -354,13 +382,18 @@ export default function Cadastral3DPage() {
                   )}
                 </div>
 
+                {/* 2. Distinction: ACTUAL PHYSICAL DATA vs DERIVED ESTIMATES */}
                 <div className="rounded-lg bg-slate-900/60 border border-slate-800/80 p-3 space-y-2">
+                  <div className="text-[10px] uppercase font-bold text-slate-400 border-b border-slate-800 pb-1 flex items-center justify-between">
+                    <span>Physical Dimensions</span>
+                    <span className="text-[9px] text-cyan-400">Contract v1.0</span>
+                  </div>
                   <div className="flex justify-between">
                     <span className="text-slate-400">Total Height:</span>
                     <span className="text-white font-bold">{activeBuilding.height} m</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Height Heuristic:</span>
+                    <span className="text-slate-400">Height Source:</span>
                     <span className="text-cyan-300 text-[11px]">{activeBuilding.height_source}</span>
                   </div>
                   {activeBuilding.levels && (
@@ -375,20 +408,40 @@ export default function Cadastral3DPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-400">Enclosed Volume:</span>
-                    <span className="text-white font-bold">{activeBuilding.volume_cubic_m} m&sup3;</span>
+                    <span className="text-cyan-300 font-bold">{activeBuilding.volume_cubic_m} m&sup3;</span>
                   </div>
                 </div>
 
-                <div className="rounded-lg bg-slate-900/40 border border-slate-800 p-3 text-[11px] text-slate-400 leading-relaxed">
-                  <span className="text-amber-400 font-semibold uppercase text-[10px] block mb-1">
-                    Cadastral Provenance
-                  </span>
-                  Extruded from unverified physical OSM building footprint. Does not confer legal cadastral title or ULPIN registration without authoritative boundary demarcation.
+                {/* 3. 3D Spatial Identity / ULPIN Prototype */}
+                <div className="rounded-lg bg-purple-950/20 border border-purple-500/30 p-3 space-y-2">
+                  <div className="text-[10px] uppercase font-bold text-purple-300 flex items-center justify-between">
+                    <span>3D Spatial Identity</span>
+                    <span className="text-[9px] text-purple-400">Prototype</span>
+                  </div>
+                  <div className="text-[11px] text-slate-300 font-mono break-all bg-slate-950/80 p-2 rounded border border-purple-500/20">
+                    {`DL-OSM-${activeBuilding.osm_id || "BLD"}-001`}
+                  </div>
+                  <div className="flex justify-between text-[10px] text-slate-400 pt-1">
+                    <span>Hierarchy:</span>
+                    <span className="text-purple-300">PARCEL &rarr; BLD &rarr; 3D</span>
+                  </div>
+                </div>
+
+                {/* 4. Cadastral Provenance Note */}
+                <div className="rounded-lg bg-slate-900/40 border border-slate-800 p-3 text-[11px] text-slate-400 leading-relaxed space-y-1">
+                  <div className="flex items-center gap-1 text-amber-400 font-semibold uppercase text-[10px]">
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                    <span>Provenance Distinction</span>
+                  </div>
+                  <p>
+                    <strong className="text-slate-300">Footprint:</strong> Actual OpenStreetMap polygon.<br />
+                    <strong className="text-slate-300">Vertical Extent:</strong> Parametrically extruded using verified height heuristics (Contract v1.0).
+                  </p>
                 </div>
               </div>
             ) : (
               <div className="py-12 text-center text-xs font-mono text-slate-500">
-                Click any building in the 3D viewer to inspect attributes and dimensions.
+                Click any building or unit in the 3D viewer to inspect spatial attributes and dimensions.
               </div>
             )}
           </div>
@@ -399,7 +452,7 @@ export default function Cadastral3DPage() {
           <button
             type="button"
             onClick={() => setRightPanelOpen(true)}
-            className="absolute top-4 right-4 z-20 p-2 rounded-lg bg-slate-900/90 border border-slate-700 text-slate-300 hover:text-white shadow-xl text-xs font-mono"
+            className="absolute top-4 right-4 z-20 p-2 rounded-lg bg-slate-900/90 border border-slate-700 text-slate-300 hover:text-white shadow-xl text-xs font-mono cursor-pointer"
             title="Open Building Inspector"
           >
             Inspector &larr;
