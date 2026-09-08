@@ -26,6 +26,8 @@ import {
   DemoUndergroundResponse,
   TopologyValidationResponse,
   TopologyValidationRequest,
+  OsmUploadResult,
+  OsmUploadSummary,
 } from "@/types/cadastre";
 import { cadastreApi, ApiError } from "@/lib/api/client";
 
@@ -144,6 +146,13 @@ export function useCadastre() {
   const [topologyData, setTopologyData] = useState<TopologyValidationResponse | null>(null);
   const [isAuditingTopology, setIsAuditingTopology] = useState<boolean>(false);
   const [topologyError, setTopologyError] = useState<string | null>(null);
+
+  // OSM File Upload State
+  type OsmUploadPhase = "idle" | "selected" | "importing" | "done" | "error";
+  const [osmUploadPhase, setOsmUploadPhase] = useState<OsmUploadPhase>("idle");
+  const [osmUploadFile, setOsmUploadFile] = useState<File | null>(null);
+  const [osmUploadResult, setOsmUploadResult] = useState<OsmUploadSummary | null>(null);
+  const [osmUploadError, setOsmUploadError] = useState<string | null>(null);
 
   // Layer Visibility
   const [layerVisibility, setLayerVisibility] = useState<{
@@ -452,6 +461,53 @@ export function useCadastre() {
       setIsLoading(false);
     }
   }, []);
+
+  // 3b. OSM File Selection
+  const selectOsmFile = useCallback((file: File | null) => {
+    setOsmUploadFile(file);
+    setOsmUploadError(null);
+    setOsmUploadResult(null);
+    if (file) {
+      setOsmUploadPhase("selected");
+    } else {
+      setOsmUploadPhase("idle");
+    }
+  }, []);
+
+  // 3c. OSM File Import — uploads .osm, extracts buildings, auto-refreshes map layer
+  const importOsmFile = useCallback(async () => {
+    if (!osmUploadFile) return;
+    setOsmUploadPhase("importing");
+    setOsmUploadError(null);
+    setOsmUploadResult(null);
+    try {
+      const result: OsmUploadResult = await cadastreApi.uploadOSMFile(osmUploadFile);
+      setOsmUploadResult(result.data.summary);
+      setOsmUploadPhase("done");
+      // Auto-refresh the buildings layer so the 2D map shows imported buildings
+      try {
+        const osmData = await cadastreApi.getRealOSMBuildings();
+        setBuildingsGeojson(osmData.raw_geojson);
+        setBuildingDatasetName(`${result.source_filename} (REAL OSM — Imported)`);
+        if (osmData.raw_geojson.features.length > 0) {
+          const first = osmData.raw_geojson.features[0];
+          const bId =
+            (first.properties?.building_id as string) ||
+            (first.id ? String(first.id) : null);
+          if (bId) setSelectedBuildingId(bId);
+        }
+      } catch {
+        // Buildings still imported; map refresh is best-effort
+      }
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setOsmUploadError(err.message);
+      } else {
+        setOsmUploadError("OSM import failed. Please try again.");
+      }
+      setOsmUploadPhase("error");
+    }
+  }, [osmUploadFile]);
 
   // 4. Trigger Explicit Backend Validation
   const runValidation = useCallback(async () => {
@@ -1582,6 +1638,13 @@ export function useCadastre() {
     runTopologyAudit,
     loadDemoTopology,
     pipelineSteps,
+    // OSM file upload
+    osmUploadPhase,
+    osmUploadFile,
+    osmUploadResult,
+    osmUploadError,
+    selectOsmFile,
+    importOsmFile,
   };
 }
 

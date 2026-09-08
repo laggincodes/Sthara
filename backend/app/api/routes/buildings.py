@@ -1,5 +1,7 @@
 from typing import List, Dict
-from fastapi import APIRouter, HTTPException, status
+import tempfile
+import os
+from fastapi import APIRouter, HTTPException, status, UploadFile, File
 from app.schemas.building_height import (
     HeightCalculationRequest,
     HeightCalculationResult,
@@ -362,11 +364,16 @@ async def extrude_demo_floors() -> GenerateFloors3DResponse:
 
 
 
+import xml.etree.ElementTree as _ET
+
 from app.services.osm_service import (
     OSMBuildingExtractor,
     DEFAULT_RAW_OSM_PATH,
     DEFAULT_PROCESSED_BUILDINGS_PATH,
 )
+
+# Maximum .osm upload size: 50 MB (OSM exports can be large)
+OSM_MAX_UPLOAD_BYTES = 50 * 1024 * 1024
 
 
 @router.post(
@@ -398,6 +405,162 @@ async def import_osm_buildings():
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to import OSM buildings: {str(e)}",
+        )
+
+
+@router.post(
+    "/upload-osm",
+    summary="Upload a user-provided .osm file and extract real building footprints",
+    description=(
+        "Accepts a multipart .osm file upload, validates structure, safely replaces "
+        "the canonical raw OSM source, extracts validated building polygons via the "
+        "existing OSMBuildingExtractor, and writes processed GeoJSON to storage. "
+        "Does NOT fabricate data. OSM data is NOT cadastral."
+    ),
+)
+async def upload_osm_file(file: UploadFile = File(...)):
+    """
+    Upload endpoint for user-provided .osm files.
+    Validation order:
+      1. Extension must be .osm
+      2. File size must be <= OSM_MAX_UPLOAD_BYTES (50 MB)
+      3. Content must be valid UTF-8
+      4. Content must be parseable XML
+      5. XML root element must be <osm>
+    On success: saves to DEFAULT_RAW_OSM_PATH (atomic), runs extractor, returns summary.
+    """
+    from app.core.logging import logger
+
+    # 1. Extension check
+    filename = file.filename or "unknown"
+    clean_name = os.path.basename(filename)
+    if not clean_name.lower().endswith(".osm"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid file format. Only .osm (OpenStreetMap XML) files are accepted here.",
+        )
+
+    # 2. Read bytes with size guard
+    try:
+        content_bytes = await file.read(OSM_MAX_UPLOAD_BYTES + 1024)
+        if len(content_bytes) > OSM_MAX_UPLOAD_BYTES:
+            raise HTTPException(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                detail=f"File exceeds maximum permitted size of {OSM_MAX_UPLOAD_BYTES // (1024 * 1024)} MB for OSM uploads.",
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error reading uploaded OSM file '{clean_name}': {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Failed to read the uploaded file.",
+        )
+
+    # 3. UTF-8 decode check
+    try:
+        raw_text = content_bytes.decode("utf-8")
+    except UnicodeDecodeError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="OSM file must be UTF-8 encoded. The uploaded file could not be decoded.",
+        )
+
+    # 4. XML parse check
+    try:
+        root = _ET.fromstring(raw_text)
+    except _ET.ParseError as xml_err:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Malformed XML: {xml_err}. Upload a valid OpenStreetMap .osm file.",
+        )
+
+    # 5. OSM root element check
+    if root.tag != "osm":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"File root element is <{root.tag}>, expected <osm>. Upload a valid OpenStreetMap .osm file.",
+        )
+
+    # Check for minimal OSM elements (at least one node, way, or relation)
+    has_nodes = root.find("node") is not None
+    has_ways = root.find("way") is not None
+    has_relations = root.find("relation") is not None
+    if not (has_nodes or has_ways or has_relations):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="The OSM file contains no nodes, ways, or relations. It appears to be empty or invalid.",
+        )
+
+    # 6. Atomically write to the canonical raw OSM path via temp file
+    dest_dir = DEFAULT_RAW_OSM_PATH.parent
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    tmp_fd, tmp_path = tempfile.mkstemp(dir=str(dest_dir), suffix=".osm.tmp")
+    try:
+        try:
+            with os.fdopen(tmp_fd, "wb") as tmp_f:
+                tmp_f.write(content_bytes)
+        except Exception as e:
+            os.unlink(tmp_path)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to write uploaded OSM file to temporary storage: {str(e)}",
+            )
+        # Atomic rename (same filesystem)
+        try:
+            os.replace(tmp_path, str(DEFAULT_RAW_OSM_PATH))
+        except Exception as e:
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to commit uploaded OSM file: {str(e)}",
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Unexpected error saving OSM file: {str(e)}",
+        )
+
+    # 7. Run the existing extractor
+    try:
+        geojson_data, summary = OSMBuildingExtractor.convert_and_save(
+            osm_source_path=DEFAULT_RAW_OSM_PATH,
+            output_geojson_path=DEFAULT_PROCESSED_BUILDINGS_PATH,
+        )
+        logger.info(
+            f"upload-osm: '{clean_name}' -> {summary['total_extracted_buildings']} buildings, "
+            f"valid={summary['validation']['valid']}"
+        )
+        return {
+            "status": "success",
+            "message": (
+                f"Successfully imported '{clean_name}': "
+                f"{summary['total_extracted_buildings']} building(s) extracted."
+            ),
+            "source_filename": clean_name,
+            "output_file": str(DEFAULT_PROCESSED_BUILDINGS_PATH),
+            "data": {
+                "summary": summary,
+                "feature_count": summary["total_extracted_buildings"],
+                "is_cadastral": False,
+                "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+                "data_type": "NON_CADASTRAL_PHYSICAL_BUILDING_DATA",
+                "source": "OpenStreetMap",
+            },
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"OSM extraction failed after upload: {str(e)}",
         )
 
 

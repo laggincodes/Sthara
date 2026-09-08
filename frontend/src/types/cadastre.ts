@@ -320,6 +320,57 @@ export * from "./ai_extraction";
 export * from "./underground";
 export * from "./topology";
 
+// OSM file upload result
+export interface OsmUploadSummary {
+  source_file: string;
+  osm_bounds_header: {
+    minlat: number;
+    minlon: number;
+    maxlat: number;
+    maxlon: number;
+  } | null;
+  total_osm_nodes: number;
+  total_osm_ways: number;
+  total_osm_relations: number;
+  total_extracted_buildings: number;
+  ways_extracted: number;
+  relations_extracted: number;
+  degenerate_or_skipped: number;
+  buildings_with_height: number;
+  buildings_with_height_pct: number;
+  buildings_with_levels: number;
+  buildings_with_levels_pct: number;
+  bounding_box: {
+    min_longitude: number;
+    min_latitude: number;
+    max_longitude: number;
+    max_latitude: number;
+    bbox: [number, number, number, number];
+  } | null;
+  validation: {
+    valid: boolean;
+    errors_count: number;
+    warnings_count: number;
+    errors: unknown[];
+    warnings: string[];
+  };
+}
+
+export interface OsmUploadResult {
+  status: string;
+  message: string;
+  source_filename: string;
+  output_file: string;
+  data: {
+    summary: OsmUploadSummary;
+    feature_count: number;
+    is_cadastral: false;
+    legal_status: string;
+    data_type: string;
+    source: string;
+  };
+}
+
 
 
 
