@@ -275,7 +275,7 @@ export default function ImportDataPage() {
               className="w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-xs font-mono text-cyan-300 focus:border-cyan-500 focus:outline-none"
             />
             <p className="text-[11px] text-slate-500">
-              Tagore Garden OSM footprints (155 buildings) fall 100% inside <strong>Rajouri Garden (AC 27)</strong>.
+              155/155 buildings contained within the selected Rajouri Garden AOI (Verified on the Tagore Garden OSM test dataset).
             </p>
           </div>
         </div>
@@ -425,6 +425,18 @@ export default function ImportDataPage() {
             </div>
             <p className="text-[10px] text-slate-500 leading-relaxed">
               IFC/DXF CAD drawing slicer for interior unit boundary extraction.
+            </p>
+          </div>
+
+          <div className="p-3.5 rounded-lg bg-slate-900/80 border border-purple-500/30 space-y-1.5 sm:col-span-2 lg:col-span-3">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-white">AI / ML Extraction</span>
+              <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-purple-950 text-purple-300 border border-purple-500/40">
+                ARCHITECTURE READY
+              </span>
+            </div>
+            <p className="text-[10px] text-slate-400 leading-relaxed">
+              Active prototype uses deterministic rule-based geometric extraction &amp; tag parsing. Computer vision / neural inference pipeline is architecture-ready for future model weights.
             </p>
           </div>
         </div>
