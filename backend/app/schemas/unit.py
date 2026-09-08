@@ -139,7 +139,7 @@ class UnitBatchValidationResponse(BaseModel):
 
 class UnitPropertyRecord(BaseModel):
     """
-    Conceptual unit-level 3D Property Record conforming to the SIH Presentation specification.
+    Conceptual unit-level 3D Property Record conforming to the cadastral specification.
     Does NOT claim to be an official government land title record.
     """
     parcel_id: str = Field(..., description="Authoritative land parcel identifier")
@@ -148,11 +148,11 @@ class UnitPropertyRecord(BaseModel):
     unit_id: str = Field(..., description="Internal deterministic unit identifier")
     unit_number: str = Field(..., description="Unit number designation")
     unit_name: Optional[str] = Field(None, description="Descriptive unit name")
-    canonical_parcel_id: str = Field(default="P001", description="SIH Presentation canonical parcel alias")
-    canonical_building_id: str = Field(default="B01", description="SIH Presentation canonical building alias")
-    canonical_floor_id: str = Field(default="05", description="SIH Presentation canonical floor alias")
-    canonical_unit_id: str = Field(default="501", description="SIH Presentation canonical unit alias")
-    canonical_path: str = Field(default="P001/B01/05/501", description="SIH hierarchical chain: PARCEL -> BUILDING -> FLOOR -> UNIT")
+    canonical_parcel_id: str = Field(default="P001", description="Canonical parcel alias")
+    canonical_building_id: str = Field(default="B01", description="Canonical building alias")
+    canonical_floor_id: str = Field(default="05", description="Canonical floor alias")
+    canonical_unit_id: str = Field(default="501", description="Canonical unit alias")
+    canonical_path: str = Field(default="P001/B01/05/501", description="Hierarchical chain: PARCEL -> BUILDING -> FLOOR -> UNIT")
     property_id: Optional[str] = Field(default=None, description="Cadastral property entity identifier")
     property_record_reference: str = Field(
         default="P001-B01-FL05-U501",

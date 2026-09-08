@@ -134,7 +134,7 @@ export function AppSidebar() {
             </div>
           </Link>
           <span className="ml-auto text-[9px] font-mono px-1.5 py-0.5 rounded border border-cyan-500/30 bg-cyan-950/30 text-cyan-300">
-            SIH 2026
+            v1.0
           </span>
         </div>
 
@@ -179,7 +179,7 @@ export function AppSidebar() {
         <div className="mx-3 mt-2 p-2.5 rounded-lg border border-slate-800 bg-slate-900/40">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-bold">
-              SIH 8-Stage Demo
+              Pipeline Validation
             </span>
             <span className="text-[10px] font-mono text-cyan-400">
               {completedSteps}/8 Verified
@@ -192,7 +192,7 @@ export function AppSidebar() {
               onClick={runEndToEndDemo}
               disabled={isDemoRunning}
               className="flex-1 inline-flex items-center justify-center gap-1.5 text-[11px] font-semibold text-white bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 disabled:opacity-50 py-1.5 px-2 rounded-md transition-all shadow-xs cursor-pointer"
-              title="Run 8-stage end-to-end demo"
+              title="Run 8-stage end-to-end pipeline validation"
             >
               {isDemoRunning ? (
                 <>

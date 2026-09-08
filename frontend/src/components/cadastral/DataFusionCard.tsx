@@ -99,7 +99,7 @@ export function DataFusionCard({ onContextLoaded }: DataFusionCardProps) {
                 Multi-Source Georeferencing & Spatial Data Fusion
               </h3>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950 text-cyan-400 border border-cyan-800/60">
-                SIH Phase 18
+                Phase 18
               </span>
             </div>
             <p className="text-xs text-slate-400 mt-0.5">

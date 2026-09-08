@@ -1,6 +1,6 @@
 /**
  * Unified Topology & Spatial Conflict Engine Types
- * Conforms to SIH PPT 06 TOPOLOGY: Overlap Check, Containment, Duplicates
+ * Conforms to Stage 06 Topology: Overlap Check, Containment, Duplicates
  */
 
 export type TopologyStatus = "VALID" | "WARNING" | "CONFLICT" | "UNAVAILABLE";

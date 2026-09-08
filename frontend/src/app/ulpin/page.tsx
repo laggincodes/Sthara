@@ -199,7 +199,7 @@ export default function UlpinWorkspacePage() {
           <span>STHARA Prototype 3D Spatial Identity Notice</span>
         </div>
         <p className="leading-relaxed">
-          This 3D ULPIN is a project-specific deterministic identifier prototype designed for the Smart India Hackathon 2026.
+          This 3D ULPIN is a project-specific deterministic identifier prototype designed for volumetric 3D property indexing.
           It represents a reproducible mathematical hash of the spatial containment hierarchy and is <strong>not an official Government of India ULPIN issuance</strong>.
         </p>
       </div>
@@ -207,7 +207,7 @@ export default function UlpinWorkspacePage() {
       {/* 3. Multi-tier Hierarchy Visualizer Banner */}
       <div className="rounded-xl border border-slate-800 bg-[#0F172A]/70 p-6 space-y-4">
         <div className="text-xs font-mono text-slate-400 uppercase font-semibold">
-          Cadastral Spatial Resolution Flow (SIH Concept)
+          Cadastral Spatial Resolution Flow
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 text-center text-xs font-mono">

@@ -767,7 +767,7 @@ function UnitInspectorCard({
             </div>
           </div>
 
-          {/* 3D PROPERTY RECORD (SIH PPT Presentation Specification) */}
+          {/* 3D PROPERTY RECORD (Presentation Specification) */}
           <div className="mt-2 rounded-lg border border-amber-500/50 bg-gradient-to-b from-amber-950/30 via-slate-900/90 to-[#0F1420] p-3 shadow-md space-y-2.5">
             <div className="flex items-center justify-between border-b border-amber-500/30 pb-2">
               <div className="flex items-center gap-2">
@@ -883,7 +883,7 @@ function UnitInspectorCard({
             {/* Legal Disclaimer */}
             <div className="rounded bg-amber-950/20 border border-amber-500/20 p-2 text-[8px] font-mono text-amber-400/90 leading-relaxed">
               <span className="font-bold text-amber-300">DISCLAIMER: </span>
-              Research & prototype implementation for Smart India Hackathon. Not official Government Cadastral Records. 3D geometric modeling does not confer or verify legal ownership title.
+              Research & prototype implementation for 3D cadastral intelligence. Not official Government Cadastral Records. 3D geometric modeling does not confer or verify legal ownership title.
             </div>
           </div>
         </div>
