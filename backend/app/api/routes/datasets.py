@@ -181,6 +181,20 @@ async def get_dataset(dataset_id: str):
             message="Retrieved session dataset",
         )
 
+    # Check Osm3DConverterService multi-dataset registry
+    from app.services.osm_3d_converter import Osm3DConverterService
+    osm_geo = Osm3DConverterService.get_dataset_geojson(dataset_id)
+    if osm_geo:
+        return ResponseEnvelope(
+            data={
+                "dataset_id": dataset_id,
+                "raw_geojson": osm_geo,
+                "is_cadastral": False,
+                "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
+            },
+            message=f"Retrieved active OSM dataset '{dataset_id}'",
+        )
+
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
         detail=f"Dataset with ID '{dataset_id}' not found",

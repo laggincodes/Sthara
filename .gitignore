@@ -69,10 +69,8 @@ yarn-error.log*
 Thumbs.db
 desktop.ini
 
-# Logs & Temporary Files
-*.log
-scratch/
-tmp/
-*.tmp
-*.bin
+# Temporary Uploads & Dynamic Conversion Artifacts
+data/uploads/
+data/processed/real/ds_*
+data/processed/real/*.bin
 

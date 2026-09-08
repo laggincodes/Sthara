@@ -27,11 +27,13 @@ DEFAULT_RAW_OSM_PATH = Path(__file__).resolve().parent.parent.parent.parent / "d
 DEFAULT_PROCESSED_BUILDINGS_PATH = Path(__file__).resolve().parent.parent.parent.parent / "data" / "processed" / "real" / "osm_buildings.geojson"
 
 
-def parse_numeric_height(val: Optional[str]) -> Optional[float]:
-    """Safely extracts numeric meter height from OSM tag string (e.g. '12.5', '12m', '15 m')."""
-    if not val:
+def parse_numeric_height(val: Any) -> Optional[float]:
+    """Safely extracts numeric meter height from OSM/GeoJSON tag (e.g. 12.5, '12.5', '12m', '15 m')."""
+    if val is None:
         return None
-    cleaned = val.strip().lower().rstrip("m").strip()
+    if isinstance(val, (int, float)):
+        return float(val) if val > 0 else None
+    cleaned = str(val).strip().lower().rstrip("m").strip()
     try:
         num = float(cleaned)
         return num if num > 0 else None
@@ -39,13 +41,17 @@ def parse_numeric_height(val: Optional[str]) -> Optional[float]:
         return None
 
 
-def parse_numeric_levels(val: Optional[str]) -> Optional[int]:
-    """Safely extracts floor level count from OSM tag string (e.g. '3', '4')."""
-    if not val:
+def parse_numeric_levels(val: Any) -> Optional[int]:
+    """Safely extracts floor level count from OSM/GeoJSON tag (e.g. 3, '3', '4')."""
+    if val is None:
         return None
-    cleaned = val.strip()
+    if isinstance(val, int):
+        return val if val > 0 else None
+    if isinstance(val, float):
+        return int(val) if val > 0 else None
+    cleaned = str(val).strip()
     try:
-        num = int(cleaned)
+        num = int(float(cleaned))
         return num if num > 0 else None
     except ValueError:
         return None

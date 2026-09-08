@@ -243,11 +243,28 @@ export const cadastreApi = {
   },
 
   /**
-   * Loads the real OpenStreetMap building footprints dataset.
+   * Loads the real or active OpenStreetMap building footprints dataset.
    */
-  async getRealOSMBuildings(): Promise<{ dataset_id: string; raw_geojson: GeoJSONFeatureCollection; is_cadastral: boolean }> {
-    const res = await this.getDataset("real_osm_buildings");
-    return { ...res, is_cadastral: false };
+  async getRealOSMBuildings(datasetId: string = "ds_tagore_garden_map_osm"): Promise<{ dataset_id: string; raw_geojson: GeoJSONFeatureCollection; is_cadastral: boolean }> {
+    try {
+      const res = await this.getOsmDatasetGeoJSON(datasetId);
+      return { dataset_id: datasetId, raw_geojson: res, is_cadastral: false };
+    } catch {
+      const res = await this.getDataset("real_osm_buildings");
+      return { ...res, is_cadastral: false };
+    }
+  },
+
+  /**
+   * Fetches the 2D GeoJSON building footprints for any registered dataset.
+   */
+  async getOsmDatasetGeoJSON(datasetId: string): Promise<GeoJSONFeatureCollection> {
+    const response = await fetch(`${BASE_URL}/osm/datasets/${encodeURIComponent(datasetId)}/geojson`, {
+      method: "GET",
+      headers: { Accept: "application/json" },
+    });
+    const res = await handleResponse<{ status: string; dataset_id: string; feature_count: number; data: GeoJSONFeatureCollection }>(response);
+    return res.data;
   },
 
   /**

@@ -77,6 +77,7 @@ export function useCadastre() {
   const [activeDatasetName, setActiveDatasetName] = useState<string | null>(null);
 
   // Buildings & Spatial Association State
+  const [activeDatasetId, setActiveDatasetId] = useState<string>("ds_tagore_garden_map_osm");
   const [buildingsGeojson, setBuildingsGeojson] = useState<GeoJSONFeatureCollection | null>(null);
   const [buildingDatasetName, setBuildingDatasetName] = useState<string | null>(null);
   const [selectedBuildingId, setSelectedBuildingId] = useState<string | null>(null);
@@ -280,14 +281,17 @@ export function useCadastre() {
   }, []);
 
   // 2c. Load Real OSM Buildings from FastAPI Backend
-  const loadRealOSMBuildings = useCallback(async () => {
+  const loadRealOSMBuildings = useCallback(async (dsId?: unknown) => {
     setIsLoading(true);
     setGeneralError(null);
 
+    const targetId = typeof dsId === "string" && dsId.trim().length > 0 ? dsId : "ds_tagore_garden_map_osm";
+
     try {
-      const data = await cadastreApi.getRealOSMBuildings();
+      const data = await cadastreApi.getRealOSMBuildings(targetId);
+      setActiveDatasetId(targetId);
       setBuildingsGeojson(data.raw_geojson);
-      setBuildingDatasetName("osm_buildings.geojson (Real OSM - Delhi)");
+      setBuildingDatasetName("map.osm (Tagore Garden, Delhi)");
       if (data.raw_geojson.features.length > 0) {
         const firstBld = data.raw_geojson.features[0];
         const bId = (firstBld.properties?.building_id as string) || (firstBld.id ? String(firstBld.id) : null);
@@ -499,19 +503,38 @@ export function useCadastre() {
     }
   }, []);
 
-  // 3b. OSM File Selection
-  const selectOsmFile = useCallback((file: File | null) => {
+
+  // 3b. OSM File Selection & Immediate 2D Footprint Ingestion
+  const selectOsmFile = useCallback(async (file: File | null) => {
     setOsmUploadFile(file);
     setOsmUploadError(null);
     setOsmUploadResult(null);
+
     if (file) {
       setOsmUploadPhase("selected");
       // Invalidate stale 3D conversion state immediately so old dataset is never displayed
       setConversionResult(null);
       setConversionStages([]);
       setBuilding3DData(null);
-      setBuildingDatasetName(`${file.name} (Pending 3D Conversion)`);
-      setActiveProjectName(file.name.replace(/\.[^/.]+$/, "") + " 3D City");
+      setBuildingDatasetName(`${file.name} (Loading 2D Map...)`);
+      setActiveProjectName(file.name.replace(/\.[^/.]+$/, "") + " Project");
+
+      try {
+        // Upload & register dataset with backend to extract 2D GeoJSON immediately
+        const dsItem = await cadastreApi.uploadOsmDataset(file);
+        setActiveDatasetId(dsItem.dataset_id);
+        const geojson = await cadastreApi.getOsmDatasetGeoJSON(dsItem.dataset_id);
+        setBuildingsGeojson(geojson);
+        setBuildingDatasetName(`${file.name} (Active OSM)`);
+        if (geojson.features && geojson.features.length > 0) {
+          const first = geojson.features[0];
+          const bId = (first.properties?.building_id as string) || (first.id ? String(first.id) : null);
+          if (bId) setSelectedBuildingId(bId);
+        }
+      } catch (err: unknown) {
+        const msg = err instanceof ApiError ? err.message : "Failed to load imported OSM 2D footprint layer.";
+        setOsmUploadError(msg);
+      }
     } else {
       setOsmUploadPhase("idle");
     }
@@ -524,23 +547,16 @@ export function useCadastre() {
     setOsmUploadError(null);
     setOsmUploadResult(null);
     try {
-      const result: OsmUploadResult = await cadastreApi.uploadOSMFile(osmUploadFile);
-      setOsmUploadResult(result.data.summary);
+      const dsItem = await cadastreApi.uploadOsmDataset(osmUploadFile);
+      setActiveDatasetId(dsItem.dataset_id);
+      const geojson = await cadastreApi.getOsmDatasetGeoJSON(dsItem.dataset_id);
+      setBuildingsGeojson(geojson);
+      setBuildingDatasetName(`${osmUploadFile.name} (Active OSM — Imported)`);
       setOsmUploadPhase("done");
-      // Auto-refresh the buildings layer so the 2D map shows imported buildings
-      try {
-        const osmData = await cadastreApi.getRealOSMBuildings();
-        setBuildingsGeojson(osmData.raw_geojson);
-        setBuildingDatasetName(`${result.source_filename} (REAL OSM — Imported)`);
-        if (osmData.raw_geojson.features.length > 0) {
-          const first = osmData.raw_geojson.features[0];
-          const bId =
-            (first.properties?.building_id as string) ||
-            (first.id ? String(first.id) : null);
-          if (bId) setSelectedBuildingId(bId);
-        }
-      } catch {
-        // Buildings still imported; map refresh is best-effort
+      if (geojson.features && geojson.features.length > 0) {
+        const first = geojson.features[0];
+        const bId = (first.properties?.building_id as string) || (first.id ? String(first.id) : null);
+        if (bId) setSelectedBuildingId(bId);
       }
     } catch (err) {
       if (err instanceof ApiError) {
@@ -560,7 +576,11 @@ export function useCadastre() {
   // 3e. Execute Full OSM -> 3D Conversion Pipeline
   const runOsm3DConversion = useCallback(
     async (cfgOverride?: Partial<Osm3DConversionConfig>) => {
-      const activeCfg = { ...conversionConfig, ...(cfgOverride || {}) };
+      const activeCfg = {
+        ...conversionConfig,
+        dataset_id: activeDatasetId,
+        ...(cfgOverride || {})
+      };
       setIsConverting(true);
       setConversionError(null);
 
@@ -574,6 +594,7 @@ export function useCadastre() {
 
         setConversionResult(resp);
         setConversionStages(resp.stages || []);
+        setActiveDatasetId(resp.dataset_id);
 
         if (resp.mesh_data) {
           setBuilding3DData(resp.mesh_data);
@@ -601,7 +622,7 @@ export function useCadastre() {
         setIsConverting(false);
       }
     },
-    [conversionConfig, osmUploadFile]
+    [conversionConfig, osmUploadFile, activeDatasetId]
   );
 
   // 3f. Direct Upload and Convert
@@ -620,6 +641,7 @@ export function useCadastre() {
         const resp = await cadastreApi.uploadAndConvertOsm(file, activeCfg);
         setConversionResult(resp);
         setConversionStages(resp.stages || []);
+        setActiveDatasetId(resp.dataset_id);
 
         if (resp.mesh_data) {
           setBuilding3DData(resp.mesh_data);
@@ -1806,6 +1828,8 @@ export function useCadastre() {
     activeProjectName,
     setActiveProjectName,
     selectedBuildingMetadata,
+    activeDatasetId,
+    setActiveDatasetId,
   };
 }
 
