@@ -42,9 +42,46 @@ async def get_dataset_geojson(dataset_id: str):
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"No 2D GeoJSON found for dataset '{dataset_id}'.",
         )
+    
+    ds_name = dataset_id
+    for item in Osm3DConverterService.list_datasets():
+        if item.dataset_id == dataset_id:
+            ds_name = item.dataset_name
+            break
+
     return {
         "status": "success",
         "dataset_id": dataset_id,
+        "dataset_name": ds_name,
+        "feature_count": len(geojson.get("features", [])),
+        "data": geojson,
+    }
+
+
+@router.get(
+    "/buildings",
+    summary="Get 2D building footprints GeoJSON for active or specified dataset",
+)
+async def get_osm_buildings(
+    dataset_id: str = Query(..., description="Unique dataset ID to retrieve 2D footprints for")
+):
+    geojson = Osm3DConverterService.get_dataset_geojson(dataset_id)
+    if not geojson:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No 2D building footprints found for dataset '{dataset_id}'.",
+        )
+    
+    ds_name = dataset_id
+    for item in Osm3DConverterService.list_datasets():
+        if item.dataset_id == dataset_id:
+            ds_name = item.dataset_name
+            break
+
+    return {
+        "status": "success",
+        "dataset_id": dataset_id,
+        "dataset_name": ds_name,
         "feature_count": len(geojson.get("features", [])),
         "data": geojson,
     }

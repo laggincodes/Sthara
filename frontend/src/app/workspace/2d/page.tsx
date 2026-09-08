@@ -70,6 +70,9 @@ export default function Cadastral2DPage() {
     isAuditingTopology,
     runTopologyAudit,
     loadDemoTopology,
+    activeDatasetId,
+    activeDatasetName,
+    buildingDatasetName,
   } = useCadastreContext();
 
   const undergroundGeojson: GeoJSONFeatureCollection | null = useMemo(() => {
@@ -105,6 +108,10 @@ export default function Cadastral2DPage() {
             <span className="h-2 w-2 rounded-full bg-emerald-400" />
             <span className="font-semibold text-slate-200">2D CADASTRAL GIS</span>
           </div>
+
+          <span className="px-2 py-0.5 rounded bg-slate-800/80 text-slate-300 border border-slate-700 text-[11px] truncate max-w-[280px]" title={activeDatasetName || buildingDatasetName || activeDatasetId}>
+            Dataset: <strong className="text-cyan-300">{activeDatasetName || buildingDatasetName || activeDatasetId}</strong>
+          </span>
 
           <span className="text-slate-700">|</span>
 

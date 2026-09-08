@@ -243,28 +243,84 @@ export const cadastreApi = {
   },
 
   /**
-   * Loads the real or active OpenStreetMap building footprints dataset.
+   * Loads real/active OpenStreetMap or GeoJSON building footprints for activeDatasetId.
    */
-  async getRealOSMBuildings(datasetId: string = "ds_tagore_garden_map_osm"): Promise<{ dataset_id: string; raw_geojson: GeoJSONFeatureCollection; is_cadastral: boolean }> {
-    try {
-      const res = await this.getOsmDatasetGeoJSON(datasetId);
-      return { dataset_id: datasetId, raw_geojson: res, is_cadastral: false };
-    } catch {
-      const res = await this.getDataset("real_osm_buildings");
-      return { ...res, is_cadastral: false };
-    }
+  async getRealOSMBuildings(datasetId: string = "ds_tagore_garden_map_osm"): Promise<{
+    dataset_id: string;
+    dataset_name: string;
+    raw_geojson: GeoJSONFeatureCollection;
+    is_cadastral: boolean;
+  }> {
+    const res = await this.getOsmDatasetGeoJSON(datasetId);
+    return {
+      dataset_id: res.dataset_id,
+      dataset_name: res.dataset_name,
+      raw_geojson: res.raw_geojson,
+      is_cadastral: false,
+    };
   },
 
   /**
    * Fetches the 2D GeoJSON building footprints for any registered dataset.
    */
-  async getOsmDatasetGeoJSON(datasetId: string): Promise<GeoJSONFeatureCollection> {
-    const response = await fetch(`${BASE_URL}/osm/datasets/${encodeURIComponent(datasetId)}/geojson`, {
+  async getOsmDatasetGeoJSON(datasetId: string): Promise<{
+    dataset_id: string;
+    dataset_name: string;
+    feature_count: number;
+    raw_geojson: GeoJSONFeatureCollection;
+  }> {
+    if (!datasetId || typeof datasetId !== "string" || !datasetId.trim()) {
+      throw new ApiError("A valid dataset ID is required to fetch 2D building footprints.", 400, "INVALID_DATASET_ID");
+    }
+
+    const trimmedId = datasetId.trim();
+    const response = await fetch(`${BASE_URL}/osm/buildings?dataset_id=${encodeURIComponent(trimmedId)}`, {
       method: "GET",
       headers: { Accept: "application/json" },
     });
-    const res = await handleResponse<{ status: string; dataset_id: string; feature_count: number; data: GeoJSONFeatureCollection }>(response);
-    return res.data;
+
+    if (!response.ok) {
+      let errorData: ApiErrorResponse | null = null;
+      try {
+        errorData = await response.json();
+      } catch {}
+      throw new ApiError(
+        errorData?.message || `Unable to load dataset '${trimmedId}': HTTP ${response.status}`,
+        response.status,
+        errorData?.error_code || "NOT_FOUND"
+      );
+    }
+
+    const json = await response.json();
+    const payload = json.data !== undefined ? json.data : json;
+    const rawGeojson: GeoJSONFeatureCollection =
+      payload && payload.type === "FeatureCollection"
+        ? payload
+        : (payload?.raw_geojson || payload);
+
+    if (!rawGeojson || !Array.isArray(rawGeojson.features)) {
+      throw new ApiError(
+        `Dataset '${trimmedId}' did not return a valid GeoJSON FeatureCollection.`,
+        500,
+        "INVALID_GEOJSON_PAYLOAD"
+      );
+    }
+
+    const respDatasetId = json.dataset_id || trimmedId;
+    if (respDatasetId !== trimmedId && !["real_osm_buildings", "osm_buildings"].includes(trimmedId)) {
+      throw new ApiError(
+        `Dataset mismatch: requested '${trimmedId}', but backend returned '${respDatasetId}'.`,
+        409,
+        "DATASET_MISMATCH"
+      );
+    }
+
+    return {
+      dataset_id: respDatasetId,
+      dataset_name: json.dataset_name || trimmedId,
+      feature_count: json.feature_count ?? rawGeojson.features.length,
+      raw_geojson: rawGeojson,
+    };
   },
 
   /**
