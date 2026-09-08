@@ -59,7 +59,7 @@ const DEFAULT_REGISTERED_MODELS: ModelMetadata[] = [
     input_type: 'SYNTHETIC_TOWER_1_SPEC',
     output_type: 'CANDIDATE_MULTI_LAYER',
     availability: 'AVAILABLE',
-    limitations: 'Pre-calibrated benchmark for SIH presentation consistency.',
+    limitations: 'Pre-calibrated benchmark for reproducible demonstration consistency.',
   },
   {
     model_id: 'pytorch_mask_rcnn_v1',
@@ -115,7 +115,7 @@ export function AiExtractionCard() {
     }
   };
 
-  // Load SIH Demo Bundle
+  // Load Benchmark Bundle
   const handleLoadDemoBundle = async () => {
     setIsExtracting('demo');
     setActionError(null);
@@ -358,7 +358,7 @@ export function AiExtractionCard() {
             AI / ML Candidate Extraction & Spatial Validation
           </h2>
           <p className="text-xs text-slate-400 mt-1 max-w-3xl">
-            Conforms strictly to the SIH Separation of Concerns: AI extracts candidate features; the
+            Conforms strictly to the architectural Separation of Concerns: AI extracts candidate features; the
             deterministic spatial engine validates topology, calculates geometry, and enforces legal
             cadastral rules.
           </p>
@@ -394,7 +394,7 @@ export function AiExtractionCard() {
             disabled={isExtracting !== null}
             className="inline-flex items-center gap-1.5 rounded-lg bg-amber-600/90 hover:bg-amber-500 px-3.5 py-1.5 text-xs font-semibold text-white transition-colors shadow-md disabled:opacity-50"
           >
-            {isExtracting === 'demo' ? 'Loading Bundle...' : 'Load SIH Demo Bundle'}
+            {isExtracting === 'demo' ? 'Loading Bundle...' : 'Load Benchmark Bundle'}
           </button>
         </div>
       </div>
@@ -426,7 +426,7 @@ export function AiExtractionCard() {
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-mono text-amber-400 font-medium">TASK 01: BUILDING</span>
               <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">
-                {activeMode === 'DEMO' ? 'sih_benchmark' : 'bld_cv_otsu'}
+                {activeMode === 'DEMO' ? 'synthetic_benchmark' : 'bld_cv_otsu'}
               </span>
             </div>
             <h3 className="text-sm font-semibold text-white mt-1">Building Footprint</h3>
@@ -642,7 +642,7 @@ export function AiExtractionCard() {
 
               {totalCandidates === 0 && (
                 <div className="p-6 text-center text-slate-500">
-                  No candidate features loaded. Click &quot;Load SIH Demo Bundle&quot; or run an individual task.
+                  No candidate features loaded. Click &quot;Load Benchmark Bundle&quot; or run an individual task.
                 </div>
               )}
             </div>

@@ -31,7 +31,7 @@ export default function DashboardPage() {
               <span className={`h-2 w-2 rounded-full ${backendConnected ? "bg-emerald-400" : "bg-red-400 animate-pulse"}`} />
               {backendConnected ? "ENGINE ONLINE :8000" : "CONNECTING TO ENGINE"}
               <span className="text-slate-600">|</span>
-              <span className="text-slate-300">SIH 2026 Prototype</span>
+              <span className="text-slate-300">Spatial Intelligence Platform</span>
             </div>
 
             <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
@@ -79,7 +79,7 @@ export default function DashboardPage() {
             </h2>
           </div>
           <span className="text-xs font-mono px-2.5 py-1 rounded bg-slate-900 border border-slate-700 text-slate-300">
-            SIH 2026 Core Concept
+            Core Cadastral Standard
           </span>
         </div>
 

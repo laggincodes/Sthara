@@ -1450,7 +1450,7 @@ export function useCadastre() {
     }
   }, [demoSpecs]);
 
-  // Compute dynamic PipelineStep list reflecting authoritative real-time state across 8 SIH stages
+  // Compute dynamic PipelineStep list reflecting authoritative real-time state across 8 validation stages
   const pipelineSteps: import("@/components/cadastral/PipelineStatus").PipelineStep[] = useMemo(() => {
     const hasParcels = !!geojson && geojson.features.length > 0;
     const hasBuildings = !!buildingsGeojson && buildingsGeojson.features.length > 0;
@@ -1609,7 +1609,7 @@ export function useCadastre() {
         stepNumber: "06",
         title: "06 TOPOLOGY",
         description: "Unified spatial conflict engine: Overlap check, containment, duplicates, underground clash, and 3D manifold audit.",
-        provenance: "SIH Stage 06 Topology Engine",
+        provenance: "STHARA Stage 06 Topology Engine",
         status: s6Status,
         detail: s6Detail,
       },

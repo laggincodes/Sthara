@@ -127,7 +127,7 @@ async def compare_geometries(request: CandidateComparisonRequest) -> CandidateCo
 @router.get(
     "/demo",
     status_code=status.HTTP_200_OK,
-    summary="Get pre-calibrated reproducible SIH demonstration candidate bundle",
+    summary="Get pre-calibrated reproducible benchmark demonstration candidate bundle",
 )
 async def get_demo_extraction() -> Dict[str, Any]:
     """Return offline deterministic benchmark candidates for Tower 1."""

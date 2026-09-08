@@ -87,7 +87,7 @@ export function UndergroundDataCard() {
               Underground & Subsurface Spatial Modeling
             </h2>
             <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-cyan-950/80 text-cyan-400 border border-cyan-800/60">
-              Step 20 • SIH PPT
+              Step 20 • Subsurface Layer
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-1">
@@ -410,7 +410,7 @@ export function UndergroundDataCard() {
                 </div>
 
                 <div className="p-3.5 rounded-lg bg-slate-950/40 border border-slate-800/80 text-[11px] text-slate-400 leading-relaxed">
-                  <span className="font-semibold text-slate-300 block mb-1">SIH Compliance Note:</span>
+                  <span className="font-semibold text-slate-300 block mb-1">Cadastral Compliance Note:</span>
                   Underground spatial modeling enforces strict separation between private property strata and public infrastructure utilities. Utility corridors do not trigger property ULPIN generation and remain non-property easement assets.
                 </div>
               </div>

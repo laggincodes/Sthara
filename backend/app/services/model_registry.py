@@ -96,7 +96,7 @@ class ModelRegistry:
             )
         )
 
-        # 5. SIH Calibrated Synthetic Benchmark (Deterministic Demo Extractor)
+        # 5. Calibrated Synthetic Benchmark (Deterministic Demo Extractor)
         self.register(
             ModelMetadata(
                 model_id="sih_benchmark_demo_v1",
@@ -108,12 +108,12 @@ class ModelRegistry:
                 availability="AVAILABLE",
                 limitations=(
                     "Pre-calibrated benchmark simulating high-confidence aerial & LiDAR extraction for Tower 1. "
-                    "Used for deterministic, reproducible SIH offline presentations."
+                    "Used for deterministic, reproducible offline demonstration."
                 ),
             )
         )
 
-        # 6. Deep Learning Aerial Segmentation (PyTorch Mask-RCNN - SIH PPT Tech Stack)
+        # 6. Deep Learning Aerial Segmentation (PyTorch Mask-RCNN)
         self.register(
             ModelMetadata(
                 model_id="pytorch_mask_rcnn_v1",
@@ -130,7 +130,7 @@ class ModelRegistry:
             )
         )
 
-        # 7. 3D Point Cloud Semantic Delineator (Open3D PointNet - SIH PPT Tech Stack)
+        # 7. 3D Point Cloud Semantic Delineator (Open3D PointNet)
         self.register(
             ModelMetadata(
                 model_id="open3d_pointnet_v1",

@@ -106,7 +106,7 @@ export function TopologyCard({
               )}
             </div>
             <p className="text-xs text-slate-400 font-mono">
-              SIH PPT Stage 06 · Overlap Check · Containment · Duplicates · 3D Mesh
+              Stage 06 · Overlap Check · Containment · Duplicates · 3D Mesh
             </p>
           </div>
         </div>

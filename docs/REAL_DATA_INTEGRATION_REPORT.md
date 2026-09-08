@@ -1,8 +1,8 @@
 # Real Multi-Source End-to-End Validation Report
 
 **Pipeline Execution ID:** `REAL-DATA-PIPELINE-E2E-001`  
-**Execution Timestamp:** `2026-09-08T15:20:49.761759+00:00`  
-**Duration:** `0.041 seconds`  
+**Execution Timestamp:** `2026-09-08T15:34:09.364005+00:00`  
+**Duration:** `0.043 seconds`  
 **Target Coordinate Reference System:** `EPSG:32643` (UTM Zone 43N)  
 **Overall Fusion Status:** `PARTIAL`  
 **Pipeline Verdict:** `VALIDATED_PARTIAL`  
@@ -14,7 +14,7 @@
 
 This report documents the rigorous end-to-end execution of the 3D Cadastral Intelligence Pipeline across both **real physical surface data** (OpenStreetMap crowd-sourced building footprints from Tagore Garden, New Delhi) and the **synthetic authoritative cadastral stack** (Pune testbed).
 
-In strict compliance with Smart India Hackathon (SIH) guidelines and professional software engineering principles:
+In strict compliance with cadastral engineering standards and professional software architecture:
 1. **Zero Data Fabrication**: Unavailable authoritative inputs (Real airborne LiDAR, As-built architectural CAD/BIM floor plans, GNSS RINEX logs, Real Delhi parcel cadastre) are **honestly classified as `UNAVAILABLE`**. The overall pipeline status is designated as **`PARTIAL`**, refusing to simulate fake completeness.
 2. **Honest Geospatial Separation**: Real Delhi data and Pune demo data are geographically disjoint by **1173.86 km**. The system reports **`NO_OVERLAP`** and strictly refrains from applying artificial coordinate shifts.
 3. **Strict Non-Cadastral Semantics for OSM**: Crowd-sourced OpenStreetMap building footprints are tagged with `is_cadastral=False` and `legal_status="UNVERIFIED_PHYSICAL_SURFACE"`. They are **never granted property ULPIN identifiers**.

@@ -1,7 +1,7 @@
 /**
  * TypeScript definitions for the AI/ML Extraction Subsystem.
  * Strictly mirrors the backend Pydantic schemas (Step 19).
- * Conforms to SIH separation:
+ * Conforms to architectural separation:
  *   AI = CANDIDATE EXTRACTION
  *   3D ENGINE = MODELLING
  *   TOPOLOGY = VALIDATION

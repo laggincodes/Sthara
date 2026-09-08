@@ -343,10 +343,10 @@ export default function ImportDataPage() {
           <div>
             <h3 className="text-sm font-bold text-white">Multi-Source Ingestion Architecture Matrix</h3>
             <p className="text-[11px] text-slate-400 mt-0.5">
-              Honest status of all spatial data sources described in the SIH 2026 specification.
+              Status and capabilities of all spatial data sources and format ingestion modules.
             </p>
           </div>
-          <span className="text-[10px] font-mono text-slate-400">SIH Deck Alignment</span>
+          <span className="text-[10px] font-mono text-slate-400">Data Source Alignment</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs font-mono">

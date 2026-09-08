@@ -1,6 +1,6 @@
 /**
  * Frontend TypeScript definitions for the Unit / Apartment Domain Entity.
- * Conforms to the SIH Presentation specification:
+ * Conforms to the Cadastral Hierarchy specification:
  * PARCEL -> BUILDING -> FLOOR -> UNIT -> 3D VOLUME -> 3D ULPIN
  *
  * Semantic Rule:

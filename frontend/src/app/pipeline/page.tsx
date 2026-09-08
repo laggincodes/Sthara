@@ -129,7 +129,7 @@ export default function PipelineAuditPage() {
               </>
             ) : (
               <>
-                <span>▶ Run SIH Demo</span>
+                <span>▶ Run Workflow Validation</span>
               </>
             )}
           </button>

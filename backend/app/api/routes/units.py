@@ -122,10 +122,10 @@ async def get_units_by_floor(floor_id: str):
     return matching
 
 
-@router.get("/canonical-demo", response_model=UnitPropertyRecord, summary="Get Canonical SIH Demonstration Property Record")
+@router.get("/canonical-demo", response_model=UnitPropertyRecord, summary="Get Canonical Demonstration Property Record")
 async def get_canonical_demo_property_record():
     """
-    Returns the canonical SIH demonstration property record:
+    Returns the canonical demonstration property record:
     P001 -> B01 -> F05 -> U501 (Apartment 501 on Floor 5 of Residential Tower 1).
     """
     all_units = load_demo_units_from_disk()
@@ -144,7 +144,7 @@ async def get_canonical_demo_property_record():
 @router.get("/property-record/{unit_id}", response_model=UnitPropertyRecord, summary="Get Conceptual 3D Property Record")
 async def get_unit_property_record(unit_id: str):
     """
-    Returns a conceptual 3D Property Record for a unit, conforming to the SIH Presentation specification.
+    Returns a conceptual 3D Property Record for a unit, conforming to the cadastral specification.
     Resolves both canonical aliases ('P001', 'U501', '501') and full IDs ('BLD-DEMO-002-FL05-U501').
     """
     all_units = load_demo_units_from_disk()

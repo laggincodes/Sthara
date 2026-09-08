@@ -1222,7 +1222,7 @@ export const cadastreApi = {
   },
 
   /**
-   * Step 19: Retrieves the reproducible demonstration candidate bundle for SIH presentations.
+   * Step 19: Retrieves the reproducible demonstration candidate bundle for platform demonstration.
    */
   async getDemoAiExtraction(): Promise<DemoAiExtractionResponse> {
     try {
@@ -1415,7 +1415,7 @@ export const cadastreApi = {
   },
 
   /**
-   * Part G: Retrieves canonical SIH demonstration property record (P001 -> B01 -> F05 -> U501).
+   * Part G: Retrieves canonical demonstration property record (P001 -> B01 -> F05 -> U501).
    */
   async getCanonicalDemoPropertyRecord(): Promise<UnitPropertyRecord> {
     try {
