@@ -1,7 +1,9 @@
 import math
 import time
 import json
+import hashlib
 import xml.etree.ElementTree as ET
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, List, Tuple, Optional, Union
 import pyproj
@@ -17,6 +19,7 @@ from app.schemas.osm_converter import (
     Osm3DConversionSummary,
     ConversionStageReport,
     BuildingMetadataItem,
+    OsmDatasetItem,
     HeightSourceOption,
     ExportFormatOption,
 )
@@ -41,10 +44,15 @@ from app.services.osm_service import (
 from app.core.logging import logger
 
 DATA_DIR = Path(__file__).resolve().parent.parent.parent.parent / "data"
-OUTPUT_GLB_PATH = DATA_DIR / "processed" / "real" / "model_3d.glb"
-OUTPUT_GLTF_PATH = DATA_DIR / "processed" / "real" / "model_3d.gltf"
-OUTPUT_METADATA_PATH = DATA_DIR / "processed" / "real" / "model_metadata.json"
-LATEST_REPORT_PATH = DATA_DIR / "processed" / "real" / "last_conversion_report.json"
+PROCESSED_REAL_DIR = DATA_DIR / "processed" / "real"
+UPLOADS_DIR = DATA_DIR / "uploads"
+PROCESSED_REAL_DIR.mkdir(parents=True, exist_ok=True)
+UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+
+OUTPUT_GLB_PATH = PROCESSED_REAL_DIR / "model_3d.glb"
+OUTPUT_GLTF_PATH = PROCESSED_REAL_DIR / "model_3d.gltf"
+OUTPUT_METADATA_PATH = PROCESSED_REAL_DIR / "model_metadata.json"
+LATEST_REPORT_PATH = PROCESSED_REAL_DIR / "last_conversion_report.json"
 
 
 def auto_detect_utm_crs(lon: float, lat: float) -> str:
@@ -61,10 +69,143 @@ class Osm3DConverterService:
     and industry-standard Binary GLB 2.0 / glTF models.
     """
 
+    _dataset_store: Dict[str, Dict[str, Any]] = {}
+    _conversion_reports: Dict[str, Dict[str, Any]] = {}
+    _active_dataset_id: str = "ds_tagore_garden_map_osm"
     _last_conversion_result: Optional[Dict[str, Any]] = None
 
     @classmethod
-    def get_last_report(cls) -> Optional[Dict[str, Any]]:
+    def register_dataset(
+        cls,
+        dataset_name: str,
+        content: Union[str, bytes],
+        dataset_id: Optional[str] = None,
+    ) -> OsmDatasetItem:
+        if isinstance(content, str):
+            content_bytes = content.encode("utf-8")
+            content_str = content
+        else:
+            content_bytes = content
+            content_str = content.decode("utf-8-sig", errors="replace")
+
+        content_hash = hashlib.sha256(content_bytes).hexdigest()
+        clean_name = Path(dataset_name).name
+
+        if not dataset_id:
+            stem = Path(clean_name).stem.replace(" ", "_").replace(".", "_").lower()
+            dataset_id = f"ds_{stem}_{content_hash[:8]}"
+
+        # Count features preview
+        feature_count = 0
+        is_geojson = clean_name.lower().endswith((".geojson", ".json"))
+        source_type = "geojson" if is_geojson else "osm"
+        if is_geojson:
+            try:
+                gdata = json.loads(content_str)
+                feature_count = len(gdata.get("features", []))
+            except Exception:
+                feature_count = 0
+        else:
+            try:
+                root = ET.fromstring(content_str)
+                ways_bld = sum(1 for w in root.findall("way") if any(t.get("k") == "building" for t in w.findall("tag")))
+                rels_bld = sum(1 for r in root.findall("relation") if any(t.get("k") == "building" for t in r.findall("tag")))
+                feature_count = ways_bld + rels_bld
+            except Exception:
+                feature_count = 0
+
+        # Save to uploads dir
+        upload_target = UPLOADS_DIR / f"{dataset_id}_{clean_name}"
+        try:
+            with open(upload_target, "wb") as f:
+                f.write(content_bytes)
+        except Exception as e:
+            logger.warning(f"Could not write upload file to disk: {e}")
+
+        created_at = datetime.now().isoformat() + "Z"
+        ds_info = {
+            "dataset_id": dataset_id,
+            "dataset_name": clean_name,
+            "source_type": source_type,
+            "file_size_bytes": len(content_bytes),
+            "feature_count": feature_count,
+            "content_hash": content_hash,
+            "source_crs": "EPSG:4326 (WGS 84)",
+            "is_converted": False,
+            "created_at": created_at,
+            "raw_content": content_str,
+            "file_path": str(upload_target),
+        }
+        cls._dataset_store[dataset_id] = ds_info
+        cls._active_dataset_id = dataset_id
+
+        return OsmDatasetItem(
+            dataset_id=dataset_id,
+            dataset_name=clean_name,
+            source_type=source_type,
+            file_size_bytes=len(content_bytes),
+            feature_count=feature_count,
+            content_hash=content_hash,
+            source_crs="EPSG:4326 (WGS 84)",
+            is_converted=False,
+            created_at=created_at,
+        )
+
+    @classmethod
+    def list_datasets(cls) -> List[OsmDatasetItem]:
+        items = []
+        if "ds_tagore_garden_map_osm" not in cls._dataset_store and DEFAULT_RAW_OSM_PATH.exists():
+            try:
+                stat = DEFAULT_RAW_OSM_PATH.stat()
+                with open(DEFAULT_RAW_OSM_PATH, "rb") as f:
+                    content_bytes = f.read()
+                chash = hashlib.sha256(content_bytes).hexdigest()
+                cls._dataset_store["ds_tagore_garden_map_osm"] = {
+                    "dataset_id": "ds_tagore_garden_map_osm",
+                    "dataset_name": "map.osm",
+                    "source_type": "osm",
+                    "file_size_bytes": stat.st_size,
+                    "feature_count": 155,
+                    "content_hash": chash,
+                    "source_crs": "EPSG:4326 (WGS 84)",
+                    "is_converted": OUTPUT_GLB_PATH.exists(),
+                    "created_at": datetime.now().isoformat() + "Z",
+                    "file_path": str(DEFAULT_RAW_OSM_PATH),
+                }
+            except Exception:
+                pass
+
+        for ds_id, ds in cls._dataset_store.items():
+            is_conv = ds.get("is_converted", False) or (ds_id in cls._conversion_reports) or (PROCESSED_REAL_DIR / f"{ds_id}.glb").exists()
+            items.append(OsmDatasetItem(
+                dataset_id=ds["dataset_id"],
+                dataset_name=ds["dataset_name"],
+                source_type=ds.get("source_type", "osm"),
+                file_size_bytes=ds.get("file_size_bytes", 0),
+                feature_count=ds.get("feature_count", 0),
+                content_hash=ds.get("content_hash", ""),
+                source_crs=ds.get("source_crs", "EPSG:4326 (WGS 84)"),
+                is_converted=is_conv,
+                created_at=ds.get("created_at", ""),
+            ))
+        return items
+
+    @classmethod
+    def get_last_report(cls, dataset_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
+        if dataset_id:
+            if dataset_id in cls._conversion_reports:
+                return cls._conversion_reports[dataset_id]
+            specific_report_path = PROCESSED_REAL_DIR / f"{dataset_id}_report.json"
+            if specific_report_path.exists():
+                try:
+                    with open(specific_report_path, "r", encoding="utf-8") as f:
+                        rep = json.load(f)
+                        cls._conversion_reports[dataset_id] = rep
+                        return rep
+                except Exception:
+                    pass
+            return None
+
         if cls._last_conversion_result:
             return cls._last_conversion_result
         if LATEST_REPORT_PATH.exists():
@@ -73,6 +214,39 @@ class Osm3DConverterService:
                     return json.load(f)
             except Exception:
                 pass
+        return None
+
+    @classmethod
+    def get_glb_path(cls, dataset_id: str) -> Optional[Path]:
+        if dataset_id == "latest":
+            return OUTPUT_GLB_PATH if OUTPUT_GLB_PATH.exists() else None
+        p = PROCESSED_REAL_DIR / f"{dataset_id}.glb"
+        if p.exists():
+            return p
+        if OUTPUT_GLB_PATH.exists() and dataset_id in ("ds_tagore_garden_map_osm", "map.osm"):
+            return OUTPUT_GLB_PATH
+        return None
+
+    @classmethod
+    def get_gltf_path(cls, dataset_id: str) -> Optional[Path]:
+        if dataset_id == "latest":
+            return OUTPUT_GLTF_PATH if OUTPUT_GLTF_PATH.exists() else None
+        p = PROCESSED_REAL_DIR / f"{dataset_id}.gltf"
+        if p.exists():
+            return p
+        if OUTPUT_GLTF_PATH.exists() and dataset_id in ("ds_tagore_garden_map_osm", "map.osm"):
+            return OUTPUT_GLTF_PATH
+        return None
+
+    @classmethod
+    def get_metadata_path(cls, dataset_id: str) -> Optional[Path]:
+        if dataset_id == "latest":
+            return OUTPUT_METADATA_PATH if OUTPUT_METADATA_PATH.exists() else None
+        p = PROCESSED_REAL_DIR / f"{dataset_id}_metadata.json"
+        if p.exists():
+            return p
+        if OUTPUT_METADATA_PATH.exists() and dataset_id in ("ds_tagore_garden_map_osm", "map.osm"):
+            return OUTPUT_METADATA_PATH
         return None
 
     @classmethod
@@ -95,8 +269,45 @@ class Osm3DConverterService:
             stages.append(rep)
             return rep
 
-        source_file_path = Path(config.source_file) if config.source_file else DEFAULT_RAW_OSM_PATH
-        source_name = source_name_override or source_file_path.name
+        # Resolve dataset identity & content
+        dataset_id = config.dataset_id
+        content_hash = None
+        source_file_path = None
+
+        if dataset_id and dataset_id in cls._dataset_store:
+            ds = cls._dataset_store[dataset_id]
+            source_name = ds["dataset_name"]
+            content_hash = ds["content_hash"]
+            raw_xml_content = ds.get("raw_content")
+            if not raw_xml_content and "file_path" in ds:
+                source_file_path = Path(ds["file_path"])
+        elif raw_xml_content:
+            content_bytes = raw_xml_content.encode("utf-8")
+            content_hash = hashlib.sha256(content_bytes).hexdigest()
+            source_name = source_name_override or "uploaded.osm"
+            stem = Path(source_name).stem.replace(" ", "_").replace(".", "_").lower()
+            dataset_id = dataset_id or f"ds_{stem}_{content_hash[:8]}"
+            cls.register_dataset(dataset_name=source_name, content=content_bytes, dataset_id=dataset_id)
+        elif config.source_file:
+            source_file_path = Path(config.source_file)
+            source_name = source_name_override or source_file_path.name
+            if source_file_path.exists():
+                with open(source_file_path, "rb") as f:
+                    cb = f.read()
+                content_hash = hashlib.sha256(cb).hexdigest()
+                stem = Path(source_name).stem.replace(" ", "_").replace(".", "_").lower()
+                dataset_id = dataset_id or f"ds_{stem}_{content_hash[:8]}"
+                cls.register_dataset(dataset_name=source_name, content=cb, dataset_id=dataset_id)
+            else:
+                dataset_id = dataset_id or f"ds_{Path(source_name).stem.lower()}"
+        else:
+            source_file_path = DEFAULT_RAW_OSM_PATH
+            source_name = source_name_override or source_file_path.name
+            dataset_id = dataset_id or "ds_tagore_garden_map_osm"
+            if source_file_path.exists():
+                with open(source_file_path, "rb") as f:
+                    cb = f.read()
+                content_hash = hashlib.sha256(cb).hexdigest()
 
         # -------------------------------------------------------------
         # STAGE 1: IMPORT
@@ -104,14 +315,14 @@ class Osm3DConverterService:
         t0 = time.perf_counter()
         if raw_xml_content:
             file_size_bytes = len(raw_xml_content.encode("utf-8"))
-            import_details = {"source_type": "memory_buffer", "size_bytes": file_size_bytes}
+            import_details = {"source_type": "memory_buffer", "size_bytes": file_size_bytes, "dataset_id": dataset_id}
         else:
-            if not source_file_path.exists():
+            if not source_file_path or not source_file_path.exists():
                 err_msg = f"Source OSM file '{source_file_path}' not found."
                 add_stage("import", "failed", message=err_msg, duration_ms=round((time.perf_counter() - t0) * 1000, 2))
                 raise FileNotFoundError(err_msg)
             file_size_bytes = source_file_path.stat().st_size
-            import_details = {"source_type": "file_path", "path": str(source_file_path), "size_bytes": file_size_bytes}
+            import_details = {"source_type": "file_path", "path": str(source_file_path), "size_bytes": file_size_bytes, "dataset_id": dataset_id}
 
         add_stage(
             "import",
@@ -198,7 +409,7 @@ class Osm3DConverterService:
         )
 
         # -------------------------------------------------------------
-        # STAGE 3: FEATURE EXTRACTION (Polygons & Building Metadata)
+        # STAGE 3: EXTRACTION (Building Footprints)
         # -------------------------------------------------------------
         t0 = time.perf_counter()
         raw_buildings: List[Dict[str, Any]] = []
@@ -319,40 +530,44 @@ class Osm3DConverterService:
                     except Exception:
                         degenerate_count += 1
 
-        total_extracted = len(raw_buildings)
-        if total_extracted == 0:
-            err_msg = "No valid building footprints could be extracted from the dataset."
-            add_stage("feature_extraction", "failed", message=err_msg, duration_ms=round((time.perf_counter() - t0) * 1000, 2))
+        if not raw_buildings:
+            err_msg = "No valid building footprints could be extracted from dataset."
+            add_stage("extraction", "failed", message=err_msg, duration_ms=round((time.perf_counter() - t0) * 1000, 2))
             raise ValueError(err_msg)
 
         add_stage(
-            "feature_extraction",
+            "extraction",
             "complete",
-            message=f"Discovered {total_extracted} valid closed footprint(s) (skipped {degenerate_count}).",
-            features=total_extracted,
+            message=f"Extracted {len(raw_buildings)} building footprints ({degenerate_count} degenerate/discarded).",
+            features=len(raw_buildings),
             duration_ms=round((time.perf_counter() - t0) * 1000, 2),
-            details={"valid_buildings": total_extracted, "skipped": degenerate_count},
+            details={
+                "extracted_buildings": len(raw_buildings),
+                "degenerate_count": degenerate_count,
+            },
         )
 
         # -------------------------------------------------------------
-        # STAGE 4: CRS TRANSFORMATION (WGS84 -> Projected Metric UTM)
+        # STAGE 4: CRS TRANSFORMATION (Projecting to Metric CRS)
         # -------------------------------------------------------------
         t0 = time.perf_counter()
-        all_centroids = [b["polygon"].centroid for b in raw_buildings]
-        center_lon = sum(c.x for c in all_centroids) / len(all_centroids)
-        center_lat = sum(c.y for c in all_centroids) / len(all_centroids)
+        all_lons, all_lats = [], []
+        for b in raw_buildings:
+            geom = b["polygon"]
+            b_minx, b_miny, b_maxx, b_maxy = geom.bounds
+            all_lons.extend([b_minx, b_maxx])
+            all_lats.extend([b_miny, b_maxy])
 
-        source_crs_str = "EPSG:4326"
-        target_crs_str = config.target_crs
-        if target_crs_str.lower() == "auto" or not target_crs_str:
+        center_lon = (min(all_lons) + max(all_lons)) / 2.0
+        center_lat = (min(all_lats) + max(all_lats)) / 2.0
+
+        if config.target_crs and config.target_crs.lower() != "auto":
+            target_crs_str = config.target_crs.upper()
+        else:
             target_crs_str = auto_detect_utm_crs(center_lon, center_lat)
 
-        src_crs = pyproj.CRS.from_user_input(source_crs_str)
-        dst_crs = pyproj.CRS.from_user_input(target_crs_str)
-        transformer = pyproj.Transformer.from_crs(src_crs, dst_crs, always_xy=True)
-
-        ox_proj, oy_proj = transformer.transform(center_lon, center_lat)
-        scene_origin = (round(ox_proj, 2), round(oy_proj, 2), 0.0)
+        source_crs_str = "EPSG:4326"
+        transformer = pyproj.Transformer.from_crs(source_crs_str, target_crs_str, always_xy=True)
 
         projected_buildings = []
         for b in raw_buildings:
@@ -366,6 +581,18 @@ class Osm3DConverterService:
                     projected_buildings.append(b_copy)
             except Exception:
                 pass
+
+        all_proj_x, all_proj_y = [], []
+        for b in projected_buildings:
+            minx, miny, maxx, maxy = b["projected_polygon"].bounds
+            all_proj_x.extend([minx, maxx])
+            all_proj_y.extend([miny, maxy])
+
+        scene_origin = [
+            (min(all_proj_x) + max(all_proj_x)) / 2.0,
+            (min(all_proj_y) + max(all_proj_y)) / 2.0,
+            0.0,
+        ]
 
         add_stage(
             "crs_transformation",
@@ -586,7 +813,6 @@ class Osm3DConverterService:
                         top_elevation=top_z,
                         height=height,
                         height_source=b["height_source"],
-                        number_of_floors=b.get("levels"),
                     ),
                     geometry=mesh_coll,
                     warnings=[],
@@ -642,7 +868,11 @@ class Osm3DConverterService:
         glb_size_bytes = 0
         gltf_size_bytes = 0
 
-        OUTPUT_GLB_PATH.parent.mkdir(parents=True, exist_ok=True)
+        # Dataset-specific paths
+        specific_glb_path = PROCESSED_REAL_DIR / f"{dataset_id}.glb"
+        specific_gltf_path = PROCESSED_REAL_DIR / f"{dataset_id}.gltf"
+        specific_metadata_path = PROCESSED_REAL_DIR / f"{dataset_id}_metadata.json"
+        specific_report_path = PROCESSED_REAL_DIR / f"{dataset_id}_report.json"
 
         if trimesh_geometries:
             try:
@@ -652,15 +882,18 @@ class Osm3DConverterService:
                     scene.add_geometry(tm, node_name=node_name)
 
                 glb_bytes = scene.export(file_type="glb")
+                glb_payload = glb_bytes if isinstance(glb_bytes, bytes) else glb_bytes.encode("utf-8")
+                
+                with open(specific_glb_path, "wb") as f:
+                    f.write(glb_payload)
                 with open(OUTPUT_GLB_PATH, "wb") as f:
-                    f.write(glb_bytes if isinstance(glb_bytes, bytes) else glb_bytes.encode("utf-8"))
-                glb_size_bytes = OUTPUT_GLB_PATH.stat().st_size
+                    f.write(glb_payload)
+                glb_size_bytes = specific_glb_path.stat().st_size
 
                 gltf_exported = scene.export(file_type="gltf")
                 if isinstance(gltf_exported, dict):
-                    # trimesh gltf export returns a dict mapping filename -> content
                     for fn, fc in gltf_exported.items():
-                        out_target = OUTPUT_GLTF_PATH.parent / fn
+                        out_target = PROCESSED_REAL_DIR / fn
                         if isinstance(fc, bytes):
                             with open(out_target, "wb") as f:
                                 f.write(fc)
@@ -670,17 +903,22 @@ class Osm3DConverterService:
                         else:
                             with open(out_target, "w", encoding="utf-8") as f:
                                 json.dump(fc, f, indent=2)
-                    # If model.gltf was written, ensure OUTPUT_GLTF_PATH is populated
-                    model_gltf_path = OUTPUT_GLTF_PATH.parent / "model.gltf"
-                    if model_gltf_path.exists() and not OUTPUT_GLTF_PATH.exists():
-                        OUTPUT_GLTF_PATH.write_text(model_gltf_path.read_text(encoding="utf-8"), encoding="utf-8")
-                    if OUTPUT_GLTF_PATH.exists():
-                        gltf_size_bytes = OUTPUT_GLTF_PATH.stat().st_size
+                    model_gltf_path = PROCESSED_REAL_DIR / "model.gltf"
+                    if model_gltf_path.exists():
+                        gltf_txt = model_gltf_path.read_text(encoding="utf-8")
+                        specific_gltf_path.write_text(gltf_txt, encoding="utf-8")
+                        OUTPUT_GLTF_PATH.write_text(gltf_txt, encoding="utf-8")
+                    if specific_gltf_path.exists():
+                        gltf_size_bytes = specific_gltf_path.stat().st_size
                 elif isinstance(gltf_exported, str):
+                    with open(specific_gltf_path, "w", encoding="utf-8") as f:
+                        f.write(gltf_exported)
                     with open(OUTPUT_GLTF_PATH, "w", encoding="utf-8") as f:
                         f.write(gltf_exported)
                     gltf_size_bytes = len(gltf_exported)
                 elif isinstance(gltf_exported, bytes):
+                    with open(specific_gltf_path, "wb") as f:
+                        f.write(gltf_exported)
                     with open(OUTPUT_GLTF_PATH, "wb") as f:
                         f.write(gltf_exported)
                     gltf_size_bytes = len(gltf_exported)
@@ -689,6 +927,7 @@ class Osm3DConverterService:
                 logger.error(f"Failed to export GLB/GLTF scene: {e}")
 
         metadata_dict = {
+            "dataset_id": dataset_id,
             "source_file": source_name,
             "target_crs": target_crs_str,
             "viewer_origin": [scene_origin[0], scene_origin[1], scene_origin[2]],
@@ -699,6 +938,8 @@ class Osm3DConverterService:
             "volume_cubic_m": round(total_volume, 2),
             "buildings": [m.model_dump() for m in metadata_items],
         }
+        with open(specific_metadata_path, "w", encoding="utf-8") as f:
+            json.dump(metadata_dict, f, indent=2)
         with open(OUTPUT_METADATA_PATH, "w", encoding="utf-8") as f:
             json.dump(metadata_dict, f, indent=2)
 
@@ -708,9 +949,10 @@ class Osm3DConverterService:
             message=f"Exported standard Binary GLB 2.0 ({glb_size_bytes / 1024:.1f} KB) & glTF ({gltf_size_bytes / 1024:.1f} KB).",
             duration_ms=round((time.perf_counter() - t0) * 1000, 2),
             details={
+                "dataset_id": dataset_id,
                 "glb_bytes": glb_size_bytes,
                 "gltf_bytes": gltf_size_bytes,
-                "glb_path": str(OUTPUT_GLB_PATH),
+                "glb_path": str(specific_glb_path),
             },
         )
 
@@ -746,24 +988,40 @@ class Osm3DConverterService:
             ),
         ).model_dump()
 
+        converted_time_str = datetime.now().isoformat() + "Z"
+
         response = Osm3DConversionResponse(
             success=True,
+            dataset_id=dataset_id,
+            dataset_name=source_name,
             source_name=source_name,
+            content_hash=content_hash,
+            converted_at=converted_time_str,
             target_crs=target_crs_str,
             viewer_origin=[scene_origin[0], scene_origin[1], scene_origin[2]],
             summary=summary,
             stages=stages,
-            glb_url="/api/v1/export/glb/latest",
-            gltf_url="/api/v1/export/gltf/latest",
-            metadata_url="/api/v1/export/metadata/latest",
+            glb_url=f"/api/v1/export/glb/{dataset_id}",
+            gltf_url=f"/api/v1/export/gltf/{dataset_id}",
+            metadata_url=f"/api/v1/export/metadata/{dataset_id}",
             buildings_metadata=metadata_items,
             mesh_data=mesh_data_response,
         )
 
-        cls._last_conversion_result = response.model_dump()
+        res_dict = response.model_dump()
+        cls._conversion_reports[dataset_id] = res_dict
+        cls._last_conversion_result = res_dict
+        cls._active_dataset_id = dataset_id
+
+        if dataset_id in cls._dataset_store:
+            cls._dataset_store[dataset_id]["is_converted"] = True
+            cls._dataset_store[dataset_id]["feature_count"] = len(building_3d_results)
+
         try:
+            with open(specific_report_path, "w", encoding="utf-8") as f:
+                json.dump(res_dict, f, indent=2)
             with open(LATEST_REPORT_PATH, "w", encoding="utf-8") as f:
-                json.dump(cls._last_conversion_result, f, indent=2)
+                json.dump(res_dict, f, indent=2)
         except Exception:
             pass
 

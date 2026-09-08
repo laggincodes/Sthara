@@ -156,7 +156,7 @@ class TestOsmConverterApiEndpoints:
         body = resp.json()
         assert body["success"] is True
         assert body["summary"]["buildings"] >= 1
-        assert body["glb_url"] == "/api/v1/export/glb/latest"
+        assert "/api/v1/export/glb/" in body["glb_url"]
 
     def test_get_conversion_status_endpoint(self):
         resp = client.get("/api/v1/osm/conversion-status")
@@ -195,6 +195,48 @@ class TestOsmConverterApiEndpoints:
         body = resp.json()
         assert body["success"] is True
         assert body["summary"]["buildings"] == 1
+        assert body["dataset_id"].startswith("ds_")
+
+    def test_multi_dataset_isolation_and_no_stale_data(self):
+        # 1. Convert Dataset A (Tagore Garden)
+        resp_a = client.post("/api/v1/osm/convert-3d", json={"source_file": str(DEFAULT_RAW_OSM_PATH)})
+        assert resp_a.status_code == 200
+        data_a = resp_a.json()
+        ds_id_a = data_a["dataset_id"]
+        assert data_a["summary"]["buildings"] == 155
+
+        # 2. Upload & Convert Dataset B (Single building)
+        resp_b = client.post(
+            "/api/v1/osm/upload-and-convert",
+            files={"file": ("custom_area_b.osm", io.BytesIO(SAMPLE_OSM_XML), "application/octet-stream")},
+            data={"height_source": "automatic"},
+        )
+        assert resp_b.status_code == 200
+        data_b = resp_b.json()
+        ds_id_b = data_b["dataset_id"]
+        assert data_b["summary"]["buildings"] == 1
+        assert ds_id_a != ds_id_b
+
+        # 3. Verify status endpoint for dataset A returns dataset A's 155 buildings, not B
+        status_a = client.get(f"/api/v1/osm/conversion-status?dataset_id={ds_id_a}")
+        assert status_a.status_code == 200
+        assert status_a.json()["data"]["summary"]["buildings"] == 155
+        assert status_a.json()["data"]["dataset_id"] == ds_id_a
+
+        # 4. Verify status endpoint for dataset B returns dataset B's 1 building, not A
+        status_b = client.get(f"/api/v1/osm/conversion-status?dataset_id={ds_id_b}")
+        assert status_b.status_code == 200
+        assert status_b.json()["data"]["summary"]["buildings"] == 1
+        assert status_b.json()["data"]["dataset_id"] == ds_id_b
+
+        # 5. Verify dataset-specific GLB downloads exist for both
+        glb_a = client.get(f"/api/v1/export/glb/{ds_id_a}")
+        assert glb_a.status_code == 200
+        assert glb_a.headers["content-type"] == "model/gltf-binary"
+
+        glb_b = client.get(f"/api/v1/export/glb/{ds_id_b}")
+        assert glb_b.status_code == 200
+        assert glb_b.headers["content-type"] == "model/gltf-binary"
 
     def test_restore_and_verify_real_map_osm_conversion(self):
         """Ensures that the final state after tests retains the real 155-building dataset."""
@@ -210,4 +252,5 @@ class TestOsmConverterApiEndpoints:
             assert res.summary.buildings == 155
             assert res.mesh_data is not None
             assert len(res.mesh_data["results"]) == 155
+
 

@@ -376,7 +376,8 @@ export type HeightSourceOption = "automatic" | "osm_height" | "building_levels" 
 export type ExportFormatOption = "glb" | "gltf" | "both";
 
 export interface Osm3DConversionConfig {
-  source_file?: string | null;
+  dataset_id?: string;
+  source_file?: string;
   height_source: HeightSourceOption;
   default_floor_height_m: number;
   default_building_height_m: number;
@@ -440,7 +441,11 @@ export interface Osm3DConversionSummary {
 
 export interface Osm3DConversionResponse {
   success: boolean;
+  dataset_id: string;
+  dataset_name: string;
   source_name: string;
+  content_hash?: string;
+  converted_at?: string;
   target_crs: string;
   viewer_origin: [number, number, number];
   summary: Osm3DConversionSummary;
@@ -450,6 +455,18 @@ export interface Osm3DConversionResponse {
   metadata_url?: string | null;
   buildings_metadata: BuildingMetadataItem[];
   mesh_data?: import("./geometry3d").Generate3DResponse | null;
+}
+
+export interface OsmDatasetItem {
+  dataset_id: string;
+  dataset_name: string;
+  source_type: string;
+  file_size_bytes: number;
+  feature_count: number;
+  content_hash: string;
+  source_crs: string;
+  is_converted: boolean;
+  created_at: string;
 }
 
 export interface DataMeetLayerInfo {

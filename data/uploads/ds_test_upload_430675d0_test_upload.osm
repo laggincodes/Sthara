@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm version="0.6" generator="pytest">
+  <bounds minlat="28.640" minlon="77.110" maxlat="28.650" maxlon="77.120"/>
+  <node id="1" lat="28.641" lon="77.111"/>
+  <node id="2" lat="28.641" lon="77.113"/>
+  <node id="3" lat="28.643" lon="77.113"/>
+  <node id="4" lat="28.643" lon="77.111"/>
+  <way id="101">
+    <nd ref="1"/><nd ref="2"/><nd ref="3"/><nd ref="4"/><nd ref="1"/>
+    <tag k="building" v="residential"/>
+    <tag k="name" v="Test Villa"/>
+    <tag k="height" v="15"/>
+    <tag k="building:levels" v="5"/>
+  </way>
+</osm>

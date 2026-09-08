@@ -57,11 +57,11 @@ export default function Cadastral3DPage() {
   }, [building3DData, isConverting, conversionResult, runOsm3DConversion]);
 
   const buildingCount =
-    conversionResult?.summary.buildings || building3DData?.summary.successful || 155;
+    conversionResult?.summary.buildings ?? (building3DData?.summary.successful || 0);
   const verticesCount =
-    conversionResult?.summary.vertices || 1260;
+    conversionResult?.summary.vertices ?? 0;
   const facesCount =
-    conversionResult?.summary.faces || 1896;
+    conversionResult?.summary.faces ?? 0;
   const crsString =
     conversionResult?.target_crs || "EPSG:32643 (UTM Zone 43N)";
 
@@ -95,14 +95,15 @@ export default function Cadastral3DPage() {
 
   const handleExportDownload = (type: "glb" | "gltf" | "metadata") => {
     setExportMenuOpen(false);
-    let url = "http://localhost:8000/api/v1/export/glb/latest";
-    let filename = "city_model_3d.glb";
+    const dsId = conversionResult?.dataset_id || "latest";
+    let url = `http://localhost:8000/api/v1/export/glb/${dsId}`;
+    let filename = `${dsId}_model_3d.glb`;
     if (type === "gltf") {
-      url = "http://localhost:8000/api/v1/export/gltf/latest";
-      filename = "city_model_3d.gltf";
+      url = `http://localhost:8000/api/v1/export/gltf/${dsId}`;
+      filename = `${dsId}_model_3d.gltf`;
     } else if (type === "metadata") {
-      url = "http://localhost:8000/api/v1/export/metadata/latest";
-      filename = "city_metadata.json";
+      url = `http://localhost:8000/api/v1/export/metadata/${dsId}`;
+      filename = `${dsId}_metadata.json`;
     }
 
     const a = document.createElement("a");
