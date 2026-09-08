@@ -7,6 +7,7 @@ import { ValidationCard } from "@/components/cadastral/ValidationCard";
 import { DataFusionCard } from "@/components/cadastral/DataFusionCard";
 import { AiExtractionCard } from "@/components/cadastral/AiExtractionCard";
 import { UndergroundDataCard } from "@/components/cadastral/UndergroundDataCard";
+import { OsmImportCard } from "@/components/cadastral/OsmImportCard";
 
 export default function DataWorkspacePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -182,6 +183,14 @@ export default function DataWorkspacePage() {
                 </svg>
                 <span>Upload Custom GeoJSON File</span>
               </button>
+            </div>
+
+            {/* OSM Import — Dedicated, logically separate from GeoJSON upload */}
+            <div className="mt-3 border-t border-slate-800 pt-3">
+              <div className="text-[10px] font-mono uppercase text-slate-500 mb-1 tracking-wide">
+                Import OpenStreetMap File
+              </div>
+              <OsmImportCard />
             </div>
           </div>
 

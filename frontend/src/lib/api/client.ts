@@ -60,6 +60,7 @@ import {
   DemoTopologyResponse,
   ControlPointValidationRequest,
   ControlPointValidationResponse,
+  OsmUploadResult,
 } from "@/types/cadastre";
 
 const BASE_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1").replace(/\/$/, "");
@@ -252,6 +253,31 @@ export const cadastreApi = {
       headers: { Accept: "application/json" },
     });
     return await handleResponse<{ status: string; message: string; data: Record<string, unknown> }>(response);
+  },
+
+  /**
+   * Uploads a user-provided .osm file to the backend for validation, storage, and
+   * building extraction via the existing OSMBuildingExtractor.
+   * Returns the full extraction summary and non-cadastral metadata.
+   */
+  async uploadOSMFile(file: File): Promise<OsmUploadResult> {
+    const formData = new FormData();
+    formData.append("file", file, file.name);
+    let response: Response;
+    try {
+      response = await fetch(`${BASE_URL}/buildings/upload-osm`, {
+        method: "POST",
+        headers: { Accept: "application/json" },
+        body: formData,
+      });
+    } catch {
+      throw new ApiError(
+        "Unable to connect to the geospatial processing service.",
+        0,
+        "NETWORK_UNAVAILABLE"
+      );
+    }
+    return await handleResponse<OsmUploadResult>(response);
   },
 
   /**
