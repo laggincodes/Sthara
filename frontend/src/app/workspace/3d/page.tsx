@@ -288,6 +288,12 @@ export default function Cadastral3DPage() {
                   <span className="text-emerald-400 font-bold">100% Watertight Solid</span>
                 </div>
                 <div className="flex justify-between">
+                  <span className="text-slate-400">Admin Boundary:</span>
+                  <span className="text-cyan-300 font-bold text-[11px]" title="Rajouri Garden (AC 27, West Delhi) - DataMeet Maps">
+                    Rajouri Garden (AC 27)
+                  </span>
+                </div>
+                <div className="flex justify-between">
                   <span className="text-slate-400">Metric Projection:</span>
                   <span className="text-slate-300 text-[11px] truncate max-w-[120px]" title={crsString}>
                     {crsString}
@@ -490,10 +496,10 @@ export default function Cadastral3DPage() {
                 {/* 5. Cadastral Provenance Distinction */}
                 <div className="rounded-lg bg-slate-900/40 border border-slate-800 p-2.5 text-[10px] text-slate-400 leading-relaxed space-y-0.5">
                   <div className="text-slate-300 font-semibold uppercase text-[9px]">
-                    Cadastral Provenance Note
+                    Cadastral Provenance &amp; Data Attribution
                   </div>
                   <p>
-                    Footprint is from physical OpenStreetMap geometry. Vertical volume extruded parametrically conforming to 3D Geometry Contract v1.0.
+                    Physical building geometry from OpenStreetMap (ODbL). Administrative reference boundary from DataMeet Maps (ODbL / CC-BY 2.5 India). Vertical volumes extruded parametrically conforming to 3D Geometry Contract v1.0.
                   </p>
                 </div>
               </div>

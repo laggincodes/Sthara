@@ -63,6 +63,9 @@ import {
   OsmUploadResult,
   Osm3DConversionConfig,
   Osm3DConversionResponse,
+  DataMeetLayerInfo,
+  DataMeetAlignmentResponse,
+  DataMeetMetadataResponse,
 } from "@/types/cadastre";
 
 const BASE_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1").replace(/\/$/, "");
@@ -1326,6 +1329,70 @@ export const cadastreApi = {
       throw new ApiError("Unable to retrieve real data pipeline result.", 0, "NETWORK_UNAVAILABLE");
     }
   },
+
+  /**
+   * DataMeet Maps Integration Methods
+   */
+  async getDatameetMetadata(): Promise<DataMeetMetadataResponse> {
+    try {
+      const response = await fetch(`${BASE_URL}/datameet/metadata`, {
+        method: "GET",
+        headers: { Accept: "application/json" },
+      });
+      return await handleResponse<DataMeetMetadataResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Unable to fetch DataMeet metadata.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  async getDatameetLayers(): Promise<DataMeetLayerInfo[]> {
+    try {
+      const response = await fetch(`${BASE_URL}/datameet/layers`, {
+        method: "GET",
+        headers: { Accept: "application/json" },
+      });
+      return await handleResponse<DataMeetLayerInfo[]>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Unable to fetch DataMeet administrative layers.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  async getDatameetLayerGeoJSON(layerId: string): Promise<GeoJSONFeatureCollection> {
+    try {
+      const response = await fetch(`${BASE_URL}/datameet/layers/${encodeURIComponent(layerId)}`, {
+        method: "GET",
+        headers: { Accept: "application/json" },
+      });
+      return await handleResponse<GeoJSONFeatureCollection>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError(`Unable to fetch DataMeet GeoJSON for layer '${layerId}'.`, 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  async alignDatameetWithOsm(layerId: string, aoiName?: string, workingCrs: string = "EPSG:32643"): Promise<DataMeetAlignmentResponse> {
+    try {
+      const response = await fetch(`${BASE_URL}/datameet/align-osm`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          layer_id: layerId,
+          aoi_name: aoiName,
+          working_crs: workingCrs,
+        }),
+      });
+      return await handleResponse<DataMeetAlignmentResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Unable to align DataMeet boundary with OSM building dataset.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
 };
+
 
 
