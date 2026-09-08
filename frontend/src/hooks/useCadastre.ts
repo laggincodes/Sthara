@@ -217,6 +217,25 @@ export function useCadastre() {
       })
       .catch(() => {});
 
+    // Preload latest conversion result from backend if available
+    cadastreApi
+      .getConversionStatus()
+      .then((statusRes) => {
+        if (mounted && statusRes?.data?.mesh_data) {
+          setConversionResult(statusRes.data);
+          setConversionStages(statusRes.data.stages || []);
+          setBuilding3DData(statusRes.data.mesh_data);
+          if (statusRes.data.source_name) {
+            setBuildingDatasetName(`${statusRes.data.source_name} (3D Converted)`);
+            setActiveProjectName(statusRes.data.source_name.replace(/\.[^/.]+$/, "") + " 3D City");
+          }
+          if (statusRes.data.buildings_metadata && statusRes.data.buildings_metadata.length > 0) {
+            setSelectedBuildingId(statusRes.data.buildings_metadata[0].building_id);
+          }
+        }
+      })
+      .catch(() => {});
+
     return () => {
       mounted = false;
     };

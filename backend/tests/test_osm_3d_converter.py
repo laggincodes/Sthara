@@ -195,3 +195,19 @@ class TestOsmConverterApiEndpoints:
         body = resp.json()
         assert body["success"] is True
         assert body["summary"]["buildings"] == 1
+
+    def test_restore_and_verify_real_map_osm_conversion(self):
+        """Ensures that the final state after tests retains the real 155-building dataset."""
+        if DEFAULT_RAW_OSM_PATH.exists():
+            config = Osm3DConversionConfig(
+                height_source=HeightSourceOption.AUTOMATIC,
+                default_floor_height_m=3.0,
+                default_building_height_m=9.0,
+                target_crs="auto",
+            )
+            res = Osm3DConverterService.convert_osm_to_3d(config)
+            assert res.success is True
+            assert res.summary.buildings == 155
+            assert res.mesh_data is not None
+            assert len(res.mesh_data["results"]) == 155
+
