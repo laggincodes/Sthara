@@ -371,6 +371,73 @@ export interface OsmUploadResult {
   };
 }
 
+// OSM -> 3D Pipeline & Export Types
+export type HeightSourceOption = "automatic" | "osm_height" | "building_levels" | "default";
+export type ExportFormatOption = "glb" | "gltf" | "both";
+
+export interface Osm3DConversionConfig {
+  source_file?: string | null;
+  height_source: HeightSourceOption;
+  default_floor_height_m: number;
+  default_building_height_m: number;
+  target_crs: string;
+  export_format: ExportFormatOption;
+}
+
+export interface ConversionStageReport {
+  stage: string;
+  status: "pending" | "running" | "complete" | "failed";
+  message?: string | null;
+  features?: number | null;
+  vertices?: number | null;
+  faces?: number | null;
+  duration_ms?: number | null;
+  details?: Record<string, unknown> | null;
+}
+
+export interface BuildingMetadataItem {
+  building_id: string;
+  osm_id?: string | null;
+  name?: string | null;
+  height: number;
+  levels?: number | null;
+  height_source: string;
+  area_sqm: number;
+  volume_cubic_m: number;
+  source: string;
+  is_cadastral: boolean;
+}
+
+export interface Osm3DConversionSummary {
+  buildings: number;
+  vertices: number;
+  faces: number;
+  surface_area_sqm: number;
+  volume_cubic_m: number;
+  processing_time_s: number;
+  bounding_box?: {
+    min: [number, number, number];
+    max: [number, number, number];
+  } | null;
+  target_crs: string;
+  source_crs: string;
+  viewer_origin: [number, number, number];
+}
+
+export interface Osm3DConversionResponse {
+  success: boolean;
+  source_name: string;
+  target_crs: string;
+  viewer_origin: [number, number, number];
+  summary: Osm3DConversionSummary;
+  stages: ConversionStageReport[];
+  glb_url?: string | null;
+  gltf_url?: string | null;
+  metadata_url?: string | null;
+  buildings_metadata: BuildingMetadataItem[];
+  mesh_data?: import("./geometry3d").Generate3DResponse | null;
+}
+
 
 
 

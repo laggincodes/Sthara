@@ -1,424 +1,363 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCadastreContext } from "@/context/CadastreContext";
-import { ValidationCard } from "@/components/cadastral/ValidationCard";
-import { DataFusionCard } from "@/components/cadastral/DataFusionCard";
-import { AiExtractionCard } from "@/components/cadastral/AiExtractionCard";
-import { UndergroundDataCard } from "@/components/cadastral/UndergroundDataCard";
-import { OsmImportCard } from "@/components/cadastral/OsmImportCard";
+import { HeightSourceOption, ExportFormatOption } from "@/types/cadastre";
 
-export default function DataWorkspacePage() {
+export default function ImportDataPage() {
+  const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
-    isLoading,
-    isValidating,
-    isAssociating,
-    isSamplingElevation,
-    validationError,
-    associationError,
-    elevationError,
-    geojson,
-    buildingsGeojson,
-    validationResult,
-    associationData,
-    demMetadata,
-    activeDatasetName,
+    conversionConfig,
+    setConversionConfig,
+    isConverting,
+    conversionError,
+    conversionResult,
+    conversionStages,
+    runOsm3DConversion,
+    uploadAndConvertOsmFile,
+    activeProjectName,
     buildingDatasetName,
-    selectedParcelElevation,
-    selectedBuildingElevation,
-    loadDemoParcels,
-    loadDemoBuildings,
-    loadRealOSMBuildings,
-    uploadGeoJson,
-    runValidation,
-    runBuildingAssociation,
-    sampleActiveElevation,
   } = useCadastreContext();
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      uploadGeoJson(file);
-      e.target.value = "";
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  // Fallback defaults for preloaded map.osm if no custom file selected
+  const defaultFileName = "map.osm";
+  const defaultFileSize = "183.2 KB";
+  const defaultFeatureCount = 155;
+  const defaultDetectedCrs = "EPSG:4326 (WGS 84)";
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      setSelectedFile(file);
     }
   };
 
-  const parcelCount = geojson?.features?.length || 0;
-  const buildingCount = buildingsGeojson?.features?.length || 0;
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setSelectedFile(e.target.files[0]);
+    }
+  };
+
+  const handleStartConversion = async () => {
+    if (selectedFile) {
+      await uploadAndConvertOsmFile(selectedFile);
+    } else {
+      await runOsm3DConversion();
+    }
+  };
+
+  const completedStagesCount = conversionStages.filter((s) => s.status === "complete").length;
+  const progressPercent = conversionStages.length > 0
+    ? Math.round((completedStagesCount / Math.max(conversionStages.length, 8)) * 100)
+    : isConverting ? 45 : conversionResult ? 100 : 0;
 
   return (
-    <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-8">
-      {/* Hidden File Input for GeoJSON Upload */}
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileUpload}
-        accept=".geojson,.json,application/geo+json,application/json"
-        className="hidden"
-        aria-label="Upload GeoJSON File"
-      />
+    <div className="h-full overflow-y-auto p-6 space-y-8 max-w-5xl mx-auto">
+      {/* 1. Header Section */}
+      <div className="space-y-1">
+        <h1 className="text-2xl font-bold tracking-tight text-white">
+          Import Geospatial Data &amp; Convert to 3D
+        </h1>
+        <p className="text-xs text-slate-400 leading-relaxed">
+          Import real OpenStreetMap XML, OSM.PBF, or GeoJSON footprints, configure parametric heights and metric projection, and extrude into 3D solids.
+        </p>
+      </div>
 
-      {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="inline-flex items-center rounded bg-cyan-950/80 px-2 py-0.5 text-[11px] font-mono font-medium text-cyan-400 border border-cyan-500/30">
-              STAGE 01-04 WORKBENCH
-            </span>
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">Data Ingestion & Validation</h1>
-          <p className="text-sm text-slate-400 mt-1">
-            Load, upload, and deterministically validate 2D cadastral parcels, physical footprints, and elevation datasets.
-          </p>
+      {/* 2. Drag & Drop File Upload Area */}
+      <div
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        onClick={() => fileInputRef.current?.click()}
+        className={`relative flex flex-col items-center justify-center p-8 rounded-2xl border-2 border-dashed transition-all cursor-pointer select-none ${
+          isDragOver
+            ? "border-cyan-400 bg-cyan-950/30 scale-[1.005]"
+            : selectedFile
+            ? "border-emerald-500/50 bg-emerald-950/10"
+            : "border-slate-800 hover:border-slate-700 bg-slate-900/40 hover:bg-slate-900/60"
+        }`}
+      >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".osm,.pbf,.geojson,.json"
+          onChange={handleFileChange}
+          className="hidden"
+        />
+
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-800 border border-slate-700 text-cyan-400 mb-3 shadow-inner">
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+          </svg>
         </div>
 
-        <div className="flex items-center gap-3">
-          <Link
-            href="/workspace/2d"
-            className="inline-flex items-center gap-2 rounded-lg bg-slate-800 hover:bg-slate-700 px-3.5 py-2 text-xs font-semibold text-slate-200 border border-slate-700 transition-colors"
-          >
-            <svg className="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-            </svg>
-            Inspect in 2D Map
-          </Link>
-          <Link
-            href="/workspace/3d"
-            className="inline-flex items-center gap-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 px-3.5 py-2 text-xs font-semibold text-white transition-colors shadow-lg shadow-cyan-950"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-            </svg>
-            Open 3D Cadastre
-          </Link>
+        <p className="text-sm font-semibold text-white">
+          {selectedFile ? selectedFile.name : "Drop an OSM, OSM.PBF or supported GeoJSON file here"}
+        </p>
+        <p className="text-xs text-slate-400 mt-1">
+          {selectedFile
+            ? `${(selectedFile.size / 1024).toFixed(1)} KB · Click to change file`
+            : "or click to browse local files (max 50 MB)"}
+        </p>
+
+        {/* Dataset Metadata Preview Badge */}
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-[11px] font-mono">
+          <span className="px-2.5 py-1 rounded-md bg-slate-800/90 text-slate-300 border border-slate-700">
+            Source: <strong className="text-white">{selectedFile ? selectedFile.name : defaultFileName}</strong>
+          </span>
+          <span className="px-2.5 py-1 rounded-md bg-slate-800/90 text-slate-300 border border-slate-700">
+            Buildings: <strong className="text-cyan-300">{defaultFeatureCount}</strong>
+          </span>
+          <span className="px-2.5 py-1 rounded-md bg-slate-800/90 text-slate-300 border border-slate-700">
+            CRS: <strong className="text-emerald-300">{defaultDetectedCrs}</strong>
+          </span>
         </div>
       </div>
 
-      {/* 4 Core Workbenches Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* CARD 1: Data Ingestion & Active Layers */}
-        <div className="rounded-xl border border-slate-800 bg-[#111827]/80 p-6 flex flex-col justify-between">
+      {/* 3. Conversion Settings Card */}
+      <div className="rounded-xl border border-slate-800 bg-[#0F172A]/70 p-6 space-y-6 shadow-xl backdrop-blur">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-emerald-950/60 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                  </svg>
-                </div>
-                <div>
-                  <h2 className="text-base font-semibold text-white">01. Geospatial Ingestion</h2>
-                  <p className="text-xs text-slate-400">Load sample datasets or upload GeoJSON files</p>
-                </div>
-              </div>
-              <span className="text-[10px] font-mono text-slate-500 uppercase">Input Engine</span>
-            </div>
+            <h2 className="text-base font-bold text-white">Configure 3D Conversion</h2>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Parametric vertical height heuristics and metric coordinate projection settings.
+            </p>
+          </div>
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/60 text-cyan-300 border border-cyan-500/30">
+            Canonical 3D v1.0
+          </span>
+        </div>
 
-            {/* Current Active Datasets State */}
-            <div className="space-y-3 mb-6">
-              <div className="rounded-lg bg-slate-900/90 border border-slate-800 p-3 flex items-center justify-between">
-                <div>
-                  <div className="text-xs font-medium text-slate-300">Cadastral Parcels Layer</div>
-                  <div className="text-[11px] font-mono text-emerald-400 mt-0.5">
-                    {activeDatasetName || "None Loaded"}
-                  </div>
-                </div>
-                <span className="rounded bg-emerald-950/80 px-2.5 py-1 text-xs font-mono font-medium text-emerald-400 border border-emerald-500/30">
-                  {parcelCount} features
-                </span>
-              </div>
-
-              <div className="rounded-lg bg-slate-900/90 border border-slate-800 p-3 flex items-center justify-between">
-                <div>
-                  <div className="text-xs font-medium text-slate-300">Building Footprints Layer</div>
-                  <div className="text-[11px] font-mono text-purple-400 mt-0.5">
-                    {buildingDatasetName || "None Loaded"}
-                  </div>
-                </div>
-                <span className="rounded bg-purple-950/80 px-2.5 py-1 text-xs font-mono font-medium text-purple-400 border border-purple-500/30">
-                  {buildingCount} features
-                </span>
-              </div>
-            </div>
-
-            {/* Dataset Action Buttons */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <button
-                type="button"
-                onClick={loadDemoParcels}
-                disabled={isLoading}
-                className="flex items-center justify-center gap-2 rounded-lg bg-emerald-950/60 hover:bg-emerald-900/70 border border-emerald-500/40 px-3 py-2 text-xs font-semibold text-emerald-300 transition-colors disabled:opacity-50"
-              >
-                <span>Load Demo Parcels</span>
-              </button>
-              <button
-                type="button"
-                onClick={loadDemoBuildings}
-                disabled={isLoading}
-                className="flex items-center justify-center gap-2 rounded-lg bg-purple-950/60 hover:bg-purple-900/70 border border-purple-500/40 px-3 py-2 text-xs font-semibold text-purple-300 transition-colors disabled:opacity-50"
-              >
-                <span>Load Demo Buildings</span>
-              </button>
-              <button
-                type="button"
-                onClick={loadRealOSMBuildings}
-                disabled={isLoading}
-                className="flex items-center justify-center gap-2 rounded-lg bg-amber-950/50 hover:bg-amber-900/60 border border-amber-500/30 px-3 py-2 text-xs font-semibold text-amber-300 transition-colors disabled:opacity-50 sm:col-span-2"
-                title="Load real-world OpenStreetMap footprints (155 buildings, New Delhi)"
-              >
-                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                <span>Load Real OSM Footprints (New Delhi, 155 Bldgs)</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isLoading}
-                className="flex items-center justify-center gap-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-200 transition-colors disabled:opacity-50 sm:col-span-2"
-              >
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
-                <span>Upload Custom GeoJSON File</span>
-              </button>
-            </div>
-
-            {/* OSM Import — Dedicated, logically separate from GeoJSON upload */}
-            <div className="mt-3 border-t border-slate-800 pt-3">
-              <div className="text-[10px] font-mono uppercase text-slate-500 mb-1 tracking-wide">
-                Import OpenStreetMap File
-              </div>
-              <OsmImportCard />
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Height Source */}
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-slate-300">
+              Building Height Source
+            </label>
+            <select
+              value={conversionConfig.height_source}
+              onChange={(e) => setConversionConfig({ height_source: e.target.value as HeightSourceOption })}
+              disabled={isConverting}
+              className="w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-xs font-mono text-white focus:border-cyan-500 focus:outline-none"
+            >
+              <option value="automatic">Automatic (OSM Tag &rarr; Levels &rarr; Default)</option>
+              <option value="osm_height">OSM Height Tag Only (height / building:height)</option>
+              <option value="building_levels">Building Levels Only (levels &times; floor height)</option>
+              <option value="default">Default Building Height Only</option>
+            </select>
+            <p className="text-[11px] text-slate-500">
+              Strict priority order applied during polyhedral extrusion.
+            </p>
           </div>
 
-          <div className="mt-4 pt-4 border-t border-slate-800 text-[11px] text-slate-500">
-            Real OSM data represents unverified physical building geometry; it is clearly separated from authoritative legal cadastral parcels.
+          {/* Target CRS */}
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-slate-300">
+              Target Coordinate Reference System
+            </label>
+            <select
+              value={conversionConfig.target_crs}
+              onChange={(e) => setConversionConfig({ target_crs: e.target.value })}
+              disabled={isConverting}
+              className="w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-xs font-mono text-white focus:border-cyan-500 focus:outline-none"
+            >
+              <option value="auto">Automatic UTM Zone (Auto-computed from centroid)</option>
+              <option value="EPSG:32643">EPSG:32643 (UTM Zone 43N - North India / Delhi)</option>
+              <option value="EPSG:3857">EPSG:3857 (Web Mercator)</option>
+            </select>
+            <p className="text-[11px] text-slate-500">
+              Converts geographic angles (lon/lat) into Cartesian meters before extrusion.
+            </p>
+          </div>
+
+          {/* Default Floor Height */}
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-slate-300">
+              Default Floor Height (m)
+            </label>
+            <input
+              type="number"
+              step="0.5"
+              min="1.0"
+              max="10.0"
+              value={conversionConfig.default_floor_height_m}
+              onChange={(e) => setConversionConfig({ default_floor_height_m: parseFloat(e.target.value) || 3.0 })}
+              disabled={isConverting}
+              className="w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-xs font-mono text-white focus:border-cyan-500 focus:outline-none"
+            />
+            <p className="text-[11px] text-slate-500">
+              Multiplied by floor level count when level tags exist (default 3.0m).
+            </p>
+          </div>
+
+          {/* Default Building Height */}
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-slate-300">
+              Default Building Height (m)
+            </label>
+            <input
+              type="number"
+              step="1.0"
+              min="1.0"
+              max="200.0"
+              value={conversionConfig.default_building_height_m}
+              onChange={(e) => setConversionConfig({ default_building_height_m: parseFloat(e.target.value) || 9.0 })}
+              disabled={isConverting}
+              className="w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-xs font-mono text-white focus:border-cyan-500 focus:outline-none"
+            />
+            <p className="text-[11px] text-slate-500">
+              Standard building height fallback when tags are absent (default 9.0m).
+            </p>
           </div>
         </div>
 
-        {/* CARD 2: Topological Validation */}
-        <div className="rounded-xl border border-slate-800 bg-[#111827]/80 p-6 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-cyan-950/60 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <h2 className="text-base font-semibold text-white">02. Topological Validation</h2>
-                  <p className="text-xs text-slate-400">Deterministic GEOS geometry validity & closure</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={runValidation}
-                disabled={isValidating || parcelCount === 0}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 px-3 py-1.5 text-xs font-semibold text-white transition-colors disabled:opacity-40"
-              >
-                {isValidating ? (
-                  <>
-                    <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Validating...</span>
-                  </>
-                ) : (
-                  <span>Run Validation</span>
-                )}
-              </button>
-            </div>
+        {/* Output Format Options & Action Button */}
+        <div className="pt-4 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4 text-xs font-mono text-slate-400">
+            <span>Outputs:</span>
+            <label className="flex items-center gap-1.5 cursor-pointer text-slate-300">
+              <input
+                type="radio"
+                name="export_format"
+                value="both"
+                checked={conversionConfig.export_format === "both"}
+                onChange={() => setConversionConfig({ export_format: "both" })}
+                className="accent-cyan-500"
+              />
+              <span>GLB + glTF</span>
+            </label>
+            <label className="flex items-center gap-1.5 cursor-pointer text-slate-300">
+              <input
+                type="radio"
+                name="export_format"
+                value="glb"
+                checked={conversionConfig.export_format === "glb"}
+                onChange={() => setConversionConfig({ export_format: "glb" })}
+                className="accent-cyan-500"
+              />
+              <span>GLB only</span>
+            </label>
+          </div>
 
-            <ValidationCard
-              validation={validationResult}
-              isValidating={isValidating}
-              validationError={validationError}
+          <button
+            type="button"
+            onClick={handleStartConversion}
+            disabled={isConverting}
+            className="inline-flex items-center justify-center gap-2 text-sm font-semibold text-white bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 disabled:opacity-50 px-6 py-3 rounded-xl transition-all shadow-lg shadow-cyan-950/60 cursor-pointer"
+          >
+            {isConverting ? (
+              <>
+                <span className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                <span>Converting to 3D Mesh...</span>
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4 text-cyan-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 7.5-9-5.25L3 7.5m18 0-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
+                </svg>
+                <span>Convert to 3D</span>
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* 4. Conversion Progress Timeline & Results */}
+      {(isConverting || conversionStages.length > 0 || conversionError) && (
+        <div className="rounded-xl border border-slate-800 bg-[#0B0F19] p-6 space-y-5">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold text-white">Conversion Pipeline Progress</h3>
+            <span className="text-xs font-mono text-cyan-400 font-semibold">{progressPercent}%</span>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+            <div
+              className={`h-full transition-all duration-300 ${
+                conversionError ? "bg-red-500" : progressPercent === 100 ? "bg-emerald-400" : "bg-cyan-500"
+              }`}
+              style={{ width: `${progressPercent}%` }}
             />
           </div>
 
-          <div className="mt-4 pt-4 border-t border-slate-800 text-[11px] text-slate-500">
-            Enforces ring closure, zero self-intersections, valid WGS84 coordinates, and RFC 7946 GeoJSON compliance.
-          </div>
-        </div>
-
-        {/* CARD 3: Spatial Relationships & Containment */}
-        <div className="rounded-xl border border-slate-800 bg-[#111827]/80 p-6 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-purple-950/60 border border-purple-500/30 flex items-center justify-center text-purple-400">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                  </svg>
-                </div>
-                <div>
-                  <h2 className="text-base font-semibold text-white">03. Spatial Relationships</h2>
-                  <p className="text-xs text-slate-400">Building-to-parcel association & containment</p>
-                </div>
+          {/* Error notice if failed */}
+          {conversionError && (
+            <div className="rounded-lg bg-red-950/40 border border-red-500/40 p-4 text-xs font-mono text-red-200 flex items-start justify-between gap-3">
+              <div>
+                <strong>Conversion failed:</strong> {conversionError}
               </div>
               <button
                 type="button"
-                onClick={runBuildingAssociation}
-                disabled={isAssociating || parcelCount === 0 || buildingCount === 0}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 px-3 py-1.5 text-xs font-semibold text-white transition-colors disabled:opacity-40"
+                onClick={handleStartConversion}
+                className="px-3 py-1 rounded bg-red-800 hover:bg-red-700 text-white font-semibold text-xs"
               >
-                {isAssociating ? (
-                  <>
-                    <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Associating...</span>
-                  </>
-                ) : (
-                  <span>Run Association</span>
-                )}
+                Retry
               </button>
             </div>
+          )}
 
-            {associationError && (
-              <div className="rounded-lg bg-red-950/40 border border-red-500/30 p-3 text-xs text-red-300 mb-4 font-mono">
-                {associationError}
-              </div>
-            )}
-
-            {associationData ? (
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="rounded-lg bg-slate-900/90 border border-slate-800 p-2.5">
-                    <div className="text-[10px] uppercase font-mono text-slate-500">Total Buildings</div>
-                    <div className="text-base font-bold text-white font-mono mt-0.5">
-                      {associationData.summary?.total_buildings ?? associationData.associations?.length ?? 0}
-                    </div>
-                  </div>
-                  <div className="rounded-lg bg-slate-900/90 border border-slate-800 p-2.5">
-                    <div className="text-[10px] uppercase font-mono text-slate-500">Associated Buildings</div>
-                    <div className="text-base font-bold text-emerald-400 font-mono mt-0.5">
-                      {associationData.summary?.associated_buildings ?? 0}
-                    </div>
-                  </div>
-                  <div className="rounded-lg bg-slate-900/90 border border-slate-800 p-2.5">
-                    <div className="text-[10px] uppercase font-mono text-slate-500">Multi-Parcel Overlap</div>
-                    <div className="text-base font-bold text-amber-400 font-mono mt-0.5">
-                      {associationData.summary?.multi_parcel_buildings ?? 0}
-                    </div>
-                  </div>
-                  <div className="rounded-lg bg-slate-900/90 border border-slate-800 p-2.5">
-                    <div className="text-[10px] uppercase font-mono text-slate-500">Outside / Unresolved</div>
-                    <div className="text-base font-bold text-slate-400 font-mono mt-0.5">
-                      {(associationData.summary?.outside_buildings ?? 0) + (associationData.summary?.unresolved_buildings ?? 0)}
-                    </div>
-                  </div>
+          {/* Stage items list */}
+          <div className="space-y-2 pt-2">
+            {conversionStages.map((stage, idx) => (
+              <div key={idx} className="flex items-center justify-between text-xs font-mono py-1.5 px-3 rounded-lg bg-slate-900/60 border border-slate-800/80">
+                <div className="flex items-center gap-2.5">
+                  {stage.status === "complete" ? (
+                    <span className="text-emerald-400 font-bold">&#10003;</span>
+                  ) : stage.status === "failed" ? (
+                    <span className="text-red-400 font-bold">&#10007;</span>
+                  ) : (
+                    <span className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse" />
+                  )}
+                  <span className="text-slate-300 capitalize">{stage.stage.replace(/_/g, " ")}:</span>
+                  <span className="text-slate-400 text-[11px]">{stage.message}</span>
                 </div>
-
-                <div className="rounded-lg bg-slate-900/60 border border-slate-800/80 p-3 text-xs text-slate-400">
-                  <span className="font-semibold text-slate-300">Deterministic Engine:</span> Shapely/GEOS point-in-polygon & intersection polygon area calculations.
-                </div>
-              </div>
-            ) : (
-              <div className="rounded-lg border border-dashed border-slate-800 p-6 text-center">
-                <p className="text-xs text-slate-500">
-                  Load both Parcels and Buildings, then click &quot;Run Association&quot; to compute spatial intersection matrix.
-                </p>
-              </div>
-            )}
-          </div>
-
-          <div className="mt-4 pt-4 border-t border-slate-800 text-[11px] text-slate-500">
-            Assigns physical structures to authoritative cadastral parcel boundaries.
-          </div>
-        </div>
-
-        {/* CARD 4: Elevation & Terrain Modeling */}
-        <div className="rounded-xl border border-slate-800 bg-[#111827]/80 p-6 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-blue-950/60 border border-blue-500/30 flex items-center justify-center text-blue-400">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 00-9.78 2.096A4.001 4.001 0 003 15z" />
-                  </svg>
-                </div>
-                <div>
-                  <h2 className="text-base font-semibold text-white">04. DEM Elevation Sampling</h2>
-                  <p className="text-xs text-slate-400">Copernicus GLO-30 Digital Elevation Model</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={sampleActiveElevation}
-                disabled={isSamplingElevation || parcelCount === 0}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 px-3 py-1.5 text-xs font-semibold text-white transition-colors disabled:opacity-40"
-              >
-                {isSamplingElevation ? (
-                  <>
-                    <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Sampling DEM...</span>
-                  </>
-                ) : (
-                  <span>Sample Elevation</span>
+                {stage.duration_ms !== undefined && stage.duration_ms !== null && (
+                  <span className="text-slate-500 text-[10px]">{stage.duration_ms.toFixed(1)}ms</span>
                 )}
-              </button>
-            </div>
-
-            {elevationError && (
-              <div className="rounded-lg bg-red-950/40 border border-red-500/30 p-3 text-xs text-red-300 mb-4 font-mono">
-                {elevationError}
               </div>
-            )}
-
-            <div className="space-y-3">
-              <div className="rounded-lg bg-slate-900/90 border border-slate-800 p-3 space-y-1.5 font-mono text-xs">
-                <div className="flex justify-between text-slate-400">
-                  <span>DEM Source:</span>
-                  <span className="text-cyan-400 font-semibold">{demMetadata?.filename || "Copernicus DEM GLO-30"}</span>
-                </div>
-                <div className="flex justify-between text-slate-400">
-                  <span>Spatial Resolution:</span>
-                  <span className="text-slate-200">
-                    {demMetadata?.resolution ? `${demMetadata.resolution[0]}° x ${demMetadata.resolution[1]}° (~30m)` : "30-meter (1 arc-sec)"}
-                  </span>
-                </div>
-                <div className="flex justify-between text-slate-400">
-                  <span>Vertical Reference:</span>
-                  <span className="text-slate-200">EGM2008 Geoid (m ASL)</span>
-                </div>
-                <div className="flex justify-between text-slate-400">
-                  <span>CRS:</span>
-                  <span className="text-slate-200">{demMetadata?.crs || "EPSG:4326"}</span>
-                </div>
-              </div>
-
-              {(selectedParcelElevation || selectedBuildingElevation) ? (
-                <div className="rounded-lg bg-blue-950/40 border border-blue-500/30 p-3 text-xs">
-                  <span className="text-blue-300 font-semibold">Active Selection Elevation:</span>
-                  <div className="mt-1 font-mono text-slate-300">
-                    {selectedParcelElevation && <div>Parcel Base: {selectedParcelElevation.elevation_m}m ASL</div>}
-                    {selectedBuildingElevation && <div>Building Base: {selectedBuildingElevation.elevation_m}m ASL</div>}
-                  </div>
-                </div>
-              ) : (
-                <div className="rounded-lg bg-slate-900/60 border border-slate-800/80 p-3 text-xs text-slate-400">
-                  Click &quot;Sample Elevation&quot; to query ground z-offsets for all active parcel and building centroids.
-                </div>
-              )}
-            </div>
+            ))}
           </div>
 
-          <div className="mt-4 pt-4 border-t border-slate-800 text-[11px] text-slate-500">
-            Supplies authoritative ground z-offset for 3D extrusion and height modeling.
-          </div>
+          {/* Success Summary & Navigation */}
+          {conversionResult && conversionResult.success && (
+            <div className="mt-4 pt-4 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="text-xs font-mono text-slate-300">
+                Extruded <strong className="text-cyan-300">{conversionResult.summary.buildings}</strong> buildings &middot;{" "}
+                <strong className="text-white">{conversionResult.summary.vertices.toLocaleString()}</strong> vertices &middot;{" "}
+                <strong className="text-white">{conversionResult.summary.faces.toLocaleString()}</strong> faces
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Link
+                  href="/workspace/3d"
+                  className="inline-flex items-center gap-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 px-4 py-2.5 rounded-lg shadow transition-all"
+                >
+                  <span>Open in 3D Workspace &rarr;</span>
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
-      </div>
-
-      {/* Stage 18: Multi-Source Spatial Data Fusion & Georeferencing */}
-      <DataFusionCard />
-
-      {/* Stage 19: AI/ML Extraction Subsystem & Spatial Validation */}
-      <AiExtractionCard />
-
-      {/* Stage 20: Underground / Subsurface Spatial Modeling */}
-      <UndergroundDataCard />
+      )}
     </div>
   );
 }
-

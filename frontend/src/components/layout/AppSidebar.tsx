@@ -42,29 +42,18 @@ export function AppSidebar() {
       ),
     },
     {
-      name: "Data Workspace",
+      name: "Import Data",
       href: "/data",
       icon: (
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 5.625c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125m16.5 5.625c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
         </svg>
       ),
-      badge: (geojson?.features.length || 0) + (buildingsGeojson?.features.length || 0) || null,
-      badgeColor: "bg-slate-800 text-slate-300 border-slate-700",
+      badge: (buildingsGeojson?.features.length || 0) > 0 ? `${buildingsGeojson?.features.length}` : null,
+      badgeColor: "bg-amber-950/60 text-amber-400 border-amber-500/30",
     },
     {
-      name: "2D GIS Map",
-      href: "/workspace/2d",
-      icon: (
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9 6.75V15m6-6v8.25m.503 3.498 4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934a1.12 1.12 0 0 1-1.006 0L9.503 3.31a1.12 1.12 0 0 0-1.006 0L3.622 5.748A1.125 1.125 0 0 0 3 6.754v11.425c0 .836.88 1.38 1.628 1.006l3.869-1.934a1.12 1.12 0 0 1 1.006 0l4.994 2.497c.317.158.69.158 1.006 0Z" />
-        </svg>
-      ),
-      badge: geojson?.features.length ? `${geojson.features.length}P` : null,
-      badgeColor: "bg-emerald-950/60 text-emerald-400 border-emerald-500/30",
-    },
-    {
-      name: "3D Cadastre",
+      name: "3D Workspace",
       href: "/workspace/3d",
       icon: (
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -75,7 +64,16 @@ export function AppSidebar() {
       badgeColor: "bg-cyan-950/60 text-cyan-400 border-cyan-500/30",
     },
     {
-      name: "Pipeline Audit",
+      name: "Projects",
+      href: "/projects",
+      icon: (
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
+        </svg>
+      ),
+    },
+    {
+      name: "Audit",
       href: "/pipeline",
       icon: (
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -86,7 +84,7 @@ export function AppSidebar() {
       badgeColor:
         completedSteps === 8
           ? "bg-emerald-950/60 text-emerald-400 border-emerald-500/30"
-          : "bg-amber-950/60 text-amber-400 border-amber-500/30",
+          : "bg-slate-800 text-slate-400 border-slate-700",
     },
   ];
 

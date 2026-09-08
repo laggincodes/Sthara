@@ -1,0 +1,28 @@
+{
+  "source_file": "test_upload.osm",
+  "target_crs": "EPSG:32643",
+  "viewer_origin": [
+    706438.9,
+    3170147.65,
+    0.0
+  ],
+  "buildings_count": 1,
+  "vertices_count": 8,
+  "faces_count": 12,
+  "surface_area_sqm": 99228.71,
+  "volume_cubic_m": 650332.35,
+  "buildings": [
+    {
+      "building_id": "OSM-BUILDING-WAY-101",
+      "osm_id": "101",
+      "name": "Test Villa",
+      "height": 15.0,
+      "levels": 5,
+      "height_source": "OSM_HEIGHT_TAG",
+      "area_sqm": 43355.49,
+      "volume_cubic_m": 650332.35,
+      "source": "OpenStreetMap",
+      "is_cadastral": false
+    }
+  ]
+}
