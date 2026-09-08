@@ -65,6 +65,7 @@ export default function ImportDataPage() {
     } else {
       await runOsm3DConversion();
     }
+    router.push("/workspace/3d");
   };
 
   const completedStagesCount = conversionStages.filter((s) => s.status === "complete").length;
