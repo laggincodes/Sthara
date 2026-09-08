@@ -57,14 +57,26 @@ export function AppHeader() {
   const breadcrumbs = getBreadcrumbItems();
 
   return (
-    <header className="border-b border-slate-800/80 bg-[#111827]/90 backdrop-blur-md z-30 shrink-0 select-none">
-      <div className="flex items-center justify-between px-4 py-2.5">
+    <header
+      className="shrink-0 select-none z-30"
+      style={{
+        backgroundColor: "var(--sth-card)",
+        borderBottom: "1px solid var(--sth-border)",
+      }}
+    >
+      <div className="flex items-center justify-between px-4 py-2.5 gap-3">
         {/* Left: Mobile Toggle & Breadcrumbs */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          {/* Mobile menu toggle */}
           <button
             type="button"
             onClick={() => setMobileMenuOpen((prev) => !prev)}
-            className="md:hidden p-1.5 rounded-lg border border-slate-800 bg-slate-900 text-slate-400 hover:text-white"
+            className="md:hidden p-1.5 rounded-md transition-colors"
+            style={{
+              border: "1px solid var(--sth-border)",
+              backgroundColor: "var(--sth-surface)",
+              color: "var(--sth-text-2)",
+            }}
             aria-label="Toggle navigation menu"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -72,17 +84,25 @@ export function AppHeader() {
             </svg>
           </button>
 
-          <div className="flex items-center gap-1.5 text-xs font-mono">
-            <span className="text-cyan-400 font-bold">STHARA</span>
+          {/* Breadcrumbs */}
+          <div
+            className="flex items-center gap-1 text-xs truncate"
+            style={{ fontFamily: "var(--font-mono)" }}
+          >
+            <span className="font-semibold shrink-0" style={{ color: "var(--sth-accent)" }}>
+              STHARA
+            </span>
             {breadcrumbs.map((crumb, idx) => (
               <React.Fragment key={idx}>
-                <span className="text-slate-700">/</span>
+                <span style={{ color: "var(--sth-border)" }}>/</span>
                 <span
-                  className={
-                    idx === breadcrumbs.length - 1
-                      ? "text-white font-semibold"
-                      : "text-slate-400 hidden sm:inline"
-                  }
+                  className={idx === breadcrumbs.length - 1 ? "font-semibold truncate" : "hidden sm:inline truncate"}
+                  style={{
+                    color:
+                      idx === breadcrumbs.length - 1
+                        ? "var(--sth-text)"
+                        : "var(--sth-text-2)",
+                  }}
                 >
                   {crumb}
                 </span>
@@ -90,45 +110,86 @@ export function AppHeader() {
             ))}
           </div>
 
-          {/* Active Dataset Provenance Chips */}
-          <div className="hidden lg:flex items-center gap-2 ml-2">
+          {/* Active Dataset Chips */}
+          <div className="hidden lg:flex items-center gap-1.5 ml-1 shrink-0">
             {activeDatasetName && (
-              <span className="text-[10px] font-mono text-emerald-400 border border-emerald-500/30 rounded px-2 py-0.5 bg-emerald-950/20 truncate max-w-[200px]" title={activeDatasetName}>
+              <span
+                className="text-[10px] px-2 py-0.5 rounded border truncate max-w-[180px]"
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  color: "var(--sth-sage)",
+                  borderColor: "#C0CAC0",
+                  backgroundColor: "var(--sth-sage-bg)",
+                }}
+                title={activeDatasetName}
+              >
                 Parcels: {activeDatasetName}
               </span>
             )}
             {buildingDatasetName && (
-              <span className="text-[10px] font-mono text-purple-400 border border-purple-500/30 rounded px-2 py-0.5 bg-purple-950/20 truncate max-w-[200px]" title={buildingDatasetName}>
+              <span
+                className="text-[10px] px-2 py-0.5 rounded border truncate max-w-[180px]"
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  color: "var(--sth-geo)",
+                  borderColor: "#D8C8A8",
+                  backgroundColor: "var(--sth-geo-bg)",
+                }}
+                title={buildingDatasetName}
+              >
                 Buildings: {buildingDatasetName}
               </span>
             )}
           </div>
         </div>
 
-        {/* Right: Quick 2D/3D Mode Switch & Actions */}
-        <div className="flex items-center gap-2">
-          {/* Fast 2D / 3D Mode Toggle Switcher when in workspace */}
+        {/* Right: Actions */}
+        <div className="flex items-center gap-2 shrink-0">
+          {/* 2D / 3D mode toggle when in workspace */}
           {pathname.startsWith("/workspace") && (
-            <div className="flex items-center rounded-lg border border-slate-700 bg-slate-900/90 p-0.5 mr-1">
+            <div
+              className="flex items-center rounded-md p-0.5"
+              style={{
+                border: "1px solid var(--sth-border)",
+                backgroundColor: "var(--sth-surface)",
+              }}
+            >
               <Link
                 href="/workspace/2d"
-                className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-all ${
+                className="px-2.5 py-1 text-xs font-semibold rounded-sm transition-all"
+                style={
                   pathname === "/workspace/2d"
-                    ? "bg-slate-700 text-white shadow"
-                    : "text-slate-400 hover:text-slate-200"
-                }`}
+                    ? {
+                        backgroundColor: "var(--sth-card)",
+                        color: "var(--sth-text)",
+                        boxShadow: "0 1px 2px rgba(37,38,34,0.08)",
+                        border: "1px solid var(--sth-border)",
+                      }
+                    : {
+                        color: "var(--sth-text-2)",
+                        border: "1px solid transparent",
+                      }
+                }
               >
                 2D Map
               </Link>
               <Link
                 href="/workspace/3d"
-                className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-all flex items-center gap-1 ${
+                className="px-2.5 py-1 text-xs font-semibold rounded-sm transition-all"
+                style={
                   pathname === "/workspace/3d"
-                    ? "bg-cyan-600 text-white shadow"
-                    : "text-slate-400 hover:text-slate-200"
-                }`}
+                    ? {
+                        backgroundColor: "var(--sth-accent)",
+                        color: "#fff",
+                        border: "1px solid transparent",
+                      }
+                    : {
+                        color: "var(--sth-text-2)",
+                        border: "1px solid transparent",
+                      }
+                }
               >
-                <span>3D Cadastre</span>
+                3D Cadastre
               </Link>
             </div>
           )}
@@ -138,30 +199,39 @@ export function AppHeader() {
             type="button"
             onClick={runEndToEndDemo}
             disabled={isDemoRunning}
-            className="md:hidden inline-flex items-center gap-1 text-[11px] font-semibold text-white bg-gradient-to-r from-emerald-600 to-cyan-600 px-2.5 py-1 rounded-md"
+            className="md:hidden inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-md"
+            style={{ backgroundColor: "var(--sth-accent)", color: "#fff" }}
           >
-            {isDemoRunning ? "Running..." : "Demo"}
+            {isDemoRunning ? "Running…" : "Validate"}
           </button>
 
-          {/* Compact Connection Pip */}
+          {/* Backend status pip */}
           <div
-            className="flex items-center gap-1 text-[11px] font-mono text-slate-400 px-2 py-1 rounded border border-slate-800 bg-slate-900/60"
+            className="flex items-center gap-1 text-[11px] px-2 py-1 rounded-md"
+            style={{
+              fontFamily: "var(--font-mono)",
+              border: "1px solid var(--sth-border)",
+              backgroundColor: "var(--sth-surface)",
+              color: "var(--sth-text-2)",
+            }}
             title={
               backendConnected === true
                 ? "FastAPI Backend connected (:8000)"
                 : backendConnected === false
                 ? "Backend offline (:8000)"
-                : "Checking backend..."
+                : "Checking backend…"
             }
           >
             <span
-              className={`h-2 w-2 rounded-full ${
-                backendConnected === true
-                  ? "bg-emerald-400"
-                  : backendConnected === false
-                  ? "bg-red-400 animate-pulse"
-                  : "bg-amber-400 animate-pulse"
-              }`}
+              className={`h-2 w-2 rounded-full ${backendConnected !== true ? "animate-pulse" : ""}`}
+              style={{
+                backgroundColor:
+                  backendConnected === true
+                    ? "var(--sth-sage)"
+                    : backendConnected === false
+                    ? "var(--sth-clay)"
+                    : "var(--sth-geo)",
+              }}
             />
             <span className="hidden sm:inline">
               {backendConnected === true ? "API 8000" : "Offline"}
@@ -172,17 +242,29 @@ export function AppHeader() {
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-slate-800 bg-[#0B0F19] px-4 py-3 space-y-1">
+        <div
+          className="md:hidden px-4 py-3 space-y-1"
+          style={{
+            borderTop: "1px solid var(--sth-border)",
+            backgroundColor: "var(--sth-surface)",
+          }}
+        >
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
               onClick={() => setMobileMenuOpen(false)}
-              className={`block px-3 py-2 rounded-md text-xs font-medium ${
+              className="block px-3 py-2 rounded-md text-xs font-medium transition-colors"
+              style={
                 pathname === link.href
-                  ? "bg-slate-800 text-cyan-300 font-semibold"
-                  : "text-slate-400 hover:text-white"
-              }`}
+                  ? {
+                      backgroundColor: "var(--sth-accent)",
+                      color: "#fff",
+                    }
+                  : {
+                      color: "var(--sth-text-2)",
+                    }
+              }
             >
               {link.name}
             </Link>
@@ -192,12 +274,28 @@ export function AppHeader() {
 
       {/* Global Error Banner */}
       {currentError && (
-        <div className="border-t border-red-500/30 bg-red-950/40 px-4 py-1.5 text-xs font-mono text-red-300 flex items-center justify-between">
+        <div
+          className="px-4 py-1.5 text-xs flex items-center justify-between"
+          style={{
+            borderTop: "1px solid #DDBCB4",
+            backgroundColor: "var(--sth-clay-bg)",
+            fontFamily: "var(--font-mono)",
+            color: "var(--sth-clay)",
+          }}
+        >
           <div className="flex items-center gap-2 truncate">
-            <span className="h-1.5 w-1.5 rounded-full bg-red-400 shrink-0" />
+            <span
+              className="h-1.5 w-1.5 rounded-full shrink-0"
+              style={{ backgroundColor: "var(--sth-clay)" }}
+            />
             <span className="truncate">{currentError}</span>
           </div>
-          <span className="text-[10px] text-red-400/70 shrink-0 ml-2">FastAPI :8000</span>
+          <span
+            className="text-[10px] shrink-0 ml-2"
+            style={{ color: "var(--sth-text-2)" }}
+          >
+            FastAPI :8000
+          </span>
         </div>
       )}
     </header>

@@ -97,93 +97,122 @@ export default function Cadastral2DPage() {
   }, [undergroundBundle]);
 
   const crsString = validationResult?.crs || geojson?.crs?.properties?.name || "WGS 84 (EPSG:4326)";
-  const hasData = (geojson && geojson.features.length > 0) || (buildingsGeojson && buildingsGeojson.features.length > 0);
+  const hasData =
+    (geojson && geojson.features.length > 0) ||
+    (buildingsGeojson && buildingsGeojson.features.length > 0);
+
+  /* ── Layer toggle helper ──────────────────────────────────────────── */
+  const layerBtn = (
+    key: "parcels" | "buildings" | "units" | "underground",
+    label: string,
+    count: number,
+    activeVariant: "sage" | "geo" | "accent" | "neutral"
+  ) => {
+    const active = layerVisibility[key];
+    const activeStyles: Record<string, React.CSSProperties> = {
+      sage: { backgroundColor: "var(--sth-sage-bg)", color: "var(--sth-sage)", border: "1px solid #C0CAC0" },
+      geo: { backgroundColor: "var(--sth-geo-bg)", color: "var(--sth-geo)", border: "1px solid #D8C8A8" },
+      accent: { backgroundColor: "var(--sth-clay-bg)", color: "var(--sth-accent)", border: "1px solid #DDBCB4" },
+      neutral: { backgroundColor: "var(--sth-surface)", color: "var(--sth-text-2)", border: "1px solid var(--sth-border)" },
+    };
+    const inactiveStyle: React.CSSProperties = {
+      backgroundColor: "var(--sth-surface)",
+      color: "var(--sth-text-2)",
+      border: "1px solid var(--sth-border)",
+    };
+
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          if (key === "underground" && !undergroundBundle) loadDemoUnderground();
+          toggleLayer(key);
+        }}
+        className="px-2 py-1 rounded text-[11px] transition-colors cursor-pointer"
+        style={{
+          ...(active ? activeStyles[activeVariant] : inactiveStyle),
+          fontFamily: "var(--font-mono)",
+        }}
+      >
+        {label} ({count})
+      </button>
+    );
+  };
 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden relative">
-      {/* 2D Map Control Sub-Header */}
-      <div className="flex items-center justify-between border-b border-slate-800 bg-[#0B0F19]/90 backdrop-blur px-4 py-2 text-xs font-mono shrink-0 z-10">
-        <div className="flex items-center gap-3">
+      {/* ── Sub-header toolbar ──────────────────────────────────────── */}
+      <div
+        className="flex items-center justify-between px-4 py-2 text-xs shrink-0 z-10 gap-3"
+        style={{
+          borderBottom: "1px solid var(--sth-border)",
+          backgroundColor: "var(--sth-card)",
+          fontFamily: "var(--font-mono)",
+        }}
+      >
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* Label */}
           <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-emerald-400" />
-            <span className="font-semibold text-slate-200">2D CADASTRAL GIS</span>
+            <span
+              className="h-2 w-2 rounded-full"
+              style={{ backgroundColor: "var(--sth-sage)" }}
+            />
+            <span className="font-semibold uppercase tracking-widest text-[10px]" style={{ color: "var(--sth-text)" }}>
+              2D Cadastral GIS
+            </span>
           </div>
 
-          <span className="px-2 py-0.5 rounded bg-slate-800/80 text-slate-300 border border-slate-700 text-[11px] truncate max-w-[280px]" title={activeDatasetName || buildingDatasetName || activeDatasetId}>
-            Dataset: <strong className="text-cyan-300">{activeDatasetName || buildingDatasetName || activeDatasetId}</strong>
+          {/* Active dataset chip */}
+          <span
+            className="px-2 py-0.5 rounded border text-[11px] truncate max-w-[260px]"
+            style={{
+              color: "var(--sth-geo)",
+              borderColor: "#D8C8A8",
+              backgroundColor: "var(--sth-geo-bg)",
+            }}
+            title={activeDatasetName || buildingDatasetName || activeDatasetId}
+          >
+            {activeDatasetName || buildingDatasetName || activeDatasetId}
           </span>
 
-          <span className="text-slate-700">|</span>
+          <span style={{ color: "var(--sth-border)" }}>|</span>
 
           {/* Layer toggles */}
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => toggleLayer("parcels")}
-              className={`px-2 py-1 rounded text-[11px] font-mono transition-colors ${
-                layerVisibility.parcels
-                  ? "bg-emerald-950/80 text-emerald-300 border border-emerald-500/40"
-                  : "bg-slate-900 text-slate-500 border border-slate-800"
-              }`}
-            >
-              Parcels ({geojson?.features?.length || 0})
-            </button>
-            <button
-              type="button"
-              onClick={() => toggleLayer("buildings")}
-              className={`px-2 py-1 rounded text-[11px] font-mono transition-colors ${
-                layerVisibility.buildings
-                  ? "bg-purple-950/80 text-purple-300 border border-purple-500/40"
-                  : "bg-slate-900 text-slate-500 border border-slate-800"
-              }`}
-            >
-              Buildings ({buildingsGeojson?.features?.length || 0})
-            </button>
-            <button
-              type="button"
-              onClick={() => toggleLayer("units")}
-              className={`px-2 py-1 rounded text-[11px] font-mono transition-colors ${
-                layerVisibility.units
-                  ? "bg-cyan-950/80 text-cyan-300 border border-cyan-500/40"
-                  : "bg-slate-900 text-slate-500 border border-slate-800"
-              }`}
-            >
-              Units ({unitsGeojson?.features?.length || 0})
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                if (!undergroundBundle) loadDemoUnderground();
-                toggleLayer("underground");
-              }}
-              className={`px-2 py-1 rounded text-[11px] font-mono transition-colors ${
-                layerVisibility.underground
-                  ? "bg-blue-950/80 text-blue-300 border border-blue-500/40"
-                  : "bg-slate-900 text-slate-500 border border-slate-800"
-              }`}
-            >
-              Subsurface ({undergroundBundle?.total_features || 0})
-            </button>
+          <div className="flex items-center gap-1.5">
+            {layerBtn("parcels", "Parcels", geojson?.features?.length || 0, "sage")}
+            {layerBtn("buildings", "Buildings", buildingsGeojson?.features?.length || 0, "accent")}
+            {layerBtn("units", "Units", unitsGeojson?.features?.length || 0, "geo")}
+            {layerBtn("underground", "Subsurface", undergroundBundle?.total_features || 0, "neutral")}
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* Quick 3D Switch */}
+        <div className="flex items-center gap-2 shrink-0">
+          {/* Quick 3D switch */}
           <Link
             href="/workspace/3d"
-            className="flex items-center gap-1.5 rounded-lg bg-cyan-950/70 hover:bg-cyan-900/80 text-cyan-300 border border-cyan-500/40 px-3 py-1 text-xs font-semibold font-sans transition-colors"
+            className="flex items-center gap-1.5 rounded-md px-3 py-1 text-xs font-semibold transition-colors"
+            style={{
+              color: "var(--sth-accent)",
+              border: "1px solid #DDBCB4",
+              backgroundColor: "var(--sth-clay-bg)",
+            }}
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
             </svg>
-            <span>Open 3D Stage</span>
+            <span>Open 3D</span>
           </Link>
 
-          {/* Inspector Toggle */}
+          {/* Inspector toggle */}
           <button
             type="button"
             onClick={() => setInspectorOpen((prev) => !prev)}
-            className="flex items-center gap-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-2.5 py-1 text-xs font-sans transition-colors"
+            className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs transition-colors cursor-pointer"
+            style={{
+              color: "var(--sth-text-2)",
+              border: "1px solid var(--sth-border)",
+              backgroundColor: "var(--sth-surface)",
+            }}
             title={inspectorOpen ? "Hide Inspector" : "Show Inspector"}
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -194,16 +223,25 @@ export default function Cadastral2DPage() {
         </div>
       </div>
 
-      {/* Error banner if any */}
+      {/* ── Error banner ────────────────────────────────────────────── */}
       {(generalError || associationError || elevationError || heightError || floorError) && (
-        <div className="border-b border-red-500/30 bg-red-950/50 px-4 py-1.5 text-xs font-mono text-red-300 flex items-center justify-between shrink-0">
+        <div
+          className="px-4 py-1.5 text-xs flex items-center gap-2 shrink-0"
+          style={{
+            fontFamily: "var(--font-mono)",
+            borderBottom: "1px solid #DDBCB4",
+            backgroundColor: "var(--sth-clay-bg)",
+            color: "var(--sth-clay)",
+          }}
+        >
+          <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: "var(--sth-clay)" }} />
           <span>{generalError || associationError || elevationError || heightError || floorError}</span>
         </div>
       )}
 
-      {/* Main Map Stage and Inspector */}
+      {/* ── Map + Inspector ─────────────────────────────────────────── */}
       <div className="flex flex-1 overflow-hidden relative">
-        {/* MapLibre Canvas Container */}
+        {/* MapLibre Canvas */}
         <div className="flex-1 h-full min-h-[350px] relative">
           <CadastralMap
             geojson={geojson}
@@ -223,59 +261,95 @@ export default function Cadastral2DPage() {
             isActive={true}
           />
 
-          {/* Empty State Overlay */}
+          {/* Empty State */}
           {!hasData && !isLoading && (
-            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#0B0F19]/80 backdrop-blur-[2px] p-6 text-center">
-              <div className="max-w-md rounded-xl border border-slate-800 bg-[#111827]/90 p-8 shadow-2xl">
-                <div className="mb-4 mx-auto flex h-12 w-12 items-center justify-center rounded-xl border border-cyan-500/30 bg-cyan-950/40 text-cyan-400">
+            <div
+              className="absolute inset-0 z-10 flex flex-col items-center justify-center p-6 text-center"
+              style={{ backgroundColor: "rgba(243,240,232,0.92)", backdropFilter: "blur(2px)" }}
+            >
+              <div
+                className="max-w-md rounded-md p-8"
+                style={{
+                  backgroundColor: "var(--sth-card)",
+                  border: "1px solid var(--sth-border)",
+                  boxShadow: "0 4px 24px rgba(37,38,34,0.10)",
+                }}
+              >
+                <div
+                  className="mb-4 mx-auto flex h-12 w-12 items-center justify-center rounded-md"
+                  style={{
+                    border: "1px solid var(--sth-border)",
+                    backgroundColor: "var(--sth-surface)",
+                    color: "var(--sth-accent)",
+                  }}
+                >
                   <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                   </svg>
                 </div>
-                <h2 className="text-base font-semibold text-white mb-2">No 2D Data Loaded</h2>
-                <p className="text-xs text-slate-400 mb-6 leading-relaxed">
-                  Load synthetic cadastral parcels, building footprints, or real OpenStreetMap data to visualize boundaries.
+                <h2
+                  className="text-base font-semibold mb-2"
+                  style={{ fontFamily: "var(--font-heading)", color: "var(--sth-text)" }}
+                >
+                  No 2D Data Loaded
+                </h2>
+                <p className="text-xs mb-6 leading-relaxed" style={{ color: "var(--sth-text-2)" }}>
+                  Load cadastral parcels, building footprints, or real OpenStreetMap data to visualize boundaries.
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 flex-wrap">
-                  <button
-                    type="button"
-                    onClick={loadDemoParcels}
-                    className="w-full sm:w-auto inline-flex items-center justify-center text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 px-3.5 py-2 rounded-lg transition-colors"
-                  >
-                    Load Parcels
-                  </button>
-                  <button
-                    type="button"
-                    onClick={loadDemoBuildings}
-                    className="w-full sm:w-auto inline-flex items-center justify-center text-xs font-semibold text-white bg-purple-600 hover:bg-purple-500 px-3.5 py-2 rounded-lg transition-colors"
-                  >
-                    Load Buildings
-                  </button>
-                  <button
-                    type="button"
-                    onClick={loadRealOSMBuildings}
-                    className="w-full sm:w-auto inline-flex items-center justify-center text-xs font-semibold text-amber-300 bg-amber-950/60 hover:bg-amber-900/70 border border-amber-500/40 px-3.5 py-2 rounded-lg transition-colors"
-                  >
-                    Load Real OSM
-                  </button>
-                  <button
-                    type="button"
-                    onClick={loadDemoUnits}
-                    className="w-full sm:w-auto inline-flex items-center justify-center text-xs font-semibold text-cyan-300 bg-cyan-950/60 hover:bg-cyan-900/70 border border-cyan-500/40 px-3.5 py-2 rounded-lg transition-colors"
-                  >
-                    Load Units
-                  </button>
+                  {[
+                    { label: "Load Parcels", onClick: loadDemoParcels, variant: "sage" },
+                    { label: "Load Buildings", onClick: loadDemoBuildings, variant: "geo" },
+                    { label: "Load Real OSM", onClick: loadRealOSMBuildings, variant: "accent" },
+                    { label: "Load Units", onClick: loadDemoUnits, variant: "neutral" },
+                  ].map((btn) => (
+                    <button
+                      key={btn.label}
+                      type="button"
+                      onClick={btn.onClick}
+                      className="w-full sm:w-auto inline-flex items-center justify-center text-xs font-semibold px-3.5 py-2 rounded-md transition-colors cursor-pointer"
+                      style={
+                        btn.variant === "sage"
+                          ? { backgroundColor: "var(--sth-sage)", color: "#fff" }
+                          : btn.variant === "geo"
+                          ? { backgroundColor: "var(--sth-geo)", color: "#fff" }
+                          : btn.variant === "accent"
+                          ? { backgroundColor: "var(--sth-accent)", color: "#fff" }
+                          : {
+                              border: "1px solid var(--sth-border)",
+                              backgroundColor: "var(--sth-surface)",
+                              color: "var(--sth-text-2)",
+                            }
+                      }
+                    >
+                      {btn.label}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
           )}
 
-          {/* Loading Indicator Overlay */}
+          {/* Loading overlay */}
           {(isLoading || isAssociating) && (
-            <div className="absolute inset-0 z-20 flex items-center justify-center bg-[#0B0F19]/60 backdrop-blur-[1px]">
-              <div className="rounded-lg border border-slate-800 bg-slate-900/90 px-4 py-3 shadow-xl flex items-center gap-3 text-xs font-mono text-slate-200">
-                <span className="h-4 w-4 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
-                <span>{isAssociating ? "Running spatial association..." : "Loading 2D dataset..."}</span>
+            <div
+              className="absolute inset-0 z-20 flex items-center justify-center"
+              style={{ backgroundColor: "rgba(243,240,232,0.7)", backdropFilter: "blur(1px)" }}
+            >
+              <div
+                className="rounded-md px-4 py-3 flex items-center gap-3 text-xs shadow-xl"
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  border: "1px solid var(--sth-border)",
+                  backgroundColor: "var(--sth-card)",
+                  color: "var(--sth-text)",
+                }}
+              >
+                <span
+                  className="h-4 w-4 border-2 border-t-transparent rounded-full animate-spin"
+                  style={{ borderColor: "var(--sth-border)", borderTopColor: "var(--sth-accent)" }}
+                />
+                <span>{isAssociating ? "Running spatial association…" : "Loading 2D dataset…"}</span>
               </div>
             </div>
           )}
@@ -285,7 +359,11 @@ export default function Cadastral2DPage() {
         {inspectorOpen && (
           <aside
             aria-label="2D Cadastral Inspector"
-            className="w-full lg:w-[380px] shrink-0 h-full overflow-y-auto bg-[#111827]/80 border-l border-slate-800/80"
+            className="w-full lg:w-[380px] shrink-0 h-full overflow-y-auto"
+            style={{
+              borderLeft: "1px solid var(--sth-border)",
+              backgroundColor: "var(--sth-card)",
+            }}
           >
             <ParcelInspector
               selectedParcel={selectedParcel}

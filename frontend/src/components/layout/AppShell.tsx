@@ -6,7 +6,10 @@ import { AppHeader } from "./AppHeader";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#0B0F19] text-slate-100 font-sans">
+    <div
+      className="flex h-screen w-screen overflow-hidden"
+      style={{ backgroundColor: "var(--sth-bg)", color: "var(--sth-text)", fontFamily: "var(--font-sans)" }}
+    >
       {/* Desktop Persistent Sidebar */}
       <AppSidebar />
 
