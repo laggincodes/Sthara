@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import type { Metadata } from "next";
 import { constructMetadata } from "@/lib/metadata";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
@@ -12,8 +12,18 @@ export const metadata: Metadata = constructMetadata({
 
 export default function NotFound() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-6 text-center">
-      <div className="w-full max-w-md rounded-xl border border-slate-800 bg-[#111827]/80 p-8 shadow-2xl backdrop-blur-sm">
+    <main
+      className="flex min-h-screen flex-col items-center justify-center p-6 text-center"
+      style={{ backgroundColor: "var(--sth-bg)" }}
+    >
+      <div
+        className="w-full max-w-md rounded-md p-8"
+        style={{
+          backgroundColor: "var(--sth-card)",
+          border: "1px solid var(--sth-border)",
+          boxShadow: "0 4px 24px rgba(37,38,34,0.08)",
+        }}
+      >
         <div className="mb-4 flex justify-center">
           <Breadcrumbs
             items={[{ name: "404 Spatial Error", item: "/404" }]}
@@ -21,23 +31,42 @@ export default function NotFound() {
           />
         </div>
 
-        <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-red-500/30 bg-red-950/20 px-3 py-1 font-mono text-xs text-red-400">
-          <span className="h-1.5 w-1.5 rounded-full bg-red-400"></span>
+        <div
+          className="mb-4 inline-flex items-center gap-2 rounded px-3 py-1 text-xs"
+          style={{
+            fontFamily: "var(--font-mono)",
+            border: "1px solid #DDBCB4",
+            backgroundColor: "var(--sth-clay-bg)",
+            color: "var(--sth-clay)",
+          }}
+        >
+          <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "var(--sth-clay)" }} />
           ERROR CODE: 404_BOUNDARY_UNRESOLVED
         </div>
 
-        <h1 className="mb-3 text-2xl sm:text-3xl font-bold tracking-tight text-white">
+        <h1
+          className="mb-3 text-2xl sm:text-3xl font-bold tracking-tight"
+          style={{ fontFamily: "var(--font-heading)", color: "var(--sth-text)" }}
+        >
           Spatial Entity Not Found
         </h1>
 
-        <p className="mb-6 text-sm text-slate-400 leading-relaxed">
+        <p className="mb-6 text-sm leading-relaxed" style={{ color: "var(--sth-text-2)" }}>
           The requested URL does not match any registered 3D cadastral parcel, volumetric unit, or application view in this workspace.
         </p>
 
-        <div className="pt-4 border-t border-slate-800 flex flex-col sm:flex-row gap-3 justify-center">
+        <div
+          className="pt-4 flex flex-col sm:flex-row gap-3 justify-center"
+          style={{ borderTop: "1px solid var(--sth-border)" }}
+        >
           <Link
             href="/"
-            className="inline-flex items-center justify-center rounded-lg bg-cyan-600 px-4 py-2.5 text-xs font-semibold text-white transition-colors hover:bg-cyan-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-500"
+            className="inline-flex items-center justify-center rounded-md px-4 py-2.5 text-xs font-semibold transition-colors"
+            style={{
+              backgroundColor: "var(--sth-accent)",
+              color: "#fff",
+              fontFamily: "var(--font-sans)",
+            }}
           >
             Return to Cadastral Workspace
           </Link>

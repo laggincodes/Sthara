@@ -4,7 +4,7 @@
   "dataset_name": "map (1).osm",
   "source_name": "map (1).osm",
   "content_hash": "9001e2c7f9b9acdad11e109518458e47f5488d870e26fd45f998bb7d2b03cc65",
-  "converted_at": "2026-09-08T20:52:35.454966Z",
+  "converted_at": "2026-09-08T23:20:09.402862Z",
   "target_crs": "EPSG:32643",
   "viewer_origin": [
     706252.6642390823,
@@ -17,7 +17,7 @@
     "faces": 4324,
     "surface_area_sqm": 278462.32,
     "volume_cubic_m": 516936.3,
-    "processing_time_s": 1.146,
+    "processing_time_s": 1.194,
     "bounding_box": {
       "min": [
         -297.037,
@@ -46,7 +46,7 @@
       "features": null,
       "vertices": null,
       "faces": null,
-      "duration_ms": 0.55,
+      "duration_ms": 0.89,
       "details": {
         "source_type": "memory_buffer",
         "size_bytes": 457752,
@@ -60,7 +60,7 @@
       "features": null,
       "vertices": null,
       "faces": null,
-      "duration_ms": 17.07,
+      "duration_ms": 16.16,
       "details": {
         "nodes_count": 1807,
         "ways_count": 454,
@@ -75,7 +75,7 @@
       "features": 347,
       "vertices": null,
       "faces": null,
-      "duration_ms": 30.46,
+      "duration_ms": 29.84,
       "details": {
         "extracted_buildings": 347,
         "degenerate_count": 0
@@ -88,7 +88,7 @@
       "features": null,
       "vertices": null,
       "faces": null,
-      "duration_ms": 73.7,
+      "duration_ms": 92.57,
       "details": {
         "source_crs": "EPSG:4326",
         "target_crs": "EPSG:32643",
@@ -108,7 +108,7 @@
       "features": null,
       "vertices": null,
       "faces": null,
-      "duration_ms": 20.92,
+      "duration_ms": 21.61,
       "details": {
         "explicit_osm_heights": 0,
         "levels_derived_heights": 0,
@@ -124,7 +124,7 @@
       "features": 347,
       "vertices": 2858,
       "faces": 4324,
-      "duration_ms": 256.73,
+      "duration_ms": 238.4,
       "details": {
         "solids_count": 347,
         "total_vertices": 2858,
@@ -139,7 +139,7 @@
       "features": null,
       "vertices": null,
       "faces": null,
-      "duration_ms": 21.87,
+      "duration_ms": 22.26,
       "details": {
         "valid_solids": 347,
         "invalid_solids": 0
@@ -152,7 +152,7 @@
       "features": null,
       "vertices": null,
       "faces": null,
-      "duration_ms": 571.48,
+      "duration_ms": 639.97,
       "details": {
         "dataset_id": "ds_map_(1)_9001e2c7",
         "glb_bytes": 214164,

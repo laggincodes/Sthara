@@ -11,7 +11,7 @@ interface NavItem {
   href: string;
   icon: React.ReactNode;
   badge?: string | number | null;
-  badgeColor?: string;
+  badgeVariant?: "accent" | "sage" | "geo" | "neutral";
 }
 
 export function AppSidebar() {
@@ -49,7 +49,7 @@ export function AppSidebar() {
         </svg>
       ),
       badge: (buildingsGeojson?.features.length || 0) > 0 ? `${buildingsGeojson?.features.length}` : null,
-      badgeColor: "bg-amber-950/60 text-amber-400 border-amber-500/30",
+      badgeVariant: "geo",
     },
     {
       name: "3D Cadastre",
@@ -59,8 +59,8 @@ export function AppSidebar() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="m21 7.5-9-5.25L3 7.5m18 0-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
         </svg>
       ),
-      badge: building3DData?.summary.successful ? `${building3DData.summary.successful} 3D` : "155 3D",
-      badgeColor: "bg-cyan-950/60 text-cyan-400 border-cyan-500/30",
+      badge: building3DData?.summary.successful ? `${building3DData.summary.successful} 3D` : null,
+      badgeVariant: "sage",
     },
     {
       name: "Projects",
@@ -80,7 +80,7 @@ export function AppSidebar() {
         </svg>
       ),
       badge: "3D ID",
-      badgeColor: "bg-purple-950/60 text-purple-300 border-purple-500/30",
+      badgeVariant: "neutral",
     },
     {
       name: "Pipeline Audit",
@@ -91,10 +91,7 @@ export function AppSidebar() {
         </svg>
       ),
       badge: `${completedSteps}/8`,
-      badgeColor:
-        completedSteps === 8
-          ? "bg-emerald-950/60 text-emerald-400 border-emerald-500/30"
-          : "bg-slate-800 text-slate-400 border-slate-700",
+      badgeVariant: completedSteps === 8 ? "sage" : "neutral",
     },
   ];
 
@@ -103,69 +100,125 @@ export function AppSidebar() {
     return pathname.startsWith(href);
   };
 
+  const badgeClass = (variant: NavItem["badgeVariant"], active: boolean) => {
+    if (active) return "bg-white/20 text-white border-white/30";
+    switch (variant) {
+      case "accent":  return "bg-[#FAF0EE] text-[#A85D48] border-[#DDBCB4]";
+      case "sage":    return "bg-[#EFF2EE] text-[#788575] border-[#C0CAC0]";
+      case "geo":     return "bg-[#F5EFE3] text-[#B28A52] border-[#D8C8A8]";
+      default:        return "bg-[#E9E5DA] text-[#6F7069] border-[#D7D4CB]";
+    }
+  };
+
   return (
     <aside
       aria-label="Application Sidebar"
-      className="hidden md:flex w-60 shrink-0 flex-col justify-between border-r border-slate-800/80 bg-[#0B0F19] select-none"
+      className="hidden md:flex w-56 shrink-0 flex-col justify-between select-none"
+      style={{
+        backgroundColor: "var(--sth-surface)",
+        borderRight: "1px solid var(--sth-border)",
+      }}
     >
-      {/* Top Branding Section */}
+      {/* ── Top: Branding ──────────────────────────────────────────────── */}
       <div>
-        <div className="flex items-center gap-2.5 px-4 py-3.5 border-b border-slate-800/80">
+        <div
+          className="flex items-center gap-2.5 px-4 py-3.5"
+          style={{ borderBottom: "1px solid var(--sth-border)" }}
+        >
           <Link
             href="/"
-            className="flex items-center gap-2.5 transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-500 rounded-md p-0.5"
+            className="flex items-center gap-2.5 rounded-md p-0.5 transition-opacity hover:opacity-80"
             title="STHARA Dashboard"
           >
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-cyan-500/30 bg-cyan-950/40 text-cyan-400">
-              <Image
-                src="/icon.svg"
-                alt="STHARA Mark"
-                width={18}
-                height={18}
-              />
+            {/* Logo mark */}
+            <div
+              className="flex h-7 w-7 items-center justify-center rounded-md"
+              style={{
+                backgroundColor: "var(--sth-accent)",
+                color: "#fff",
+              }}
+            >
+              <Image src="/icon.svg" alt="STHARA Mark" width={16} height={16} className="brightness-[10]" />
             </div>
+
+            {/* Wordmark */}
             <div className="flex flex-col">
-              <span className="text-xs font-bold uppercase tracking-wider text-white font-mono leading-none">
+              <span
+                className="text-xs font-bold uppercase tracking-widest leading-none"
+                style={{ fontFamily: "var(--font-mono)", color: "var(--sth-text)" }}
+              >
                 STHARA
               </span>
-              <span className="text-[10px] text-slate-400 font-mono tracking-tight leading-none mt-1">
+              <span
+                className="text-[9px] tracking-tight leading-none mt-1"
+                style={{ fontFamily: "var(--font-mono)", color: "var(--sth-text-2)" }}
+              >
                 3D Cadastre Intel
               </span>
             </div>
           </Link>
-          <span className="ml-auto text-[9px] font-mono px-1.5 py-0.5 rounded border border-cyan-500/30 bg-cyan-950/30 text-cyan-300">
+
+          {/* Version badge */}
+          <span
+            className="ml-auto text-[9px] px-1.5 py-0.5 rounded border"
+            style={{
+              fontFamily: "var(--font-mono)",
+              color: "var(--sth-text-2)",
+              borderColor: "var(--sth-border)",
+              backgroundColor: "var(--sth-card)",
+            }}
+          >
             v1.0
           </span>
         </div>
 
-        {/* Navigation Menu */}
-        <nav aria-label="Main Navigation" className="p-3 space-y-1">
-          <div className="px-2.5 pb-1.5 text-[10px] font-mono uppercase tracking-wider text-slate-500 font-semibold">
+        {/* ── Navigation ─────────────────────────────────────────────── */}
+        <nav aria-label="Main Navigation" className="p-3 space-y-0.5">
+          <div
+            className="px-2 pb-2 pt-1 text-[10px] uppercase tracking-widest font-semibold"
+            style={{ fontFamily: "var(--font-mono)", color: "var(--sth-text-2)" }}
+          >
             Workspaces
           </div>
+
           {navItems.map((item) => {
             const active = isLinkActive(item.href);
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-all ${
+                className="flex items-center justify-between px-2.5 py-2 rounded-md text-xs font-medium transition-all"
+                style={
                   active
-                    ? "bg-slate-800/90 text-cyan-300 font-semibold shadow-xs border border-slate-700"
-                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/60"
-                }`}
+                    ? {
+                        backgroundColor: "var(--sth-accent)",
+                        color: "#fff",
+                      }
+                    : {
+                        color: "var(--sth-text-2)",
+                      }
+                }
+                onMouseEnter={(e) => {
+                  if (!active) {
+                    (e.currentTarget as HTMLElement).style.backgroundColor = "var(--sth-border)";
+                    (e.currentTarget as HTMLElement).style.color = "var(--sth-text)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!active) {
+                    (e.currentTarget as HTMLElement).style.backgroundColor = "transparent";
+                    (e.currentTarget as HTMLElement).style.color = "var(--sth-text-2)";
+                  }
+                }}
               >
                 <div className="flex items-center gap-2.5">
-                  <span className={active ? "text-cyan-400" : "text-slate-500"}>
-                    {item.icon}
-                  </span>
-                  <span>{item.name}</span>
+                  <span style={{ opacity: active ? 1 : 0.7 }}>{item.icon}</span>
+                  <span style={{ fontFamily: "var(--font-sans)" }}>{item.name}</span>
                 </div>
                 {item.badge !== null && item.badge !== undefined && (
                   <span
-                    className={`text-[10px] font-mono px-1.5 py-0.2 rounded border ${
-                      item.badgeColor || "bg-slate-800 text-slate-400 border-slate-700"
-                    }`}
+                    className={`text-[9px] px-1.5 py-0.5 rounded border ${badgeClass(item.badgeVariant, active)}`}
+                    style={{ fontFamily: "var(--font-mono)" }}
                   >
                     {item.badge}
                   </span>
@@ -175,14 +228,29 @@ export function AppSidebar() {
           })}
         </nav>
 
-        {/* Quick Demo Execution Box */}
-        <div className="mx-3 mt-2 p-2.5 rounded-lg border border-slate-800 bg-slate-900/40">
+        {/* ── Pipeline Validation Box ─────────────────────────────────── */}
+        <div
+          className="mx-3 mt-2 p-2.5 rounded-md"
+          style={{
+            border: "1px solid var(--sth-border)",
+            backgroundColor: "var(--sth-card)",
+          }}
+        >
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-bold">
-              Pipeline Validation
+            <span
+              className="text-[10px] uppercase tracking-wider font-semibold"
+              style={{ fontFamily: "var(--font-mono)", color: "var(--sth-text-2)" }}
+            >
+              Pipeline
             </span>
-            <span className="text-[10px] font-mono text-cyan-400">
-              {completedSteps}/8 Verified
+            <span
+              className="text-[10px]"
+              style={{
+                fontFamily: "var(--font-mono)",
+                color: completedSteps === 8 ? "var(--sth-sage)" : "var(--sth-geo)",
+              }}
+            >
+              {completedSteps}/8 verified
             </span>
           </div>
 
@@ -191,20 +259,25 @@ export function AppSidebar() {
               type="button"
               onClick={runEndToEndDemo}
               disabled={isDemoRunning}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 text-[11px] font-semibold text-white bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 disabled:opacity-50 py-1.5 px-2 rounded-md transition-all shadow-xs cursor-pointer"
-              title="Run 8-stage end-to-end pipeline validation"
+              className="flex-1 inline-flex items-center justify-center gap-1.5 text-[11px] font-semibold py-1.5 px-2 rounded-md transition-all cursor-pointer disabled:opacity-50"
+              style={{
+                backgroundColor: "var(--sth-accent)",
+                color: "#fff",
+                fontFamily: "var(--font-sans)",
+              }}
+              title="Run pipeline validation"
             >
               {isDemoRunning ? (
                 <>
                   <span className="h-2.5 w-2.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                  <span>Running...</span>
+                  <span>Running…</span>
                 </>
               ) : (
                 <>
-                  <svg className="w-3 h-3 text-emerald-200" fill="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M5 3l14 9-14 9V3z" />
                   </svg>
-                  <span>Run Demo</span>
+                  <span>Run Validation</span>
                 </>
               )}
             </button>
@@ -213,9 +286,14 @@ export function AppSidebar() {
               type="button"
               onClick={resetDemo}
               disabled={isDemoRunning}
-              className="inline-flex items-center justify-center p-1.5 text-slate-400 hover:text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-md transition-colors cursor-pointer"
-              title="Reset demo state"
-              aria-label="Reset Demo"
+              className="inline-flex items-center justify-center p-1.5 rounded-md transition-colors cursor-pointer disabled:opacity-50"
+              style={{
+                border: "1px solid var(--sth-border)",
+                backgroundColor: "var(--sth-surface)",
+                color: "var(--sth-text-2)",
+              }}
+              title="Reset validation state"
+              aria-label="Reset"
             >
               <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -224,21 +302,42 @@ export function AppSidebar() {
           </div>
         </div>
 
-        {/* Active Dataset Provenance Snapshot */}
+        {/* ── Active Dataset Provenance ───────────────────────────────── */}
         {(activeDatasetName || buildingDatasetName) && (
-          <div className="mx-3 mt-3 p-2 rounded-lg border border-slate-800/80 bg-[#111827]/60 text-[10px] font-mono space-y-1">
-            <div className="text-slate-500 uppercase tracking-wider font-semibold">
+          <div
+            className="mx-3 mt-3 p-2 rounded-md space-y-1"
+            style={{
+              border: "1px solid var(--sth-border)",
+              backgroundColor: "var(--sth-card)",
+            }}
+          >
+            <div
+              className="text-[9px] uppercase tracking-widest font-semibold"
+              style={{ fontFamily: "var(--font-mono)", color: "var(--sth-text-2)" }}
+            >
               Active Dataset
             </div>
             {activeDatasetName && (
-              <div className="flex items-center gap-1 text-emerald-400 truncate">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0" />
+              <div
+                className="flex items-center gap-1.5 text-[10px] truncate"
+                style={{ fontFamily: "var(--font-mono)", color: "var(--sth-sage)" }}
+              >
+                <span
+                  className="h-1.5 w-1.5 rounded-full shrink-0"
+                  style={{ backgroundColor: "var(--sth-sage)" }}
+                />
                 <span className="truncate">{activeDatasetName}</span>
               </div>
             )}
             {buildingDatasetName && (
-              <div className="flex items-center gap-1 text-purple-400 truncate">
-                <span className="h-1.5 w-1.5 rounded-full bg-purple-400 shrink-0" />
+              <div
+                className="flex items-center gap-1.5 text-[10px] truncate"
+                style={{ fontFamily: "var(--font-mono)", color: "var(--sth-geo)" }}
+              >
+                <span
+                  className="h-1.5 w-1.5 rounded-full shrink-0"
+                  style={{ backgroundColor: "var(--sth-geo)" }}
+                />
                 <span className="truncate">{buildingDatasetName}</span>
               </div>
             )}
@@ -246,28 +345,44 @@ export function AppSidebar() {
         )}
       </div>
 
-      {/* Bottom Status & Connectivity */}
-      <div className="p-3 border-t border-slate-800/80">
-        <div className="flex items-center justify-between text-[11px] font-mono text-slate-400">
+      {/* ── Bottom: Connectivity ───────────────────────────────────────── */}
+      <div
+        className="p-3"
+        style={{ borderTop: "1px solid var(--sth-border)" }}
+      >
+        <div
+          className="flex items-center justify-between text-[11px]"
+          style={{ fontFamily: "var(--font-mono)", color: "var(--sth-text-2)" }}
+        >
           <div className="flex items-center gap-1.5">
             <span
               className={`h-2 w-2 rounded-full ${
                 backendConnected === true
-                  ? "bg-emerald-400"
+                  ? ""
                   : backendConnected === false
-                  ? "bg-red-400 animate-pulse"
-                  : "bg-amber-400 animate-pulse"
+                  ? "animate-pulse"
+                  : "animate-pulse"
               }`}
+              style={{
+                backgroundColor:
+                  backendConnected === true
+                    ? "var(--sth-sage)"
+                    : backendConnected === false
+                    ? "var(--sth-clay)"
+                    : "var(--sth-geo)",
+              }}
             />
             <span>
               {backendConnected === true
                 ? "API Connected"
                 : backendConnected === false
                 ? "API Offline"
-                : "Connecting..."}
+                : "Connecting…"}
             </span>
           </div>
-          <span className="text-[10px] text-slate-600">:8000</span>
+          <span className="text-[10px]" style={{ color: "var(--sth-border)" }}>
+            :8000
+          </span>
         </div>
       </div>
     </aside>
