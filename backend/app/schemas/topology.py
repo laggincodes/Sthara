@@ -1,7 +1,7 @@
-"""
+﻿"""
 Unified Topology & Spatial Conflict Engine Schemas.
 
-Conforms strictly to SIH PPT 06 TOPOLOGY:
+Conforms strictly to STHARA Stage 06 TOPOLOGY:
 - Overlap Check
 - Containment
 - Duplicates

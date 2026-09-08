@@ -70,41 +70,42 @@ export function WorkspaceHeader({
   buildingDatasetName,
 }: WorkspaceHeaderProps) {
   return (
-    <header className="border-b border-slate-800 bg-[#111827]/90 px-4 py-2.5 backdrop-blur-md">
+    <header className="px-4 py-2.5 shadow-sm" style={{ backgroundColor: "#F8F6F0", borderBottom: "1px solid #D7D4CB", fontFamily: "var(--font-sans)", color: "#252622" }}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         {/* Brand & Workspace Title */}
         <div className="flex items-center gap-3">
           <Link
             href="/"
-            className="flex items-center gap-2.5 transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-500 rounded-md p-1"
+            className="flex items-center gap-2.5 transition-opacity hover:opacity-90 rounded-md p-1"
             title="Return to Homepage"
           >
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-cyan-500/30 bg-cyan-950/30">
+            <div className="flex h-7 w-7 items-center justify-center rounded-md" style={{ backgroundColor: "#A85D48", color: "#FFFFFF" }}>
               <Image
                 src="/icon.svg"
                 alt="3D Cadastral Mark"
                 width={18}
                 height={18}
+                className="brightness-0 invert"
               />
             </div>
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-300 font-mono">
+            <span className="text-xs font-bold uppercase tracking-wider" style={{ fontFamily: "var(--font-mono)", color: "#252622" }}>
               3D Cadastre
             </span>
           </Link>
 
-          <span className="text-slate-600 hidden sm:inline" aria-hidden="true">
+          <span className="hidden sm:inline" style={{ color: "#D7D4CB" }} aria-hidden="true">
             /
           </span>
 
-          <h1 className="text-sm font-semibold text-white tracking-tight flex items-center gap-2 flex-wrap">
+          <h1 className="text-sm font-semibold tracking-tight flex items-center gap-2 flex-wrap" style={{ color: "#252622" }}>
             <span>2D Cadastral Workspace</span>
             {activeDatasetName && (
-              <span className="text-xs font-mono font-normal text-emerald-400 border border-emerald-500/30 rounded px-1.5 py-0.5 bg-emerald-950/20">
+              <span className="text-xs font-semibold rounded px-1.5 py-0.5" style={{ fontFamily: "var(--font-mono)", backgroundColor: "#EFF2EE", color: "#788575", border: "1px solid #C0CAC0" }}>
                 Parcels: {activeDatasetName}
               </span>
             )}
             {buildingDatasetName && (
-              <span className="text-xs font-mono font-normal text-purple-400 border border-purple-500/30 rounded px-1.5 py-0.5 bg-purple-950/20">
+              <span className="text-xs font-semibold rounded px-1.5 py-0.5" style={{ fontFamily: "var(--font-mono)", backgroundColor: "#F5EFE3", color: "#B28A52", border: "1px solid #D8C8A8" }}>
                 Buildings: {buildingDatasetName}
               </span>
             )}
@@ -115,7 +116,8 @@ export function WorkspaceHeader({
         <div className="flex items-center flex-wrap gap-2">
           {/* Backend Health Status Indicator */}
           <div
-            className="flex items-center gap-1.5 text-xs font-mono px-2.5 py-1 rounded-full border border-slate-800 bg-slate-900/80"
+            className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md"
+            style={{ fontFamily: "var(--font-mono)", backgroundColor: "#E9E5DA", border: "1px solid #D7D4CB", color: "#62635D" }}
             title={
               backendConnected === true
                 ? "Backend service connected (:8000)"
@@ -127,13 +129,13 @@ export function WorkspaceHeader({
             <span
               className={`h-2 w-2 rounded-full ${
                 backendConnected === true
-                  ? "bg-emerald-400"
+                  ? "bg-emerald-600"
                   : backendConnected === false
-                  ? "bg-red-400 animate-pulse"
-                  : "bg-amber-400 animate-pulse"
+                  ? "bg-red-600 animate-pulse"
+                  : "bg-amber-600 animate-pulse"
               }`}
             />
-            <span className="text-slate-400 text-[11px] hidden md:inline">
+            <span className="text-[11px] hidden md:inline">
               {backendConnected === true
                 ? "API Connected"
                 : backendConnected === false
@@ -148,7 +150,8 @@ export function WorkspaceHeader({
               type="button"
               onClick={onRunDemo}
               disabled={isLoading || isDemoRunning}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 disabled:opacity-50 px-3.5 py-1.5 rounded-lg transition-all shadow-md shadow-cyan-950/40 ring-1 ring-cyan-400/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-400"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-white px-3.5 py-1.5 rounded-md transition-all shadow-sm disabled:opacity-50 cursor-pointer"
+              style={{ backgroundColor: "#A85D48" }}
               title="Run end-to-end deterministic demonstration pipeline"
             >
               {isDemoRunning ? (
@@ -158,7 +161,7 @@ export function WorkspaceHeader({
                 </>
               ) : (
                 <>
-                  <svg className="w-3.5 h-3.5 text-emerald-200" fill="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M5 3l14 9-14 9V3z" />
                   </svg>
                   <span className="font-bold">Run Demo</span>
@@ -173,8 +176,9 @@ export function WorkspaceHeader({
               type="button"
               onClick={onResetDemo}
               disabled={isLoading || isDemoRunning}
-              className="inline-flex items-center gap-1 text-xs font-mono text-slate-400 hover:text-slate-200 bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700 disabled:opacity-50 px-2.5 py-1.5 rounded-lg transition-colors"
-              title="Reset demo data & viewport selections"
+              className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-md transition-colors disabled:opacity-50 cursor-pointer"
+              style={{ fontFamily: "var(--font-mono)", backgroundColor: "#E9E5DA", border: "1px solid #D7D4CB", color: "#62635D" }}
+              title="Reset demo data &amp; viewport selections"
             >
               <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -188,14 +192,15 @@ export function WorkspaceHeader({
             <button
               type="button"
               onClick={onTogglePipelineStatus}
-              className={`inline-flex items-center gap-1.5 text-xs font-medium border px-2.5 py-1.5 rounded-lg transition-colors ${
-                showPipelineStatus
-                  ? "bg-cyan-950/60 border-cyan-500/40 text-cyan-300"
-                  : "bg-slate-800/90 border-slate-700 text-slate-400 hover:text-slate-200"
-              }`}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-md transition-colors cursor-pointer"
+              style={{
+                backgroundColor: showPipelineStatus ? "#FAF0EE" : "#E9E5DA",
+                border: showPipelineStatus ? "1px solid #DDBCB4" : "1px solid #D7D4CB",
+                color: showPipelineStatus ? "#A85D48" : "#62635D",
+              }}
               title="Toggle Pipeline Status Bar"
             >
-              <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
+              <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "#A85D48" }} />
               <span>Pipeline Audit</span>
             </button>
           )}
@@ -205,7 +210,8 @@ export function WorkspaceHeader({
             type="button"
             onClick={onLoadDemoParcels}
             disabled={isLoading}
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-200 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 border border-slate-700 px-3 py-1.5 rounded-lg transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-500"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-md transition-colors disabled:opacity-50 cursor-pointer"
+            style={{ backgroundColor: "#E9E5DA", border: "1px solid #D7D4CB", color: "#252622" }}
           >
             Load Demo Parcels
           </button>
@@ -215,7 +221,8 @@ export function WorkspaceHeader({
             type="button"
             onClick={onLoadDemoBuildings}
             disabled={isLoading}
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-200 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 border border-slate-700 px-3 py-1.5 rounded-lg transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-500"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-md transition-colors disabled:opacity-50 cursor-pointer"
+            style={{ backgroundColor: "#E9E5DA", border: "1px solid #D7D4CB", color: "#252622" }}
           >
             Load Demo Buildings
           </button>
@@ -226,10 +233,11 @@ export function WorkspaceHeader({
               type="button"
               onClick={onLoadRealOSMBuildings}
               disabled={isLoading}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-300 bg-amber-950/50 hover:bg-amber-900/60 border border-amber-500/40 disabled:opacity-50 px-3 py-1.5 rounded-lg transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-500 shadow-sm"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-md transition-colors disabled:opacity-50 cursor-pointer shadow-sm"
+              style={{ backgroundColor: "#F5EFE3", color: "#B28A52", border: "1px solid #D8C8A8" }}
               title="Load 155 real building footprints extracted from OpenStreetMap (Tagore Garden, New Delhi)"
             >
-              <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+              <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "#B28A52" }} />
               Load Real OSM
             </button>
           )}
@@ -239,7 +247,8 @@ export function WorkspaceHeader({
             type="button"
             onClick={onUploadClick}
             disabled={isLoading}
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-200 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 border border-slate-700 px-3 py-1.5 rounded-lg transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-500"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-md transition-colors disabled:opacity-50 cursor-pointer"
+            style={{ backgroundColor: "#E9E5DA", border: "1px solid #D7D4CB", color: "#252622" }}
           >
             Upload GeoJSON
           </button>
@@ -249,7 +258,8 @@ export function WorkspaceHeader({
             type="button"
             onClick={onRunValidation}
             disabled={isLoading || !hasParcels}
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-cyan-200 bg-cyan-950/60 hover:bg-cyan-900/60 disabled:opacity-40 border border-cyan-800/80 px-3 py-1.5 rounded-lg transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-500"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-md transition-colors disabled:opacity-40 cursor-pointer"
+            style={{ backgroundColor: "#FAF0EE", color: "#A85D48", border: "1px solid #DDBCB4" }}
           >
             Validate Parcels
           </button>
@@ -259,7 +269,8 @@ export function WorkspaceHeader({
             type="button"
             onClick={onRunAssociation}
             disabled={isLoading || isAssociating || !hasParcels || !hasBuildings}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-purple-600 hover:bg-purple-500 disabled:opacity-40 disabled:hover:bg-purple-600 px-3.5 py-1.5 rounded-lg transition-colors shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-purple-500"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-white px-3.5 py-1.5 rounded-md transition-colors shadow-sm disabled:opacity-40 cursor-pointer"
+            style={{ backgroundColor: "#B28A52" }}
           >
             {isAssociating ? (
               <>
@@ -276,7 +287,8 @@ export function WorkspaceHeader({
             type="button"
             onClick={onSampleElevation}
             disabled={isLoading || isSamplingElevation || (!hasParcels && !hasBuildings)}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-amber-600 hover:bg-amber-500 disabled:opacity-40 disabled:hover:bg-amber-600 px-3.5 py-1.5 rounded-lg transition-colors shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-500"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-white px-3.5 py-1.5 rounded-md transition-colors shadow-sm disabled:opacity-40 cursor-pointer"
+            style={{ backgroundColor: "#788575" }}
           >
             {isSamplingElevation ? (
               <>
@@ -293,7 +305,8 @@ export function WorkspaceHeader({
             type="button"
             onClick={onGenerate3D}
             disabled={isLoading || isGenerating3D || !hasBuildings}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:hover:bg-blue-600 px-3.5 py-1.5 rounded-lg transition-colors shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-white px-3.5 py-1.5 rounded-md transition-colors shadow-sm disabled:opacity-40 cursor-pointer"
+            style={{ backgroundColor: "#A85D48" }}
           >
             {isGenerating3D ? (
               <>
@@ -310,82 +323,34 @@ export function WorkspaceHeader({
             )}
           </button>
 
-          {/* Action: Generate 3D Stratified Floor Volumes (Step 12) */}
-          {onGenerateFloors3D && (
-            <button
-              type="button"
-              onClick={onGenerateFloors3D}
-              disabled={isLoading || isGeneratingFloors3D || !hasBuildings}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-cyan-600 hover:bg-cyan-500 disabled:opacity-40 disabled:hover:bg-cyan-600 px-3 py-1.5 rounded-lg transition-colors shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-500"
-            >
-              {isGeneratingFloors3D ? (
-                <>
-                  <span className="h-3 w-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Slicing Floors...
-                </>
-              ) : (
-                <>
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                  </svg>
-                  <span>Stratify Floors</span>
-                  {hasFloors3DData && <span className="h-1.5 w-1.5 rounded-full bg-cyan-300" />}
-                </>
-              )}
-            </button>
-          )}
-
-          {/* Action: Generate 3D Property Volumes (Step 12) */}
-          {onGenerateProperty3D && (
-            <button
-              type="button"
-              onClick={onGenerateProperty3D}
-              disabled={isLoading || isGeneratingProperty3D || !hasBuildings}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:hover:bg-violet-600 px-3 py-1.5 rounded-lg transition-colors shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-500"
-            >
-              {isGeneratingProperty3D ? (
-                <>
-                  <span className="h-3 w-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Binding Units...
-                </>
-              ) : (
-                <>
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
-                  <span>Property Volumes</span>
-                  {hasProperty3DData && <span className="h-1.5 w-1.5 rounded-full bg-violet-300" />}
-                </>
-              )}
-            </button>
-          )}
-
           {/* View Mode Segmented Toggle: 2D vs 3D */}
           {onToggleViewMode && (
-            <div className="flex items-center rounded-lg border border-slate-700 bg-slate-900/90 p-0.5 ml-1">
+            <div className="flex items-center rounded-md p-0.5 ml-1" style={{ backgroundColor: "#E9E5DA", border: "1px solid #D7D4CB" }}>
               <button
                 type="button"
                 onClick={() => onToggleViewMode("2d")}
-                className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-all ${
-                  viewMode === "2d"
-                    ? "bg-slate-700 text-white shadow"
-                    : "text-slate-400 hover:text-slate-200"
-                }`}
+                className="px-2.5 py-1 text-xs font-semibold rounded transition-all cursor-pointer"
+                style={{
+                  backgroundColor: viewMode === "2d" ? "#F8F6F0" : "transparent",
+                  color: viewMode === "2d" ? "#252622" : "#62635D",
+                  border: viewMode === "2d" ? "1px solid #D7D4CB" : "1px solid transparent",
+                }}
               >
                 2D Map
               </button>
               <button
                 type="button"
                 onClick={() => onToggleViewMode("3d")}
-                className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-all flex items-center gap-1 ${
-                  viewMode === "3d"
-                    ? "bg-blue-600 text-white shadow"
-                    : "text-slate-400 hover:text-slate-200"
-                }`}
+                className="px-2.5 py-1 text-xs font-semibold rounded transition-all flex items-center gap-1 cursor-pointer"
+                style={{
+                  backgroundColor: viewMode === "3d" ? "#A85D48" : "transparent",
+                  color: viewMode === "3d" ? "#FFFFFF" : "#62635D",
+                  border: viewMode === "3d" ? "1px solid transparent" : "1px solid transparent",
+                }}
               >
                 <span>3D Cadastre</span>
                 {has3DData && (
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-white" />
                 )}
               </button>
             </div>

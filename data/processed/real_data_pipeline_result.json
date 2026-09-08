@@ -1,7 +1,7 @@
 {
   "pipeline_id": "REAL-DATA-PIPELINE-E2E-001",
-  "executed_at": "2026-09-08T15:34:09.364005+00:00",
-  "execution_duration_sec": 0.043,
+  "executed_at": "2026-09-08T18:41:35.531777+00:00",
+  "execution_duration_sec": 0.079,
   "target_crs": "EPSG:32643",
   "fusion_status": "PARTIAL",
   "quality_level": "LIMITED",
@@ -326,7 +326,7 @@
                 "target_crs": "EPSG:32643",
                 "transformed": true,
                 "method": "pyproj_cartesian_transform",
-                "timestamp": "2026-09-08T15:34:09.331833+00:00"
+                "timestamp": "2026-09-08T18:41:35.473855+00:00"
               }
             },
             {
@@ -415,7 +415,7 @@
                 "target_crs": "EPSG:32643",
                 "transformed": true,
                 "method": "pyproj_cartesian_transform",
-                "timestamp": "2026-09-08T15:34:09.332529+00:00"
+                "timestamp": "2026-09-08T18:41:35.475103+00:00"
               }
             },
             {
@@ -504,7 +504,7 @@
                 "target_crs": "EPSG:32643",
                 "transformed": true,
                 "method": "pyproj_cartesian_transform",
-                "timestamp": "2026-09-08T15:34:09.333028+00:00"
+                "timestamp": "2026-09-08T18:41:35.476294+00:00"
               }
             },
             {
@@ -593,7 +593,7 @@
                 "target_crs": "EPSG:32643",
                 "transformed": true,
                 "method": "pyproj_cartesian_transform",
-                "timestamp": "2026-09-08T15:34:09.333482+00:00"
+                "timestamp": "2026-09-08T18:41:35.477401+00:00"
               }
             },
             {
@@ -682,7 +682,7 @@
                 "target_crs": "EPSG:32643",
                 "transformed": true,
                 "method": "pyproj_cartesian_transform",
-                "timestamp": "2026-09-08T15:34:09.333946+00:00"
+                "timestamp": "2026-09-08T18:41:35.478352+00:00"
               }
             },
             {
@@ -771,7 +771,7 @@
                 "target_crs": "EPSG:32643",
                 "transformed": true,
                 "method": "pyproj_cartesian_transform",
-                "timestamp": "2026-09-08T15:34:09.334360+00:00"
+                "timestamp": "2026-09-08T18:41:35.479240+00:00"
               }
             },
             {
@@ -860,7 +860,7 @@
                 "target_crs": "EPSG:32643",
                 "transformed": true,
                 "method": "pyproj_cartesian_transform",
-                "timestamp": "2026-09-08T15:34:09.334794+00:00"
+                "timestamp": "2026-09-08T18:41:35.480156+00:00"
               }
             },
             {
@@ -949,7 +949,7 @@
                 "target_crs": "EPSG:32643",
                 "transformed": true,
                 "method": "pyproj_cartesian_transform",
-                "timestamp": "2026-09-08T15:34:09.335240+00:00"
+                "timestamp": "2026-09-08T18:41:35.481252+00:00"
               }
             },
             {
@@ -1038,7 +1038,7 @@
                 "target_crs": "EPSG:32643",
                 "transformed": true,
                 "method": "pyproj_cartesian_transform",
-                "timestamp": "2026-09-08T15:34:09.335778+00:00"
+                "timestamp": "2026-09-08T18:41:35.482345+00:00"
               }
             },
             {
@@ -1127,7 +1127,7 @@
                 "target_crs": "EPSG:32643",
                 "transformed": true,
                 "method": "pyproj_cartesian_transform",
-                "timestamp": "2026-09-08T15:34:09.336531+00:00"
+                "timestamp": "2026-09-08T18:41:35.483222+00:00"
               }
             },
             {
@@ -1216,7 +1216,7 @@
                 "target_crs": "EPSG:32643",
                 "transformed": true,
                 "method": "pyproj_cartesian_transform",
-                "timestamp": "2026-09-08T15:34:09.337407+00:00"
+                "timestamp": "2026-09-08T18:41:35.485345+00:00"
               }
             },
             {
@@ -1305,7 +1305,7 @@
                 "target_crs": "EPSG:32643",
                 "transformed": true,
                 "method": "pyproj_cartesian_transform",
-                "timestamp": "2026-09-08T15:34:09.337871+00:00"
+                "timestamp": "2026-09-08T18:41:35.486563+00:00"
               }
             },
             {
@@ -1394,7 +1394,7 @@
                 "target_crs": "EPSG:32643",
                 "transformed": true,
                 "method": "pyproj_cartesian_transform",
-                "timestamp": "2026-09-08T15:34:09.338344+00:00"
+                "timestamp": "2026-09-08T18:41:35.487665+00:00"
               }
             },
             {
@@ -1483,7 +1483,7 @@
                 "target_crs": "EPSG:32643",
                 "transformed": true,
                 "method": "pyproj_cartesian_transform",
-                "timestamp": "2026-09-08T15:34:09.338762+00:00"
+                "timestamp": "2026-09-08T18:41:35.488654+00:00"
               }
             },
             {
@@ -1572,7 +1572,7 @@
                 "target_crs": "EPSG:32643",
                 "transformed": true,
                 "method": "pyproj_cartesian_transform",
-                "timestamp": "2026-09-08T15:34:09.339127+00:00"
+                "timestamp": "2026-09-08T18:41:35.489509+00:00"
               }
             }
           ],
@@ -1660,7 +1660,7 @@
                 "target_crs": "EPSG:32643",
                 "transformed": true,
                 "method": "pyproj_cartesian_transform",
-                "timestamp": "2026-09-08T15:34:09.340219+00:00"
+                "timestamp": "2026-09-08T18:41:35.490920+00:00"
               }
             },
             {
@@ -1739,7 +1739,7 @@
                 "target_crs": "EPSG:32643",
                 "transformed": true,
                 "method": "pyproj_cartesian_transform",
-                "timestamp": "2026-09-08T15:34:09.340717+00:00"
+                "timestamp": "2026-09-08T18:41:35.491770+00:00"
               }
             },
             {
@@ -1818,7 +1818,7 @@
                 "target_crs": "EPSG:32643",
                 "transformed": true,
                 "method": "pyproj_cartesian_transform",
-                "timestamp": "2026-09-08T15:34:09.341182+00:00"
+                "timestamp": "2026-09-08T18:41:35.492583+00:00"
               }
             }
           ],
@@ -1912,7 +1912,7 @@
                 "target_crs": "EPSG:32643",
                 "transformed": true,
                 "method": "pyproj_cartesian_transform",
-                "timestamp": "2026-09-08T15:34:09.343322+00:00"
+                "timestamp": "2026-09-08T18:41:35.493851+00:00"
               }
             },
             {
@@ -1997,7 +1997,7 @@
                 "target_crs": "EPSG:32643",
                 "transformed": true,
                 "method": "pyproj_cartesian_transform",
-                "timestamp": "2026-09-08T15:34:09.344143+00:00"
+                "timestamp": "2026-09-08T18:41:35.494811+00:00"
               }
             },
             {
@@ -2082,7 +2082,7 @@
                 "target_crs": "EPSG:32643",
                 "transformed": true,
                 "method": "pyproj_cartesian_transform",
-                "timestamp": "2026-09-08T15:34:09.344658+00:00"
+                "timestamp": "2026-09-08T18:41:35.495830+00:00"
               }
             },
             {
@@ -2167,7 +2167,7 @@
                 "target_crs": "EPSG:32643",
                 "transformed": true,
                 "method": "pyproj_cartesian_transform",
-                "timestamp": "2026-09-08T15:34:09.345105+00:00"
+                "timestamp": "2026-09-08T18:41:35.496715+00:00"
               }
             }
           ],

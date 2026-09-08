@@ -1,8 +1,8 @@
-# Underground & Subsurface Spatial Modeling
+﻿# Underground & Subsurface Spatial Modeling
 
-## 1. Executive Summary & SIH Architectural Principle
+## 1. Executive Summary & STHARA Architectural Principle
 
-The **Underground & Subsurface Spatial Modeling Layer** in **3D Cadastral Intelligence** implements the requirements specified in the Smart India Hackathon (SIH) technical presentation:
+The **Underground & Subsurface Spatial Modeling Layer** in **3D Cadastral Intelligence** implements the requirements specified in the STHARA technical presentation:
 
 $$\mathbf{Surface\ Cadastre} \cup \mathbf{Vertical\ Cadastre} \cup \mathbf{Subsurface\ Cadastre}$$
 

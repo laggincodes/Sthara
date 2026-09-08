@@ -1,8 +1,8 @@
-# 3D ULPIN Prototype Specification (v1.0)
+﻿# 3D ULPIN Prototype Specification (v1.0)
 
 > [!IMPORTANT]
 > **CRITICAL SEMANTIC NOTICE & SCOPE BOUNDARY**  
-> **3D ULPIN Prototype** is a **project-specific, deterministic identifier design** created for the Smart India Hackathon (SIH) prototype.  
+> **3D ULPIN Prototype** is a **project-specific, deterministic identifier design** created for the STHARA prototype.  
 > It is **NOT** an official Government of India ULPIN (Unique Land Parcel Identification Number) specification.  
 > When an authoritative national or state-level 3D cadastral specification becomes available, this prototype design can be cleanly mapped or adapted without disrupting underlying cadastral spatial relationships.
 
@@ -118,7 +118,7 @@ For property `PROP-DEMO-101-U01` on parcel `PARCEL-DEMO-101`, building `BLD-DEMO
 
 ## 5.1 Canonical 3D ULPIN vs. Property Record Reference
 
-To preserve complete semantic clarity and prevent confusion during hackathon evaluations, the system strictly separates the **cryptographic spatial identifier** from the **human-readable presentation reference**:
+To preserve complete semantic clarity and prevent confusion during platform evaluations, the system strictly separates the **cryptographic spatial identifier** from the **human-readable presentation reference**:
 
 | Characteristic | Canonical 3D ULPIN Prototype | Property Record Reference |
 | :--- | :--- | :--- |

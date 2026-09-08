@@ -1,7 +1,7 @@
-"""
+﻿"""
 Schemas and contracts for the AI/ML Extraction Subsystem.
 
-Conforms strictly to the SIH Separation of Concerns:
+Conforms strictly to the STHARA Separation of Concerns:
     AI = CANDIDATE EXTRACTION
     3D ENGINE = DETERMINISTIC MODELLING
     TOPOLOGY = DETERMINISTIC VALIDATION

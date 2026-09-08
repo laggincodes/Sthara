@@ -1,7 +1,7 @@
-"""
+﻿"""
 AI/ML Extraction Service for 3D Cadastral Intelligence.
 
-Implements the SIH Architectural Separation:
+Implements the STHARA Architectural Separation:
     AI/ML = CANDIDATE EXTRACTION
     3D ENGINE = DETERMINISTIC MODELLING
     TOPOLOGY = DETERMINISTIC VALIDATION
@@ -76,7 +76,7 @@ class AiExtractionService:
                 ],
             )
 
-        # SIH Benchmark Demo Mode (Deterministic reproducible run)
+        # Benchmark Demo Mode (Deterministic reproducible run)
         if request.demo_mode or model_id == "sih_benchmark_demo_v1":
             # Realistic metric coordinates in UTM 43N (Bangalore testbed)
             # Centered around (775927m E, 1297165m N)
@@ -458,7 +458,7 @@ class AiExtractionService:
                 status=CandidateStatus.UNAVAILABLE,
                 warnings=[
                     "UNIT_EXTRACTION_UNAVAILABLE: No floor geometry or interior layout provided. "
-                    "In accordance with SIH engineering rules, unit boundaries will NOT be fabricated."
+                    "In accordance with STHARA engineering rules, unit boundaries will NOT be fabricated."
                 ],
             )
 
@@ -879,7 +879,7 @@ class AiExtractionService:
     # 7. Demo Pipeline Runner
     # -------------------------------------------------------------------------
     def get_demo_ai_extraction(self) -> Dict[str, Any]:
-        """Generate a complete, reproducible AI candidate bundle for Tower 1 for the SIH presentation."""
+        """Generate a complete, reproducible AI candidate bundle for Tower 1 for demonstration."""
         bld_res = self.extract_buildings(
             BuildingExtractionRequest(source_id="AERIAL_SURFACE_DEMO", demo_mode=True)
         )

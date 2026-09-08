@@ -1,4 +1,4 @@
-# STHARA — 3D Cadastral Intelligence
+﻿# STHARA — 3D Cadastral Intelligence
 
 > Next-generation 3D spatial cadastre, volumetric land rights modeling, and prototype 3D-ULPIN platform. Fusing 2D cadastral, LiDAR, elevation, and building data to generate validated 3D property models and unique 3D ULPINs.
 
@@ -54,7 +54,7 @@ The platform enforces a strict separation between **deterministic computational 
 - **2D Mapping**: Leaflet / MapLibre GL
 - **Backend**: Python 3.11+, FastAPI, Uvicorn, Pydantic v2
 - **Computational Geometry**: Shapely 2.0+ (GEOS), GeoPandas, PyProj (PROJ)
-- **Database / Data Store**: In-memory spatial cache / GeoJSON (SIH Fast-Track mode); PostgreSQL 16 + PostGIS 3.4 (Production mode)
+- **Database / Data Store**: In-memory spatial cache / GeoJSON (STHARA Fast-Track mode); PostgreSQL 16 + PostGIS 3.4 (Production mode)
 - **AI (Optional)**: Google Gemini Flash API (`google-genai` SDK)
 
 ---
@@ -93,7 +93,7 @@ The platform enforces a strict separation between **deterministic computational 
 - **PHASE 9**: 3D Viewer Integration & Exploded View *(Completed — Step 14; see [3D_VIEWER.md](3D_VIEWER.md))*
 - **PHASE 10**: Optional Gemini Intelligence Advisor *(Advisory layer)*
 - **PHASE 11**: Integration Testing *(Completed — Step 15; see [backend/tests/test_e2e_demo.py](backend/tests/test_e2e_demo.py))*
-- **PHASE 12**: Demo Polish & SIH Presentation Hardening *(Completed — Step 15; see [Demo Guide](#demo-walkthrough--presentation-guide))*
+- **PHASE 12**: Demo Polish & STHARA platform Hardening *(Completed — Step 15; see [Demo Guide](#demo-walkthrough--presentation-guide))*
 - **PHASE 18A**: Real OSM Building Data Ingestion *(Completed — Step 18A; 155 real footprints from New Delhi)*
 
 ---
@@ -142,7 +142,7 @@ cd backend
 
 ## Demo Walkthrough & Presentation Guide
 
-The platform is equipped with an automated, deterministic **"Run Demo"** pipeline tailored for live Smart India Hackathon evaluations and presentations.
+The platform is equipped with an automated, deterministic **"Run Demo"** pipeline tailored for live STHARA evaluations and presentations.
 
 ### 1. Instant Automated Demo
 1. Open the workspace at [`http://localhost:3000/workspace`](http://localhost:3000/workspace).
@@ -235,9 +235,9 @@ Copy `.env.example` templates if customization is needed:
 > 4. **Deterministic Computational Geometry Authority**: All coordinate projections, spatial intersections, 3D polyhedral extrusions, and hash derivations are computed deterministically using `GEOS`, `Shapely`, `GeoPandas`, and `PyProj`. Generative AI is **strictly non-authoritative** and confined to plain-English advisory summaries.
 >>>>>>> d94272d (feat: Initial release of STHARA (3D Cadastral Intelligence) - Steps 1-15 complete)
 
-## SIH Presentation Alignment & Final End-to-End Demo
+## Platform Capability Alignment & Final End-to-End Demo
 
-The platform is 100% aligned with the official Smart India Hackathon (SIH) Presentation specifications:
+The platform is 100% aligned with the official STHARA Presentation specifications:
 
 - **8 Technical Stages:**
   1. `01 INGESTION`: Multi-source ingest (Parcels, Buildings, DEM, Units, Subsurface).
@@ -254,5 +254,5 @@ The platform is 100% aligned with the official Smart India Hackathon (SIH) Prese
 - **Complete Runbook:** See [docs/FINAL_DEMO.md](docs/FINAL_DEMO.md) and [docs/PPT_ALIGNMENT_MATRIX.md](docs/PPT_ALIGNMENT_MATRIX.md).
 
 
-## SIH Presentation Alignment & Truthful Capability Status
-For a full 18-point capability audit matching the SIH presentation claims against the running codebase, refer to [docs/SIH_CAPABILITY_STATUS.md](docs/SIH_CAPABILITY_STATUS.md).
+## Platform Capability Alignment & Truthful Capability Status
+For a full 18-point capability audit matching the STHARA platform claims against the running codebase, refer to [docs/SIH_CAPABILITY_STATUS.md](docs/SIH_CAPABILITY_STATUS.md).

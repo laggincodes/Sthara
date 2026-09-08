@@ -1,4 +1,4 @@
-"""
+﻿"""
 End-to-End Demo Integration Test for 3D Cadastral Intelligence Pipeline (Step 15).
 
 Verifies the complete deterministic chain:
@@ -17,7 +17,7 @@ client = TestClient(app)
 
 def test_end_to_end_demo_pipeline():
     """
-    Executes and validates the full SIH demo pipeline in sequential order.
+    Executes and validates the full STHARA pipeline in sequential order.
     """
     # 1. Health check
     health_resp = client.get("/api/v1/health")

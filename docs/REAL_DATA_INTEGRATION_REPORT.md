@@ -1,8 +1,8 @@
 # Real Multi-Source End-to-End Validation Report
 
 **Pipeline Execution ID:** `REAL-DATA-PIPELINE-E2E-001`  
-**Execution Timestamp:** `2026-09-08T15:34:09.364005+00:00`  
-**Duration:** `0.043 seconds`  
+**Execution Timestamp:** `2026-09-08T18:41:35.531777+00:00`  
+**Duration:** `0.079 seconds`  
 **Target Coordinate Reference System:** `EPSG:32643` (UTM Zone 43N)  
 **Overall Fusion Status:** `PARTIAL`  
 **Pipeline Verdict:** `VALIDATED_PARTIAL`  

@@ -1,4 +1,4 @@
-# Data Model Specification
+﻿# Data Model Specification
 
 ## 1. Conceptual Hierarchy
 The cadastral data model is structured around a stratified property hierarchy that bridges traditional 2D surface parcels and multi-tier 3D volumetric rights conforming conceptually to **ISO 19152 (Land Administration Domain Model - LADM)**.
@@ -333,7 +333,7 @@ Captures deterministic spatial audit results and detected boundary clashes.
 ---
 
 ### 2.8 Prototype 3D ULPIN Specification
-*Notice: This is a hackathon research prototype specification and does not represent an official Gazette notification.*
+*Notice: This is a research prototype specification and does not represent an official Gazette notification.*
 
 The Prototype 3D Unique Land Parcel Identification Number is structured into 5 deterministic segments:
 

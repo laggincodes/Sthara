@@ -1,7 +1,7 @@
-# STHARA: SIH Presentation Truthful Capability Status Report
+﻿# STHARA: STHARA platform Truthful Capability Status Report
 
 **Project**: STHARA (Spatial-Temporal Hierarchical Authority for Rural & Urban Assets) / 3D Cadastral Intelligence  
-**Evaluation Standard**: Smart India Hackathon (SIH) Problem Statement & Presentation Alignment  
+**Evaluation Standard**: STHARA Problem Statement & Presentation Alignment  
 **Version**: 1.0.0 (Final Gap Closure)  
 **Date**: September 2026  
 **Geometry Contract**: Canonical 3D Geometry Contract v1.0 (Strictly Preserved)  
@@ -10,9 +10,9 @@
 
 ## 1. Authoritative 18-Requirement Capability Matrix
 
-The following table evaluates all 18 functional pillars claimed in the SIH presentation against the actual, verified, running codebase.
+The following table evaluates all 18 functional pillars claimed in the STHARA platform against the actual, verified, running codebase.
 
-| # | SIH Presentation Claim | Actual Implementation Status | Exact Implementation Mechanism | Data Source & Provenance | Accuracy / Limitations & Truthful Disclaimers |
+| # | STHARA platform Claim | Actual Implementation Status | Exact Implementation Mechanism | Data Source & Provenance | Accuracy / Limitations & Truthful Disclaimers |
 |---|------------------------|------------------------------|--------------------------------|--------------------------|-----------------------------------------------|
 | 1 | **GIS (Vector Cadastre)** | **FULLY IMPLEMENTED** | GeoJSON parser, Shapely polygon validator, topology containment check (`backend/app/services/validation_service.py`) | Real sample + synthetic test vectors (`data/processed/demo_parcels.geojson`) | 2D planimetric vector geometry; topological validity verified (zero self-intersections). |
 | 2 | **Drone / Aerial Orthophoto** | **FULLY IMPLEMENTED** | Raster metadata reader, GeoTIFF bounds parsing, ground sampling raster processor (`backend/app/services/ai_extraction_service.py`) | Synthetic GeoTIFF fixture (`data/synthetic/sample_orthophoto.tif`) + Real test metadata | 0.05m GSD simulated orthophoto raster; used for visual context and CV extraction gating. |
@@ -35,7 +35,7 @@ The following table evaluates all 18 functional pillars claimed in the SIH prese
 
 ---
 
-## 2. SIH Presentation Demonstration Script & Verification Guide
+## 2. STHARA platform Demonstration Script & Verification Guide
 
 ### 1. Launching the System
 - **Backend**:
@@ -51,10 +51,10 @@ The following table evaluates all 18 functional pillars claimed in the SIH prese
   ```
 - **URL**: [http://localhost:3000](http://localhost:3000)
 
-### 2. Executing the 1-Click SIH Pipeline
+### 2. Executing the 1-Click STHARA Pipeline
 1. Navigate to **Pipeline** ([http://localhost:3000/pipeline](http://localhost:3000/pipeline)).
-2. Click the green button: **▶ Run SIH Demo**.
-3. Observe all 8 SIH stages update in real time with truthful counts:
+2. Click the green button: **▶ Run platform demo**.
+3. Observe all 8 platform stages update in real time with truthful counts:
    - **Stage 01: INGESTION** → Complete (Parcels, Buildings, Orthophoto, DEM, LiDAR)
    - **Stage 02: GEO-REF** → Complete (Validated & Reprojected to EPSG:32643)
    - **Stage 03: FUSION** → Complete (Buildings Associated & DEM Sampled)

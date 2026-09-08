@@ -1,8 +1,8 @@
-# Unit-Level 3D Property Record & Presentation Reference Specification
+﻿# Unit-Level 3D Property Record & Presentation Reference Specification
 
 **Document Version:** 1.0.0  
 **Date:** September 2026  
-**Audience:** SIH Evaluators, Cadastral Engineers, Hackathon Jury  
+**Audience:** Platform Evaluators, Cadastral Engineers, Technical Evaluators  
 
 ---
 

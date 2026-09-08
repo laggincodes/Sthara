@@ -1,4 +1,4 @@
-# Backend API Specification
+﻿# Backend API Specification
 
 This document defines the REST API contracts for the **3D Cadastral Intelligence** backend.  
 Base URL: `http://localhost:8000/api/v1`
@@ -63,7 +63,7 @@ Base URL: `http://localhost:8000/api/v1`
 
 ### 2.1 List Preset Demo Datasets
 - **Route**: `GET /datasets`
-- **Purpose**: Returns the list of bundled SIH evaluation datasets.
+- **Purpose**: Returns the list of bundled STHARA evaluation datasets.
 - **Request**: None
 - **Response**:
   ```json
@@ -1045,7 +1045,7 @@ Validates candidate features against geometry validity, parcel boundary containm
 `POST /api/v1/ai/compare`
 Computes Intersection-over-Union (IoU), overlapping area, centroid offset, and boundary discrepancies between AI candidates and source reference.
 
-### 11.8 SIH Presentation Demonstration Bundle
+### 11.8 Platform Demonstration Bundle
 `GET /api/v1/ai/demo`
 Returns reproducible deterministic candidates for Tower 1.
 

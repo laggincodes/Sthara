@@ -1,8 +1,8 @@
-"""
+﻿"""
 Unified Topology & Spatial Conflict Engine API Router.
 
 Exposes endpoints for comprehensive multi-tier topological validation
-and demonstration bundles conforming to SIH PPT 06 TOPOLOGY:
+and demonstration bundles conforming to STHARA Stage 06 TOPOLOGY:
 - Overlap Check
 - Containment
 - Duplicates

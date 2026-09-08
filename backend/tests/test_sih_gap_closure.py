@@ -1,5 +1,5 @@
-"""
-Comprehensive Integration Tests for SIH Gap Closures:
+﻿"""
+Comprehensive Integration Tests for STHARA Gap Closures:
 - GNSS & CORS Reference-Control Workflow (Part B)
 - Real Local AI Extraction on Raster (Part C & D)
 - Canonical Demo Property Record P001 -> B01 -> F05 -> U501 (Part G & H)
@@ -109,7 +109,7 @@ def test_ai_building_extraction_on_raster():
 # 3. Canonical Demo Property Record P001 -> B01 -> F05 -> U501 (Part G & H)
 # -----------------------------------------------------------------------------
 def test_canonical_demo_property_record():
-    """GET /api/v1/units/canonical-demo returns SIH canonical structure."""
+    """GET /api/v1/units/canonical-demo returns canonical cadastral structure."""
     resp = client.get("/api/v1/units/canonical-demo")
     assert resp.status_code == 200
     data = resp.json()

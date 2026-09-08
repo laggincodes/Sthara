@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import {
@@ -59,7 +59,7 @@ const DEFAULT_REGISTERED_MODELS: ModelMetadata[] = [
     input_type: 'SYNTHETIC_TOWER_1_SPEC',
     output_type: 'CANDIDATE_MULTI_LAYER',
     availability: 'AVAILABLE',
-    limitations: 'Pre-calibrated benchmark for reproducible demonstration consistency.',
+    limitations: 'Pre-calibrated benchmark for Tower 1 in UTM 43N. Produces reproducible, deterministic candidate extractions for validation.',
   },
   {
     model_id: 'pytorch_mask_rcnn_v1',
@@ -342,22 +342,22 @@ export function AiExtractionCard() {
     verticalCandidates.length;
 
   return (
-    <div className="rounded-xl border border-slate-800 bg-[#111827]/80 p-6 space-y-6 shadow-xl shadow-black/40">
+    <div className="rounded-xl border border-[#D7D4CB] bg-[#111827]/80 p-6 space-y-6 shadow-xl shadow-black/40">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#D7D4CB] pb-5">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="inline-flex items-center rounded bg-amber-950/80 px-2 py-0.5 text-[11px] font-mono font-medium text-amber-400 border border-amber-500/30">
+            <span className="inline-flex items-center rounded bg-[#F8F6F0]mber-950/80 px-2 py-0.5 text-[11px] font-mono font-medium text-amber-400 border border-amber-500/30">
               STEP 19 — AI / ML EXTRACTION LAYER
             </span>
-            <span className="inline-flex items-center rounded bg-slate-800 px-2 py-0.5 text-[11px] font-mono text-slate-300">
+            <span className="inline-flex items-center rounded bg-[#E9E5DA] px-2 py-0.5 text-[11px] font-mono text-[#252622]">
               CANDIDATE EXTRACTION ONLY
             </span>
           </div>
-          <h2 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+          <h2 className="text-xl font-bold tracking-tight text-[#252622] flex items-center gap-2">
             AI / ML Candidate Extraction & Spatial Validation
           </h2>
-          <p className="text-xs text-slate-400 mt-1 max-w-3xl">
+          <p className="text-xs text-[#62635D] mt-1 max-w-3xl">
             Conforms strictly to the architectural Separation of Concerns: AI extracts candidate features; the
             deterministic spatial engine validates topology, calculates geometry, and enforces legal
             cadastral rules.
@@ -366,13 +366,13 @@ export function AiExtractionCard() {
 
         {/* Mode Toggle & Benchmark Button */}
         <div className="flex flex-wrap items-center gap-2.5">
-          <div className="flex items-center bg-slate-900 border border-slate-700/80 rounded-lg p-0.5 text-xs">
+          <div className="flex items-center bg-[#E9E5DA] border border-[#D7D4CB] rounded-lg p-0.5 text-xs">
             <button
               onClick={() => setActiveMode('DEMO')}
               className={`px-3 py-1 rounded-md font-medium transition-colors ${
                 activeMode === 'DEMO'
-                  ? 'bg-amber-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-[#F8F6F0]mber-600 text-[#252622] shadow-sm'
+                  : 'text-[#62635D] hover:text-[#252622]'
               }`}
             >
               Demo Benchmark
@@ -381,8 +381,8 @@ export function AiExtractionCard() {
               onClick={() => setActiveMode('LIVE_CV')}
               className={`px-3 py-1 rounded-md font-medium transition-colors ${
                 activeMode === 'LIVE_CV'
-                  ? 'bg-amber-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-[#F8F6F0]mber-600 text-[#252622] shadow-sm'
+                  : 'text-[#62635D] hover:text-[#252622]'
               }`}
             >
               Live Local CV
@@ -392,7 +392,7 @@ export function AiExtractionCard() {
           <button
             onClick={handleLoadDemoBundle}
             disabled={isExtracting !== null}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-amber-600/90 hover:bg-amber-500 px-3.5 py-1.5 text-xs font-semibold text-white transition-colors shadow-md disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-[#F8F6F0]mber-600/90 hover:bg-[#F8F6F0]mber-500 px-3.5 py-1.5 text-xs font-semibold text-[#252622] transition-colors shadow-md disabled:opacity-50"
           >
             {isExtracting === 'demo' ? 'Loading Bundle...' : 'Load Benchmark Bundle'}
           </button>
@@ -410,7 +410,7 @@ export function AiExtractionCard() {
       )}
 
       {actionNotice && (
-        <div className="rounded-lg bg-amber-950/40 border border-amber-500/30 p-3 text-xs text-amber-300 font-mono flex items-center gap-2">
+        <div className="rounded-lg bg-[#F8F6F0]mber-950/40 border border-amber-500/30 p-3 text-xs text-amber-300 font-mono flex items-center gap-2">
           <svg className="w-4 h-4 shrink-0 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
@@ -421,30 +421,30 @@ export function AiExtractionCard() {
       {/* 4 Extraction Task Rows */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Task 1: Building Extraction */}
-        <div className="rounded-lg border border-slate-800 bg-slate-900/90 p-4 flex flex-col justify-between space-y-3">
+        <div className="rounded-lg border border-[#D7D4CB] bg-[#E9E5DA] p-4 flex flex-col justify-between space-y-3">
           <div>
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-mono text-amber-400 font-medium">TASK 01: BUILDING</span>
-              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#E9E5DA] text-[#252622]">
                 {activeMode === 'DEMO' ? 'synthetic_benchmark' : 'bld_cv_otsu'}
               </span>
             </div>
-            <h3 className="text-sm font-semibold text-white mt-1">Building Footprint</h3>
-            <p className="text-[11px] text-slate-400 mt-1">
+            <h3 className="text-sm font-semibold text-[#252622] mt-1">Building Footprint</h3>
+            <p className="text-[11px] text-[#62635D] mt-1">
               {activeMode === 'DEMO'
                 ? 'Calibrated Tower 1 candidate polygon (UTM 43N).'
                 : 'Otsu binarization + contour simplification from raster.'}
             </p>
           </div>
-          <div className="space-y-2 pt-2 border-t border-slate-800/80">
-            <div className="flex justify-between text-xs font-mono text-slate-400">
+          <div className="space-y-2 pt-2 border-t border-[#D7D4CB]">
+            <div className="flex justify-between text-xs font-mono text-[#62635D]">
               <span>Candidates:</span>
               <span className="text-amber-400 font-semibold">{buildingCandidates.length}</span>
             </div>
             <button
               onClick={handleExtractBuildings}
               disabled={isExtracting !== null}
-              className="w-full py-1.5 px-3 rounded bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 border border-slate-700 transition-colors disabled:opacity-50"
+              className="w-full py-1.5 px-3 rounded bg-[#E9E5DA] hover:bg-slate-700 text-xs font-medium text-[#252622] border border-[#D7D4CB] transition-colors disabled:opacity-50"
             >
               {isExtracting === 'buildings' ? 'Extracting...' : 'Extract Footprint'}
             </button>
@@ -452,28 +452,28 @@ export function AiExtractionCard() {
         </div>
 
         {/* Task 2: Floor Segmentation */}
-        <div className="rounded-lg border border-slate-800 bg-slate-900/90 p-4 flex flex-col justify-between space-y-3">
+        <div className="rounded-lg border border-[#D7D4CB] bg-[#E9E5DA] p-4 flex flex-col justify-between space-y-3">
           <div>
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-mono text-cyan-400 font-medium">TASK 02: FLOOR</span>
-              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">
+              <span className="text-[11px] font-mono text-[#A85D48] font-medium">TASK 02: FLOOR</span>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#E9E5DA] text-[#252622]">
                 flr_hist_cluster
               </span>
             </div>
-            <h3 className="text-sm font-semibold text-white mt-1">Floor Strata</h3>
-            <p className="text-[11px] text-slate-400 mt-1">
+            <h3 className="text-sm font-semibold text-[#252622] mt-1">Floor Strata</h3>
+            <p className="text-[11px] text-[#62635D] mt-1">
               1D vertical density stratification from building height evidence.
             </p>
           </div>
-          <div className="space-y-2 pt-2 border-t border-slate-800/80">
-            <div className="flex justify-between text-xs font-mono text-slate-400">
+          <div className="space-y-2 pt-2 border-t border-[#D7D4CB]">
+            <div className="flex justify-between text-xs font-mono text-[#62635D]">
               <span>Strata Levels:</span>
-              <span className="text-cyan-400 font-semibold">{floorCandidates.length}</span>
+              <span className="text-[#A85D48] font-semibold">{floorCandidates.length}</span>
             </div>
             <button
               onClick={handleExtractFloors}
               disabled={isExtracting !== null}
-              className="w-full py-1.5 px-3 rounded bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 border border-slate-700 transition-colors disabled:opacity-50"
+              className="w-full py-1.5 px-3 rounded bg-[#E9E5DA] hover:bg-slate-700 text-xs font-medium text-[#252622] border border-[#D7D4CB] transition-colors disabled:opacity-50"
             >
               {isExtracting === 'floors' ? 'Segmenting...' : 'Segment Floors'}
             </button>
@@ -481,28 +481,28 @@ export function AiExtractionCard() {
         </div>
 
         {/* Task 3: Unit Delineation */}
-        <div className="rounded-lg border border-slate-800 bg-slate-900/90 p-4 flex flex-col justify-between space-y-3">
+        <div className="rounded-lg border border-[#D7D4CB] bg-[#E9E5DA] p-4 flex flex-col justify-between space-y-3">
           <div>
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-mono text-emerald-400 font-medium">TASK 03: UNIT</span>
-              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">
+              <span className="text-[11px] font-mono text-[#788575] font-medium">TASK 03: UNIT</span>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#E9E5DA] text-[#252622]">
                 unit_partition
               </span>
             </div>
-            <h3 className="text-sm font-semibold text-white mt-1">Apartment Units</h3>
-            <p className="text-[11px] text-slate-400 mt-1">
+            <h3 className="text-sm font-semibold text-[#252622] mt-1">Apartment Units</h3>
+            <p className="text-[11px] text-[#62635D] mt-1">
               Orthogonal interior partitioning with party-wall touching verification.
             </p>
           </div>
-          <div className="space-y-2 pt-2 border-t border-slate-800/80">
-            <div className="flex justify-between text-xs font-mono text-slate-400">
+          <div className="space-y-2 pt-2 border-t border-[#D7D4CB]">
+            <div className="flex justify-between text-xs font-mono text-[#62635D]">
               <span>Candidate Units:</span>
-              <span className="text-emerald-400 font-semibold">{unitCandidates.length}</span>
+              <span className="text-[#788575] font-semibold">{unitCandidates.length}</span>
             </div>
             <button
               onClick={handleExtractUnits}
               disabled={isExtracting !== null}
-              className="w-full py-1.5 px-3 rounded bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 border border-slate-700 transition-colors disabled:opacity-50"
+              className="w-full py-1.5 px-3 rounded bg-[#E9E5DA] hover:bg-slate-700 text-xs font-medium text-[#252622] border border-[#D7D4CB] transition-colors disabled:opacity-50"
             >
               {isExtracting === 'units' ? 'Delineating...' : 'Delineate Units'}
             </button>
@@ -510,28 +510,28 @@ export function AiExtractionCard() {
         </div>
 
         {/* Task 4: Vertical Delineation */}
-        <div className="rounded-lg border border-slate-800 bg-slate-900/90 p-4 flex flex-col justify-between space-y-3">
+        <div className="rounded-lg border border-[#D7D4CB] bg-[#E9E5DA] p-4 flex flex-col justify-between space-y-3">
           <div>
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-mono text-purple-400 font-medium">TASK 04: VERTICAL</span>
-              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">
+              <span className="text-[11px] font-mono text-[#B28A52] font-medium">TASK 04: VERTICAL</span>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#E9E5DA] text-[#252622]">
                 vert_delineator
               </span>
             </div>
-            <h3 className="text-sm font-semibold text-white mt-1">Vertical Strata</h3>
-            <p className="text-[11px] text-slate-400 mt-1">
+            <h3 className="text-sm font-semibold text-[#252622] mt-1">Vertical Strata</h3>
+            <p className="text-[11px] text-[#62635D] mt-1">
               Base-to-roof elevation bounds coordination (920m - 935m ASL).
             </p>
           </div>
-          <div className="space-y-2 pt-2 border-t border-slate-800/80">
-            <div className="flex justify-between text-xs font-mono text-slate-400">
+          <div className="space-y-2 pt-2 border-t border-[#D7D4CB]">
+            <div className="flex justify-between text-xs font-mono text-[#62635D]">
               <span>Envelopes:</span>
-              <span className="text-purple-400 font-semibold">{verticalCandidates.length}</span>
+              <span className="text-[#B28A52] font-semibold">{verticalCandidates.length}</span>
             </div>
             <button
               onClick={handleExtractVertical}
               disabled={isExtracting !== null}
-              className="w-full py-1.5 px-3 rounded bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 border border-slate-700 transition-colors disabled:opacity-50"
+              className="w-full py-1.5 px-3 rounded bg-[#E9E5DA] hover:bg-slate-700 text-xs font-medium text-[#252622] border border-[#D7D4CB] transition-colors disabled:opacity-50"
             >
               {isExtracting === 'vertical' ? 'Delineating...' : 'Extract Vertical'}
             </button>
@@ -545,8 +545,8 @@ export function AiExtractionCard() {
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-semibold text-white">Candidate Feature Register</h3>
-              <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[11px] font-mono text-slate-300">
+              <h3 className="text-sm font-semibold text-[#252622]">Candidate Feature Register</h3>
+              <span className="rounded-full bg-[#E9E5DA] px-2 py-0.5 text-[11px] font-mono text-[#252622]">
                 {totalCandidates} Total
               </span>
             </div>
@@ -554,7 +554,7 @@ export function AiExtractionCard() {
             <button
               onClick={handleValidateCandidates}
               disabled={totalCandidates === 0 || isExtracting !== null}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-[#252622] transition-colors disabled:opacity-50"
             >
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -565,9 +565,9 @@ export function AiExtractionCard() {
 
           {/* Validation Summary Badge if available */}
           {validationResult && (
-            <div className="rounded-lg bg-slate-900 border border-slate-800 p-3 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+            <div className="rounded-lg bg-[#E9E5DA] border border-[#D7D4CB] p-3 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
               <div className="flex items-center gap-3">
-                <span className="text-emerald-400 font-semibold">
+                <span className="text-[#788575] font-semibold">
                   ✓ {validationResult.accepted_count} Accepted
                 </span>
                 <span className="text-amber-400 font-semibold">
@@ -580,7 +580,7 @@ export function AiExtractionCard() {
               <span
                 className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
                   validationResult.all_valid
-                    ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/30'
+                    ? 'bg-emerald-950 text-[#788575] border border-emerald-500/30'
                     : 'bg-red-950 text-red-300 border border-red-500/30'
                 }`}
               >
@@ -590,7 +590,7 @@ export function AiExtractionCard() {
           )}
 
           {/* Candidates List */}
-          <div className="rounded-lg border border-slate-800 bg-slate-900/60 overflow-hidden text-xs">
+          <div className="rounded-lg border border-[#D7D4CB] bg-[#E9E5DA] overflow-hidden text-xs">
             <div className="max-h-56 overflow-y-auto divide-y divide-slate-800/80">
               {[
                 ...buildingCandidates,
@@ -603,35 +603,35 @@ export function AiExtractionCard() {
                   onClick={() => setSelectedCandidate(cand)}
                   className={`p-3 flex items-center justify-between cursor-pointer transition-colors ${
                     selectedCandidate?.candidate_id === cand.candidate_id
-                      ? 'bg-slate-800/90 border-l-2 border-amber-400'
-                      : 'hover:bg-slate-800/40'
+                      ? 'bg-[#E9E5DA] border-l-2 border-amber-400'
+                      : 'hover:bg-[#E9E5DA]'
                   }`}
                 >
                   <div className="space-y-0.5">
-                    <div className="flex items-center gap-2 font-mono font-semibold text-slate-200">
+                    <div className="flex items-center gap-2 font-mono font-semibold text-[#252622]">
                       <span>{cand.candidate_id}</span>
-                      <span className="text-[10px] text-slate-400">({cand.feature_type})</span>
+                      <span className="text-[10px] text-[#62635D]">({cand.feature_type})</span>
                     </div>
-                    <div className="text-[11px] text-slate-400 font-mono">
+                    <div className="text-[11px] text-[#62635D] font-mono">
                       Method: {cand.extraction_method} | Model: {cand.provenance.model_id}
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2 font-mono">
                     {cand.confidence !== null && cand.confidence !== undefined && (
-                      <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 text-[10px]">
+                      <span className="px-1.5 py-0.5 rounded bg-[#E9E5DA] text-[#252622] text-[10px]">
                         {(cand.confidence * 100).toFixed(0)}%
                       </span>
                     )}
                     <span
                       className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
                         cand.status === 'ACCEPTED'
-                          ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/30'
+                          ? 'bg-emerald-950 text-[#788575] border border-emerald-500/30'
                           : cand.status === 'REVIEW_REQUIRED'
-                          ? 'bg-amber-950 text-amber-300 border border-amber-500/30'
+                          ? 'bg-[#F8F6F0]mber-950 text-amber-300 border border-amber-500/30'
                           : cand.status === 'REJECTED'
                           ? 'bg-red-950 text-red-300 border border-red-500/30'
-                          : 'bg-amber-950/60 text-amber-400 border border-amber-500/30'
+                          : 'bg-[#F8F6F0]mber-950/60 text-amber-400 border border-amber-500/30'
                       }`}
                     >
                       {cand.status}
@@ -641,7 +641,7 @@ export function AiExtractionCard() {
               ))}
 
               {totalCandidates === 0 && (
-                <div className="p-6 text-center text-slate-500">
+                <div className="p-6 text-center text-[#77786F]">
                   No candidate features loaded. Click &quot;Load Benchmark Bundle&quot; or run an individual task.
                 </div>
               )}
@@ -650,23 +650,23 @@ export function AiExtractionCard() {
 
           {/* Selected Candidate Details Panel */}
           {selectedCandidate && (
-            <div className="rounded-lg border border-slate-800 bg-slate-900/90 p-4 space-y-3">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                <span className="font-mono text-xs font-semibold text-white">
+            <div className="rounded-lg border border-[#D7D4CB] bg-[#E9E5DA] p-4 space-y-3">
+              <div className="flex items-center justify-between border-b border-[#D7D4CB] pb-2">
+                <span className="font-mono text-xs font-semibold text-[#252622]">
                   Candidate Inspector: {selectedCandidate.candidate_id}
                 </span>
-                <span className="rounded bg-amber-950/80 px-2 py-0.5 text-[10px] font-mono font-medium text-amber-300 border border-amber-500/30">
+                <span className="rounded bg-[#F8F6F0]mber-950/80 px-2 py-0.5 text-[10px] font-mono font-medium text-amber-300 border border-amber-500/30">
                   CANDIDATE — NOT YET AUTHORITATIVE
                 </span>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
                 <div>
-                  <span className="text-slate-500 text-[10px] block">Feature Type</span>
-                  <span className="text-slate-200 font-semibold">{selectedCandidate.feature_type}</span>
+                  <span className="text-[#77786F] text-[10px] block">Feature Type</span>
+                  <span className="text-[#252622] font-semibold">{selectedCandidate.feature_type}</span>
                 </div>
                 <div>
-                  <span className="text-slate-500 text-[10px] block">Confidence Rating</span>
+                  <span className="text-[#77786F] text-[10px] block">Confidence Rating</span>
                   <span className="text-amber-400 font-semibold">
                     {selectedCandidate.confidence !== null && selectedCandidate.confidence !== undefined
                       ? `${(selectedCandidate.confidence * 100).toFixed(1)}% (${selectedCandidate.confidence_level})`
@@ -674,27 +674,27 @@ export function AiExtractionCard() {
                   </span>
                 </div>
                 <div>
-                  <span className="text-slate-500 text-[10px] block">CRS</span>
-                  <span className="text-slate-200 font-semibold">{selectedCandidate.provenance.crs}</span>
+                  <span className="text-[#77786F] text-[10px] block">CRS</span>
+                  <span className="text-[#252622] font-semibold">{selectedCandidate.provenance.crs}</span>
                 </div>
                 <div>
-                  <span className="text-slate-500 text-[10px] block">Extraction Method</span>
-                  <span className="text-slate-200 font-semibold">{selectedCandidate.extraction_method}</span>
+                  <span className="text-[#77786F] text-[10px] block">Extraction Method</span>
+                  <span className="text-[#252622] font-semibold">{selectedCandidate.extraction_method}</span>
                 </div>
               </div>
 
               {/* Estimated Attributes */}
               {selectedCandidate.estimated_attributes &&
                 Object.keys(selectedCandidate.estimated_attributes).length > 0 && (
-                  <div className="rounded bg-slate-950/60 p-2.5 font-mono text-[11px] text-slate-300 space-y-1">
-                    <span className="text-[10px] text-slate-500 block uppercase tracking-wider">
+                  <div className="rounded bg-[#E9E5DA] p-2.5 font-mono text-[11px] text-[#252622] space-y-1">
+                    <span className="text-[10px] text-[#77786F] block uppercase tracking-wider">
                       Candidate Physical Attributes:
                     </span>
                     <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                       {Object.entries(selectedCandidate.estimated_attributes).map(([k, v]) => (
                         <div key={k} className="flex justify-between border-b border-slate-900/60 pb-0.5">
-                          <span className="text-slate-400">{k}:</span>
-                          <span className="text-slate-200 font-semibold">{String(v)}</span>
+                          <span className="text-[#62635D]">{k}:</span>
+                          <span className="text-[#252622] font-semibold">{String(v)}</span>
                         </div>
                       ))}
                     </div>
@@ -703,7 +703,7 @@ export function AiExtractionCard() {
 
               {/* Warnings / Notices */}
               {selectedCandidate.warnings && selectedCandidate.warnings.length > 0 && (
-                <div className="rounded bg-amber-950/30 border border-amber-500/20 p-2 text-[11px] text-amber-300/90 font-mono space-y-0.5">
+                <div className="rounded bg-[#F8F6F0]mber-950/30 border border-amber-500/20 p-2 text-[11px] text-amber-300/90 font-mono space-y-0.5">
                   {selectedCandidate.warnings.map((w, idx) => (
                     <div key={idx}>• {w}</div>
                   ))}
@@ -716,49 +716,49 @@ export function AiExtractionCard() {
         {/* Right Col: Spatial Comparison (IoU vs OSM) & Model Registry */}
         <div className="space-y-4">
           {/* Spatial Comparison Box */}
-          <div className="rounded-lg border border-slate-800 bg-slate-900/90 p-4 space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-              <h3 className="text-xs font-semibold text-white uppercase tracking-wider font-mono">
+          <div className="rounded-lg border border-[#D7D4CB] bg-[#E9E5DA] p-4 space-y-3">
+            <div className="flex items-center justify-between border-b border-[#D7D4CB] pb-2">
+              <h3 className="text-xs font-semibold text-[#252622] uppercase tracking-wider font-mono">
                 Spatial Discrepancy & IoU
               </h3>
               <span className="text-[10px] font-mono text-amber-400">AI vs OSM</span>
             </div>
 
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[11px] text-[#62635D]">
               Quantify geometric deviation between AI candidate footprint and physical OSM building.
             </p>
 
             <button
               onClick={handleCompareWithReference}
               disabled={buildingCandidates.length === 0 || isExtracting !== null}
-              className="w-full py-1.5 px-3 rounded bg-amber-600 hover:bg-amber-500 text-xs font-semibold text-white transition-colors disabled:opacity-50 shadow-md"
+              className="w-full py-1.5 px-3 rounded bg-[#F8F6F0]mber-600 hover:bg-[#F8F6F0]mber-500 text-xs font-semibold text-[#252622] transition-colors disabled:opacity-50 shadow-md"
             >
               {isExtracting === 'compare' ? 'Comparing...' : 'Calculate IoU & Discrepancy'}
             </button>
 
             {comparisonResult && (
-              <div className="rounded bg-slate-950/80 border border-slate-800 p-3 space-y-2 text-xs font-mono">
+              <div className="rounded bg-[#E9E5DA] border border-[#D7D4CB] p-3 space-y-2 text-xs font-mono">
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-400">IoU Score:</span>
+                  <span className="text-[#62635D]">IoU Score:</span>
                   <span className="text-base font-bold text-amber-400">
                     {(comparisonResult.iou * 100).toFixed(1)}%
                   </span>
                 </div>
-                <div className="flex justify-between text-slate-400 text-[11px]">
+                <div className="flex justify-between text-[#62635D] text-[11px]">
                   <span>Intersection Area:</span>
-                  <span className="text-slate-200">{comparisonResult.intersection_area_m2} m²</span>
+                  <span className="text-[#252622]">{comparisonResult.intersection_area_m2} m²</span>
                 </div>
-                <div className="flex justify-between text-slate-400 text-[11px]">
+                <div className="flex justify-between text-[#62635D] text-[11px]">
                   <span>Union Area:</span>
-                  <span className="text-slate-200">{comparisonResult.union_area_m2} m²</span>
+                  <span className="text-[#252622]">{comparisonResult.union_area_m2} m²</span>
                 </div>
-                <div className="flex justify-between text-slate-400 text-[11px]">
+                <div className="flex justify-between text-[#62635D] text-[11px]">
                   <span>Centroid Offset:</span>
-                  <span className="text-slate-200">{comparisonResult.centroid_offset_m} m</span>
+                  <span className="text-[#252622]">{comparisonResult.centroid_offset_m} m</span>
                 </div>
-                <div className="flex justify-between text-slate-400 text-[11px]">
+                <div className="flex justify-between text-[#62635D] text-[11px]">
                   <span>Containment:</span>
-                  <span className="text-emerald-400 font-semibold">
+                  <span className="text-[#788575] font-semibold">
                     {comparisonResult.containment_status}
                   </span>
                 </div>
@@ -770,12 +770,12 @@ export function AiExtractionCard() {
           </div>
 
           {/* Registered Models Registry */}
-          <div className="rounded-lg border border-slate-800 bg-slate-900/90 p-4 space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-              <h3 className="text-xs font-semibold text-white uppercase tracking-wider font-mono">
+          <div className="rounded-lg border border-[#D7D4CB] bg-[#E9E5DA] p-4 space-y-3">
+            <div className="flex items-center justify-between border-b border-[#D7D4CB] pb-2">
+              <h3 className="text-xs font-semibold text-[#252622] uppercase tracking-wider font-mono">
                 Model Registry ({models.length})
               </h3>
-              <span className="text-[10px] font-mono text-slate-400">
+              <span className="text-[10px] font-mono text-[#62635D]">
                 <button onClick={handleRefreshModels} className="hover:text-amber-400 transition-colors">
                 {isLoadingModels ? 'Checking...' : 'Refresh'}
               </button>
@@ -784,20 +784,20 @@ export function AiExtractionCard() {
 
             <div className="space-y-2 max-h-48 overflow-y-auto pr-1 text-xs font-mono">
               {models.map((m) => (
-                <div key={m.model_id} className="rounded bg-slate-950/60 p-2 border border-slate-800/80">
+                <div key={m.model_id} className="rounded bg-[#E9E5DA] p-2 border border-[#D7D4CB]">
                   <div className="flex items-center justify-between text-[11px]">
-                    <span className="font-semibold text-slate-200">{m.model_id}</span>
+                    <span className="font-semibold text-[#252622]">{m.model_id}</span>
                     <span
                       className={`px-1.5 py-0.2 rounded text-[9px] font-semibold ${
                         m.availability === 'AVAILABLE'
-                          ? 'bg-emerald-950 text-emerald-300'
-                          : 'bg-slate-800 text-slate-400'
+                          ? 'bg-emerald-950 text-[#788575]'
+                          : 'bg-[#E9E5DA] text-[#62635D]'
                       }`}
                     >
                       {m.availability}
                     </span>
                   </div>
-                  <div className="text-[10px] text-slate-400 mt-0.5">
+                  <div className="text-[10px] text-[#62635D] mt-0.5">
                     {m.framework} | {m.task}
                   </div>
                 </div>

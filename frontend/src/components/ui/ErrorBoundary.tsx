@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { Component, ErrorInfo, ReactNode } from "react";
 
@@ -37,7 +37,7 @@ export class ErrorBoundary extends Component<Props, State> {
   public render() {
     if (this.state.hasError) {
       return (
-        <div className="w-full h-full min-h-[300px] flex flex-col items-center justify-center p-6 text-center bg-slate-950/80 border border-slate-800 rounded-xl">
+        <div className="w-full h-full min-h-[300px] flex flex-col items-center justify-center p-6 text-center bg-[#E9E5DA] border border-[#D7D4CB] rounded-xl">
           <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl border border-red-500/30 bg-red-950/40 text-red-400">
             <svg className="h-6 w-6 stroke-current" fill="none" viewBox="0 0 24 24" strokeWidth="1.5">
               <path
@@ -47,16 +47,16 @@ export class ErrorBoundary extends Component<Props, State> {
               />
             </svg>
           </div>
-          <h3 className="text-sm font-semibold text-white mb-1">
+          <h3 className="text-sm font-semibold text-[#252622] mb-1">
             {this.props.fallbackTitle || "Visual Component Encountered an Error"}
           </h3>
-          <p className="text-xs text-slate-400 max-w-sm mb-4 leading-relaxed font-mono">
+          <p className="text-xs text-[#62635D] max-w-sm mb-4 leading-relaxed font-mono">
             {this.state.error?.message || "An unexpected rendering fault occurred."}
           </p>
           <button
             type="button"
             onClick={this.handleReset}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3.5 py-1.5 rounded-lg transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-500"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#252622] bg-[#E9E5DA] hover:bg-slate-700 border border-[#D7D4CB] px-3.5 py-1.5 rounded-lg transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-500"
           >
             Reset View & Retry
           </button>

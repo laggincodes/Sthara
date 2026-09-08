@@ -1,7 +1,7 @@
-"""
+﻿"""
 Underground & Subsurface Spatial Modeling Schemas (Step 20).
 
-Adheres strictly to the SIH Presentation Technical Requirements:
+Adheres strictly to the STHARA 3D Cadastral Technical Requirements:
     - Basement Modeling (subterranean stratum of building/property)
     - Underground Utility Modeling (subsurface infrastructure; NOT a property volume)
     - Subsurface Volumes (generic 3D subsurface spatial parcels)
@@ -185,7 +185,7 @@ class UndergroundConflictResponse(BaseModel):
 
 
 class DemoUndergroundResponse(BaseModel):
-    """Complete bundle of synthetic underground demo assets for SIH presentation."""
+    """Complete bundle of synthetic underground demo assets for STHARA demonstration."""
     schema_version: str = Field("1.0", description="Contract version")
     parcel_id: str
     building_id: str
