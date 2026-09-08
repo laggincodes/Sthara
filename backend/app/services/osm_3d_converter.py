@@ -653,16 +653,37 @@ class Osm3DConverterService:
 
                 glb_bytes = scene.export(file_type="glb")
                 with open(OUTPUT_GLB_PATH, "wb") as f:
-                    f.write(glb_bytes)
-                glb_size_bytes = len(glb_bytes)
+                    f.write(glb_bytes if isinstance(glb_bytes, bytes) else glb_bytes.encode("utf-8"))
+                glb_size_bytes = OUTPUT_GLB_PATH.stat().st_size
 
                 gltf_exported = scene.export(file_type="gltf")
-                with open(OUTPUT_GLTF_PATH, "w", encoding="utf-8") as f:
-                    if isinstance(gltf_exported, (str, bytes)):
-                        f.write(gltf_exported if isinstance(gltf_exported, str) else gltf_exported.decode("utf-8"))
-                    elif isinstance(gltf_exported, dict):
-                        json.dump(gltf_exported, f, indent=2)
-                gltf_size_bytes = OUTPUT_GLTF_PATH.stat().st_size
+                if isinstance(gltf_exported, dict):
+                    # trimesh gltf export returns a dict mapping filename -> content
+                    for fn, fc in gltf_exported.items():
+                        out_target = OUTPUT_GLTF_PATH.parent / fn
+                        if isinstance(fc, bytes):
+                            with open(out_target, "wb") as f:
+                                f.write(fc)
+                        elif isinstance(fc, str):
+                            with open(out_target, "w", encoding="utf-8") as f:
+                                f.write(fc)
+                        else:
+                            with open(out_target, "w", encoding="utf-8") as f:
+                                json.dump(fc, f, indent=2)
+                    # If model.gltf was written, ensure OUTPUT_GLTF_PATH is populated
+                    model_gltf_path = OUTPUT_GLTF_PATH.parent / "model.gltf"
+                    if model_gltf_path.exists() and not OUTPUT_GLTF_PATH.exists():
+                        OUTPUT_GLTF_PATH.write_text(model_gltf_path.read_text(encoding="utf-8"), encoding="utf-8")
+                    if OUTPUT_GLTF_PATH.exists():
+                        gltf_size_bytes = OUTPUT_GLTF_PATH.stat().st_size
+                elif isinstance(gltf_exported, str):
+                    with open(OUTPUT_GLTF_PATH, "w", encoding="utf-8") as f:
+                        f.write(gltf_exported)
+                    gltf_size_bytes = len(gltf_exported)
+                elif isinstance(gltf_exported, bytes):
+                    with open(OUTPUT_GLTF_PATH, "wb") as f:
+                        f.write(gltf_exported)
+                    gltf_size_bytes = len(gltf_exported)
 
             except Exception as e:
                 logger.error(f"Failed to export GLB/GLTF scene: {e}")
