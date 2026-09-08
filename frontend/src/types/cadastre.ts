@@ -399,13 +399,27 @@ export interface BuildingMetadataItem {
   building_id: string;
   osm_id?: string | null;
   name?: string | null;
+  parcel_id?: string | null;
   height: number;
+  z_min?: number;
+  z_max?: number;
   levels?: number | null;
+  floor_unit_available?: boolean;
   height_source: string;
   area_sqm: number;
   volume_cubic_m: number;
   source: string;
   is_cadastral: boolean;
+  validation_status?: string;
+  watertight?: boolean;
+  duplicate_check?: string;
+  topology_status?: string;
+  prototype_3d_ulpin?: string | null;
+  bounding_box?: {
+    min: [number, number, number];
+    max: [number, number, number];
+  } | null;
+  centroid?: [number, number, number] | null;
 }
 
 export interface Osm3DConversionSummary {

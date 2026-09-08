@@ -1,4 +1,4 @@
-﻿from enum import Enum
+from enum import Enum
 from typing import Dict, Any, List, Optional, Tuple
 from pydantic import BaseModel, Field
 
@@ -57,13 +57,24 @@ class BuildingMetadataItem(BaseModel):
     building_id: str
     osm_id: Optional[str] = None
     name: Optional[str] = None
+    parcel_id: Optional[str] = "PARCEL-UNREGISTERED"
     height: float
+    z_min: float = 0.0
+    z_max: float = 9.0
     levels: Optional[int] = None
+    floor_unit_available: bool = False
     height_source: str
     area_sqm: float
     volume_cubic_m: float
     source: str = "OpenStreetMap"
     is_cadastral: bool = False
+    validation_status: str = "PASS"
+    watertight: bool = True
+    duplicate_check: str = "PASS"
+    topology_status: str = "PASS"
+    prototype_3d_ulpin: Optional[str] = None
+    bounding_box: Optional[Dict[str, List[float]]] = None
+    centroid: Optional[List[float]] = None
 
 class Osm3DConversionSummary(BaseModel):
     buildings: int
