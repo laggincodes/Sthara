@@ -74,12 +74,15 @@ export function useCadastre() {
   const [normalizedDataset, setNormalizedDataset] = useState<NormalizedParcelDataset | null>(null);
   const [validationResult, setValidationResult] = useState<GeoJSONValidationResult | null>(null);
   const [selectedParcelId, setSelectedParcelId] = useState<string | null>(null);
-  const [activeDatasetName, setActiveDatasetName] = useState<string | null>(null);
+  // Unified Active Dataset Source of Truth
+  const [activeDatasetId, setActiveDatasetId] = useState<string>("ds_tagore_garden_map_osm");
+  const [activeDatasetName, setActiveDatasetName] = useState<string | null>("map.osm (Tagore Garden, Delhi)");
+  const [activeDatasetType, setActiveDatasetType] = useState<"osm" | "geojson" | "synthetic">("osm");
+  const [activeDatasetHash, setActiveDatasetHash] = useState<string | null>(null);
 
   // Buildings & Spatial Association State
-  const [activeDatasetId, setActiveDatasetId] = useState<string>("ds_tagore_garden_map_osm");
   const [buildingsGeojson, setBuildingsGeojson] = useState<GeoJSONFeatureCollection | null>(null);
-  const [buildingDatasetName, setBuildingDatasetName] = useState<string | null>(null);
+  const [buildingDatasetName, setBuildingDatasetName] = useState<string | null>("map.osm (Tagore Garden, Delhi)");
   const [selectedBuildingId, setSelectedBuildingId] = useState<string | null>(null);
   const [associationData, setAssociationData] = useState<import("@/types/cadastre").SpatialAssociationResponse | null>(null);
   const [isAssociating, setIsAssociating] = useState<boolean>(false);
@@ -242,6 +245,88 @@ export function useCadastre() {
     };
   }, []);
 
+  // 1b. Auto-load 2D building footprints whenever activeDatasetId changes
+  useEffect(() => {
+    if (!activeDatasetId) return;
+
+    let isMounted = true;
+    setIsLoading(true);
+    setGeneralError(null);
+
+    // Clear old map selection & associated state
+    setSelectedBuildingId(null);
+    setSelectedParcelId(null);
+    setAssociationData(null);
+    setElevationResults({});
+    setBuildingHeights({});
+    setBuildingFloors({});
+    // Reset synthetic units to null (Units: 0) to avoid stale units across datasets
+    setUnitsGeojson(null);
+    setUnitsDatasetName(null);
+    setSelectedUnitId(null);
+
+    if (activeDatasetId === "demo_buildings") {
+      cadastreApi
+        .getDemoBuildings()
+        .then((data) => {
+          if (!isMounted) return;
+          setBuildingsGeojson(data.raw_geojson);
+          setBuildingDatasetName("demo_buildings.geojson");
+          setActiveDatasetName("demo_buildings.geojson");
+          setActiveDatasetType("synthetic");
+          if (data.raw_geojson?.features?.length > 0) {
+            const firstBld = data.raw_geojson.features[0];
+            const bId = (firstBld.properties?.building_id as string) || (firstBld.id ? String(firstBld.id) : null);
+            if (bId) setSelectedBuildingId(bId);
+          }
+        })
+        .catch((err) => {
+          if (!isMounted) return;
+          const msg = err instanceof ApiError ? err.message : `Unable to load synthetic building dataset '${activeDatasetId}'.`;
+          setGeneralError(msg);
+          setBuildingsGeojson(null);
+        })
+        .finally(() => {
+          if (isMounted) setIsLoading(false);
+        });
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    cadastreApi
+      .getRealOSMBuildings(activeDatasetId)
+      .then((data) => {
+        if (!isMounted) return;
+        if (data.dataset_id !== activeDatasetId && !["real_osm_buildings", "osm_buildings"].includes(activeDatasetId)) {
+          console.warn(`Dataset mismatch: expected ${activeDatasetId}, got ${data.dataset_id}`);
+          return;
+        }
+        setBuildingsGeojson(data.raw_geojson);
+        setBuildingDatasetName(data.dataset_name || activeDatasetId);
+        setActiveDatasetName(data.dataset_name || activeDatasetId);
+
+        if (data.raw_geojson?.features?.length > 0) {
+          const firstBld = data.raw_geojson.features[0];
+          const bId = (firstBld.properties?.building_id as string) || (firstBld.id ? String(firstBld.id) : null);
+          if (bId) setSelectedBuildingId(bId);
+        }
+      })
+      .catch((err) => {
+        if (!isMounted) return;
+        const msg = err instanceof ApiError ? err.message : `Unable to load dataset '${activeDatasetId}'.`;
+        setGeneralError(msg);
+        setBuildingsGeojson(null);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeDatasetId]);
+
   // 2. Load Demo Parcels from FastAPI Backend
   const loadDemoParcels = useCallback(async () => {
     setIsLoading(true);
@@ -282,61 +367,13 @@ export function useCadastre() {
 
   // 2c. Load Real OSM Buildings from FastAPI Backend
   const loadRealOSMBuildings = useCallback(async (dsId?: unknown) => {
-    setIsLoading(true);
-    setGeneralError(null);
-
     const targetId = typeof dsId === "string" && dsId.trim().length > 0 ? dsId : "ds_tagore_garden_map_osm";
-
-    try {
-      const data = await cadastreApi.getRealOSMBuildings(targetId);
-      setActiveDatasetId(targetId);
-      setBuildingsGeojson(data.raw_geojson);
-      setBuildingDatasetName("map.osm (Tagore Garden, Delhi)");
-      if (data.raw_geojson.features.length > 0) {
-        const firstBld = data.raw_geojson.features[0];
-        const bId = (firstBld.properties?.building_id as string) || (firstBld.id ? String(firstBld.id) : null);
-        if (bId) setSelectedBuildingId(bId);
-      }
-    } catch (err) {
-      if (err instanceof ApiError) {
-        setGeneralError(err.message);
-      } else {
-        setGeneralError("Unable to load real OSM building dataset.");
-      }
-    } finally {
-      setIsLoading(false);
-    }
+    setActiveDatasetId(targetId);
   }, []);
 
   // 2b. Load Demo Buildings from FastAPI Backend
   const loadDemoBuildings = useCallback(async () => {
-    setIsLoading(true);
-    setGeneralError(null);
-
-    try {
-      const data = await cadastreApi.getDemoBuildings();
-      setBuildingsGeojson(data.raw_geojson);
-      setBuildingDatasetName("demo_buildings.geojson");
-      // Auto-select first building if available
-      if (data.raw_geojson.features.length > 0) {
-        const firstBld = data.raw_geojson.features[0];
-        const bId = (firstBld.properties?.building_id as string) || (firstBld.id ? String(firstBld.id) : null);
-        if (bId) setSelectedBuildingId(bId);
-      }
-      // Also preload demo units for Floor 5 of BLD-DEMO-002
-      cadastreApi.getDemoUnits().then((units) => {
-        setUnitsGeojson(units);
-        setUnitsDatasetName("demo_units.geojson");
-      }).catch(() => {});
-    } catch (err) {
-      if (err instanceof ApiError) {
-        setGeneralError(err.message);
-      } else {
-        setGeneralError("Unable to connect to the geospatial processing service.");
-      }
-    } finally {
-      setIsLoading(false);
-    }
+    setActiveDatasetId("demo_buildings");
   }, []);
 
   // 2d. Step 16: Load Demo Units from FastAPI Backend
@@ -504,7 +541,7 @@ export function useCadastre() {
   }, []);
 
 
-  // 3b. OSM File Selection & Immediate 2D Footprint Ingestion
+  // 3b. OSM/GeoJSON File Selection & Immediate 2D Footprint Ingestion
   const selectOsmFile = useCallback(async (file: File | null) => {
     setOsmUploadFile(file);
     setOsmUploadError(null);
@@ -523,11 +560,15 @@ export function useCadastre() {
         // Upload & register dataset with backend to extract 2D GeoJSON immediately
         const dsItem = await cadastreApi.uploadOsmDataset(file);
         setActiveDatasetId(dsItem.dataset_id);
-        const geojson = await cadastreApi.getOsmDatasetGeoJSON(dsItem.dataset_id);
-        setBuildingsGeojson(geojson);
-        setBuildingDatasetName(`${file.name} (Active OSM)`);
-        if (geojson.features && geojson.features.length > 0) {
-          const first = geojson.features[0];
+        setActiveDatasetName(dsItem.dataset_name || file.name);
+        setActiveDatasetType(dsItem.source_type === "geojson" ? "geojson" : "osm");
+        setActiveDatasetHash(dsItem.content_hash || null);
+        
+        const res = await cadastreApi.getOsmDatasetGeoJSON(dsItem.dataset_id);
+        setBuildingsGeojson(res.raw_geojson);
+        setBuildingDatasetName(res.dataset_name || file.name);
+        if (res.raw_geojson?.features && res.raw_geojson.features.length > 0) {
+          const first = res.raw_geojson.features[0];
           const bId = (first.properties?.building_id as string) || (first.id ? String(first.id) : null);
           if (bId) setSelectedBuildingId(bId);
         }
@@ -540,7 +581,7 @@ export function useCadastre() {
     }
   }, []);
 
-  // 3c. OSM File Import — uploads .osm, extracts buildings, auto-refreshes map layer
+  // 3c. OSM/GeoJSON File Import — uploads file, extracts buildings, auto-refreshes map layer
   const importOsmFile = useCallback(async () => {
     if (!osmUploadFile) return;
     setOsmUploadPhase("importing");
@@ -549,12 +590,16 @@ export function useCadastre() {
     try {
       const dsItem = await cadastreApi.uploadOsmDataset(osmUploadFile);
       setActiveDatasetId(dsItem.dataset_id);
-      const geojson = await cadastreApi.getOsmDatasetGeoJSON(dsItem.dataset_id);
-      setBuildingsGeojson(geojson);
-      setBuildingDatasetName(`${osmUploadFile.name} (Active OSM — Imported)`);
+      setActiveDatasetName(dsItem.dataset_name || osmUploadFile.name);
+      setActiveDatasetType(dsItem.source_type === "geojson" ? "geojson" : "osm");
+      setActiveDatasetHash(dsItem.content_hash || null);
+
+      const res = await cadastreApi.getOsmDatasetGeoJSON(dsItem.dataset_id);
+      setBuildingsGeojson(res.raw_geojson);
+      setBuildingDatasetName(res.dataset_name || osmUploadFile.name);
       setOsmUploadPhase("done");
-      if (geojson.features && geojson.features.length > 0) {
-        const first = geojson.features[0];
+      if (res.raw_geojson?.features && res.raw_geojson.features.length > 0) {
+        const first = res.raw_geojson.features[0];
         const bId = (first.properties?.building_id as string) || (first.id ? String(first.id) : null);
         if (bId) setSelectedBuildingId(bId);
       }
@@ -562,7 +607,7 @@ export function useCadastre() {
       if (err instanceof ApiError) {
         setOsmUploadError(err.message);
       } else {
-        setOsmUploadError("OSM import failed. Please try again.");
+        setOsmUploadError("Geospatial dataset import failed. Please try again.");
       }
       setOsmUploadPhase("error");
     }
@@ -1753,7 +1798,6 @@ export function useCadastre() {
     selectedBuilding3D,
     selectedBuildingFloors3D,
     selectedProperty3D,
-    activeDatasetName,
     buildingDatasetName,
     layerVisibility,
     toggleLayer,
@@ -1830,6 +1874,12 @@ export function useCadastre() {
     selectedBuildingMetadata,
     activeDatasetId,
     setActiveDatasetId,
+    activeDatasetName,
+    setActiveDatasetName,
+    activeDatasetType,
+    setActiveDatasetType,
+    activeDatasetHash,
+    setActiveDatasetHash,
   };
 }
 
