@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCadastreContext } from "@/context/CadastreContext";
-import { HeightSourceOption, ExportFormatOption } from "@/types/cadastre";
+import { HeightSourceOption } from "@/types/cadastre";
 
 export default function ImportDataPage() {
   const router = useRouter();
@@ -71,14 +71,14 @@ export default function ImportDataPage() {
     : isConverting ? 45 : conversionResult ? 100 : 0;
 
   return (
-    <div className="h-full overflow-y-auto p-6 space-y-8 max-w-5xl mx-auto">
+    <div className="h-full overflow-y-auto p-6 space-y-8 max-w-5xl mx-auto select-none">
       {/* 1. Header Section */}
       <div className="space-y-1">
         <h1 className="text-2xl font-bold tracking-tight text-white">
-          Import Geospatial Data &amp; Convert to 3D
+          Data Workspace &amp; 3D Conversion Engine
         </h1>
         <p className="text-xs text-slate-400 leading-relaxed">
-          Import real OpenStreetMap XML, OSM.PBF, or GeoJSON footprints, configure parametric heights and metric projection, and extrude into 3D solids.
+          Import physical OSM XML, OSM.PBF, or GeoJSON footprints, configure parametric vertical heuristics and metric projection, and extrude into watertight 3D solids.
         </p>
       </div>
 
@@ -111,7 +111,7 @@ export default function ImportDataPage() {
         </div>
 
         <p className="text-sm font-semibold text-white">
-          {selectedFile ? selectedFile.name : "Drop an OSM, OSM.PBF or supported GeoJSON file here"}
+          {selectedFile ? selectedFile.name : "Drop an OSM (.osm), OSM.PBF or GeoJSON file here"}
         </p>
         <p className="text-xs text-slate-400 mt-1">
           {selectedFile
@@ -130,6 +130,9 @@ export default function ImportDataPage() {
           <span className="px-2.5 py-1 rounded-md bg-slate-800/90 text-slate-300 border border-slate-700">
             CRS: <strong className="text-emerald-300">{defaultDetectedCrs}</strong>
           </span>
+          <span className="px-2.5 py-1 rounded-md bg-purple-950/60 text-purple-300 border border-purple-500/30">
+            Extraction: <strong>Rule-based &middot; Zero Hallucination</strong>
+          </span>
         </div>
       </div>
 
@@ -137,13 +140,13 @@ export default function ImportDataPage() {
       <div className="rounded-xl border border-slate-800 bg-[#0F172A]/70 p-6 space-y-6 shadow-xl backdrop-blur">
         <div className="flex items-center justify-between pb-3 border-b border-slate-800">
           <div>
-            <h2 className="text-base font-bold text-white">Configure 3D Conversion</h2>
+            <h2 className="text-base font-bold text-white">Configure 3D Parametric Extrusion</h2>
             <p className="text-xs text-slate-400 mt-0.5">
-              Parametric vertical height heuristics and metric coordinate projection settings.
+              Strict deterministic vertical heuristics and metric Cartesian CRS transformation settings.
             </p>
           </div>
           <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/60 text-cyan-300 border border-cyan-500/30">
-            Canonical 3D v1.0
+            Contract v1.0
           </span>
         </div>
 
@@ -151,7 +154,7 @@ export default function ImportDataPage() {
           {/* Height Source */}
           <div className="space-y-2">
             <label className="text-xs font-semibold text-slate-300">
-              Building Height Source
+              Building Height Priority
             </label>
             <select
               value={conversionConfig.height_source}
@@ -159,20 +162,20 @@ export default function ImportDataPage() {
               disabled={isConverting}
               className="w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-xs font-mono text-white focus:border-cyan-500 focus:outline-none"
             >
-              <option value="automatic">Automatic (OSM Tag &rarr; Levels &rarr; Default)</option>
+              <option value="automatic">Automatic (OSM height &rarr; levels &times; floor_height &rarr; default)</option>
               <option value="osm_height">OSM Height Tag Only (height / building:height)</option>
               <option value="building_levels">Building Levels Only (levels &times; floor height)</option>
               <option value="default">Default Building Height Only</option>
             </select>
             <p className="text-[11px] text-slate-500">
-              Strict priority order applied during polyhedral extrusion.
+              Strict hierarchical rule applied during polyhedral extrusion.
             </p>
           </div>
 
           {/* Target CRS */}
           <div className="space-y-2">
             <label className="text-xs font-semibold text-slate-300">
-              Target Coordinate Reference System
+              Target Coordinate Reference System (Metric)
             </label>
             <select
               value={conversionConfig.target_crs}
@@ -185,7 +188,7 @@ export default function ImportDataPage() {
               <option value="EPSG:3857">EPSG:3857 (Web Mercator)</option>
             </select>
             <p className="text-[11px] text-slate-500">
-              Converts geographic angles (lon/lat) into Cartesian meters before extrusion.
+              Never extrudes degrees directly; reprojects to Cartesian meters.
             </p>
           </div>
 
@@ -205,7 +208,7 @@ export default function ImportDataPage() {
               className="w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-xs font-mono text-white focus:border-cyan-500 focus:outline-none"
             />
             <p className="text-[11px] text-slate-500">
-              Multiplied by floor level count when level tags exist (default 3.0m).
+              Configurable level coefficient (default: 3.0 meters).
             </p>
           </div>
 
@@ -225,7 +228,7 @@ export default function ImportDataPage() {
               className="w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-xs font-mono text-white focus:border-cyan-500 focus:outline-none"
             />
             <p className="text-[11px] text-slate-500">
-              Standard building height fallback when tags are absent (default 9.0m).
+              Standard fallback height when tags are absent (default: 9.0 meters).
             </p>
           </div>
         </div>
@@ -281,7 +284,94 @@ export default function ImportDataPage() {
         </div>
       </div>
 
-      {/* 4. Conversion Progress Timeline & Results */}
+      {/* 4. Multi-Source Ingestion Readiness Matrix (Honest Implementation Audit) */}
+      <div className="rounded-xl border border-slate-800 bg-[#0B0F19] p-6 space-y-4">
+        <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+          <div>
+            <h3 className="text-sm font-bold text-white">Multi-Source Ingestion Architecture Matrix</h3>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              Honest status of all spatial data sources described in the SIH 2026 specification.
+            </p>
+          </div>
+          <span className="text-[10px] font-mono text-slate-400">SIH Deck Alignment</span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs font-mono">
+          <div className="p-3.5 rounded-lg bg-slate-900/80 border border-emerald-500/30 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-white">GIS / OSM Vector</span>
+              <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-500/40">
+                READY / IMPLEMENTED
+              </span>
+            </div>
+            <p className="text-[10px] text-slate-400 leading-relaxed">
+              Full XML/PBF/GeoJSON parser, UTM zone reprojection, and 3D watertight solid extrusion.
+            </p>
+          </div>
+
+          <div className="p-3.5 rounded-lg bg-slate-900/80 border border-cyan-500/30 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-white">DEM / DSM Raster</span>
+              <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-cyan-950 text-cyan-300 border border-cyan-500/40">
+                PARTIAL / IMPLEMENTED
+              </span>
+            </div>
+            <p className="text-[10px] text-slate-400 leading-relaxed">
+              Bilinear elevation sampling from Copernicus GLO-30 GeoTIFF for ground and roof elevations.
+            </p>
+          </div>
+
+          <div className="p-3.5 rounded-lg bg-slate-900/80 border border-purple-500/30 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-white">GNSS / CORS Points</span>
+              <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-purple-950 text-purple-300 border border-purple-500/40">
+                ARCHITECTURE READY
+              </span>
+            </div>
+            <p className="text-[10px] text-slate-400 leading-relaxed">
+              Ground control points schema and coordinate validation interface defined.
+            </p>
+          </div>
+
+          <div className="p-3.5 rounded-lg bg-slate-900/80 border border-slate-800 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-slate-300">LiDAR Point Cloud</span>
+              <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-slate-800 text-slate-400 border border-slate-700">
+                ARCHITECTURE ONLY
+              </span>
+            </div>
+            <p className="text-[10px] text-slate-500 leading-relaxed">
+              LAS/LAZ point cloud filtering schema in place; ingestion parser planned.
+            </p>
+          </div>
+
+          <div className="p-3.5 rounded-lg bg-slate-900/80 border border-slate-800 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-slate-300">Drone Imagery</span>
+              <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-slate-800 text-slate-400 border border-slate-700">
+                PLANNED
+              </span>
+            </div>
+            <p className="text-[10px] text-slate-500 leading-relaxed">
+              Photogrammetric mesh ingestion pipeline to be integrated with SfM outputs.
+            </p>
+          </div>
+
+          <div className="p-3.5 rounded-lg bg-slate-900/80 border border-slate-800 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-slate-300">Floor Plans / BIM</span>
+              <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-slate-800 text-slate-400 border border-slate-700">
+                PLANNED
+              </span>
+            </div>
+            <p className="text-[10px] text-slate-500 leading-relaxed">
+              IFC/DXF CAD drawing slicer for interior unit boundary extraction.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* 5. Conversion Progress Timeline & Results */}
       {(isConverting || conversionStages.length > 0 || conversionError) && (
         <div className="rounded-xl border border-slate-800 bg-[#0B0F19] p-6 space-y-5">
           <div className="flex items-center justify-between">
@@ -308,7 +398,7 @@ export default function ImportDataPage() {
               <button
                 type="button"
                 onClick={handleStartConversion}
-                className="px-3 py-1 rounded bg-red-800 hover:bg-red-700 text-white font-semibold text-xs"
+                className="px-3 py-1 rounded bg-red-800 hover:bg-red-700 text-white font-semibold text-xs cursor-pointer"
               >
                 Retry
               </button>
@@ -349,9 +439,9 @@ export default function ImportDataPage() {
               <div className="flex items-center gap-3">
                 <Link
                   href="/workspace/3d"
-                  className="inline-flex items-center gap-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 px-4 py-2.5 rounded-lg shadow transition-all"
+                  className="inline-flex items-center gap-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 px-4 py-2.5 rounded-lg shadow transition-all cursor-pointer"
                 >
-                  <span>Open in 3D Workspace &rarr;</span>
+                  <span>Open in 3D Cadastre &rarr;</span>
                 </Link>
               </div>
             </div>
