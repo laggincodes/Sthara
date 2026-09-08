@@ -31,10 +31,29 @@ async def list_datasets() -> List[OsmDatasetItem]:
     return Osm3DConverterService.list_datasets()
 
 
+@router.get(
+    "/datasets/{dataset_id}/geojson",
+    summary="Get 2D building footprints GeoJSON for registered dataset",
+)
+async def get_dataset_geojson(dataset_id: str):
+    geojson = Osm3DConverterService.get_dataset_geojson(dataset_id)
+    if not geojson:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No 2D GeoJSON found for dataset '{dataset_id}'.",
+        )
+    return {
+        "status": "success",
+        "dataset_id": dataset_id,
+        "feature_count": len(geojson.get("features", [])),
+        "data": geojson,
+    }
+
+
 @router.post(
     "/upload",
     response_model=OsmDatasetItem,
-    summary="Upload and register geospatial file (.osm, .geojson) without executing conversion yet",
+    summary="Upload and register geospatial file (.osm, .geojson) extracting 2D footprints without immediate 3D conversion",
 )
 async def upload_dataset_file(
     file: UploadFile = File(...),

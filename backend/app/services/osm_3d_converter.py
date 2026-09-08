@@ -38,6 +38,7 @@ from app.services.extrusion_service import ExtrusionService
 from app.services.osm_service import (
     DEFAULT_RAW_OSM_PATH,
     DEFAULT_PROCESSED_BUILDINGS_PATH,
+    OSMBuildingExtractor,
     parse_numeric_height,
     parse_numeric_levels,
 )
@@ -66,7 +67,7 @@ class Osm3DConverterService:
     """
     High-performance, deterministic engine converting OpenStreetMap & GeoJSON
     building footprints into valid, watertight 3D architectural city meshes
-    and industry-standard Binary GLB 2.0 / glTF models.
+    and industry-standard Binary GLB 2.0 / glTF models with unified 2D/3D active dataset management.
     """
 
     _dataset_store: Dict[str, Dict[str, Any]] = {}
@@ -95,32 +96,53 @@ class Osm3DConverterService:
             stem = Path(clean_name).stem.replace(" ", "_").replace(".", "_").lower()
             dataset_id = f"ds_{stem}_{content_hash[:8]}"
 
-        # Count features preview
-        feature_count = 0
-        is_geojson = clean_name.lower().endswith((".geojson", ".json"))
-        source_type = "geojson" if is_geojson else "osm"
-        if is_geojson:
-            try:
-                gdata = json.loads(content_str)
-                feature_count = len(gdata.get("features", []))
-            except Exception:
-                feature_count = 0
-        else:
-            try:
-                root = ET.fromstring(content_str)
-                ways_bld = sum(1 for w in root.findall("way") if any(t.get("k") == "building" for t in w.findall("tag")))
-                rels_bld = sum(1 for r in root.findall("relation") if any(t.get("k") == "building" for t in r.findall("tag")))
-                feature_count = ways_bld + rels_bld
-            except Exception:
-                feature_count = 0
-
-        # Save to uploads dir
+        # Save raw upload to disk
         upload_target = UPLOADS_DIR / f"{dataset_id}_{clean_name}"
         try:
             with open(upload_target, "wb") as f:
                 f.write(content_bytes)
         except Exception as e:
             logger.warning(f"Could not write upload file to disk: {e}")
+
+        # Extract 2D GeoJSON footprints
+        is_geojson = clean_name.lower().endswith((".geojson", ".json"))
+        source_type = "geojson" if is_geojson else "osm"
+        geojson_dict: Optional[Dict[str, Any]] = None
+        feature_count = 0
+
+        if is_geojson:
+            try:
+                gdata = json.loads(content_str)
+                if gdata.get("type") == "FeatureCollection":
+                    geojson_dict = gdata
+                elif gdata.get("type") == "Feature":
+                    geojson_dict = {"type": "FeatureCollection", "features": [gdata]}
+                elif isinstance(gdata, list):
+                    geojson_dict = {"type": "FeatureCollection", "features": gdata}
+                else:
+                    geojson_dict = {"type": "FeatureCollection", "features": []}
+                feature_count = len(geojson_dict.get("features", []))
+            except Exception as err:
+                logger.warning(f"Failed to parse GeoJSON: {err}")
+                geojson_dict = {"type": "FeatureCollection", "features": []}
+                feature_count = 0
+        else:
+            try:
+                geojson_dict, _ = OSMBuildingExtractor.extract_from_xml_string(content_str, source_name=clean_name)
+                feature_count = len(geojson_dict.get("features", []))
+            except Exception as err:
+                logger.warning(f"Failed to extract OSM XML footprints: {err}")
+                geojson_dict = {"type": "FeatureCollection", "features": []}
+                feature_count = 0
+
+        # Save dataset-specific 2D GeoJSON
+        specific_geojson_path = PROCESSED_REAL_DIR / f"{dataset_id}_buildings.geojson"
+        if geojson_dict:
+            try:
+                with open(specific_geojson_path, "w", encoding="utf-8") as f:
+                    json.dump(geojson_dict, f, indent=2)
+            except Exception as e:
+                logger.warning(f"Could not write dataset 2D geojson to disk: {e}")
 
         created_at = datetime.now().isoformat() + "Z"
         ds_info = {
@@ -135,6 +157,7 @@ class Osm3DConverterService:
             "created_at": created_at,
             "raw_content": content_str,
             "file_path": str(upload_target),
+            "geojson": geojson_dict,
         }
         cls._dataset_store[dataset_id] = ds_info
         cls._active_dataset_id = dataset_id
@@ -154,23 +177,34 @@ class Osm3DConverterService:
     @classmethod
     def list_datasets(cls) -> List[OsmDatasetItem]:
         items = []
+        # Ensure default Tagore Garden is present
         if "ds_tagore_garden_map_osm" not in cls._dataset_store and DEFAULT_RAW_OSM_PATH.exists():
             try:
                 stat = DEFAULT_RAW_OSM_PATH.stat()
                 with open(DEFAULT_RAW_OSM_PATH, "rb") as f:
                     content_bytes = f.read()
                 chash = hashlib.sha256(content_bytes).hexdigest()
+                
+                # Load or extract 2D GeoJSON
+                tg_geojson = None
+                if DEFAULT_PROCESSED_BUILDINGS_PATH.exists():
+                    with open(DEFAULT_PROCESSED_BUILDINGS_PATH, "r", encoding="utf-8-sig") as gf:
+                        tg_geojson = json.load(gf)
+                else:
+                    tg_geojson, _ = OSMBuildingExtractor.extract_from_file(DEFAULT_RAW_OSM_PATH)
+
                 cls._dataset_store["ds_tagore_garden_map_osm"] = {
                     "dataset_id": "ds_tagore_garden_map_osm",
                     "dataset_name": "map.osm",
                     "source_type": "osm",
                     "file_size_bytes": stat.st_size,
-                    "feature_count": 155,
+                    "feature_count": len(tg_geojson.get("features", [])) if tg_geojson else 155,
                     "content_hash": chash,
                     "source_crs": "EPSG:4326 (WGS 84)",
                     "is_converted": OUTPUT_GLB_PATH.exists(),
                     "created_at": datetime.now().isoformat() + "Z",
                     "file_path": str(DEFAULT_RAW_OSM_PATH),
+                    "geojson": tg_geojson,
                 }
             except Exception:
                 pass
@@ -189,6 +223,35 @@ class Osm3DConverterService:
                 created_at=ds.get("created_at", ""),
             ))
         return items
+
+    @classmethod
+    def get_dataset_geojson(cls, dataset_id: str) -> Optional[Dict[str, Any]]:
+        # Ensure default datasets initialized
+        cls.list_datasets()
+
+        if dataset_id in cls._dataset_store and cls._dataset_store[dataset_id].get("geojson"):
+            return cls._dataset_store[dataset_id]["geojson"]
+
+        specific_path = PROCESSED_REAL_DIR / f"{dataset_id}_buildings.geojson"
+        if specific_path.exists():
+            try:
+                with open(specific_path, "r", encoding="utf-8-sig") as f:
+                    data = json.load(f)
+                    if dataset_id in cls._dataset_store:
+                        cls._dataset_store[dataset_id]["geojson"] = data
+                    return data
+            except Exception:
+                pass
+
+        if dataset_id in ("ds_tagore_garden_map_osm", "real_osm_buildings", "osm_buildings", "map.osm"):
+            if DEFAULT_PROCESSED_BUILDINGS_PATH.exists():
+                try:
+                    with open(DEFAULT_PROCESSED_BUILDINGS_PATH, "r", encoding="utf-8-sig") as f:
+                        return json.load(f)
+                except Exception:
+                    pass
+
+        return None
 
     @classmethod
     def get_last_report(cls, dataset_id: Optional[str] = None) -> Optional[Dict[str, Any]]:

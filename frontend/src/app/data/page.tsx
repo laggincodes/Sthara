@@ -22,6 +22,7 @@ export default function ImportDataPage() {
     selectOsmFile,
     activeProjectName,
     buildingDatasetName,
+    buildingsGeojson,
   } = useCadastreContext();
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -129,10 +130,10 @@ export default function ImportDataPage() {
         {/* Dataset Metadata Preview Badge */}
         <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-[11px] font-mono">
           <span className="px-2.5 py-1 rounded-md bg-slate-800/90 text-slate-300 border border-slate-700">
-            Source: <strong className="text-white">{selectedFile ? selectedFile.name : defaultFileName}</strong>
+            Source: <strong className="text-white">{selectedFile ? selectedFile.name : (buildingDatasetName || defaultFileName)}</strong>
           </span>
           <span className="px-2.5 py-1 rounded-md bg-slate-800/90 text-slate-300 border border-slate-700">
-            Buildings: <strong className="text-cyan-300">{selectedFile ? "Pending 3D Extrusion" : defaultFeatureCount}</strong>
+            Buildings: <strong className="text-cyan-300">{buildingsGeojson?.features?.length !== undefined ? buildingsGeojson.features.length : (selectedFile ? "Extracting..." : defaultFeatureCount)}</strong>
           </span>
           <span className="px-2.5 py-1 rounded-md bg-slate-800/90 text-slate-300 border border-slate-700">
             CRS: <strong className="text-emerald-300">{defaultDetectedCrs}</strong>
