@@ -1,0 +1,32 @@
+{
+  "source_name": "DataMeet Maps",
+  "repository_url": "https://github.com/datameet/maps.git",
+  "license": "Creative Commons Attribution 2.5 India / Open Data Commons Open Database License (ODbL)",
+  "source_crs": "EPSG:4326",
+  "datasets": {
+    "delhi_assembly_constituencies": {
+      "file": "delhi_assembly_constituencies.geojson",
+      "source_shp": "assembly-constituencies/India_AC.shp",
+      "feature_count": 70,
+      "target_assembly_constituency": "Rajouri Garden (AC_NO: 27)",
+      "description": "70 Assembly Constituencies of National Capital Territory of Delhi"
+    },
+    "delhi_districts": {
+      "file": "delhi_districts.geojson",
+      "source_shp": "Districts/Census_2011/2011_Dist.shp",
+      "feature_count": 9,
+      "target_district": "West Delhi",
+      "description": "9 Census Districts of National Capital Territory of Delhi"
+    },
+    "delhi_state_boundary": {
+      "file": "delhi_state_boundary.geojson",
+      "description": "Outer boundary of NCT of Delhi"
+    }
+  },
+  "provenance_notes": [
+    "DataMeet Maps provides administrative, electoral, and statistical boundary datasets.",
+    "DataMeet boundaries serve as authoritative geographic reference / Area of Interest (AOI) base layers.",
+    "DataMeet datasets do NOT contain cadastral parcel boundaries or building footprints.",
+    "Cadastral physical building footprints are extracted from OpenStreetMap and spatially associated with DataMeet administrative units."
+  ]
+}

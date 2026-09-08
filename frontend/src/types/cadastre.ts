@@ -452,8 +452,47 @@ export interface Osm3DConversionResponse {
   mesh_data?: import("./geometry3d").Generate3DResponse | null;
 }
 
+export interface DataMeetLayerInfo {
+  layer_id: string;
+  name: string;
+  description: string;
+  feature_count: number;
+  source_crs: string;
+  source_file: string;
+  target_feature_default?: string | null;
+}
 
+export interface BoundaryRing3D {
+  ring_index: number;
+  is_exterior: boolean;
+  point_count: number;
+  points_local: [number, number, number][];
+}
 
+export interface DataMeetAlignmentResponse {
+  success: boolean;
+  layer_id: string;
+  aoi_name: string;
+  state: string;
+  district?: string | null;
+  source_crs: string;
+  working_crs: string;
+  bounds_wgs84: [number, number, number, number];
+  bounds_metric: [number, number, number, number];
+  viewer_origin: [number, number, number];
+  total_buildings_checked: number;
+  buildings_inside_aoi: number;
+  buildings_outside_aoi: number;
+  boundary_rings_3d: BoundaryRing3D[];
+  attribution: string;
+  license: string;
+}
 
-
-
+export interface DataMeetMetadataResponse {
+  source_repo: string;
+  attribution: string;
+  license: string;
+  description: string;
+  delhi_coverage: Record<string, unknown>;
+  available_layers: DataMeetLayerInfo[];
+}

@@ -25,6 +25,8 @@ export default function ImportDataPage() {
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [selectedDatameetLayer, setSelectedDatameetLayer] = useState<string>("delhi_assembly_constituencies");
+  const [selectedDatameetAoi, setSelectedDatameetAoi] = useState<string>("Rajouri Garden");
 
   // Fallback defaults for preloaded map.osm if no custom file selected
   const defaultFileName = "map.osm";
@@ -231,6 +233,51 @@ export default function ImportDataPage() {
               Standard fallback height when tags are absent (default: 9.0 meters).
             </p>
           </div>
+
+          {/* DataMeet Area of Interest (AOI) Layer */}
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-slate-300 flex items-center justify-between">
+              <span>Administrative Reference AOI (DataMeet Maps)</span>
+              <span className="text-[10px] text-cyan-400 font-mono">Real Geospatial</span>
+            </label>
+            <select
+              value={selectedDatameetLayer}
+              onChange={(e) => {
+                const val = e.target.value;
+                setSelectedDatameetLayer(val);
+                if (val === "delhi_assembly_constituencies") setSelectedDatameetAoi("Rajouri Garden");
+                else if (val === "delhi_districts") setSelectedDatameetAoi("West");
+                else setSelectedDatameetAoi("NCT of Delhi");
+              }}
+              disabled={isConverting}
+              className="w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-xs font-mono text-white focus:border-cyan-500 focus:outline-none"
+            >
+              <option value="delhi_assembly_constituencies">Assembly Constituencies (Delhi - 70 ACs)</option>
+              <option value="delhi_districts">Districts (Census 2011 - 9 Districts)</option>
+              <option value="delhi_state_boundary">State Union Boundary (NCT of Delhi)</option>
+            </select>
+            <p className="text-[11px] text-slate-500">
+              Source: DataMeet Maps (ODbL / CC-BY 2.5 India).
+            </p>
+          </div>
+
+          {/* DataMeet Selected Feature */}
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-slate-300">
+              Selected Administrative Feature
+            </label>
+            <input
+              type="text"
+              value={selectedDatameetAoi}
+              onChange={(e) => setSelectedDatameetAoi(e.target.value)}
+              disabled={isConverting}
+              placeholder="e.g. Rajouri Garden, West, Delhi"
+              className="w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-xs font-mono text-cyan-300 focus:border-cyan-500 focus:outline-none"
+            />
+            <p className="text-[11px] text-slate-500">
+              Tagore Garden OSM footprints (155 buildings) fall 100% inside <strong>Rajouri Garden (AC 27)</strong>.
+            </p>
+          </div>
         </div>
 
         {/* Output Format Options & Action Button */}
@@ -306,6 +353,18 @@ export default function ImportDataPage() {
             </div>
             <p className="text-[10px] text-slate-400 leading-relaxed">
               Full XML/PBF/GeoJSON parser, UTM zone reprojection, and 3D watertight solid extrusion.
+            </p>
+          </div>
+
+          <div className="p-3.5 rounded-lg bg-slate-900/80 border border-emerald-500/30 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-white">DataMeet Admin AOI</span>
+              <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-500/40">
+                READY / INTEGRATED
+              </span>
+            </div>
+            <p className="text-[10px] text-slate-400 leading-relaxed">
+              Real administrative boundaries (AC/District/State) from DataMeet Maps with metric spatial alignment.
             </p>
           </div>
 
