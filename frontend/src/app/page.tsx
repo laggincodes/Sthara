@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { useCadastreContext } from "@/context/CadastreContext";
+import { cadastreApi } from "@/lib/api/client";
 
 export default function DashboardPage() {
   const {
@@ -231,7 +232,7 @@ export default function DashboardPage() {
             </Link>
 
             <a
-              href="http://localhost:8000/api/v1/export/glb/latest"
+              href={cadastreApi.getLatestGlbUrl()}
               download="city_model_3d.glb"
               className="inline-flex items-center gap-1.5 text-xs font-medium px-3.5 py-2.5 rounded-md transition-colors cursor-pointer"
               style={{
