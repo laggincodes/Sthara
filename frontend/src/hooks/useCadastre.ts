@@ -250,20 +250,23 @@ export function useCadastre() {
     if (!activeDatasetId) return;
 
     let isMounted = true;
-    setIsLoading(true);
-    setGeneralError(null);
+    Promise.resolve().then(() => {
+      if (!isMounted) return;
+      setIsLoading(true);
+      setGeneralError(null);
 
-    // Clear old map selection & associated state
-    setSelectedBuildingId(null);
-    setSelectedParcelId(null);
-    setAssociationData(null);
-    setElevationResults({});
-    setBuildingHeights({});
-    setBuildingFloors({});
-    // Reset synthetic units to null (Units: 0) to avoid stale units across datasets
-    setUnitsGeojson(null);
-    setUnitsDatasetName(null);
-    setSelectedUnitId(null);
+      // Clear old map selection & associated state
+      setSelectedBuildingId(null);
+      setSelectedParcelId(null);
+      setAssociationData(null);
+      setElevationResults({});
+      setBuildingHeights({});
+      setBuildingFloors({});
+      // Reset synthetic units to null (Units: 0) to avoid stale units across datasets
+      setUnitsGeojson(null);
+      setUnitsDatasetName(null);
+      setSelectedUnitId(null);
+    });
 
     if (activeDatasetId === "demo_buildings") {
       cadastreApi
