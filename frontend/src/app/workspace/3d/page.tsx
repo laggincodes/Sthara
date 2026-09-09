@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCadastreContext } from "@/context/CadastreContext";
+import { cadastreApi } from "@/lib/api/client";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
 const Cadastral3DViewer = dynamic(
@@ -99,13 +100,13 @@ export default function Cadastral3DPage() {
   const handleExportDownload = (type: "glb" | "gltf" | "metadata") => {
     setExportMenuOpen(false);
     const dsId = conversionResult?.dataset_id || "latest";
-    let url = `http://localhost:8000/api/v1/export/glb/${dsId}`;
+    let url = cadastreApi.getGlbUrl(dsId);
     let filename = `${dsId}_model_3d.glb`;
     if (type === "gltf") {
-      url = `http://localhost:8000/api/v1/export/gltf/${dsId}`;
+      url = cadastreApi.getGltfUrl(dsId);
       filename = `${dsId}_model_3d.gltf`;
     } else if (type === "metadata") {
-      url = `http://localhost:8000/api/v1/export/metadata/${dsId}`;
+      url = cadastreApi.getMetadataUrl(dsId);
       filename = `${dsId}_metadata.json`;
     }
     const a = document.createElement("a");

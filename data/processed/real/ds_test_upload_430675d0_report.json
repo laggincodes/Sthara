@@ -4,7 +4,7 @@
   "dataset_name": "test_upload.osm",
   "source_name": "test_upload.osm",
   "content_hash": "430675d09b7268ac3fb9dc4582e05abaff9284092a8f494931471074ce00ed32",
-  "converted_at": "2026-09-09T00:11:31.128241Z",
+  "converted_at": "2026-09-09T09:47:41.788073Z",
   "target_crs": "EPSG:32643",
   "viewer_origin": [
     706438.9040099336,
@@ -17,7 +17,7 @@
     "faces": 12,
     "surface_area_sqm": 99228.71,
     "volume_cubic_m": 650332.35,
-    "processing_time_s": 0.029,
+    "processing_time_s": 0.024,
     "bounding_box": {
       "min": [
         -99.729,
@@ -60,7 +60,7 @@
       "features": null,
       "vertices": null,
       "faces": null,
-      "duration_ms": 0.12,
+      "duration_ms": 0.13,
       "details": {
         "nodes_count": 4,
         "ways_count": 1,
@@ -75,7 +75,7 @@
       "features": 1,
       "vertices": null,
       "faces": null,
-      "duration_ms": 0.31,
+      "duration_ms": 0.3,
       "details": {
         "extracted_buildings": 1,
         "degenerate_count": 0
@@ -88,7 +88,7 @@
       "features": null,
       "vertices": null,
       "faces": null,
-      "duration_ms": 2.46,
+      "duration_ms": 2.28,
       "details": {
         "source_crs": "EPSG:4326",
         "target_crs": "EPSG:32643",
@@ -108,7 +108,7 @@
       "features": null,
       "vertices": null,
       "faces": null,
-      "duration_ms": 0.11,
+      "duration_ms": 0.1,
       "details": {
         "explicit_osm_heights": 1,
         "levels_derived_heights": 0,
@@ -124,7 +124,7 @@
       "features": 1,
       "vertices": 8,
       "faces": 12,
-      "duration_ms": 0.81,
+      "duration_ms": 0.98,
       "details": {
         "solids_count": 1,
         "total_vertices": 8,
@@ -139,7 +139,7 @@
       "features": null,
       "vertices": null,
       "faces": null,
-      "duration_ms": 0.11,
+      "duration_ms": 0.1,
       "details": {
         "valid_solids": 1,
         "invalid_solids": 0
@@ -152,7 +152,7 @@
       "features": null,
       "vertices": null,
       "faces": null,
-      "duration_ms": 18.03,
+      "duration_ms": 12.67,
       "details": {
         "dataset_id": "ds_test_upload_430675d0",
         "glb_bytes": 1256,
