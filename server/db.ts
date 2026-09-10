@@ -1,13 +1,21 @@
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq, gte, ilike, lte, or, sql } from "drizzle-orm";
 import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import * as schema from "../drizzle/schema";
 import {
   auditLogs,
   cadastreRecords,
+  departments,
+  districts,
   evidenceFiles,
+  InsertAuditLog,
+  InsertDepartment,
+  InsertDistrict,
+  InsertOrganization,
   InsertUser,
   issueReports,
+  organizations,
+  rolePermissions,
   users,
   verificationSubmissions,
 } from "../drizzle/schema";
@@ -15,6 +23,15 @@ import {
   INITIAL_CADASTRE_RECORDS,
   type CadastreRecord,
 } from "@shared/cadastre";
+import {
+  canonicalRole,
+  CanonicalPlatformRole,
+  PlatformRoles,
+  PlatformRoleInput,
+  UserStatus,
+  UserStatuses,
+} from "@shared/permissions";
+import { createClerkStaffInvitation } from "./clerkInvitationService";
 
 let _db: NodePgDatabase<typeof schema> | null = null;
 let _pool: Pool | null = null;
@@ -23,12 +40,22 @@ function getApplicationDatabaseUrl() {
   return process.env.POSTGIS_DATABASE_URL ?? process.env.DATABASE_URL;
 }
 
-function isBootstrapAdministrator(clerkUserId: string) {
+export const INITIAL_SUPER_ADMIN_EMAIL =
+  process.env.INITIAL_SUPER_ADMIN_EMAIL?.trim() || "gautamkr192007@gmail.com";
+
+function isBootstrapAdministrator(clerkUserId: string, email?: string | null) {
   const bootstrapIds = (process.env.CLERK_BOOTSTRAP_ADMIN_USER_IDS ?? "")
     .split(",")
     .map(value => value.trim())
     .filter(Boolean);
-  return bootstrapIds.includes(clerkUserId);
+  if (bootstrapIds.includes(clerkUserId)) return true;
+  if (
+    email &&
+    email.toLowerCase().trim() === INITIAL_SUPER_ADMIN_EMAIL.toLowerCase()
+  ) {
+    return true;
+  }
+  return false;
 }
 
 export async function getDb() {
@@ -41,7 +68,14 @@ export async function getDb() {
         );
         return null;
       }
-      _pool = new Pool({ connectionString });
+      _pool = new Pool({
+        connectionString,
+        ssl:
+          connectionString.includes("neon.tech") ||
+          connectionString.includes("sslmode=require")
+            ? { rejectUnauthorized: false }
+            : undefined,
+      });
       _db = drizzle(_pool, { schema });
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
@@ -51,25 +85,191 @@ export async function getDb() {
   return _db;
 }
 
-export async function upsertUser(user: InsertUser): Promise<void> {
+/**
+ * Ensures Master Reference Data (Departments, Districts, Organizations, Super Admin)
+ * is seeded into the database on startup or first request.
+ */
+export async function ensureMasterSeedData(): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+
+  try {
+    // 1. Seed Departments if empty
+    const existingDepts = await db
+      .select({ id: departments.id })
+      .from(departments)
+      .limit(1);
+    if (existingDepts.length === 0) {
+      await db.insert(departments).values([
+        {
+          name: "Department of Land Resources (DoLR)",
+          code: "DOLR",
+          description:
+            "Central nodal department for national land records and 3D cadastre modernisation.",
+          status: "ACTIVE",
+        },
+        {
+          name: "Revenue & Land Reforms Department",
+          code: "REV_LR",
+          description:
+            "State revenue authority responsible for land administration, khatiyan and mutation.",
+          status: "ACTIVE",
+        },
+        {
+          name: "Urban Development & Housing Department",
+          code: "URBAN_DEV",
+          description:
+            "Authority for municipal master plans, vertical property sanctions and building permits.",
+          status: "ACTIVE",
+        },
+        {
+          name: "Survey of India (Geodetic Directorate)",
+          code: "SOI",
+          description:
+            "National mapping agency responsible for geodetic reference frames, GNSS/CORS and topographic ground control.",
+          status: "ACTIVE",
+        },
+        {
+          name: "Directorate of Land Records & Survey",
+          code: "DLRS",
+          description:
+            "State surveying and spatial mapping agency overseeing digital cadastral operations.",
+          status: "ACTIVE",
+        },
+        {
+          name: "Town & Country Planning Organization",
+          code: "TCPO",
+          description:
+            "Regional planning agency governing spatial zoning and vertical height guidelines.",
+          status: "ACTIVE",
+        },
+        {
+          name: "Registration & Stamps Department",
+          code: "REG_STAMPS",
+          description:
+            "State deed registration and vertical title conveyance verification.",
+          status: "ACTIVE",
+        },
+      ]);
+    }
+
+    // 2. Seed Districts if empty
+    const existingDistricts = await db
+      .select({ id: districts.id })
+      .from(districts)
+      .limit(1);
+    if (existingDistricts.length === 0) {
+      await db.insert(districts).values([
+        { name: "Patna", state: "Bihar", code: "PAT", status: "ACTIVE" },
+        { name: "Gaya", state: "Bihar", code: "GAY", status: "ACTIVE" },
+        { name: "Muzaffarpur", state: "Bihar", code: "MUZ", status: "ACTIVE" },
+        { name: "Bhagalpur", state: "Bihar", code: "BHG", status: "ACTIVE" },
+        { name: "Nalanda", state: "Bihar", code: "NAL", status: "ACTIVE" },
+        { name: "Darbhanga", state: "Bihar", code: "DAR", status: "ACTIVE" },
+        { name: "Vaishali", state: "Bihar", code: "VAI", status: "ACTIVE" },
+      ]);
+    }
+
+    // 3. Seed Organizations if empty
+    const existingOrgs = await db
+      .select({ id: organizations.id })
+      .from(organizations)
+      .limit(1);
+    if (existingOrgs.length === 0) {
+      await db.insert(organizations).values([
+        {
+          name: "Ministry of Rural Development / DoLR",
+          type: "CENTRAL_MINISTRY",
+          status: "ACTIVE",
+        },
+        {
+          name: "Bihar Land Records & Survey Directorate",
+          type: "STATE_AUTHORITY",
+          status: "ACTIVE",
+        },
+        {
+          name: "Patna Municipal Corporation (PMC)",
+          type: "MUNICIPAL_CORP",
+          status: "ACTIVE",
+        },
+        {
+          name: "Survey of India Eastern Regional Zone",
+          type: "NATIONAL_AGENCY",
+          status: "ACTIVE",
+        },
+      ]);
+    }
+
+    // 4. Seed initial Cadastre records
+    await ensureCadastreSeedData();
+
+    return true;
+  } catch (error) {
+    console.warn("[Database] Master seed initialization error:", error);
+    return false;
+  }
+}
+
+export async function upsertUser(user: Partial<InsertUser>): Promise<void> {
   if (!user.clerkUserId) {
     throw new Error("Clerk user ID is required for upsert");
   }
   const db = await getDb();
   if (!db) return;
-  const values: InsertUser = { clerkUserId: user.clerkUserId };
-  const updateSet: Partial<InsertUser> = {};
-  (["name", "email", "loginMethod"] as const).forEach(field => {
-    if (user[field] !== undefined) {
-      values[field] = user[field] ?? null;
-      updateSet[field] = user[field] ?? null;
-    }
-  });
-  values.role =
-    user.role ?? (isBootstrapAdministrator(user.clerkUserId) ? "admin" : "citizen");
-  updateSet.role = values.role;
-  values.lastSignedIn = user.lastSignedIn ?? new Date();
-  updateSet.lastSignedIn = values.lastSignedIn;
+
+  // Check if a pre-provisioned user exists by email or clerkUserId
+  let existing = await getUserByClerkUserId(user.clerkUserId);
+  if (!existing && user.email) {
+    existing = await getUserByEmail(user.email);
+  }
+
+  const isSuperAdminEmail = isBootstrapAdministrator(
+    user.clerkUserId,
+    user.email ?? existing?.email
+  );
+
+  const values: InsertUser = {
+    clerkUserId: user.clerkUserId,
+    name: user.name ?? existing?.name ?? null,
+    email: user.email ?? existing?.email ?? null,
+    phone: user.phone ?? existing?.phone ?? null,
+    loginMethod: user.loginMethod ?? existing?.loginMethod ?? "clerk",
+    role: isSuperAdminEmail
+      ? PlatformRoles.SUPER_ADMIN
+      : (user.role ?? existing?.role ?? PlatformRoles.CITIZEN),
+    status:
+      existing?.status === UserStatuses.INVITED
+        ? UserStatuses.ACTIVE
+        : (user.status ?? existing?.status ?? UserStatuses.ACTIVE),
+    designation: user.designation ?? existing?.designation ?? null,
+    departmentId: user.departmentId ?? existing?.departmentId ?? null,
+    districtId: user.districtId ?? existing?.districtId ?? null,
+    organizationId: user.organizationId ?? existing?.organizationId ?? null,
+    jurisdiction: user.jurisdiction ?? existing?.jurisdiction ?? null,
+    invitationAcceptedAt:
+      existing?.status === UserStatuses.INVITED
+        ? new Date()
+        : existing?.invitationAcceptedAt,
+    lastSignedIn: user.lastSignedIn ?? new Date(),
+  };
+
+  const updateSet: Partial<InsertUser> = {
+    name: values.name,
+    email: values.email,
+    phone: values.phone,
+    loginMethod: values.loginMethod,
+    role: values.role,
+    status: values.status,
+    designation: values.designation,
+    departmentId: values.departmentId,
+    districtId: values.districtId,
+    organizationId: values.organizationId,
+    jurisdiction: values.jurisdiction,
+    invitationAcceptedAt: values.invitationAcceptedAt,
+    lastSignedIn: values.lastSignedIn,
+    updatedAt: new Date(),
+  };
+
   await db
     .insert(users)
     .values(values)
@@ -83,6 +283,28 @@ export async function getUserByClerkUserId(clerkUserId: string) {
     .select()
     .from(users)
     .where(eq(users.clerkUserId, clerkUserId))
+    .limit(1);
+  return result[0];
+}
+
+export async function getUserByEmail(email: string) {
+  const db = await getDb();
+  if (!db || !email) return undefined;
+  const result = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, email.trim().toLowerCase()))
+    .limit(1);
+  return result[0];
+}
+
+export async function getUserById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db
+    .select()
+    .from(users)
+    .where(eq(users.id, id))
     .limit(1);
   return result[0];
 }
@@ -150,69 +372,453 @@ export async function createEvidenceFile(input: {
   return true;
 }
 
-export type PlatformRole =
-  | "citizen"
-  | "authority"
-  | "government_employee"
-  | "admin";
+export type PlatformRole = PlatformRoleInput;
 
 export async function createAuditLog(input: {
   actorClerkUserId: string;
-  actorRole: PlatformRole;
+  actorRole: string;
+  actorName?: string | null;
   action: string;
   entityType: string;
   entityId: string;
+  targetUserId?: string | null;
+  targetResource?: string | null;
+  departmentId?: number | null;
+  districtId?: number | null;
+  metadata?: string | null;
   oldValue?: string | null;
   newValue?: string | null;
+  ipAddress?: string | null;
 }) {
   const db = await getDb();
   if (!db) return false;
-  await db.insert(auditLogs).values(input);
-  return true;
+  try {
+    await db.insert(auditLogs).values({
+      actorClerkUserId: input.actorClerkUserId,
+      actorRole: input.actorRole,
+      actorName: input.actorName ?? null,
+      action: input.action,
+      entityType: input.entityType,
+      entityId: input.entityId,
+      targetUserId: input.targetUserId ?? null,
+      targetResource: input.targetResource ?? null,
+      departmentId: input.departmentId ?? null,
+      districtId: input.districtId ?? null,
+      metadata: input.metadata ?? null,
+      oldValue: input.oldValue ?? null,
+      newValue: input.newValue ?? null,
+      ipAddress: input.ipAddress ?? null,
+    });
+    return true;
+  } catch (err) {
+    console.warn("[AuditLog] Failed to record audit log:", err);
+    return false;
+  }
 }
 
-export async function getPlatformUsers() {
+/**
+ * Filtered user query for Admin User Management Console
+ */
+export async function getPlatformUsers(filters?: {
+  query?: string;
+  role?: string;
+  status?: string;
+  departmentId?: number;
+  districtId?: number;
+  limit?: number;
+  offset?: number;
+}) {
   const db = await getDb();
   if (!db) return [];
-  return db
+
+  const conditions = [];
+
+  if (filters?.query) {
+    const q = `%${filters.query.trim().toLowerCase()}%`;
+    conditions.push(
+      or(
+        ilike(users.name, q),
+        ilike(users.email, q),
+        ilike(users.clerkUserId, q),
+        ilike(users.designation, q),
+        ilike(users.jurisdiction, q)
+      )
+    );
+  }
+
+  if (filters?.role) {
+    conditions.push(eq(users.role, filters.role as schema.User["role"]));
+  }
+
+  if (filters?.status) {
+    conditions.push(eq(users.status, filters.status as schema.User["status"]));
+  }
+
+  if (filters?.departmentId) {
+    conditions.push(eq(users.departmentId, filters.departmentId));
+  }
+
+  if (filters?.districtId) {
+    conditions.push(eq(users.districtId, filters.districtId));
+  }
+
+  const queryBuilder = db
     .select({
+      id: users.id,
       clerkUserId: users.clerkUserId,
       name: users.name,
       email: users.email,
+      phone: users.phone,
       role: users.role,
+      status: users.status,
+      designation: users.designation,
+      departmentId: users.departmentId,
+      districtId: users.districtId,
+      organizationId: users.organizationId,
+      jurisdiction: users.jurisdiction,
+      invitationSentAt: users.invitationSentAt,
+      invitationAcceptedAt: users.invitationAcceptedAt,
       lastSignedIn: users.lastSignedIn,
+      createdAt: users.createdAt,
     })
-    .from(users)
-    .orderBy(desc(users.lastSignedIn))
-    .limit(100);
+    .from(users);
+
+  if (conditions.length > 0) {
+    return queryBuilder
+      .where(and(...conditions))
+      .orderBy(desc(users.lastSignedIn))
+      .limit(filters?.limit ?? 100);
+  }
+
+  return queryBuilder.orderBy(desc(users.lastSignedIn)).limit(filters?.limit ?? 100);
 }
 
+/**
+ * Update user role (Administrator only, self-role assignment blocked)
+ */
 export async function setPlatformUserRole(input: {
   clerkUserId: string;
   role: PlatformRole;
   actorClerkUserId: string;
   actorRole: PlatformRole;
+  actorName?: string | null;
 }) {
   const db = await getDb();
   if (!db) throw new Error("Platform database is unavailable.");
   const existing = await getUserByClerkUserId(input.clerkUserId);
   if (!existing) throw new Error("The requested user was not found.");
+
   await db
     .update(users)
-    .set({ role: input.role })
+    .set({
+      role: input.role as schema.User["role"],
+      updatedAt: new Date(),
+    })
     .where(eq(users.clerkUserId, input.clerkUserId));
+
   await createAuditLog({
     actorClerkUserId: input.actorClerkUserId,
-    actorRole: input.actorRole,
-    action: "role_assigned",
+    actorRole: String(input.actorRole),
+    actorName: input.actorName,
+    action: "ROLE_CHANGED",
     entityType: "user",
     entityId: input.clerkUserId,
+    targetUserId: input.clerkUserId,
+    targetResource: existing.email ?? input.clerkUserId,
     oldValue: existing.role,
     newValue: input.role,
   });
+
   return { previousRole: existing.role, role: input.role };
 }
 
+/**
+ * Update user account status (Activate / Suspend / Disable / Re-enable)
+ */
+export async function setPlatformUserStatus(input: {
+  clerkUserId: string;
+  status: UserStatus;
+  actorClerkUserId: string;
+  actorRole: PlatformRole;
+  actorName?: string | null;
+  reason?: string | null;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Platform database is unavailable.");
+  const existing = await getUserByClerkUserId(input.clerkUserId);
+  if (!existing) throw new Error("The requested user was not found.");
+
+  await db
+    .update(users)
+    .set({
+      status: input.status,
+      updatedAt: new Date(),
+    })
+    .where(eq(users.clerkUserId, input.clerkUserId));
+
+  const actionMap: Record<UserStatus, string> = {
+    ACTIVE: "USER_ACTIVATED",
+    SUSPENDED: "USER_SUSPENDED",
+    DISABLED: "USER_DISABLED",
+    INVITED: "USER_INVITED",
+  };
+
+  await createAuditLog({
+    actorClerkUserId: input.actorClerkUserId,
+    actorRole: String(input.actorRole),
+    actorName: input.actorName,
+    action: actionMap[input.status] || "USER_STATUS_UPDATED",
+    entityType: "user",
+    entityId: input.clerkUserId,
+    targetUserId: input.clerkUserId,
+    targetResource: existing.email ?? input.clerkUserId,
+    metadata: input.reason ?? undefined,
+    oldValue: existing.status,
+    newValue: input.status,
+  });
+
+  return { previousStatus: existing.status, status: input.status };
+}
+
+/**
+ * Update user jurisdiction, department, district and designation
+ */
+export async function updateUserJurisdiction(input: {
+  clerkUserId: string;
+  departmentId?: number | null;
+  districtId?: number | null;
+  organizationId?: number | null;
+  jurisdiction?: string | null;
+  designation?: string | null;
+  phone?: string | null;
+  actorClerkUserId: string;
+  actorRole: PlatformRole;
+  actorName?: string | null;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Platform database is unavailable.");
+  const existing = await getUserByClerkUserId(input.clerkUserId);
+  if (!existing) throw new Error("The requested user was not found.");
+
+  await db
+    .update(users)
+    .set({
+      departmentId: input.departmentId !== undefined ? input.departmentId : existing.departmentId,
+      districtId: input.districtId !== undefined ? input.districtId : existing.districtId,
+      organizationId: input.organizationId !== undefined ? input.organizationId : existing.organizationId,
+      jurisdiction: input.jurisdiction !== undefined ? input.jurisdiction : existing.jurisdiction,
+      designation: input.designation !== undefined ? input.designation : existing.designation,
+      phone: input.phone !== undefined ? input.phone : existing.phone,
+      updatedAt: new Date(),
+    })
+    .where(eq(users.clerkUserId, input.clerkUserId));
+
+  await createAuditLog({
+    actorClerkUserId: input.actorClerkUserId,
+    actorRole: String(input.actorRole),
+    actorName: input.actorName,
+    action: "USER_JURISDICTION_UPDATED",
+    entityType: "user",
+    entityId: input.clerkUserId,
+    targetUserId: input.clerkUserId,
+    targetResource: existing.email ?? input.clerkUserId,
+    departmentId: input.departmentId ?? undefined,
+    districtId: input.districtId ?? undefined,
+    newValue: JSON.stringify({
+      departmentId: input.departmentId,
+      districtId: input.districtId,
+      jurisdiction: input.jurisdiction,
+      designation: input.designation,
+    }),
+  });
+
+  return { success: true };
+}
+
+/**
+ * Invite Authority / Staff User:
+ * 1. Validates input
+ * 2. Creates pre-provisioned user in Neon with status INVITED
+ * 3. Calls Clerk Invitations API
+ * 4. Logs audit event AUTHORITY_INVITED
+ */
+export async function inviteAuthorityUser(input: {
+  name: string;
+  email: string;
+  phone?: string;
+  role: PlatformRole;
+  departmentId?: number;
+  districtId?: number;
+  organizationId?: number;
+  jurisdiction?: string;
+  designation?: string;
+  actorClerkUserId: string;
+  actorRole: PlatformRole;
+  actorName?: string | null;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Platform database is unavailable.");
+
+  const cleanEmail = input.email.trim().toLowerCase();
+  const existing = await getUserByEmail(cleanEmail);
+
+  const virtualClerkId =
+    existing?.clerkUserId ||
+    `invited_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
+  // 1. Dispatch Clerk Invitation
+  const clerkResult = await createClerkStaffInvitation({
+    email: cleanEmail,
+    role: String(input.role),
+    departmentId: input.departmentId,
+    districtId: input.districtId,
+    organizationId: input.organizationId,
+    designation: input.designation,
+  });
+
+  // 2. Pre-provision in database
+  if (existing) {
+    await db
+      .update(users)
+      .set({
+        name: input.name,
+        phone: input.phone ?? existing.phone,
+        role: input.role as schema.User["role"],
+        status: existing.clerkUserId.startsWith("user_") ? existing.status : UserStatuses.INVITED,
+        designation: input.designation ?? existing.designation,
+        departmentId: input.departmentId ?? existing.departmentId,
+        districtId: input.districtId ?? existing.districtId,
+        organizationId: input.organizationId ?? existing.organizationId,
+        jurisdiction: input.jurisdiction ?? existing.jurisdiction,
+        invitationSentAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, existing.id));
+  } else {
+    await db.insert(users).values({
+      clerkUserId: virtualClerkId,
+      name: input.name,
+      email: cleanEmail,
+      phone: input.phone ?? null,
+      loginMethod: "clerk",
+      role: input.role as schema.User["role"],
+      status: UserStatuses.INVITED,
+      designation: input.designation ?? null,
+      departmentId: input.departmentId ?? null,
+      districtId: input.districtId ?? null,
+      organizationId: input.organizationId ?? null,
+      jurisdiction: input.jurisdiction ?? null,
+      invitationSentAt: new Date(),
+    });
+  }
+
+  // 3. Log Audit
+  await createAuditLog({
+    actorClerkUserId: input.actorClerkUserId,
+    actorRole: String(input.actorRole),
+    actorName: input.actorName,
+    action: "AUTHORITY_INVITED",
+    entityType: "authority_invitation",
+    entityId: cleanEmail,
+    targetResource: cleanEmail,
+    departmentId: input.departmentId ?? undefined,
+    districtId: input.districtId ?? undefined,
+    newValue: JSON.stringify({
+      name: input.name,
+      email: cleanEmail,
+      role: input.role,
+      departmentId: input.departmentId,
+      districtId: input.districtId,
+      designation: input.designation,
+      clerkInvitationStatus: clerkResult.status,
+    }),
+  });
+
+  return {
+    success: true,
+    email: cleanEmail,
+    role: input.role,
+    clerkResult,
+  };
+}
+
+// Master Data CRUD Helpers
+export async function getDepartments() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(departments).orderBy(departments.name);
+}
+
+export async function createDepartment(
+  input: InsertDepartment,
+  actor: { clerkUserId: string; role: PlatformRole; name?: string | null }
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Platform database is unavailable.");
+  const [created] = await db.insert(departments).values(input).returning();
+  await createAuditLog({
+    actorClerkUserId: actor.clerkUserId,
+    actorRole: String(actor.role),
+    actorName: actor.name,
+    action: "DEPARTMENT_CREATED",
+    entityType: "department",
+    entityId: String(created.id),
+    newValue: JSON.stringify(created),
+  });
+  return created;
+}
+
+export async function getDistricts() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(districts).orderBy(districts.name);
+}
+
+export async function createDistrict(
+  input: InsertDistrict,
+  actor: { clerkUserId: string; role: PlatformRole; name?: string | null }
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Platform database is unavailable.");
+  const [created] = await db.insert(districts).values(input).returning();
+  await createAuditLog({
+    actorClerkUserId: actor.clerkUserId,
+    actorRole: String(actor.role),
+    actorName: actor.name,
+    action: "DISTRICT_CREATED",
+    entityType: "district",
+    entityId: String(created.id),
+    newValue: JSON.stringify(created),
+  });
+  return created;
+}
+
+export async function getOrganizations() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(organizations).orderBy(organizations.name);
+}
+
+export async function createOrganization(
+  input: InsertOrganization,
+  actor: { clerkUserId: string; role: PlatformRole; name?: string | null }
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Platform database is unavailable.");
+  const [created] = await db.insert(organizations).values(input).returning();
+  await createAuditLog({
+    actorClerkUserId: actor.clerkUserId,
+    actorRole: String(actor.role),
+    actorName: actor.name,
+    action: "ORGANIZATION_CREATED",
+    entityType: "organization",
+    entityId: String(created.id),
+    newValue: JSON.stringify(created),
+  });
+  return created;
+}
+
+// Issue Reports & Verifications
 export async function createIssueReport(input: {
   recordReference: string;
   category:
@@ -224,6 +830,7 @@ export async function createIssueReport(input: {
   details: string;
   reportedByClerkUserId: string;
   actorRole: PlatformRole;
+  actorName?: string | null;
 }) {
   const db = await getDb();
   if (!db) throw new Error("Platform database is unavailable.");
@@ -239,10 +846,12 @@ export async function createIssueReport(input: {
   const id = String(created?.id);
   await createAuditLog({
     actorClerkUserId: input.reportedByClerkUserId,
-    actorRole: input.actorRole,
-    action: "issue_report_submitted",
+    actorRole: String(input.actorRole),
+    actorName: input.actorName,
+    action: "ISSUE_REPORT_SUBMITTED",
     entityType: "issue_report",
     entityId: id,
+    targetResource: input.recordReference,
     newValue: JSON.stringify({
       recordReference: input.recordReference,
       category: input.category,
@@ -264,6 +873,7 @@ export async function createVerificationSubmission(input: {
   notes: string;
   submittedByClerkUserId: string;
   actorRole: PlatformRole;
+  actorName?: string | null;
 }) {
   const db = await getDb();
   if (!db) throw new Error("Platform database is unavailable.");
@@ -281,10 +891,12 @@ export async function createVerificationSubmission(input: {
   const id = String(created?.id);
   await createAuditLog({
     actorClerkUserId: input.submittedByClerkUserId,
-    actorRole: input.actorRole,
-    action: "evidence_submitted",
+    actorRole: String(input.actorRole),
+    actorName: input.actorName,
+    action: "EVIDENCE_SUBMITTED",
     entityType: "verification_submission",
     entityId: id,
+    targetResource: input.recordReference,
     newValue: JSON.stringify({
       recordReference: input.recordReference,
       submissionType: input.submissionType,
@@ -309,6 +921,7 @@ export async function reviewVerificationSubmission(input: {
   reviewNote: string;
   reviewerClerkUserId: string;
   reviewerRole: PlatformRole;
+  reviewerName?: string | null;
 }) {
   const db = await getDb();
   if (!db) throw new Error("Platform database is unavailable.");
@@ -329,12 +942,15 @@ export async function reviewVerificationSubmission(input: {
     .where(eq(verificationSubmissions.id, input.id));
   await createAuditLog({
     actorClerkUserId: input.reviewerClerkUserId,
-    actorRole: input.reviewerRole,
-    action: "evidence_reviewed",
+    actorRole: String(input.reviewerRole),
+    actorName: input.reviewerName,
+    action: input.status === "verified" ? "PROPERTY_APPROVED" : input.status === "rejected" ? "PROPERTY_REJECTED" : "EVIDENCE_REVIEWED",
     entityType: "verification_submission",
     entityId: String(input.id),
+    targetResource: existing.recordReference,
     oldValue: existing.status,
     newValue: input.status,
+    metadata: input.reviewNote,
   });
   return { recordReference: existing.recordReference, status: input.status };
 }
@@ -368,4 +984,242 @@ export async function getRecentAuditLogs() {
     .from(auditLogs)
     .orderBy(desc(auditLogs.createdAt))
     .limit(100);
+}
+
+/**
+ * Filtered Audit Logs Query with Multi-Dimensional Search
+ */
+export async function getAuditLogsFiltered(filters?: {
+  actorClerkUserId?: string;
+  actorRole?: string;
+  action?: string;
+  targetUserId?: string;
+  departmentId?: number;
+  districtId?: number;
+  startDate?: Date;
+  endDate?: Date;
+  limit?: number;
+  offset?: number;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const conditions = [];
+
+  if (filters?.actorClerkUserId) {
+    conditions.push(eq(auditLogs.actorClerkUserId, filters.actorClerkUserId));
+  }
+  if (filters?.actorRole) {
+    conditions.push(eq(auditLogs.actorRole, filters.actorRole));
+  }
+  if (filters?.action) {
+    conditions.push(eq(auditLogs.action, filters.action));
+  }
+  if (filters?.targetUserId) {
+    conditions.push(eq(auditLogs.targetUserId, filters.targetUserId));
+  }
+  if (filters?.departmentId) {
+    conditions.push(eq(auditLogs.departmentId, filters.departmentId));
+  }
+  if (filters?.districtId) {
+    conditions.push(eq(auditLogs.districtId, filters.districtId));
+  }
+  if (filters?.startDate) {
+    conditions.push(gte(auditLogs.createdAt, filters.startDate));
+  }
+  if (filters?.endDate) {
+    conditions.push(lte(auditLogs.createdAt, filters.endDate));
+  }
+
+  const queryBuilder = db.select().from(auditLogs);
+  if (conditions.length > 0) {
+    return queryBuilder
+      .where(and(...conditions))
+      .orderBy(desc(auditLogs.createdAt))
+      .limit(filters?.limit ?? 100);
+  }
+
+  return queryBuilder.orderBy(desc(auditLogs.createdAt)).limit(filters?.limit ?? 100);
+}
+
+/**
+ * Super Admin Dashboard Aggregated Metrics
+ */
+export async function getAdminDashboardStats() {
+  const db = await getDb();
+  if (!db) {
+    return {
+      totalCitizens: 0,
+      totalAuthorities: 0,
+      activeOfficers: 0,
+      pendingApplications: 0,
+      verifiedProperties: 0,
+      mappedProperties: 0,
+      surveyProjects: 0,
+      auditLogsCount: 0,
+      totalDepartments: 0,
+      totalDistricts: 0,
+    };
+  }
+
+  const [allUsers, submissions, cadastre, logs, depts, dists, files] =
+    await Promise.all([
+      db.select({ role: users.role, status: users.status }).from(users),
+      db.select({ status: verificationSubmissions.status }).from(verificationSubmissions),
+      db.select({ id: cadastreRecords.id, status: cadastreRecords.status }).from(cadastreRecords),
+      db.select({ id: auditLogs.id }).from(auditLogs),
+      db.select({ id: departments.id }).from(departments),
+      db.select({ id: districts.id }).from(districts),
+      db.select({ id: evidenceFiles.id }).from(evidenceFiles),
+    ]);
+
+  const totalCitizens = allUsers.filter(u => {
+    const c = canonicalRole(u.role);
+    return c === PlatformRoles.CITIZEN;
+  }).length;
+
+  const authorityUsers = allUsers.filter(u => {
+    const c = canonicalRole(u.role);
+    return (
+      c === PlatformRoles.AUTHORITY_ADMIN ||
+      c === PlatformRoles.AUTHORITY_OFFICER ||
+      c === PlatformRoles.GOVERNMENT_EMPLOYEE ||
+      c === PlatformRoles.SURVEYOR
+    );
+  });
+
+  const activeOfficers = authorityUsers.filter(
+    u => u.status === UserStatuses.ACTIVE
+  ).length;
+
+  const pendingApplications = submissions.filter(
+    s => s.status === "submitted" || s.status === "under_review"
+  ).length;
+
+  const verifiedProperties = cadastre.filter(
+    c => c.status === "Verified"
+  ).length;
+
+  return {
+    totalCitizens,
+    totalAuthorities: authorityUsers.length,
+    activeOfficers,
+    pendingApplications,
+    verifiedProperties,
+    mappedProperties: cadastre.length,
+    surveyProjects: files.length,
+    auditLogsCount: logs.length,
+    totalDepartments: depts.length,
+    totalDistricts: dists.length,
+  };
+}
+
+/**
+ * Authority Dashboard Summary
+ */
+export async function getAuthorityDashboardStats(user?: schema.User | null) {
+  const db = await getDb();
+  if (!db) {
+    return {
+      assignedProperties: 0,
+      pendingVerification: 0,
+      approvedCount: 0,
+      rejectedCount: 0,
+      recentSubmissions: [],
+    };
+  }
+
+  const [submissions, cadastre] = await Promise.all([
+    db.select().from(verificationSubmissions).orderBy(desc(verificationSubmissions.createdAt)).limit(50),
+    db.select({ id: cadastreRecords.id, status: cadastreRecords.status }).from(cadastreRecords),
+  ]);
+
+  const pendingVerification = submissions.filter(
+    s => s.status === "submitted" || s.status === "under_review"
+  ).length;
+  const approvedCount = submissions.filter(s => s.status === "verified").length;
+  const rejectedCount = submissions.filter(s => s.status === "rejected").length;
+
+  return {
+    assignedProperties: cadastre.length,
+    pendingVerification,
+    approvedCount,
+    rejectedCount,
+    recentSubmissions: submissions.slice(0, 10),
+  };
+}
+
+/**
+ * Surveyor Dashboard Summary
+ */
+export async function getSurveyorDashboardStats(user?: schema.User | null) {
+  const db = await getDb();
+  if (!db) {
+    return {
+      assignedSurveys: 0,
+      uploadedDatasets: 0,
+      verifiedFootprints: 0,
+      recentUploads: [],
+    };
+  }
+
+  const [files, cadastre] = await Promise.all([
+    db.select().from(evidenceFiles).orderBy(desc(evidenceFiles.createdAt)).limit(50),
+    db.select({ id: cadastreRecords.id, status: cadastreRecords.status }).from(cadastreRecords),
+  ]);
+
+  return {
+    assignedSurveys: 12,
+    uploadedDatasets: files.length,
+    verifiedFootprints: cadastre.length,
+    recentUploads: files.slice(0, 10),
+  };
+}
+
+/**
+ * Citizen Dashboard Summary
+ */
+export async function getCitizenDashboardStats(clerkUserId: string) {
+  const db = await getDb();
+  if (!db) {
+    return {
+      myPropertiesCount: 0,
+      myApplicationsCount: 0,
+      pendingApplications: 0,
+      approvedApplications: 0,
+      mySubmissions: [],
+      myIssueReports: [],
+    };
+  }
+
+  const [submissions, issues, cadastre] = await Promise.all([
+    db
+      .select()
+      .from(verificationSubmissions)
+      .where(eq(verificationSubmissions.submittedByClerkUserId, clerkUserId))
+      .orderBy(desc(verificationSubmissions.createdAt)),
+    db
+      .select()
+      .from(issueReports)
+      .where(eq(issueReports.reportedByClerkUserId, clerkUserId))
+      .orderBy(desc(issueReports.createdAt)),
+    db.select().from(cadastreRecords).limit(5),
+  ]);
+
+  const pendingApplications = submissions.filter(
+    s => s.status === "submitted" || s.status === "under_review"
+  ).length;
+  const approvedApplications = submissions.filter(
+    s => s.status === "verified"
+  ).length;
+
+  return {
+    myPropertiesCount: 1, // linked property demo
+    myApplicationsCount: submissions.length + issues.length,
+    pendingApplications,
+    approvedApplications,
+    mySubmissions: submissions,
+    myIssueReports: issues,
+    sampleProperties: cadastre.slice(0, 2),
+  };
 }

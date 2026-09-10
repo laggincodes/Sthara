@@ -22,13 +22,29 @@ import { FormEvent, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
 
-type PlatformRole = "citizen" | "authority" | "government_employee" | "admin";
+type PlatformRole =
+  | "SUPER_ADMIN"
+  | "AUTHORITY_ADMIN"
+  | "AUTHORITY_OFFICER"
+  | "GOVERNMENT_EMPLOYEE"
+  | "SURVEYOR"
+  | "CITIZEN"
+  | "citizen"
+  | "authority"
+  | "government_employee"
+  | "admin";
 
 const roleCopy: Record<
-  PlatformRole,
+  string,
   { label: string; description: string; icon: typeof Users }
 > = {
   citizen: {
+    label: "Citizen property dashboard",
+    description:
+      "Search public source-backed property context and submit corrections without exposing personal owner data.",
+    icon: Building2,
+  },
+  CITIZEN: {
     label: "Citizen property dashboard",
     description:
       "Search public source-backed property context and submit corrections without exposing personal owner data.",
@@ -40,11 +56,35 @@ const roleCopy: Record<
       "Submit and review evidence through a recorded workflow. Evidence remains non-authoritative until review is completed.",
     icon: ClipboardCheck,
   },
+  AUTHORITY_ADMIN: {
+    label: "Authority administration workspace",
+    description:
+      "Review vertical cadastre applications, manage officers, and verify GIS 3D property data.",
+    icon: ClipboardCheck,
+  },
+  AUTHORITY_OFFICER: {
+    label: "Authority verification workspace",
+    description:
+      "Submit and review evidence through a recorded workflow. Evidence remains non-authoritative until review is completed.",
+    icon: ClipboardCheck,
+  },
   government_employee: {
     label: "Government operations dashboard",
     description:
       "Use aggregate mapping and verification progress indicators without unrestricted personal data access.",
     icon: Map,
+  },
+  GOVERNMENT_EMPLOYEE: {
+    label: "Government operations dashboard",
+    description:
+      "Use aggregate mapping and verification progress indicators without unrestricted personal data access.",
+    icon: Map,
+  },
+  SURVEYOR: {
+    label: "Field surveyor workspace",
+    description:
+      "Upload GeoJSON, GNSS/GCP datasets and manage cadastral survey projects.",
+    icon: Building2,
   },
   admin: {
     label: "Administrator control room",
@@ -52,12 +92,31 @@ const roleCopy: Record<
       "Manage role assignments and inspect immutable system audit records. Your own role cannot be changed here.",
     icon: ShieldCheck,
   },
+  SUPER_ADMIN: {
+    label: "Administrator control room",
+    description:
+      "Manage role assignments and inspect immutable system audit records. Your own role cannot be changed here.",
+    icon: ShieldCheck,
+  },
 };
 
-const allowedReviewRoles: PlatformRole[] = ["authority", "admin"];
-const allowedGovernmentRoles: PlatformRole[] = ["government_employee", "admin"];
+const allowedReviewRoles: string[] = [
+  "authority",
+  "admin",
+  "AUTHORITY_ADMIN",
+  "AUTHORITY_OFFICER",
+  "SUPER_ADMIN",
+];
+const allowedGovernmentRoles: string[] = [
+  "government_employee",
+  "admin",
+  "GOVERNMENT_EMPLOYEE",
+  "AUTHORITY_ADMIN",
+  "AUTHORITY_OFFICER",
+  "SUPER_ADMIN",
+];
 
-function formatRole(role: PlatformRole) {
+function formatRole(role: string) {
   return role.replaceAll("_", " ");
 }
 
@@ -188,7 +247,7 @@ export default function RoleConsole() {
   const role = user?.role as PlatformRole | undefined;
   const hasAuthority = Boolean(role && allowedReviewRoles.includes(role));
   const hasGovernment = Boolean(role && allowedGovernmentRoles.includes(role));
-  const isAdmin = role === "admin";
+  const isAdmin = role === "admin" || role === "SUPER_ADMIN";
   const dashboardSummary = trpc.platform.dashboardSummary.useQuery(undefined, {
     enabled: Boolean(user),
   });
@@ -321,12 +380,54 @@ export default function RoleConsole() {
           <h1>{roleCopy[role].label}</h1>
           <p>{roleCopy[role].description}</p>
         </div>
-        <Button
-          type="button"
-          onClick={() => setLocation("/workspace?segment=buildings")}
-        >
-          Open 3D property explorer <ArrowRight size={15} />
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          {isAdmin && (
+            <Button
+              type="button"
+              className="bg-purple-600 text-white hover:bg-purple-500"
+              onClick={() => setLocation("/admin/dashboard")}
+            >
+              Admin Dashboard <ArrowRight size={15} />
+            </Button>
+          )}
+          {(role === "AUTHORITY_ADMIN" ||
+            role === "AUTHORITY_OFFICER" ||
+            role === "authority") && (
+            <Button
+              type="button"
+              className="bg-cyan-600 text-white hover:bg-cyan-500"
+              onClick={() => setLocation("/authority/dashboard")}
+            >
+              Authority Workspace <ArrowRight size={15} />
+            </Button>
+          )}
+          {role === "SURVEYOR" && (
+            <Button
+              type="button"
+              className="bg-amber-600 text-white hover:bg-amber-500"
+              onClick={() => setLocation("/surveyor/dashboard")}
+            >
+              Surveyor Workspace <ArrowRight size={15} />
+            </Button>
+          )}
+          {(role === "GOVERNMENT_EMPLOYEE" ||
+            role === "government_employee") && (
+            <Button
+              type="button"
+              className="bg-blue-600 text-white hover:bg-blue-500"
+              onClick={() => setLocation("/government/dashboard")}
+            >
+              Government Console <ArrowRight size={15} />
+            </Button>
+          )}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setLocation("/workspace?segment=buildings")}
+          >
+            Open 3D property explorer <ArrowRight size={15} />
+          </Button>
+        </div>
       </section>
 
       {dashboardSummary.isLoading ? (

@@ -9,10 +9,23 @@ import {
 } from "drizzle-orm/pg-core";
 
 export const platformRole = pgEnum("platform_role", [
+  "SUPER_ADMIN",
+  "AUTHORITY_ADMIN",
+  "AUTHORITY_OFFICER",
+  "GOVERNMENT_EMPLOYEE",
+  "SURVEYOR",
+  "CITIZEN",
   "citizen",
   "authority",
   "government_employee",
   "admin",
+]);
+
+export const userStatus = pgEnum("user_status", [
+  "INVITED",
+  "ACTIVE",
+  "SUSPENDED",
+  "DISABLED",
 ]);
 
 export const verificationStatus = pgEnum("verification_status", [
@@ -51,13 +64,58 @@ export const issueReportStatus = pgEnum("issue_report_status", [
   "closed",
 ]);
 
+export const departments = pgTable("departments", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 160 }).notNull(),
+  code: varchar("code", { length: 48 }).notNull().unique(),
+  description: text("description"),
+  status: varchar("status", { length: 32 }).default("ACTIVE").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+export const districts = pgTable("districts", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 120 }).notNull(),
+  state: varchar("state", { length: 120 }).default("Bihar").notNull(),
+  code: varchar("code", { length: 48 }).notNull().unique(),
+  status: varchar("status", { length: 32 }).default("ACTIVE").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+export const organizations = pgTable("organizations", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 160 }).notNull(),
+  type: varchar("type", { length: 80 }).notNull(),
+  status: varchar("status", { length: 32 }).default("ACTIVE").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+export const rolePermissions = pgTable("role_permissions", {
+  id: serial("id").primaryKey(),
+  role: varchar("role", { length: 64 }).notNull(),
+  permission: varchar("permission", { length: 120 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   clerkUserId: varchar("clerkUserId", { length: 96 }).notNull().unique(),
   name: text("name"),
   email: varchar("email", { length: 320 }),
+  phone: varchar("phone", { length: 48 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: platformRole("role").default("citizen").notNull(),
+  status: userStatus("status").default("ACTIVE").notNull(),
+  designation: varchar("designation", { length: 160 }),
+  departmentId: integer("departmentId"),
+  districtId: integer("districtId"),
+  organizationId: integer("organizationId"),
+  jurisdiction: text("jurisdiction"),
+  invitationSentAt: timestamp("invitationSentAt"),
+  invitationAcceptedAt: timestamp("invitationAcceptedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -127,14 +185,36 @@ export const issueReports = pgTable("issueReports", {
 export const auditLogs = pgTable("auditLogs", {
   id: serial("id").primaryKey(),
   actorClerkUserId: varchar("actorClerkUserId", { length: 96 }).notNull(),
-  actorRole: platformRole("actorRole").notNull(),
+  actorRole: varchar("actorRole", { length: 64 }).notNull(),
+  actorName: varchar("actorName", { length: 160 }),
   action: varchar("action", { length: 96 }).notNull(),
+  targetUserId: varchar("targetUserId", { length: 96 }),
+  targetResource: varchar("targetResource", { length: 160 }),
   entityType: varchar("entityType", { length: 96 }).notNull(),
   entityId: varchar("entityId", { length: 128 }).notNull(),
+  departmentId: integer("departmentId"),
+  districtId: integer("districtId"),
+  metadata: text("metadata"),
   oldValue: text("oldValue"),
   newValue: text("newValue"),
+  ipAddress: varchar("ipAddress", { length: 64 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
+
+export type Department = typeof departments.$inferSelect;
+export type InsertDepartment = typeof departments.$inferInsert;
+
+export type District = typeof districts.$inferSelect;
+export type InsertDistrict = typeof districts.$inferInsert;
+
+export type Organization = typeof organizations.$inferSelect;
+export type InsertOrganization = typeof organizations.$inferInsert;
+
+export type RolePermission = typeof rolePermissions.$inferSelect;
+export type InsertRolePermission = typeof rolePermissions.$inferInsert;
+
+export type AuditLog = typeof auditLogs.$inferSelect;
+export type InsertAuditLog = typeof auditLogs.$inferInsert;
