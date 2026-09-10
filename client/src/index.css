@@ -9184,3 +9184,169 @@ html[data-ulpin-motion="reduced"] *::after {
     max-width: 180px;
   }
 }
+
+/* ==========================================================================
+   Clerk High-Contrast Authentication & OTP Visibility Enhancements
+   ========================================================================== */
+.cl-rootBox,
+.cl-card {
+  color: #ffffff !important;
+}
+
+.cl-headerTitle {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-size: 1.125rem !important;
+}
+
+.cl-headerSubtitle {
+  color: #cbd5e1 !important;
+  font-size: 0.8125rem !important;
+  line-height: 1.4 !important;
+}
+
+.cl-identityPreviewText {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+}
+
+.cl-identityPreviewEditButton {
+  color: #2ad4d9 !important;
+}
+
+.cl-socialButtonsBlockButton {
+  background-color: #12232c !important;
+  border: 1.5px solid rgba(42, 212, 217, 0.4) !important;
+  color: #ffffff !important;
+  transition: all 0.2s ease !important;
+}
+
+.cl-socialButtonsBlockButton:hover {
+  background-color: #1b3442 !important;
+  border-color: #2ad4d9 !important;
+}
+
+.cl-socialButtonsBlockButtonText {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+}
+
+.cl-dividerLine {
+  background-color: #334155 !important;
+}
+
+.cl-dividerText {
+  color: #94a3b8 !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  font-size: 0.6875rem !important;
+  letter-spacing: 0.05em !important;
+}
+
+.cl-formFieldLabel {
+  color: #e2e8f0 !important;
+  font-weight: 500 !important;
+  font-size: 0.75rem !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.cl-formFieldInput {
+  background-color: #11222b !important;
+  border: 1.5px solid rgba(42, 212, 217, 0.4) !important;
+  color: #ffffff !important;
+  font-size: 0.875rem !important;
+  border-radius: 0.75rem !important;
+}
+
+.cl-formFieldInput:focus {
+  border-color: #2ad4d9 !important;
+  background-color: #162c37 !important;
+  box-shadow: 0 0 0 2px rgba(42, 212, 217, 0.3) !important;
+}
+
+.cl-formFieldInput::placeholder {
+  color: #64748b !important;
+}
+
+/* OTP Verification Code Input Boxes */
+.cl-otpCodeField,
+div[data-localization-key*="otp"] {
+  gap: 0.5rem !important;
+  margin: 1rem 0 !important;
+}
+
+.cl-otpCodeFieldInputs {
+  gap: 0.5rem !important;
+  justify-content: center !important;
+}
+
+.cl-otpCodeFieldInput,
+input[data-otp-input="true"],
+.cl-formFieldInput[name*="code"] {
+  width: 2.85rem !important;
+  height: 3.25rem !important;
+  background-color: #132833 !important;
+  border: 2px solid rgba(42, 212, 217, 0.6) !important;
+  border-radius: 0.75rem !important;
+  color: #ffffff !important;
+  font-size: 1.35rem !important;
+  font-weight: 700 !important;
+  text-align: center !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
+  transition: all 0.2s ease !important;
+}
+
+.cl-otpCodeFieldInput:focus,
+input[data-otp-input="true"]:focus,
+.cl-formFieldInput[name*="code"]:focus {
+  border-color: #2ad4d9 !important;
+  background-color: #193847 !important;
+  box-shadow: 0 0 0 3px rgba(42, 212, 217, 0.4), 0 2px 10px rgba(42, 212, 217, 0.2) !important;
+  outline: none !important;
+}
+
+.cl-formResendCodeLink,
+.cl-alternativeMethodsLink,
+.cl-footerActionLink,
+.cl-footerPagesLink {
+  color: #2ad4d9 !important;
+  font-weight: 600 !important;
+  font-size: 0.75rem !important;
+  text-decoration: none !important;
+}
+
+.cl-formResendCodeLink:hover,
+.cl-alternativeMethodsLink:hover,
+.cl-footerActionLink:hover,
+.cl-footerPagesLink:hover {
+  color: #74ebe9 !important;
+  text-decoration: underline !important;
+}
+
+.cl-footerActionText {
+  color: #94a3b8 !important;
+  font-size: 0.75rem !important;
+}
+
+.cl-formButtonPrimary {
+  background: linear-gradient(135deg, #2ad4d9 0%, #38bdf8 100%) !important;
+  color: #062126 !important;
+  font-weight: 700 !important;
+  font-size: 0.875rem !important;
+  border-radius: 0.75rem !important;
+  box-shadow: 0 4px 14px rgba(42, 212, 217, 0.25) !important;
+  transition: all 0.2s ease !important;
+}
+
+.cl-formButtonPrimary:hover {
+  background: linear-gradient(135deg, #74ebe9 0%, #60a5fa 100%) !important;
+  box-shadow: 0 6px 20px rgba(42, 212, 217, 0.4) !important;
+  transform: translateY(-1px) !important;
+}
+
+.cl-footer {
+  color: #64748b !important;
+}
+
