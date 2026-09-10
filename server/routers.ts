@@ -34,6 +34,10 @@ import {
   updateUserJurisdiction,
 } from "./db";
 import { extractEvidenceMetadata } from "./evidenceExtraction";
+import {
+  getPendingClerkInvitations,
+  resendClerkStaffInvitation,
+} from "./clerkInvitationService";
 import { invokeLLM } from "./_core/llm";
 import { systemRouter } from "./_core/systemRouter";
 import {
@@ -299,6 +303,35 @@ export const appRouter = router({
           actorName: ctx.user.name,
         })
       ),
+
+    pendingInvitations: superAdminProcedure.query(async () =>
+      getPendingClerkInvitations()
+    ),
+
+    resendInvitation: superAdminProcedure
+      .input(
+        z.object({
+          email: z.string().trim().email(),
+          role: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const result = await resendClerkStaffInvitation(
+          input.email,
+          input.role
+        );
+        await createAuditLog({
+          actorClerkUserId: ctx.user.clerkUserId,
+          actorRole: String(ctx.user.role),
+          actorName: ctx.user.name,
+          action: "AUTHORITY_INVITATION_RESENT",
+          entityType: "authority_invitation",
+          entityId: input.email,
+          targetResource: input.email,
+          newValue: JSON.stringify(result),
+        });
+        return result;
+      }),
 
     updateRole: superAdminProcedure
       .input(assignRoleInput)

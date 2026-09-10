@@ -13,10 +13,14 @@ import {
   Building2,
   CheckCircle2,
   Clock,
+  Copy,
+  ExternalLink,
+  Info,
   Mail,
   MapPin,
   Plus,
   RefreshCw,
+  RotateCw,
   Send,
   Shield,
   ShieldAlert,
@@ -31,6 +35,9 @@ import { toast } from "sonner";
 
 export default function AdminAuthorities() {
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [successLinkModalOpen, setSuccessLinkModalOpen] = useState(false);
+  const [latestInviteUrl, setLatestInviteUrl] = useState<string | null>(null);
+  const [latestInviteEmail, setLatestInviteEmail] = useState("");
   const [search, setSearch] = useState("");
 
   // Invite Form State
@@ -55,13 +62,37 @@ export default function AdminAuthorities() {
   const deptsQuery = trpc.admin.departments.useQuery();
   const distsQuery = trpc.admin.districts.useQuery();
   const orgsQuery = trpc.admin.organizations.useQuery();
+  const pendingInvitesQuery = trpc.admin.pendingInvitations.useQuery();
+
+  const resendMutation = trpc.admin.resendInvitation.useMutation({
+    onSuccess: (data, variables) => {
+      toast.success(`Invitation resent to ${variables.email}!`);
+      void utils.admin.pendingInvitations.invalidate();
+      void utils.admin.users.invalidate();
+      if (data.invitationUrl) {
+        setLatestInviteUrl(data.invitationUrl);
+        setLatestInviteEmail(variables.email);
+        setSuccessLinkModalOpen(true);
+      }
+    },
+    onError: err => {
+      toast.error(err.message || "Failed to resend invitation");
+    },
+  });
 
   const inviteMutation = trpc.admin.inviteAuthority.useMutation({
-    onSuccess: data => {
+    onSuccess: (data) => {
       toast.success(
-        `Authority account invitation sent to ${data.email} via Clerk!`
+        `Authority account invitation created for ${data.email}!`
       );
       setInviteModalOpen(false);
+
+      if (data.clerkResult?.invitationUrl) {
+        setLatestInviteUrl(data.clerkResult.invitationUrl);
+        setLatestInviteEmail(data.email);
+        setSuccessLinkModalOpen(true);
+      }
+
       // Reset form
       setFullName("");
       setEmail("");
@@ -71,6 +102,7 @@ export default function AdminAuthorities() {
       void utils.admin.users.invalidate();
       void utils.admin.stats.invalidate();
       void utils.admin.auditLogs.invalidate();
+      void utils.admin.pendingInvitations.invalidate();
     },
     onError: err => {
       toast.error(err.message || "Failed to invite authority");
@@ -95,6 +127,11 @@ export default function AdminAuthorities() {
       jurisdiction: jurisdiction.trim() || undefined,
       designation: designation.trim() || undefined,
     });
+  };
+
+  const copyToClipboard = (text: string, label = "Link") => {
+    navigator.clipboard.writeText(text);
+    toast.success(`📋 ${label} copied to clipboard!`);
   };
 
   const deptsMap = new Map((deptsQuery.data ?? []).map(d => [d.id, d.name]));
@@ -277,19 +314,78 @@ export default function AdminAuthorities() {
                           </td>
                           <td className="px-5 py-3.5 text-slate-400 text-[11px]">
                             {u.status === "INVITED" ? (
-                              <div className="text-blue-400 font-medium flex items-center gap-1">
-                                <Mail size={12} /> Invitation Sent
+                              <div className="space-y-1.5">
+                                <div className="text-blue-400 font-medium flex items-center gap-1">
+                                  <Mail size={12} /> Invitation Sent
+                                </div>
+                                <div className="text-[10px] text-slate-500">
+                                  {u.invitationSentAt
+                                    ? `Sent: ${new Date(u.invitationSentAt).toLocaleDateString()}`
+                                    : `Pending setup`}
+                                </div>
+                                <div className="flex items-center gap-1.5 pt-1">
+                                  {(() => {
+                                    const matching = (
+                                      pendingInvitesQuery.data ?? []
+                                    ).find(
+                                      p =>
+                                        p.email_address.toLowerCase() ===
+                                        u.email?.toLowerCase()
+                                    );
+                                    return matching?.url ? (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-6 px-2 text-[10px] bg-blue-500/10 border-blue-500/30 text-blue-300 hover:bg-blue-500/20"
+                                        onClick={() =>
+                                          copyToClipboard(
+                                            matching.url!,
+                                            "Officer Setup Link"
+                                          )
+                                        }
+                                      >
+                                        <Copy size={10} className="mr-1" /> Copy Link
+                                      </Button>
+                                    ) : null;
+                                  })()}
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-6 px-2 text-[10px] text-slate-400 hover:text-white hover:bg-slate-800"
+                                    disabled={resendMutation.isPending}
+                                    onClick={() =>
+                                      resendMutation.mutate({
+                                        email: u.email!,
+                                        role: u.role,
+                                      })
+                                    }
+                                  >
+                                    <RotateCw
+                                      size={10}
+                                      className={`mr-1 ${
+                                        resendMutation.isPending &&
+                                        resendMutation.variables?.email ===
+                                          u.email
+                                          ? "animate-spin"
+                                          : ""
+                                      }`}
+                                    />
+                                    Resend
+                                  </Button>
+                                </div>
                               </div>
                             ) : (
-                              <div className="text-emerald-400 font-medium flex items-center gap-1">
-                                <CheckCircle2 size={12} /> Setup Completed
+                              <div>
+                                <div className="text-emerald-400 font-medium flex items-center gap-1">
+                                  <CheckCircle2 size={12} /> Setup Completed
+                                </div>
+                                <div className="text-[10px] text-slate-500 mt-0.5">
+                                  {u.createdAt
+                                    ? `Joined: ${new Date(u.createdAt).toLocaleDateString()}`
+                                    : ""}
+                                </div>
                               </div>
                             )}
-                            <div className="text-[10px] text-slate-500 mt-0.5">
-                              {u.invitationSentAt
-                                ? `Sent: ${new Date(u.invitationSentAt).toLocaleDateString()}`
-                                : `Joined: ${new Date(u.createdAt).toLocaleDateString()}`}
-                            </div>
                           </td>
                         </tr>
                       );
@@ -484,6 +580,77 @@ export default function AdminAuthorities() {
                   </Button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* Setup Link Success / Direct Copy Modal */}
+        {successLinkModalOpen && latestInviteUrl && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm">
+            <div className="w-full max-w-lg rounded-2xl border border-blue-500/30 bg-slate-900 p-6 shadow-2xl space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div className="flex items-center gap-2 text-white font-bold">
+                  <CheckCircle2 size={20} className="text-emerald-400" />
+                  Official Account Invitation Created
+                </div>
+                <button
+                  onClick={() => setSuccessLinkModalOpen(false)}
+                  className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <div className="space-y-3 text-xs">
+                <p className="text-slate-300">
+                  An invitation has been registered for{" "}
+                  <strong className="text-white">{latestInviteEmail}</strong>.
+                </p>
+
+                <div className="rounded-xl border border-slate-800 bg-slate-950 p-3 space-y-2">
+                  <div className="flex items-center justify-between text-slate-400 text-[11px] font-medium">
+                    <span>DIRECT CLERK SETUP LINK:</span>
+                    <span className="text-emerald-400">One-Time Secure Ticket</span>
+                  </div>
+                  <div className="p-2 bg-slate-900 rounded border border-slate-800 text-[11px] text-blue-300 break-all font-mono select-all max-h-24 overflow-y-auto">
+                    {latestInviteUrl}
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-3 text-[11px] text-amber-300 flex items-start gap-2">
+                  <Info size={16} className="shrink-0 mt-0.5 text-amber-400" />
+                  <div>
+                    <span className="font-semibold">Email Delivery Note:</span>{" "}
+                    In Clerk development mode, emails may land in the <strong>Spam / Junk</strong> folder or be queued. You can copy this direct link and share it directly with the officer (via WhatsApp/Email) to activate their account immediately!
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-slate-800 text-xs"
+                  onClick={() => setSuccessLinkModalOpen(false)}
+                >
+                  Close
+                </Button>
+                <Button
+                  size="sm"
+                  className="bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs"
+                  onClick={() => copyToClipboard(latestInviteUrl, "Setup Link")}
+                >
+                  <Copy size={14} className="mr-1.5" /> Copy Setup Link
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-blue-500/30 text-blue-300 hover:bg-blue-500/20 text-xs"
+                  onClick={() => window.open(latestInviteUrl, "_blank")}
+                >
+                  <ExternalLink size={14} className="mr-1.5" /> Open Link
+                </Button>
+              </div>
             </div>
           </div>
         )}
