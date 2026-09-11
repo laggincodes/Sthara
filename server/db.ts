@@ -367,8 +367,9 @@ export async function ensureCadastreSeedData() {
 
 export async function getCadastreRecords(): Promise<CadastreRecord[]> {
   const db = await getDb();
-  if (!db) return [];
+  if (!db) return INITIAL_CADASTRE_RECORDS;
   const records = await db.select().from(cadastreRecords).limit(100);
+  if (records.length === 0) return INITIAL_CADASTRE_RECORDS;
   return records.map(record => ({
     ulpin: record.ulpin,
     title: record.title,
@@ -1263,3 +1264,183 @@ export async function getCitizenDashboardStats(clerkUserId: string) {
     sampleProperties: cadastre.slice(0, 2),
   };
 }
+
+/**
+ * Filtered Cadastre Directory query for Government & Authority exploration
+ */
+export async function getCadastreFiltered(filters?: {
+  query?: string;
+  districtId?: number;
+  status?: string;
+  limit?: number;
+}) {
+  const allRecords = await getCadastreRecords();
+  let filtered = allRecords;
+
+  if (filters?.query && filters.query.trim().length > 0) {
+    const q = filters.query.trim().toLowerCase();
+    filtered = filtered.filter(
+      r =>
+        r.ulpin.toLowerCase().includes(q) ||
+        r.title.toLowerCase().includes(q) ||
+        r.parcel.toLowerCase().includes(q) ||
+        r.building.toLowerCase().includes(q) ||
+        r.unit.toLowerCase().includes(q)
+    );
+  }
+
+  if (filters?.status && filters.status !== "ALL") {
+    filtered = filtered.filter(
+      r => r.status.toLowerCase() === filters.status!.toLowerCase()
+    );
+  }
+
+  if (filters?.limit) {
+    filtered = filtered.slice(0, filters.limit);
+  }
+
+  return filtered;
+}
+
+/**
+ * Generates full payload for printable / downloadable official 3D ULPIN Title Certificate
+ */
+export async function getCertificateData(ulpinOrReference: string) {
+  const records = await getCadastreRecords();
+  const target =
+    records.find(
+      r =>
+        r.ulpin.toLowerCase() === ulpinOrReference.toLowerCase().trim() ||
+        r.parcel.toLowerCase() === ulpinOrReference.toLowerCase().trim()
+    ) || records[0];
+
+  if (!target) {
+    throw new Error(`No cadastre record found matching ${ulpinOrReference}`);
+  }
+
+  const [depts, dists] = await Promise.all([getDepartments(), getDistricts()]);
+
+  const sanitizedUlpin = (target.ulpin || "IN-BR-PAT-0042-3D").replace(/[^a-zA-Z0-9]/g, "-").toUpperCase();
+
+  return {
+    certificateNumber: `CERT-ULPIN-${sanitizedUlpin}`,
+    ulpin: target.ulpin,
+    title: target.title,
+    parcelReference: target.parcel,
+    buildingName: target.building,
+    unitNumber: target.unit,
+    floorLevel: target.floor,
+    areaSqMeters: target.area,
+    volumeCubicMeters: target.volume,
+    elevationAboveMSL: target.elevation,
+    verificationStatus: target.status,
+    ownershipRights: target.rights,
+    evidenceChain: target.evidence,
+    issuedBy: "3D Land Authority (DoLR), Ministry of Rural Development",
+    issuingAuthority: "Department of Land Resources (DoLR), Ministry of Rural Development",
+    state: "Bihar",
+    district: dists[0]?.name || "Patna",
+    geodeticDatum: "WGS84 / EPSG:4326 (3D Ellipsoidal)",
+    coordinatesCentroid: {
+      latitude: 25.5941,
+      longitude: 85.1376,
+      heightMSL: target.elevation,
+    },
+    verificationTimestamp: new Date().toISOString(),
+    qrVerificationUrl: `https://sih2026.gov.in/verify-certificate?ulpin=${encodeURIComponent(target.ulpin)}`,
+    qrVerificationCode: `https://sih2026.gov.in/verify-certificate?ulpin=${encodeURIComponent(target.ulpin)}`,
+    securityWatermark: "NATIONAL 3D CADASTRAL REGISTRY · GOVERNMENT OF INDIA",
+  };
+}
+
+/**
+ * Inter-Departmental Spatial Conflict & Height Clearance Alerts
+ */
+export async function getConflictAlerts() {
+  return [
+    {
+      id: "CONF-2026-081",
+      severity: "HIGH",
+      title: "Municipal Height Limit Discrepancy",
+      conflictType: "MUNICIPAL_HEIGHT_LIMIT_DISCREPANCY",
+      ulpin: "IN-BR-PAT-0042-3D-F04",
+      parcel: "Plot 42/B, Danapur Main",
+      involvedDepartments: ["URBAN_DEV", "REV_LR"],
+      description:
+        "Building permit sanctions 45.2m extrusion; revenue record specifies G+3 zoning height restriction (15.0m max).",
+      timestamp: new Date(Date.now() - 3600000 * 4).toISOString(),
+      status: "OPEN",
+    },
+    {
+      id: "CONF-2026-044",
+      severity: "MEDIUM",
+      title: "Vertical Floor Plan Overlap",
+      conflictType: "VERTICAL_FLOOR_PLAN_OVERLAP",
+      ulpin: "IN-BR-PAT-0012-3D-U02",
+      parcel: "Survey 12, Exhibition Road",
+      involvedDepartments: ["DLRS", "TCPO"],
+      description:
+        "Commercial unit boundary slice overlaps 0.8m with adjacent common utility corridor.",
+      timestamp: new Date(Date.now() - 3600000 * 18).toISOString(),
+      status: "UNDER_INSPECTION",
+    },
+    {
+      id: "CONF-2026-019",
+      severity: "LOW",
+      title: "Pending Khatiyan Deed Mutation Link",
+      conflictType: "PENDING_KHATIYAN_MUTATION",
+      ulpin: "IN-BR-PAT-0088-3D-F01",
+      parcel: "Khasra 88, Kankarbagh",
+      involvedDepartments: ["REG_STAMPS", "REV_LR"],
+      description:
+        "Conveyance deed registered; automated 3D spatial boundary update awaiting land revenue mutation clearance.",
+      timestamp: new Date(Date.now() - 3600000 * 36).toISOString(),
+      status: "PENDING_CLEARANCE",
+    },
+  ];
+}
+
+/**
+ * Assigned Survey Missions for Field Surveyors
+ */
+export async function getAssignedSurveyMissions(surveyorClerkUserId?: string) {
+  return [
+    {
+      id: "SM-2026-001",
+      missionName: "Patna Central Volumetric Height Survey",
+      parcelReference: "Plot 42/B, Danapur Main",
+      ulpin: "IN-BR-PAT-0042-3D-F04",
+      priority: "HIGH",
+      status: "IN_PROGRESS",
+      targetDistrict: "Patna",
+      instructions: "Perform GNSS RTK CORS ground check and measure total building height to verify municipal permit claim.",
+      assignedAt: new Date(Date.now() - 3600000 * 24).toISOString(),
+      gcpPointsCount: 4,
+    },
+    {
+      id: "SM-2026-002",
+      missionName: "Exhibition Road 3D Floor Boundary Verification",
+      parcelReference: "Survey 12, Exhibition Road",
+      ulpin: "IN-BR-PAT-0012-3D-U02",
+      priority: "MEDIUM",
+      status: "ASSIGNED",
+      targetDistrict: "Patna",
+      instructions: "Capture laser distance measurements of 2nd floor commercial parcel boundary and verify common wall clearance.",
+      assignedAt: new Date(Date.now() - 3600000 * 48).toISOString(),
+      gcpPointsCount: 0,
+    },
+    {
+      id: "SM-2026-003",
+      missionName: "Bailey Road Multi-Storey Drone Photogrammetry",
+      parcelReference: "Plot 104, Bailey Road Corridor",
+      ulpin: "IN-BR-PAT-0104-3D-F12",
+      priority: "LOW",
+      status: "COMPLETED",
+      targetDistrict: "Patna",
+      instructions: "Ingest high-density point cloud and extract building boundary polygon coordinates.",
+      assignedAt: new Date(Date.now() - 3600000 * 96).toISOString(),
+      gcpPointsCount: 8,
+    },
+  ];
+}
+

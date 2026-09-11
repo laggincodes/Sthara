@@ -87,7 +87,7 @@ describe("secure role-based cadastral platform foundation", () => {
     expect(homeSource).toContain("/access?returnTo=/overview");
     expect(mainSource).toContain("appearance={clerkAppearance}");
     expect(mainSource).toContain('colorPrimary: "#2ad4d9"');
-    expect(mainSource).toContain('card: "bg-transparent shadow-none border-0 w-full"');
+    expect(mainSource).toContain('card: "bg-transparent shadow-none border-0 w-full text-white"');
     expect(portalStyles).not.toContain(".access-portal__clerk .cl-card");
   });
 });

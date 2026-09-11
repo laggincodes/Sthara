@@ -16,14 +16,18 @@ import {
   getAdminDashboardStats,
   getAuditLogsFiltered,
   getAuthorityDashboardStats,
+  getCadastreFiltered,
   getCadastreRecords,
+  getCertificateData,
   getCitizenDashboardStats,
+  getConflictAlerts,
   getDepartments,
   getDistricts,
   getOrganizations,
   getPlatformDashboardSummary,
   getPlatformUsers,
   getRecentAuditLogs,
+  getAssignedSurveyMissions,
   getSurveyorDashboardStats,
   getUserByClerkUserId,
   getVerificationSubmissions,
@@ -612,6 +616,31 @@ export const appRouter = router({
     officers: authorityAdminProcedure.query(async () =>
       getPlatformUsers({ role: PlatformRoles.AUTHORITY_OFFICER })
     ),
+    assignSurveyTask: authorityProcedure
+      .input(
+        z.object({
+          parcelReference: z.string().trim().min(2),
+          surveyorClerkUserId: z.string().trim().min(3),
+          instructions: z.string().trim().min(6),
+          priority: z.enum(["LOW", "MEDIUM", "HIGH"]).default("MEDIUM"),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        await createAuditLog({
+          actorClerkUserId: ctx.user.clerkUserId,
+          actorRole: String(ctx.user.role),
+          actorName: ctx.user.name,
+          action: "SURVEY_MISSION_DISPATCHED",
+          entityType: "survey_mission",
+          entityId: input.parcelReference,
+          targetUserId: input.surveyorClerkUserId,
+          newValue: JSON.stringify(input),
+        });
+        return {
+          success: true,
+          message: `Survey mission dispatched to field surveyor for parcel ${input.parcelReference}.`,
+        };
+      }),
   }),
 
   // Government Operations Router
@@ -621,6 +650,22 @@ export const appRouter = router({
     ),
     departments: governmentProcedure.query(async () => getDepartments()),
     districts: governmentProcedure.query(async () => getDistricts()),
+    cadastreCatalog: governmentProcedure
+      .input(
+        z
+          .object({
+            query: z.string().optional(),
+            districtId: z.number().optional(),
+            status: z.string().optional(),
+            limit: z.number().optional(),
+          })
+          .optional()
+      )
+      .query(async ({ input }) => getCadastreFiltered(input)),
+    generateCertificateData: governmentProcedure
+      .input(z.object({ ulpinOrReference: z.string().trim().min(2) }))
+      .query(async ({ input }) => getCertificateData(input.ulpinOrReference)),
+    conflictAlerts: governmentProcedure.query(async () => getConflictAlerts()),
   }),
 
   // Field Surveyor Workspace Router
@@ -628,6 +673,38 @@ export const appRouter = router({
     stats: surveyorProcedure.query(async ({ ctx }) =>
       getSurveyorDashboardStats(ctx.user)
     ),
+    assignedMissions: surveyorProcedure.query(async ({ ctx }) =>
+      getAssignedSurveyMissions(ctx.user.clerkUserId)
+    ),
+    submitGcpMeasurement: surveyorProcedure
+      .input(
+        z.object({
+          pointCode: z.string().trim().min(2).max(48),
+          latitude: z.number().min(-90).max(90),
+          longitude: z.number().min(-180).max(180),
+          ellipsoidalHeight: z.number(),
+          rtkAccuracyCm: z.number().positive().max(100).default(2.5),
+          markerType: z.string().trim().default("BENCHMARK_PILLAR"),
+          notes: z.string().trim().optional(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        await createAuditLog({
+          actorClerkUserId: ctx.user.clerkUserId,
+          actorRole: String(ctx.user.role),
+          actorName: ctx.user.name,
+          action: "GCP_BENCHMARK_RECORDED",
+          entityType: "gcp_measurement",
+          entityId: input.pointCode,
+          newValue: JSON.stringify(input),
+        });
+        return {
+          success: true,
+          pointCode: input.pointCode,
+          recordedAt: new Date().toISOString(),
+          accuracyVerified: input.rtkAccuracyCm <= 5.0,
+        };
+      }),
     uploadSurveyData: surveyorProcedure
       .input(uploadInput)
       .mutation(async ({ input, ctx }) => {
@@ -696,6 +773,9 @@ export const appRouter = router({
     stats: citizenProcedure.query(async ({ ctx }) =>
       getCitizenDashboardStats(ctx.user.clerkUserId)
     ),
+    certificate: citizenProcedure
+      .input(z.object({ ulpin: z.string().trim().min(2) }))
+      .query(async ({ input }) => getCertificateData(input.ulpin)),
     submitApplication: citizenProcedure
       .input(evidenceSubmissionInput)
       .mutation(async ({ input, ctx }) =>
