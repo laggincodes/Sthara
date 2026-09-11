@@ -403,6 +403,8 @@ export async function createEvidenceFile(input: {
 
 export type PlatformRole = PlatformRoleInput;
 
+const inMemoryAuditLogs: schema.AuditLog[] = [];
+
 export async function createAuditLog(input: {
   actorClerkUserId: string;
   actorRole: string;
@@ -419,8 +421,28 @@ export async function createAuditLog(input: {
   newValue?: string | null;
   ipAddress?: string | null;
 }) {
+  const memoryLog: schema.AuditLog = {
+    id: inMemoryAuditLogs.length + 1,
+    actorClerkUserId: input.actorClerkUserId,
+    actorRole: input.actorRole,
+    actorName: input.actorName ?? null,
+    action: input.action,
+    entityType: input.entityType,
+    entityId: input.entityId,
+    targetUserId: input.targetUserId ?? null,
+    targetResource: input.targetResource ?? null,
+    departmentId: input.departmentId ?? null,
+    districtId: input.districtId ?? null,
+    metadata: input.metadata ?? null,
+    oldValue: input.oldValue ?? null,
+    newValue: input.newValue ?? null,
+    ipAddress: input.ipAddress ?? null,
+    createdAt: new Date(),
+  };
+  inMemoryAuditLogs.unshift(memoryLog);
+
   const db = await getDb();
-  if (!db) return false;
+  if (!db) return true;
   try {
     await db.insert(auditLogs).values({
       actorClerkUserId: input.actorClerkUserId,
@@ -441,7 +463,7 @@ export async function createAuditLog(input: {
     return true;
   } catch (err) {
     console.warn("[AuditLog] Failed to record audit log:", err);
-    return false;
+    return true;
   }
 }
 
@@ -1031,6 +1053,7 @@ export async function getRecentAuditLogs() {
  * Filtered Audit Logs Query with Multi-Dimensional Search
  */
 export async function getAuditLogsFiltered(filters?: {
+  search?: string;
   actorClerkUserId?: string;
   actorRole?: string;
   action?: string;
@@ -1043,44 +1066,200 @@ export async function getAuditLogsFiltered(filters?: {
   offset?: number;
 }) {
   const db = await getDb();
+  let logs: schema.AuditLog[] = [];
+
+  if (db) {
+    const conditions = [];
+
+    if (filters?.actorClerkUserId) {
+      conditions.push(eq(auditLogs.actorClerkUserId, filters.actorClerkUserId));
+    }
+    if (filters?.actorRole && filters.actorRole !== "ALL") {
+      conditions.push(eq(auditLogs.actorRole, filters.actorRole));
+    }
+    if (filters?.action && filters.action !== "ALL") {
+      conditions.push(eq(auditLogs.action, filters.action));
+    }
+    if (filters?.targetUserId) {
+      conditions.push(eq(auditLogs.targetUserId, filters.targetUserId));
+    }
+    if (filters?.departmentId) {
+      conditions.push(eq(auditLogs.departmentId, filters.departmentId));
+    }
+    if (filters?.districtId) {
+      conditions.push(eq(auditLogs.districtId, filters.districtId));
+    }
+    if (filters?.startDate) {
+      conditions.push(gte(auditLogs.createdAt, filters.startDate));
+    }
+    if (filters?.endDate) {
+      conditions.push(lte(auditLogs.createdAt, filters.endDate));
+    }
+
+    const queryBuilder = db.select().from(auditLogs);
+    if (conditions.length > 0) {
+      logs = await queryBuilder
+        .where(and(...conditions))
+        .orderBy(desc(auditLogs.createdAt))
+        .limit(filters?.limit ?? 150);
+    } else {
+      logs = await queryBuilder
+        .orderBy(desc(auditLogs.createdAt))
+        .limit(filters?.limit ?? 150);
+    }
+  }
+
+  if (logs.length === 0 && inMemoryAuditLogs.length > 0) {
+    logs = [...inMemoryAuditLogs];
+    if (filters?.actorClerkUserId) {
+      logs = logs.filter(l => l.actorClerkUserId === filters.actorClerkUserId);
+    }
+    if (filters?.actorRole && filters.actorRole !== "ALL") {
+      logs = logs.filter(l => l.actorRole === filters.actorRole);
+    }
+    if (filters?.action && filters.action !== "ALL") {
+      logs = logs.filter(l => l.action === filters.action);
+    }
+  }
+
+  if (filters?.search && filters.search.trim().length > 0) {
+    const q = filters.search.trim().toLowerCase();
+    logs = logs.filter(
+      log =>
+        log.action.toLowerCase().includes(q) ||
+        (log.actorName && log.actorName.toLowerCase().includes(q)) ||
+        log.actorClerkUserId.toLowerCase().includes(q) ||
+        (log.targetResource && log.targetResource.toLowerCase().includes(q)) ||
+        (log.entityId && log.entityId.toLowerCase().includes(q)) ||
+        (log.metadata && log.metadata.toLowerCase().includes(q)) ||
+        (log.newValue && log.newValue.toLowerCase().includes(q))
+    );
+  }
+
+  return logs;
+}
+
+/**
+ * Super Admin Omniscient Surveillance Metrics & Live Pulse
+ */
+export async function getAdminSurveillanceMetrics() {
+  const db = await getDb();
+  let allLogs: schema.AuditLog[] = [];
+
+  if (db) {
+    allLogs = await db
+      .select()
+      .from(auditLogs)
+      .orderBy(desc(auditLogs.createdAt))
+      .limit(500);
+  }
+
+  if (allLogs.length === 0 && inMemoryAuditLogs.length > 0) {
+    allLogs = [...inMemoryAuditLogs];
+  }
+
+  if (allLogs.length === 0) {
+    return {
+      totalEvents: 0,
+      events24h: 0,
+      roleDistribution: {
+        SUPER_ADMIN: 0,
+        AUTHORITY_ADMIN: 0,
+        AUTHORITY_OFFICER: 0,
+        GOVERNMENT_EMPLOYEE: 0,
+        SURVEYOR: 0,
+        CITIZEN: 0,
+      },
+      topActions: [],
+      highRiskEventsCount: 0,
+      recentSecurityAlerts: [],
+    };
+  }
+
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const events24h = allLogs.filter(l => new Date(l.createdAt) >= oneDayAgo).length;
+
+  const roleDistribution: Record<string, number> = {
+    SUPER_ADMIN: 0,
+    AUTHORITY_ADMIN: 0,
+    AUTHORITY_OFFICER: 0,
+    GOVERNMENT_EMPLOYEE: 0,
+    SURVEYOR: 0,
+    CITIZEN: 0,
+  };
+  const actionCounts: Record<string, number> = {};
+
+  for (const log of allLogs) {
+    const role = log.actorRole || "CITIZEN";
+    roleDistribution[role] = (roleDistribution[role] || 0) + 1;
+    actionCounts[log.action] = (actionCounts[log.action] || 0) + 1;
+  }
+
+  const topActions = Object.entries(actionCounts)
+    .map(([action, count]) => ({ action, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 6);
+
+  const securityActionKeywords = [
+    "ROLE_CHANGED",
+    "USER_SUSPENDED",
+    "USER_DISABLED",
+    "PROPERTY_REJECTED",
+    "INVITATION_REVOKED",
+    "3D_FOOTPRINT_HEIGHT_SANCTIONED",
+  ];
+
+  const recentSecurityAlerts = allLogs.filter(l =>
+    securityActionKeywords.some(k => l.action.includes(k))
+  );
+
+  return {
+    totalEvents: allLogs.length,
+    events24h,
+    roleDistribution,
+    topActions,
+    highRiskEventsCount: recentSecurityAlerts.length,
+    recentSecurityAlerts: recentSecurityAlerts.slice(0, 6),
+  };
+}
+
+/**
+ * Super Admin User Activity Roster ("Who is Doing What")
+ */
+export async function getUserActivityRoster() {
+  const db = await getDb();
   if (!db) return [];
 
-  const conditions = [];
+  const [allUsers, allLogs] = await Promise.all([
+    db.select().from(users).orderBy(desc(users.lastSignedIn)).limit(100),
+    db.select().from(auditLogs).orderBy(desc(auditLogs.createdAt)).limit(1000),
+  ]);
 
-  if (filters?.actorClerkUserId) {
-    conditions.push(eq(auditLogs.actorClerkUserId, filters.actorClerkUserId));
-  }
-  if (filters?.actorRole) {
-    conditions.push(eq(auditLogs.actorRole, filters.actorRole));
-  }
-  if (filters?.action) {
-    conditions.push(eq(auditLogs.action, filters.action));
-  }
-  if (filters?.targetUserId) {
-    conditions.push(eq(auditLogs.targetUserId, filters.targetUserId));
-  }
-  if (filters?.departmentId) {
-    conditions.push(eq(auditLogs.departmentId, filters.departmentId));
-  }
-  if (filters?.districtId) {
-    conditions.push(eq(auditLogs.districtId, filters.districtId));
-  }
-  if (filters?.startDate) {
-    conditions.push(gte(auditLogs.createdAt, filters.startDate));
-  }
-  if (filters?.endDate) {
-    conditions.push(lte(auditLogs.createdAt, filters.endDate));
+  const userLogsMap = new Map<string, schema.AuditLog[]>();
+  for (const log of allLogs) {
+    const list = userLogsMap.get(log.actorClerkUserId) || [];
+    list.push(log);
+    userLogsMap.set(log.actorClerkUserId, list);
   }
 
-  const queryBuilder = db.select().from(auditLogs);
-  if (conditions.length > 0) {
-    return queryBuilder
-      .where(and(...conditions))
-      .orderBy(desc(auditLogs.createdAt))
-      .limit(filters?.limit ?? 100);
-  }
-
-  return queryBuilder.orderBy(desc(auditLogs.createdAt)).limit(filters?.limit ?? 100);
+  return allUsers.map(user => {
+    const userLogs = userLogsMap.get(user.clerkUserId) || [];
+    return {
+      id: user.id,
+      clerkUserId: user.clerkUserId,
+      name: user.name || "Anonymous User",
+      email: user.email || "",
+      role: user.role,
+      status: user.status,
+      designation: user.designation,
+      departmentId: user.departmentId,
+      districtId: user.districtId,
+      lastSignedIn: user.lastSignedIn,
+      totalActionsCount: userLogs.length,
+      lastAction: userLogs[0]?.action || null,
+      lastActionTimestamp: userLogs[0]?.createdAt || null,
+    };
+  });
 }
 
 /**

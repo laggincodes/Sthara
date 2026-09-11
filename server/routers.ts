@@ -27,6 +27,8 @@ import {
   getPlatformDashboardSummary,
   getPlatformUsers,
   getRecentAuditLogs,
+  getAdminSurveillanceMetrics,
+  getUserActivityRoster,
   getAssignedSurveyMissions,
   getSurveyorDashboardStats,
   getUserByClerkUserId,
@@ -552,10 +554,19 @@ export const appRouter = router({
       rolePermissions: ROLE_PERMISSIONS,
     })),
 
+    surveillanceStats: superAdminProcedure.query(async () =>
+      getAdminSurveillanceMetrics()
+    ),
+
+    userActivityRoster: superAdminProcedure.query(async () =>
+      getUserActivityRoster()
+    ),
+
     auditLogs: superAdminProcedure
       .input(
         z
           .object({
+            search: z.string().optional(),
             actorClerkUserId: z.string().optional(),
             actorRole: z.string().optional(),
             action: z.string().optional(),
@@ -664,7 +675,24 @@ export const appRouter = router({
       .query(async ({ input }) => getCadastreFiltered(input)),
     generateCertificateData: governmentProcedure
       .input(z.object({ ulpinOrReference: z.string().trim().min(2) }))
-      .query(async ({ input }) => getCertificateData(input.ulpinOrReference)),
+      .query(async ({ input, ctx }) => {
+        const cert = await getCertificateData(input.ulpinOrReference);
+        await createAuditLog({
+          actorClerkUserId: ctx.user.clerkUserId,
+          actorRole: String(ctx.user.role),
+          actorName: ctx.user.name,
+          action: "OFFICIAL_3D_CERTIFICATE_GENERATED",
+          entityType: "certificate",
+          entityId: cert.ulpin,
+          targetResource: cert.ulpin,
+          newValue: JSON.stringify({
+            certificateNumber: cert.certificateNumber,
+            ulpin: cert.ulpin,
+            generatedAt: new Date().toISOString(),
+          }),
+        });
+        return cert;
+      }),
     conflictAlerts: governmentProcedure.query(async () => getConflictAlerts()),
   }),
 
@@ -775,7 +803,23 @@ export const appRouter = router({
     ),
     certificate: citizenProcedure
       .input(z.object({ ulpin: z.string().trim().min(2) }))
-      .query(async ({ input }) => getCertificateData(input.ulpin)),
+      .query(async ({ input, ctx }) => {
+        const cert = await getCertificateData(input.ulpin);
+        await createAuditLog({
+          actorClerkUserId: ctx.user.clerkUserId,
+          actorRole: String(ctx.user.role),
+          actorName: ctx.user.name,
+          action: "DIGITAL_ULPIN_CARD_GENERATED",
+          entityType: "citizen_card",
+          entityId: cert.ulpin,
+          targetResource: cert.ulpin,
+          newValue: JSON.stringify({
+            ulpin: cert.ulpin,
+            generatedAt: new Date().toISOString(),
+          }),
+        });
+        return cert;
+      }),
     submitApplication: citizenProcedure
       .input(evidenceSubmissionInput)
       .mutation(async ({ input, ctx }) =>

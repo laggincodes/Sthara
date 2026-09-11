@@ -735,7 +735,7 @@ export default function RoleConsole() {
               <h2>Recent sensitive actions</h2>
               <div className="role-console__audit-list">
                 {auditLogs.data?.length ? (
-                  auditLogs.data.map(log => (
+                  auditLogs.data.map((log: any) => (
                     <div key={log.id}>
                       <b>{log.action.replaceAll("_", " ")}</b>
                       <span>
