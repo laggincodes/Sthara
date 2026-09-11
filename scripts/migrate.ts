@@ -79,6 +79,42 @@ async function runMigration() {
     `);
     console.log("✅ Master table columns aligned.");
 
+    // Create invitations table if not exists
+    console.log("⚡ Ensuring invitations and password_reset_tokens tables exist...");
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "invitations" (
+        "id" serial PRIMARY KEY NOT NULL,
+        "email" varchar(320) NOT NULL,
+        "name" varchar(160),
+        "phone" varchar(48),
+        "assignedRole" "platform_role" NOT NULL,
+        "tokenHash" varchar(128) NOT NULL UNIQUE,
+        "status" varchar(32) DEFAULT 'PENDING' NOT NULL,
+        "departmentId" integer,
+        "districtId" integer,
+        "organizationId" integer,
+        "jurisdiction" text,
+        "designation" varchar(160),
+        "createdByClerkUserId" varchar(96),
+        "createdByEmail" varchar(320),
+        "expiresAt" timestamp NOT NULL,
+        "acceptedAt" timestamp,
+        "createdAt" timestamp DEFAULT now() NOT NULL,
+        "updatedAt" timestamp DEFAULT now() NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS "password_reset_tokens" (
+        "id" serial PRIMARY KEY NOT NULL,
+        "email" varchar(320) NOT NULL,
+        "tokenHash" varchar(128) NOT NULL UNIQUE,
+        "status" varchar(32) DEFAULT 'PENDING' NOT NULL,
+        "expiresAt" timestamp NOT NULL,
+        "usedAt" timestamp,
+        "createdAt" timestamp DEFAULT now() NOT NULL
+      );
+    `);
+    console.log("✅ Token & invitation tables verified.");
+
     client.release();
 
     // Now seed master reference data

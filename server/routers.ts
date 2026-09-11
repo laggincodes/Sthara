@@ -37,7 +37,18 @@ import { extractEvidenceMetadata } from "./evidenceExtraction";
 import {
   getPendingClerkInvitations,
   resendClerkStaffInvitation,
+  createClerkStaffInvitation,
 } from "./clerkInvitationService";
+import {
+  createInvitationTokenRecord,
+  verifyInvitationToken,
+  acceptInvitationAndSetPassword,
+  getAllInvitations,
+  revokeInvitationToken,
+  requestPasswordReset,
+  verifyPasswordResetToken,
+  resetPasswordWithToken,
+} from "./invitationTokenService";
 import { invokeLLM } from "./_core/llm";
 import { systemRouter } from "./_core/systemRouter";
 import {
@@ -231,6 +242,22 @@ const updateJurisdictionInput = z.object({
   phone: z.string().trim().max(32).nullable().optional(),
 });
 
+const acceptInvitationInput = z.object({
+  token: z.string().trim().min(1, "Invitation token is required."),
+  password: z.string().min(8, "Password must be at least 8 characters long."),
+  confirmPassword: z.string().min(8, "Confirm password must be at least 8 characters long."),
+});
+
+const forgotPasswordInput = z.object({
+  email: z.string().trim().email("Valid official email required."),
+});
+
+const resetPasswordInput = z.object({
+  token: z.string().trim().min(1, "Reset token is required."),
+  password: z.string().min(8, "Password must be at least 8 characters long."),
+  confirmPassword: z.string().min(8, "Confirm password must be at least 8 characters long."),
+});
+
 function safeFileName(fileName: string) {
   return (
     fileName
@@ -259,6 +286,7 @@ export const appRouter = router({
         permissions,
       };
     }),
+
     logout: publicProcedure.mutation(async ({ ctx }) => {
       if (ctx.user) {
         await createAuditLog({
@@ -272,6 +300,50 @@ export const appRouter = router({
       }
       return { success: true } as const;
     }),
+
+    verifyInvitationToken: publicProcedure
+      .input(z.object({ token: z.string().trim().min(1) }))
+      .query(async ({ input }) => {
+        return verifyInvitationToken(input.token);
+      }),
+
+    acceptInvitation: publicProcedure
+      .input(acceptInvitationInput)
+      .mutation(async ({ input }) => {
+        try {
+          return await acceptInvitationAndSetPassword(input);
+        } catch (error: any) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: error.message || "Failed to activate account.",
+          });
+        }
+      }),
+
+    forgotPassword: publicProcedure
+      .input(forgotPasswordInput)
+      .mutation(async ({ input }) => {
+        return requestPasswordReset(input.email);
+      }),
+
+    verifyResetToken: publicProcedure
+      .input(z.object({ token: z.string().trim().min(1) }))
+      .query(async ({ input }) => {
+        return verifyPasswordResetToken(input.token);
+      }),
+
+    resetPassword: publicProcedure
+      .input(resetPasswordInput)
+      .mutation(async ({ input }) => {
+        try {
+          return await resetPasswordWithToken(input);
+        } catch (error: any) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: error.message || "Failed to reset password.",
+          });
+        }
+      }),
   }),
 
   // Super Admin Control Room Router
@@ -295,14 +367,50 @@ export const appRouter = router({
 
     inviteAuthority: superAdminProcedure
       .input(inviteAuthorityInput)
-      .mutation(async ({ input, ctx }) =>
-        inviteAuthorityUser({
-          ...input,
-          actorClerkUserId: ctx.user.clerkUserId,
-          actorRole: ctx.user.role,
-          actorName: ctx.user.name,
-        })
-      ),
+      .mutation(async ({ input, ctx }) => {
+        const tokenRecord = await createInvitationTokenRecord(input, {
+          clerkUserId: ctx.user.clerkUserId,
+          role: ctx.user.role,
+          name: ctx.user.name,
+          email: ctx.user.email,
+        });
+
+        const clerkResult = await createClerkStaffInvitation({
+          email: input.email,
+          role: input.role,
+          departmentId: input.departmentId,
+          districtId: input.districtId,
+          organizationId: input.organizationId,
+          designation: input.designation,
+          redirectUrl: tokenRecord.invitationUrl,
+        });
+
+        return {
+          success: true,
+          email: input.email,
+          role: input.role,
+          invitationId: tokenRecord.invitationId,
+          invitationUrl: tokenRecord.invitationUrl,
+          rawToken: tokenRecord.rawToken,
+          expiresAt: tokenRecord.expiresAt,
+          clerkResult,
+        };
+      }),
+
+    invitations: superAdminProcedure.query(async () => {
+      return getAllInvitations();
+    }),
+
+    revokeInvitation: superAdminProcedure
+      .input(z.object({ invitationId: z.number().int().positive() }))
+      .mutation(async ({ input, ctx }) => {
+        return revokeInvitationToken(input.invitationId, {
+          clerkUserId: ctx.user.clerkUserId,
+          role: ctx.user.role,
+          name: ctx.user.name,
+          email: ctx.user.email,
+        });
+      }),
 
     pendingInvitations: superAdminProcedure.query(async () =>
       getPendingClerkInvitations()

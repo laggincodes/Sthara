@@ -228,28 +228,56 @@ export async function upsertUser(user: Partial<InsertUser>): Promise<void> {
     user.email ?? existing?.email
   );
 
+  const resolvedRole = isSuperAdminEmail
+    ? PlatformRoles.SUPER_ADMIN
+    : (user.role ?? existing?.role ?? PlatformRoles.CITIZEN);
+
+  const resolvedStatus =
+    user.status ??
+    (existing?.status === UserStatuses.INVITED
+      ? UserStatuses.ACTIVE
+      : (existing?.status ?? UserStatuses.ACTIVE));
+
+  // If upgrading a pre-provisioned invitation account by email to official clerk user ID
+  if (existing && existing.clerkUserId !== user.clerkUserId) {
+    await db
+      .update(users)
+      .set({
+        clerkUserId: user.clerkUserId,
+        name: user.name ?? existing.name,
+        role: resolvedRole as schema.User["role"],
+        status: resolvedStatus,
+        designation: user.designation ?? existing.designation,
+        departmentId: user.departmentId ?? existing.departmentId,
+        districtId: user.districtId ?? existing.districtId,
+        organizationId: user.organizationId ?? existing.organizationId,
+        jurisdiction: user.jurisdiction ?? existing.jurisdiction,
+        invitationAcceptedAt: user.invitationAcceptedAt ?? (existing.status === UserStatuses.INVITED ? new Date() : existing.invitationAcceptedAt),
+        lastSignedIn: user.lastSignedIn ?? new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, existing.id));
+    return;
+  }
+
   const values: InsertUser = {
     clerkUserId: user.clerkUserId,
     name: user.name ?? existing?.name ?? null,
     email: user.email ?? existing?.email ?? null,
     phone: user.phone ?? existing?.phone ?? null,
     loginMethod: user.loginMethod ?? existing?.loginMethod ?? "clerk",
-    role: isSuperAdminEmail
-      ? PlatformRoles.SUPER_ADMIN
-      : (user.role ?? existing?.role ?? PlatformRoles.CITIZEN),
-    status:
-      existing?.status === UserStatuses.INVITED
-        ? UserStatuses.ACTIVE
-        : (user.status ?? existing?.status ?? UserStatuses.ACTIVE),
+    role: resolvedRole as schema.User["role"],
+    status: resolvedStatus,
     designation: user.designation ?? existing?.designation ?? null,
     departmentId: user.departmentId ?? existing?.departmentId ?? null,
     districtId: user.districtId ?? existing?.districtId ?? null,
     organizationId: user.organizationId ?? existing?.organizationId ?? null,
     jurisdiction: user.jurisdiction ?? existing?.jurisdiction ?? null,
     invitationAcceptedAt:
-      existing?.status === UserStatuses.INVITED
+      user.invitationAcceptedAt ??
+      (existing?.status === UserStatuses.INVITED
         ? new Date()
-        : existing?.invitationAcceptedAt,
+        : existing?.invitationAcceptedAt),
     lastSignedIn: user.lastSignedIn ?? new Date(),
   };
 
@@ -503,6 +531,18 @@ export async function setPlatformUserRole(input: {
   actorRole: PlatformRole;
   actorName?: string | null;
 }) {
+  if (input.clerkUserId === input.actorClerkUserId) {
+    throw new Error("Administrators cannot change their own role.");
+  }
+
+  const targetCanon = canonicalRole(input.role);
+  const actorCanon = canonicalRole(input.actorRole);
+
+  // Only SUPER_ADMIN can assign SUPER_ADMIN role
+  if (targetCanon === PlatformRoles.SUPER_ADMIN && actorCanon !== PlatformRoles.SUPER_ADMIN) {
+    throw new Error("Only a Super Administrator can assign the Super Admin role.");
+  }
+
   const db = await getDb();
   if (!db) throw new Error("Platform database is unavailable.");
   const existing = await getUserByClerkUserId(input.clerkUserId);

@@ -75,6 +75,15 @@ export default function StaffLogin() {
                 fallbackRedirectUrl="/authority/dashboard"
               />
             </div>
+
+            <div className="mt-6 flex flex-col items-center gap-2 text-xs text-slate-400">
+              <Link
+                href="/forgot-password"
+                className="text-cyan-400 hover:text-cyan-300 hover:underline"
+              >
+                Forgot your password?
+              </Link>
+            </div>
           </div>
         </section>
       </div>

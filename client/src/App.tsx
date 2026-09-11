@@ -26,6 +26,9 @@ import GovernmentDashboard from "./pages/government/GovernmentDashboard";
 import SurveyorDashboard from "./pages/surveyor/SurveyorDashboard";
 import StaffLogin from "./pages/auth/StaffLogin";
 import AdminLogin from "./pages/auth/AdminLogin";
+import AcceptInvitation from "./pages/auth/AcceptInvitation";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import ResetPassword from "./pages/auth/ResetPassword";
 
 function Router() {
   return (
@@ -38,6 +41,9 @@ function Router() {
       <Route path="/signup" component={AccessPortal} />
       <Route path="/staff/login" component={StaffLogin} />
       <Route path="/admin/login" component={AdminLogin} />
+      <Route path="/accept-invitation" component={AcceptInvitation} />
+      <Route path="/forgot-password" component={ForgotPassword} />
+      <Route path="/reset-password" component={ResetPassword} />
 
       {/* 3D GIS & Registry */}
       <Route path="/workspace" component={SpatialWorkspace} />

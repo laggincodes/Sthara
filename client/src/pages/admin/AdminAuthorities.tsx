@@ -63,11 +63,24 @@ export default function AdminAuthorities() {
   const distsQuery = trpc.admin.districts.useQuery();
   const orgsQuery = trpc.admin.organizations.useQuery();
   const pendingInvitesQuery = trpc.admin.pendingInvitations.useQuery();
+  const invitationsQuery = trpc.admin.invitations.useQuery();
+
+  const revokeMutation = trpc.admin.revokeInvitation.useMutation({
+    onSuccess: (data) => {
+      toast.success(data.message);
+      void utils.admin.invitations.invalidate();
+      void utils.admin.users.invalidate();
+    },
+    onError: (err) => {
+      toast.error(err.message || "Failed to revoke invitation");
+    },
+  });
 
   const resendMutation = trpc.admin.resendInvitation.useMutation({
     onSuccess: (data, variables) => {
       toast.success(`Invitation resent to ${variables.email}!`);
       void utils.admin.pendingInvitations.invalidate();
+      void utils.admin.invitations.invalidate();
       void utils.admin.users.invalidate();
       if (data.invitationUrl) {
         setLatestInviteUrl(data.invitationUrl);
@@ -87,8 +100,9 @@ export default function AdminAuthorities() {
       );
       setInviteModalOpen(false);
 
-      if (data.clerkResult?.invitationUrl) {
-        setLatestInviteUrl(data.clerkResult.invitationUrl);
+      const targetUrl = data.invitationUrl || data.clerkResult?.invitationUrl;
+      if (targetUrl) {
+        setLatestInviteUrl(targetUrl);
         setLatestInviteEmail(data.email);
         setSuccessLinkModalOpen(true);
       }
@@ -100,6 +114,7 @@ export default function AdminAuthorities() {
       setDesignation("");
       setJurisdiction("");
       void utils.admin.users.invalidate();
+      void utils.admin.invitations.invalidate();
       void utils.admin.stats.invalidate();
       void utils.admin.auditLogs.invalidate();
       void utils.admin.pendingInvitations.invalidate();
@@ -394,6 +409,141 @@ export default function AdminAuthorities() {
                     <tr>
                       <td colSpan={6} className="py-12 text-center text-slate-500">
                         No authority staff users provisioned yet. Click "+ Add Authority" to invite officers.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Cryptographic Invitations & Token Security Audit Table */}
+          <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur">
+            <div className="flex items-center justify-between border-b border-slate-800 p-4">
+              <div className="flex items-center gap-2">
+                <Mail size={18} className="text-cyan-400" />
+                <span className="font-bold text-sm text-white">
+                  Cryptographic Account Invitations & Security Log ({(invitationsQuery.data ?? []).length})
+                </span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-slate-800 text-xs text-slate-300 hover:bg-slate-800"
+                onClick={() => void invitationsQuery.refetch()}
+              >
+                <RefreshCw
+                  size={14}
+                  className={`mr-1.5 ${invitationsQuery.isFetching ? "animate-spin" : ""}`}
+                />
+                Refresh Tokens
+              </Button>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="border-b border-slate-800 bg-slate-950/80 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                  <tr>
+                    <th className="px-5 py-3.5">Recipient & Assigned Role</th>
+                    <th className="px-5 py-3.5">Token Status</th>
+                    <th className="px-5 py-3.5">Created At</th>
+                    <th className="px-5 py-3.5">Expires At</th>
+                    <th className="px-5 py-3.5 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60">
+                  {(invitationsQuery.data ?? []).length > 0 ? (
+                    (invitationsQuery.data ?? []).map(inv => {
+                      const isExpired =
+                        inv.status === "EXPIRED" ||
+                        new Date(inv.expiresAt) < new Date();
+                      const statusColor =
+                        inv.status === "ACCEPTED"
+                          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                          : inv.status === "REVOKED"
+                          ? "bg-rose-500/10 text-rose-400 border-rose-500/20"
+                          : isExpired
+                          ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                          : "bg-blue-500/10 text-blue-400 border-blue-500/20";
+
+                      const displayStatus =
+                        inv.status === "PENDING" && isExpired
+                          ? "EXPIRED"
+                          : inv.status;
+
+                      return (
+                        <tr key={inv.id} className="hover:bg-slate-800/30 transition">
+                          <td className="px-5 py-3.5">
+                            <div className="font-semibold text-white">
+                              {inv.name || inv.email}
+                            </div>
+                            <div className="text-slate-400 text-[11px]">
+                              {inv.email}
+                            </div>
+                            <div className="text-cyan-400 text-[10px] font-mono mt-0.5">
+                              Role: {formatRole(inv.assignedRole)}
+                            </div>
+                          </td>
+                          <td className="px-5 py-3.5">
+                            <span
+                              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-semibold border ${statusColor}`}
+                            >
+                              <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                              {displayStatus}
+                            </span>
+                          </td>
+                          <td className="px-5 py-3.5 text-slate-400 text-[11px]">
+                            {new Date(inv.createdAt).toLocaleString()}
+                          </td>
+                          <td className="px-5 py-3.5 text-slate-400 text-[11px]">
+                            {new Date(inv.expiresAt).toLocaleString()}
+                          </td>
+                          <td className="px-5 py-3.5 text-right space-x-2">
+                            {inv.status === "PENDING" && !isExpired ? (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 px-2 text-[10px] text-cyan-400 hover:text-cyan-300 hover:bg-slate-800"
+                                  disabled={resendMutation.isPending}
+                                  onClick={() =>
+                                    resendMutation.mutate({
+                                      email: inv.email,
+                                      role: inv.assignedRole,
+                                    })
+                                  }
+                                >
+                                  Resend
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 px-2 text-[10px] text-rose-400 hover:text-rose-300 hover:bg-rose-500/10"
+                                  disabled={revokeMutation.isPending}
+                                  onClick={() =>
+                                    revokeMutation.mutate({
+                                      invitationId: inv.id,
+                                    })
+                                  }
+                                >
+                                  Revoke
+                                </Button>
+                              </>
+                            ) : (
+                              <span className="text-slate-500 text-[11px]">
+                                {inv.status === "ACCEPTED"
+                                  ? `Activated ${inv.acceptedAt ? new Date(inv.acceptedAt).toLocaleDateString() : ""}`
+                                  : "Completed"}
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan={5} className="py-8 text-center text-slate-500">
+                        No invitations recorded yet.
                       </td>
                     </tr>
                   )}

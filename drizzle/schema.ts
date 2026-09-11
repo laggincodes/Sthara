@@ -201,6 +201,37 @@ export const auditLogs = pgTable("auditLogs", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
+export const invitations = pgTable("invitations", {
+  id: serial("id").primaryKey(),
+  email: varchar("email", { length: 320 }).notNull(),
+  name: varchar("name", { length: 160 }),
+  phone: varchar("phone", { length: 48 }),
+  assignedRole: platformRole("assignedRole").notNull(),
+  tokenHash: varchar("tokenHash", { length: 128 }).notNull().unique(),
+  status: varchar("status", { length: 32 }).default("PENDING").notNull(), // PENDING, ACCEPTED, EXPIRED, REVOKED
+  departmentId: integer("departmentId"),
+  districtId: integer("districtId"),
+  organizationId: integer("organizationId"),
+  jurisdiction: text("jurisdiction"),
+  designation: varchar("designation", { length: 160 }),
+  createdByClerkUserId: varchar("createdByClerkUserId", { length: 96 }),
+  createdByEmail: varchar("createdByEmail", { length: 320 }),
+  expiresAt: timestamp("expiresAt").notNull(),
+  acceptedAt: timestamp("acceptedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: serial("id").primaryKey(),
+  email: varchar("email", { length: 320 }).notNull(),
+  tokenHash: varchar("tokenHash", { length: 128 }).notNull().unique(),
+  status: varchar("status", { length: 32 }).default("PENDING").notNull(), // PENDING, USED, EXPIRED
+  expiresAt: timestamp("expiresAt").notNull(),
+  usedAt: timestamp("usedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
@@ -218,3 +249,10 @@ export type InsertRolePermission = typeof rolePermissions.$inferInsert;
 
 export type AuditLog = typeof auditLogs.$inferSelect;
 export type InsertAuditLog = typeof auditLogs.$inferInsert;
+
+export type Invitation = typeof invitations.$inferSelect;
+export type InsertInvitation = typeof invitations.$inferInsert;
+
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
+export type InsertPasswordResetToken = typeof passwordResetTokens.$inferInsert;
+
