@@ -154,6 +154,14 @@ export default function CitizenDashboard() {
               >
                 <Plus size={16} className="mr-1.5" /> Submit Property Request
               </Button>
+              <Link href="/floor-explorer">
+                <Button
+                  size="sm"
+                  className="bg-indigo-600 font-semibold text-white hover:bg-indigo-500 shadow-md shadow-indigo-900/30"
+                >
+                  <Layers size={16} className="mr-1.5" /> 3D Floor Explorer
+                </Button>
+              </Link>
               <Link href="/workspace">
                 <Button
                   variant="outline"

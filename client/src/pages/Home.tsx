@@ -88,6 +88,7 @@ type LayerKey = "parcels" | "buildings" | "utilities" | "terrain";
 const navItems: { icon: LucideIcon; label: string; caption?: string }[] = [
   { icon: Grid3X3, label: "Mission control" },
   { icon: MapPinned, label: "3D workspace" },
+  { icon: Layers3, label: "3D Floor Explorer", caption: "NEW" },
   { icon: Box, label: "Parcels", caption: "1,248" },
   { icon: Building2, label: "Buildings", caption: "342" },
   { icon: Layers3, label: "Property volumes" },
@@ -1177,6 +1178,17 @@ export default function Home() {
                 <small>Review issuance eligibility</small>
               </span>
               <ArrowUpRight size={15} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setLocation("/floor-explorer")}
+            >
+              <Layers3 size={17} className="text-sky-400" />
+              <span>
+                <b className="text-sky-400">05 · 3D Floor Explorer</b>
+                <small>Exploded floor separation &amp; units</small>
+              </span>
+              <ArrowUpRight size={15} className="text-sky-400" />
             </button>
           </section>
 

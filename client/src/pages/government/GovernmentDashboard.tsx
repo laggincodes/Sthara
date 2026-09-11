@@ -156,6 +156,14 @@ export default function GovernmentDashboard() {
             </div>
 
             <div className="flex items-center gap-3">
+              <Link href="/floor-explorer">
+                <Button
+                  size="sm"
+                  className="bg-indigo-600 font-semibold text-white hover:bg-indigo-500 shadow-md shadow-indigo-900/30"
+                >
+                  <Layers size={16} className="mr-1.5" /> 3D Floor Cadastre
+                </Button>
+              </Link>
               <Link href="/workspace">
                 <Button
                   size="sm"

@@ -24,6 +24,14 @@ import {
   type CadastreRecord,
 } from "@shared/cadastre";
 import {
+  getBuildingFloorStackRecord,
+  getUnitCadastreDetails as getUnitDetailsFromCadastre,
+  SAMPLE_BUILDING_FLOOR_STACKS,
+  type BuildingFloorStackRecord,
+  type FloorStackLevel,
+  type FloorUnitCadastre,
+} from "@shared/floorCadastre";
+import {
   canonicalRole,
   CanonicalPlatformRole,
   PlatformRoles,
@@ -1621,5 +1629,28 @@ export async function getAssignedSurveyMissions(surveyorClerkUserId?: string) {
       gcpPointsCount: 8,
     },
   ];
+}
+
+/**
+ * 3D Floor Cadastre & Unit-Level Volumetric Slicing Methods
+ */
+export async function getBuildingFloorStack(buildingIdOrUlpin: string): Promise<BuildingFloorStackRecord> {
+  const stack = getBuildingFloorStackRecord(buildingIdOrUlpin);
+  if (!stack) {
+    return SAMPLE_BUILDING_FLOOR_STACKS[0];
+  }
+  return stack;
+}
+
+export async function getAllBuildingFloorStacks(): Promise<BuildingFloorStackRecord[]> {
+  return SAMPLE_BUILDING_FLOOR_STACKS;
+}
+
+export async function getUnitCadastreDetails(ulpin3d: string): Promise<{
+  building: BuildingFloorStackRecord;
+  floor: FloorStackLevel;
+  unit: FloorUnitCadastre;
+} | null> {
+  return getUnitDetailsFromCadastre(ulpin3d);
 }
 

@@ -33,6 +33,9 @@ import {
   getSurveyorDashboardStats,
   getUserByClerkUserId,
   getVerificationSubmissions,
+  getBuildingFloorStack,
+  getAllBuildingFloorStacks,
+  getUnitCadastreDetails,
   inviteAuthorityUser,
   reviewVerificationSubmission,
   setPlatformUserRole,
@@ -1117,6 +1120,22 @@ export const appRouter = router({
             category: input.category,
           },
         };
+      }),
+
+    buildingFloorStacksList: publicProcedure.query(async () => {
+      return getAllBuildingFloorStacks();
+    }),
+
+    buildingFloorStack: publicProcedure
+      .input(z.object({ buildingIdOrUlpin: z.string().trim().min(1) }))
+      .query(async ({ input }) => {
+        return getBuildingFloorStack(input.buildingIdOrUlpin);
+      }),
+
+    unitDetails: publicProcedure
+      .input(z.object({ ulpin3d: z.string().trim().min(1) }))
+      .query(async ({ input }) => {
+        return getUnitCadastreDetails(input.ulpin3d);
       }),
   }),
 

@@ -12,6 +12,7 @@ import RoleConsole, { AccessPortal } from "./pages/RoleConsole";
 import SpatialWorkspace from "./pages/SpatialWorkspace";
 import SyntheticGcpDemo from "./pages/SyntheticGcpDemo";
 import UlpInRegistry from "./pages/UlpInRegistry";
+import FloorExplorer from "./pages/FloorExplorer";
 
 // Admin & Staff Pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -47,6 +48,7 @@ function Router() {
 
       {/* 3D GIS & Registry */}
       <Route path="/workspace" component={SpatialWorkspace} />
+      <Route path="/floor-explorer" component={FloorExplorer} />
       <Route path="/property-volumes" component={PropertyVolumes} />
       <Route path="/ulpin-registry" component={UlpInRegistry} />
       <Route path="/synthetic-gcp-demo" component={SyntheticGcpDemo} />

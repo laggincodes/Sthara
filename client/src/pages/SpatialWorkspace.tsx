@@ -660,6 +660,9 @@ export default function SpatialWorkspace() {
           <button type="button" onClick={() => setLocation("/overview")}>
             <Layers3 size={17} /> Command home
           </button>
+          <button type="button" onClick={() => setLocation("/floor-explorer")}>
+            <Layers3 size={17} className="text-sky-400" /> 3D Floor Explorer
+          </button>
           <button type="button" onClick={() => setLocation("/ulpin-registry")}>
             <ShieldCheck size={17} /> ULPIN registry
           </button>

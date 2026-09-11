@@ -1,4 +1,5 @@
-import { Building2, CheckCircle2, MapPin, ShieldAlert } from "lucide-react";
+import { Building2, CheckCircle2, MapPin, ShieldAlert, Layers, Sparkles } from "lucide-react";
+import { useLocation } from "wouter";
 import type { DetailedMapSelection } from "@/components/CesiumSpatialViewer";
 
 type BuildingInformationPanelProps = {
@@ -72,6 +73,7 @@ function Field({ label, children }: { label: string; children: string }) {
 export function BuildingInformationPanel({
   selection,
 }: BuildingInformationPanelProps) {
+  const [, setLocation] = useLocation();
   if (!selection) {
     return (
       <section
@@ -264,6 +266,17 @@ export function BuildingInformationPanel({
             ))}
           </div>
         )}
+      </div>
+      <div className="pt-2 pb-1">
+        <button
+          type="button"
+          onClick={() => setLocation("/floor-explorer?building=patna-central-heights")}
+          className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold text-xs shadow-lg shadow-sky-500/25 transition-all active:scale-[0.98]"
+        >
+          <Layers size={14} />
+          <span>Launch 3D Exploded Floor Explorer</span>
+          <Sparkles size={12} className="text-amber-300" />
+        </button>
       </div>
       <div className="building-information-verification">
         <MapPin size={14} />
