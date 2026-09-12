@@ -776,35 +776,37 @@ export default function SpatialWorkspace() {
                 sampleAsset={sampleAsset}
               />
 
-              {/* Floating On-Map 3D Floor Slicer & Explosion Dock */}
-              {sourceMapView === "3d" && floorStackData && (
-                <div className="absolute top-4 left-4 z-20 flex flex-col gap-2 p-3 bg-slate-950/90 backdrop-blur-md border border-cyan-500/40 rounded-2xl shadow-2xl max-w-sm text-slate-100 ring-1 ring-cyan-500/20">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse" />
-                      <span className="text-xs font-extrabold uppercase tracking-wider text-cyan-300">
-                        3D Floor Slicer
-                      </span>
-                    </div>
-                    <span className="text-[10px] font-mono bg-cyan-950/90 px-2 py-0.5 rounded text-cyan-200 border border-cyan-700/60">
+              <div className="spatial-stage-grid" />
+              <div className="spatial-stage-vignette" />
+            </section>
+
+            {/* Dedicated 3D Floor Slicer & Vertical Cadastre Ribbon (Positioned Below the Map) */}
+            {sourceMapView === "3d" && floorStackData && (
+              <div className="p-3.5 bg-slate-900/95 border border-cyan-500/30 rounded-xl shadow-xl flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 text-slate-100">
+                {/* Left: Heading & Floor Selector Pills */}
+                <div className="flex flex-col gap-2 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse" />
+                    <span className="text-xs font-bold uppercase tracking-wider text-cyan-300">
+                      3D Floor Slicer & Vertical Cadastre
+                    </span>
+                    <span className="text-[10px] font-mono bg-cyan-950 px-2 py-0.5 rounded text-cyan-200 border border-cyan-700/60">
                       {activeFloorIndex === null
                         ? "All Floors (Stacked)"
-                        : `Level ${floorStackData.floors.find(f => f.floorIndex === activeFloorIndex)?.floorCode || ""}`}
+                        : `Active: Level ${floorStackData.floors.find(f => f.floorIndex === activeFloorIndex)?.floorCode || ""}`}
                     </span>
                   </div>
-
-                  {/* Floor Level Buttons */}
-                  <div className="flex flex-wrap gap-1 items-center mt-0.5">
+                  <div className="flex flex-wrap gap-1.5 items-center">
                     <button
                       type="button"
                       onClick={() => setActiveFloorIndex(null)}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                         activeFloorIndex === null
-                          ? "bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/30"
-                          : "bg-slate-900/90 text-slate-300 hover:bg-slate-800 border border-slate-700/60"
+                          ? "bg-cyan-400 text-slate-950 shadow-md shadow-cyan-400/40 font-extrabold"
+                          : "bg-slate-800/90 text-slate-300 hover:bg-slate-700 border border-slate-700/70"
                       }`}
                     >
-                      All
+                      All Floors
                     </button>
                     {floorStackData.floors.map(floor => {
                       const isActive = activeFloorIndex === floor.floorIndex;
@@ -813,12 +815,12 @@ export default function SpatialWorkspace() {
                           key={floor.floorIndex}
                           type="button"
                           onClick={() => setActiveFloorIndex(floor.floorIndex)}
-                          className={`px-2 py-1 rounded-lg text-xs font-bold transition-all ${
+                          className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
                             isActive
                               ? "bg-gradient-to-r from-cyan-400 to-sky-400 text-slate-950 shadow-md shadow-cyan-500/40 ring-2 ring-cyan-200 font-extrabold"
                               : floor.isUnauthorizedFloor
-                                ? "bg-rose-950/60 text-rose-300 border border-rose-700 hover:bg-rose-900/60"
-                                : "bg-slate-900/90 text-slate-300 hover:bg-slate-800 border border-slate-700/60"
+                                ? "bg-rose-950/70 text-rose-300 border border-rose-700 hover:bg-rose-900/70"
+                                : "bg-slate-800/90 text-slate-300 hover:bg-slate-700 border border-slate-700/70"
                           }`}
                           title={`${floor.floorName} (${floor.elevationMsl})`}
                         >
@@ -827,62 +829,59 @@ export default function SpatialWorkspace() {
                       );
                     })}
                   </div>
+                </div>
 
-                  {/* Explosion Separation Slider */}
-                  <div className="mt-1 pt-2 border-t border-slate-800/90">
-                    <div className="flex items-center justify-between text-[11px] text-slate-300 mb-1">
-                      <span className="font-semibold text-slate-300">Vertical Explosion (Separate Floors)</span>
-                      <span className="font-mono text-cyan-400 font-bold">
-                        {Math.round(floorExplosionFactor * 100)}%
-                      </span>
-                    </div>
-                    <input
-                      type="range"
-                      min={0}
-                      max={1}
-                      step={0.05}
-                      value={floorExplosionFactor}
-                      onChange={e => setFloorExplosionFactor(parseFloat(e.target.value))}
-                      className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
-                    />
+                {/* Center: Vertical Explosion Slider */}
+                <div className="flex flex-col gap-1.5 lg:w-72 shrink-0 px-3.5 py-2 bg-slate-950/80 rounded-lg border border-slate-800/90">
+                  <div className="flex items-center justify-between text-[11px] text-slate-300">
+                    <span className="font-semibold">Vertical Explosion (Separate Floors)</span>
+                    <span className="font-mono text-cyan-400 font-bold">
+                      {Math.round(floorExplosionFactor * 100)}%
+                    </span>
                   </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.05}
+                    value={floorExplosionFactor}
+                    onChange={e => setFloorExplosionFactor(parseFloat(e.target.value))}
+                    className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+                  />
+                </div>
 
-                  {/* Building Storeys / Levels Simulator */}
-                  <div className="mt-0.5 pt-1.5 border-t border-slate-800/80 flex items-center justify-between gap-1">
-                    <span className="text-[10px] text-slate-400 font-semibold">Storeys:</span>
-                    <div className="flex gap-1">
-                      {[
-                        { label: "Auto", count: null },
-                        { label: "4L", count: 4 },
-                        { label: "7L", count: 7 },
-                        { label: "8L", count: 8 },
-                        { label: "10L", count: 10 },
-                        { label: "12L", count: 12 },
-                      ].map(preset => (
-                        <button
-                          key={preset.label}
-                          type="button"
-                          onClick={() => {
-                            setOverrideFloorCount(preset.count);
-                            setActiveFloorIndex(null);
-                          }}
-                          className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition-all ${
-                            overrideFloorCount === preset.count
-                              ? "bg-cyan-400 text-slate-950 shadow-sm shadow-cyan-400/50"
-                              : "bg-slate-900 text-slate-400 hover:text-white border border-slate-700/60"
-                          }`}
-                        >
-                          {preset.label}
-                        </button>
-                      ))}
-                    </div>
+                {/* Right: Storey Simulator Presets */}
+                <div className="flex flex-col gap-1.5 shrink-0 px-3.5 py-2 bg-slate-950/80 rounded-lg border border-slate-800/90">
+                  <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Storey Levels:</span>
+                  <div className="flex gap-1">
+                    {[
+                      { label: "Auto", count: null },
+                      { label: "4L", count: 4 },
+                      { label: "7L", count: 7 },
+                      { label: "8L", count: 8 },
+                      { label: "10L", count: 10 },
+                      { label: "12L", count: 12 },
+                    ].map(preset => (
+                      <button
+                        key={preset.label}
+                        type="button"
+                        onClick={() => {
+                          setOverrideFloorCount(preset.count);
+                          setActiveFloorIndex(null);
+                        }}
+                        className={`px-2 py-1 rounded text-xs font-bold transition-all ${
+                          overrideFloorCount === preset.count
+                            ? "bg-cyan-400 text-slate-950 shadow-sm shadow-cyan-400/50 font-extrabold"
+                            : "bg-slate-800 text-slate-400 hover:text-white border border-slate-700/60"
+                        }`}
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
                   </div>
                 </div>
-              )}
-
-              <div className="spatial-stage-grid" />
-              <div className="spatial-stage-vignette" />
-            </section>
+              </div>
+            )}
 
             <section
               className="spatial-below-map"
