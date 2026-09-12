@@ -37,6 +37,24 @@ describe("Map-Native Multi-Storey Floor Slicer & Cadastral Slicing", () => {
     expect(terrace).toBeDefined();
   });
 
+  it("dynamically resolves 7, 8, 10, 12 floor stacks based on height, typology, and user overrides", () => {
+    // 1. Height-derived (e.g. 25.6m height -> ~8 floors)
+    const eightFloorHeightStack = resolveFloorStackForSelection({ approvedHeightMetres: 25.6, name: "Ganga View Residency" });
+    // Total floor objects = B1 (for >=6 floors) + G + F1..F7 + Terrace
+    expect(eightFloorHeightStack.floors.some(f => f.floorCode === "F7")).toBe(true);
+    expect(eightFloorHeightStack.floors.some(f => f.floorCode === "B1")).toBe(true);
+    expect(eightFloorHeightStack.floors.some(f => f.floorCode === "TERRACE")).toBe(true);
+
+    // 2. High-rise typology keyword (Tower -> 12 floors)
+    const towerStack = resolveFloorStackForSelection({ name: "Patna Tech Tower" });
+    expect(towerStack.floors.some(f => f.floorCode === "F11")).toBe(true);
+
+    // 3. User Storey Level Override (e.g. 10 floors)
+    const custom10FloorStack = resolveFloorStackForSelection(null, "Custom Building", 10);
+    expect(custom10FloorStack.floors.some(f => f.floorCode === "F9")).toBe(true);
+    expect(custom10FloorStack.floors.some(f => f.floorCode === "TERRACE")).toBe(true);
+  });
+
   it("CesiumSpatialViewer exposes floor explosion, active floor isolation and floor stack props", () => {
     expect(cesiumViewerSource).toContain("floorExplosionFactor?: number");
     expect(cesiumViewerSource).toContain("activeFloorIndex?: number | null");
@@ -51,6 +69,7 @@ describe("Map-Native Multi-Storey Floor Slicer & Cadastral Slicing", () => {
     expect(workspaceSource).toContain("floorExplosionFactor={floorExplosionFactor}");
     expect(workspaceSource).toContain("activeFloorIndex={activeFloorIndex}");
     expect(workspaceSource).toContain("floorStackData={floorStackData}");
+    expect(workspaceSource).toContain("overrideFloorCount");
     expect(workspaceSource).toContain("FloorUnitInspectorDrawer");
   });
 

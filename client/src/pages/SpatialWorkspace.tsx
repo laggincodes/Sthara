@@ -261,6 +261,7 @@ export default function SpatialWorkspace() {
   );
   const [hoveredMockFloor, setHoveredMockFloor] = useState<number | null>(null);
   const [activeFloorIndex, setActiveFloorIndex] = useState<number | null>(null);
+  const [overrideFloorCount, setOverrideFloorCount] = useState<number | null>(null);
   const [floorExplosionFactor, setFloorExplosionFactor] = useState<number>(0);
   const [selectedUnitCadastre, setSelectedUnitCadastre] = useState<{
     floor: FloorStackLevel;
@@ -288,9 +289,10 @@ export default function SpatialWorkspace() {
   const floorStackData = useMemo<BuildingFloorStackRecord>(() => {
     return resolveFloorStackForSelection(
       buildingSelection?.properties ?? selected?.properties,
-      siteQuery
+      siteQuery,
+      overrideFloorCount
     );
-  }, [buildingSelection, selected, siteQuery]);
+  }, [buildingSelection, selected, siteQuery, overrideFloorCount]);
 
   const selectedName =
     typeof selected?.properties.name === "string"
@@ -844,6 +846,37 @@ export default function SpatialWorkspace() {
                       className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
                     />
                   </div>
+
+                  {/* Building Storeys / Levels Simulator */}
+                  <div className="mt-0.5 pt-1.5 border-t border-slate-800/80 flex items-center justify-between gap-1">
+                    <span className="text-[10px] text-slate-400 font-semibold">Storeys:</span>
+                    <div className="flex gap-1">
+                      {[
+                        { label: "Auto", count: null },
+                        { label: "4L", count: 4 },
+                        { label: "7L", count: 7 },
+                        { label: "8L", count: 8 },
+                        { label: "10L", count: 10 },
+                        { label: "12L", count: 12 },
+                      ].map(preset => (
+                        <button
+                          key={preset.label}
+                          type="button"
+                          onClick={() => {
+                            setOverrideFloorCount(preset.count);
+                            setActiveFloorIndex(null);
+                          }}
+                          className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition-all ${
+                            overrideFloorCount === preset.count
+                              ? "bg-cyan-400 text-slate-950 shadow-sm shadow-cyan-400/50"
+                              : "bg-slate-900 text-slate-400 hover:text-white border border-slate-700/60"
+                          }`}
+                        >
+                          {preset.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -1058,6 +1091,11 @@ export default function SpatialWorkspace() {
               floorStack={floorStackData}
               activeFloorIndex={activeFloorIndex}
               onFloorSelect={setActiveFloorIndex}
+              overrideFloorCount={overrideFloorCount}
+              onOverrideFloorCountChange={count => {
+                setOverrideFloorCount(count);
+                setActiveFloorIndex(null);
+              }}
               onUnitSelect={(floor, unit) => {
                 setSelectedUnitCadastre({ floor, unit });
                 setIsUnitDrawerOpen(true);

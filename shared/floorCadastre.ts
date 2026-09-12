@@ -1992,24 +1992,103 @@ export function getBuildingFloorStackRecord(buildingIdOrUlpin: string): Building
 /**
  * Universal dynamic floor stack generator for ANY searched building or clicked polygon on the map
  */
-export function resolveFloorStackForSelection(properties?: Record<string, unknown> | null, query?: string): BuildingFloorStackRecord {
-  const name = String(properties?.name || properties?.title || properties?.buildingName || query || "Searched Structure").trim();
+/**
+ * Infers the realistic floor count for any building using:
+ * 1. Authority approved floor count / OSM building:levels
+ * 2. 3D Survey Height (height / 3.2m standard slab height)
+ * 3. Typology & Institution classification (Towers: 12-15 floors, Heights/Apartments: 8-10 floors, Campus: 6-8 floors, Houses: 2-3 floors)
+ */
+export function inferFloorCountForBuilding(
+  properties?: Record<string, unknown> | null,
+  name?: string
+): { floorCount: number; sourceBasis: "sanction-record" | "height-derived" | "typology-profile" } {
+  // 1. Explicit approvedFloorCount or building:levels
+  const explicit = Number(
+    properties?.approvedFloorCount ||
+    properties?.floorCount ||
+    properties?.['building:levels'] ||
+    properties?.levels
+  );
+  if (Number.isFinite(explicit) && explicit > 0) {
+    return {
+      floorCount: Math.min(Math.max(Math.floor(explicit), 1), 24),
+      sourceBasis: "sanction-record",
+    };
+  }
+
+  // 2. Height-derived: approvedHeightMetres / 3.2m
+  const rawHeight = Number(
+    properties?.approvedHeightMetres ||
+    properties?.heightMetres ||
+    properties?.height ||
+    properties?.buildingHeight
+  );
+  if (Number.isFinite(rawHeight) && rawHeight > 0) {
+    return {
+      floorCount: Math.min(Math.max(Math.round(rawHeight / 3.2), 1), 24),
+      sourceBasis: "height-derived",
+    };
+  }
+
+  // 3. Typology & Name Keywords
+  const lower = (name || "").toLowerCase();
+  if (/tower|skyscraper|high-?rise|exhibition|centre point|commercial hub/i.test(lower)) {
+    return { floorCount: 12, sourceBasis: "typology-profile" }; // G+11 commercial high-rise
+  }
+  if (/heights|apartment|residency|enclave|alankar|plaza|central|kusum/i.test(lower)) {
+    return { floorCount: 8, sourceBasis: "typology-profile" }; // G+7 residential multi-storey
+  }
+  if (/amity|hospital|aiims|hotel|corporate/i.test(lower)) {
+    return { floorCount: 8, sourceBasis: "typology-profile" }; // G+7 institutional/medical tower
+  }
+  if (/university|college|institute|iit|academic|block|bihta|science/i.test(lower)) {
+    return { floorCount: 6, sourceBasis: "typology-profile" }; // G+5 academic complex
+  }
+  if (/house|villa|bungalow|cottage|single|plot/i.test(lower)) {
+    return { floorCount: 2, sourceBasis: "typology-profile" }; // G+1 residential bungalow
+  }
+
+  // 4. Standard default for urban multi-storey structures
+  return { floorCount: 7, sourceBasis: "typology-profile" }; // G+6 standard urban multi-storey
+}
+
+/**
+ * Universal dynamic floor stack generator for ANY searched building or clicked polygon on the map.
+ * Supports custom override floor counts (e.g. user toggles 8, 10, 12, etc.).
+ */
+export function resolveFloorStackForSelection(
+  properties?: Record<string, unknown> | null,
+  query?: string,
+  overrideFloorCount?: number | null
+): BuildingFloorStackRecord {
+  const name = String(
+    properties?.name ||
+    properties?.title ||
+    properties?.buildingName ||
+    query ||
+    "Searched Structure"
+  ).trim();
   const lowerName = name.toLowerCase();
 
-  // 1. Direct Catalog Match
-  if (lowerName.includes("iit") || lowerName.includes("academic block") || lowerName.includes("bihta")) {
-    return getBuildingFloorStackRecord("iit-patna-academic-block-4")!;
-  }
-  if (lowerName.includes("exhibition") || lowerName.includes("business tower")) {
-    return getBuildingFloorStackRecord("exhibition-road-tower")!;
-  }
-  if (lowerName.includes("bailey") || lowerName.includes("patna central") || lowerName.includes("heights")) {
-    return getBuildingFloorStackRecord("patna-central-heights")!;
+  // 1. Direct Catalog Match (if no override requested)
+  if (!overrideFloorCount) {
+    if (lowerName.includes("bailey") || lowerName.includes("patna central") || (lowerName.includes("heights") && !lowerName.includes("alankar"))) {
+      return getBuildingFloorStackRecord("patna-central-heights")!;
+    }
+    if (lowerName.includes("exhibition") || lowerName.includes("business tower")) {
+      return getBuildingFloorStackRecord("exhibition-road-tower")!;
+    }
+    if (lowerName.includes("iit") || lowerName.includes("academic block") || lowerName.includes("bihta")) {
+      return getBuildingFloorStackRecord("iit-patna-academic-block-4")!;
+    }
   }
 
-  // 2. Generate dynamic vertical floor stack based on height / approvedFloorCount
-  const floorCountRaw = Number(properties?.approvedFloorCount || properties?.floorCount || 4);
-  const floorCount = Math.min(Math.max(Number.isFinite(floorCountRaw) ? Math.floor(floorCountRaw) : 4, 2), 8);
+  // 2. Determine floor count dynamically
+  const inference = inferFloorCountForBuilding(properties, name);
+  const floorCount = overrideFloorCount && overrideFloorCount > 0
+    ? Math.min(Math.max(overrideFloorCount, 1), 24)
+    : inference.floorCount;
+
   const rawHeight = Number(properties?.approvedHeightMetres || properties?.heightMetres || floorCount * 3.2);
   const buildingHeight = Number.isFinite(rawHeight) ? rawHeight : floorCount * 3.2;
   const footprintArea = Number(properties?.footprintAreaSquareMetres || properties?.area || 850);
@@ -2017,32 +2096,99 @@ export function resolveFloorStackForSelection(properties?: Record<string, unknow
 
   const dynamicFloors: FloorStackLevel[] = [];
 
+  // Add Basement for taller buildings (>= 6 floors)
+  if (floorCount >= 6) {
+    dynamicFloors.push({
+      floorIndex: -1,
+      floorCode: "B1",
+      floorName: `Basement 1 · Dedicated Resident/Visitor Parking Bay`,
+      floorType: "UNDERGROUND_BASEMENT",
+      elevationBaseM: -3.2,
+      floorHeightM: 3.2,
+      elevationMsl: `-3.2m → 0.0m MSL`,
+      grossAreaSqM: footprintArea,
+      isUnauthorizedFloor: false,
+      units: [
+        {
+          id: `dyn-b1-park`,
+          unitNumber: "Basement Parking Bay B1 (Slots 1-18)",
+          ulpin3d: `${ulpin}-B01-U01`,
+          unitType: "PARKING",
+          carpetAreaSqM: Math.round(footprintArea * 0.7),
+          builtUpAreaSqM: Math.round(footprintArea * 0.8),
+          volumeCuM: Math.round(footprintArea * 0.7 * 3.2),
+          elevationRange: `-3.2m → 0.0m MSL`,
+          baseElevationM: -3.2,
+          heightM: 3.2,
+          relativeBounds: { x: 0.0, z: 0.0, w: 0.9, d: 0.9 },
+          owner: {
+            name: `${name} Common Parking Association`,
+            verifiedAadhaarPan: true,
+            contact: "+91 94310 00000",
+            email: `parking@patna.gov.in`,
+            deedNumber: `DEED-PAT-2024-B1PK`,
+            deedDate: "10-Jan-2024",
+            stampDutyRef: `STAMP-BR-2024-90000`,
+            registeredShare: "Common Parking Easement",
+          },
+          clearances: {
+            fireNoc: "APPROVED",
+            fireNocNumber: `BR-FIRE-PAT-2024-B1`,
+            electricityConsumerId: `SBPDCL-HT-9001`,
+            electricitySanctionedKw: 25,
+            waterConnectionId: `PHED-EXEMPT`,
+            municipalTaxStatus: "CLEARED",
+            lastTaxPaidDate: "10-Apr-2026",
+            taxReceiptNo: `PMC-TAX-2026-90001`,
+          },
+          easements: ["Vehicular Ingress & Ramp Easement"],
+        },
+      ],
+    });
+  }
+
+  // Build above-ground floors G, F1, F2, F3...
   for (let i = 0; i < floorCount; i++) {
     const isGround = i === 0;
     const floorCode = isGround ? "G" : `F${i}`;
     const baseElevation = i * 3.2;
     const topElevation = (i + 1) * 3.2;
-    const floorType: FloorType = isGround ? "GROUND_RETAIL" : "RESIDENTIAL_LEVEL";
+    const isCommercial = isGround || floorCount >= 10;
+    const floorType: FloorType = isGround
+      ? "GROUND_RETAIL"
+      : isCommercial && i <= 2
+        ? "COMMERCIAL_OFFICES"
+        : "RESIDENTIAL_LEVEL";
+
+    // Mark top floor as unauthorized if exceeding standard 15m sanction on 8+ floors without deviation permit
+    const isUnauthorized = floorCount > 7 && i >= 6 && properties?.sanctionStatus === "SANCTIONED_WITH_DEVIATIONS";
 
     dynamicFloors.push({
       floorIndex: i,
       floorCode,
-      floorName: isGround ? `Ground Floor · Foyer & Retail Core` : `Floor ${i} · Verified Units`,
+      floorName: isGround
+        ? `Ground Floor · Foyer, Reception & Retail Suites`
+        : `Floor ${i} · Verified Units [${isCommercial ? "Commercial Suite" : "Residential"}]`,
       floorType,
       elevationBaseM: baseElevation,
       floorHeightM: 3.2,
       elevationMsl: `+${baseElevation.toFixed(1)}m → +${topElevation.toFixed(1)}m MSL`,
       grossAreaSqM: footprintArea,
-      isUnauthorizedFloor: false,
+      isUnauthorizedFloor: isUnauthorized,
+      heightViolationNotice: isUnauthorized
+        ? `Floor ${i} exceeds sanctioned G+4 height baseline without updated municipal NOC.`
+        : undefined,
       units: [
         {
           id: `dyn-f${i}-u1`,
-          unitNumber: isGround ? `Commercial Suite G-01` : `Apartment Flat ${i}01`,
+          unitNumber: isGround
+            ? `Commercial Suite G-01`
+            : `${floorType === "COMMERCIAL_OFFICES" ? "Executive Office" : "Apartment Flat"} ${i}01`,
           ulpin3d: `${ulpin}-F0${i}-U01`,
-          unitType: isGround ? "COMMERCIAL" : "RESIDENTIAL",
-          carpetAreaSqM: Math.round((footprintArea * 0.42) * 10) / 10,
-          builtUpAreaSqM: Math.round((footprintArea * 0.48) * 10) / 10,
-          volumeCuM: Math.round((footprintArea * 0.42 * 3.2) * 10) / 10,
+          unitType: isGround || floorType === "COMMERCIAL_OFFICES" ? "COMMERCIAL" : "RESIDENTIAL",
+          carpetAreaSqM: Math.round(footprintArea * 0.42 * 10) / 10,
+          builtUpAreaSqM: Math.round(footprintArea * 0.48 * 10) / 10,
+          volumeCuM: Math.round(footprintArea * 0.42 * 3.2 * 10) / 10,
           elevationRange: `+${baseElevation.toFixed(1)}m → +${topElevation.toFixed(1)}m MSL`,
           baseElevationM: baseElevation,
           heightM: 3.2,
@@ -2061,7 +2207,7 @@ export function resolveFloorStackForSelection(properties?: Record<string, unknow
             fireNoc: "APPROVED",
             fireNocNumber: `BR-FIRE-PAT-2024-F${i}`,
             electricityConsumerId: `SBPDCL-DOM-${40000 + i}`,
-            electricitySanctionedKw: 8,
+            electricitySanctionedKw: isGround ? 25 : 8,
             waterConnectionId: `PHED-PAT-DOM-${400 + i}`,
             municipalTaxStatus: "CLEARED",
             lastTaxPaidDate: "10-Jun-2026",
@@ -2071,12 +2217,14 @@ export function resolveFloorStackForSelection(properties?: Record<string, unknow
         },
         {
           id: `dyn-f${i}-u2`,
-          unitNumber: isGround ? `Commercial Suite G-02` : `Apartment Flat ${i}02`,
+          unitNumber: isGround
+            ? `Commercial Suite G-02`
+            : `${floorType === "COMMERCIAL_OFFICES" ? "Corporate Suite" : "Apartment Flat"} ${i}02`,
           ulpin3d: `${ulpin}-F0${i}-U02`,
-          unitType: isGround ? "COMMERCIAL" : "RESIDENTIAL",
-          carpetAreaSqM: Math.round((footprintArea * 0.42) * 10) / 10,
-          builtUpAreaSqM: Math.round((footprintArea * 0.48) * 10) / 10,
-          volumeCuM: Math.round((footprintArea * 0.42 * 3.2) * 10) / 10,
+          unitType: isGround || floorType === "COMMERCIAL_OFFICES" ? "COMMERCIAL" : "RESIDENTIAL",
+          carpetAreaSqM: Math.round(footprintArea * 0.42 * 10) / 10,
+          builtUpAreaSqM: Math.round(footprintArea * 0.48 * 10) / 10,
+          volumeCuM: Math.round(footprintArea * 0.42 * 3.2 * 10) / 10,
           elevationRange: `+${baseElevation.toFixed(1)}m → +${topElevation.toFixed(1)}m MSL`,
           baseElevationM: baseElevation,
           heightM: 3.2,
@@ -2095,7 +2243,7 @@ export function resolveFloorStackForSelection(properties?: Record<string, unknow
             fireNoc: "APPROVED",
             fireNocNumber: `BR-FIRE-PAT-2024-F${i}`,
             electricityConsumerId: `SBPDCL-DOM-${40500 + i}`,
-            electricitySanctionedKw: 8,
+            electricitySanctionedKw: isGround ? 20 : 8,
             waterConnectionId: `PHED-PAT-DOM-${450 + i}`,
             municipalTaxStatus: "CLEARED",
             lastTaxPaidDate: "12-Jun-2026",
@@ -2111,7 +2259,7 @@ export function resolveFloorStackForSelection(properties?: Record<string, unknow
   dynamicFloors.push({
     floorIndex: floorCount,
     floorCode: "TERRACE",
-    floorName: `Terrace · Solar & Air-Rights Easement Zone`,
+    floorName: `Terrace · Rooftop Solar Array & Air-Rights Zone`,
     floorType: "ROOFTOP_TERRACE",
     elevationBaseM: floorCount * 3.2,
     floorHeightM: 1.0,
@@ -2121,7 +2269,7 @@ export function resolveFloorStackForSelection(properties?: Record<string, unknow
     units: [
       {
         id: `dyn-ter-solar`,
-        unitNumber: "Rooftop Solar Easement Array (50kW)",
+        unitNumber: `Rooftop Solar Array (${Math.round(footprintArea * 0.08)} kW)`,
         ulpin3d: `${ulpin}-TER-U01`,
         unitType: "AIR_RIGHTS",
         carpetAreaSqM: Math.round(footprintArea * 0.6),
@@ -2132,7 +2280,7 @@ export function resolveFloorStackForSelection(properties?: Record<string, unknow
         heightM: 1.0,
         relativeBounds: { x: 0.0, z: 0.0, w: 0.85, d: 0.85 },
         owner: {
-          name: `${name} Common Society`,
+          name: `${name} Common Society & Solar Co-op`,
           verifiedAadhaarPan: true,
           contact: "+91 94310 00000",
           email: `society@bihar.cadastre.gov.in`,
@@ -2161,7 +2309,7 @@ export function resolveFloorStackForSelection(properties?: Record<string, unknow
     buildingName: name,
     ulpin,
     address: String(properties?.location || properties?.address || `${name}, Patna, Bihar`),
-    district: "Patna",
+    district: "Patna Central",
     coordinates: {
       latitude: Number(properties?.latitude || 25.6093),
       longitude: Number(properties?.longitude || 85.1235),
@@ -2169,11 +2317,13 @@ export function resolveFloorStackForSelection(properties?: Record<string, unknow
     sanctionedHeightM: buildingHeight,
     actualHeightM: buildingHeight,
     sanctionedFloors: `G + ${floorCount - 1} + Terrace (${buildingHeight.toFixed(1)}m)`,
-    actualFloors: `G + ${floorCount - 1} + Terrace (${buildingHeight.toFixed(1)}m)`,
-    totalUnits: floorCount * 2 + 1,
+    actualFloors: `${floorCount >= 6 ? "B1 + " : ""}G + ${floorCount - 1} + Terrace (${buildingHeight.toFixed(1)}m)`,
+    totalUnits: floorCount * 2 + (floorCount >= 6 ? 2 : 1),
     municipalSanctionNo: `PMC/2024/BP-${Math.floor(1000 + Math.random() * 9000)}/A`,
-    sanctionStatus: "FULLY_COMPLIANT",
-    subsurfaceMetroEasement: false,
+    sanctionStatus: floorCount > 7 && properties?.sanctionStatus === "SANCTIONED_WITH_DEVIATIONS"
+      ? "SANCTIONED_WITH_DEVIATIONS"
+      : "FULLY_COMPLIANT",
+    subsurfaceMetroEasement: floorCount >= 8,
     rooftopSolarRights: true,
     floors: dynamicFloors,
   };

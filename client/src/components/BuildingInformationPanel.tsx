@@ -34,6 +34,8 @@ type BuildingInformationPanelProps = {
   onUnitSelect?: (floor: FloorStackLevel, unit: FloorUnitCadastre) => void;
   explosionFactor?: number;
   onExplosionFactorChange?: (factor: number) => void;
+  overrideFloorCount?: number | null;
+  onOverrideFloorCountChange?: (count: number | null) => void;
 };
 
 const unavailable = "Data not available / Not verified";
@@ -148,6 +150,8 @@ export function BuildingInformationPanel({
   onUnitSelect,
   explosionFactor = 0,
   onExplosionFactorChange,
+  overrideFloorCount = null,
+  onOverrideFloorCountChange,
 }: BuildingInformationPanelProps) {
   const [copiedUlpin, setCopiedUlpin] = useState<string | null>(null);
 
@@ -273,7 +277,7 @@ export function BuildingInformationPanel({
       <dl className="building-information-grid">
         <Field label="Building Height">{height}</Field>
         <Field label="Total Storeys">
-          {floorStack ? `${floorStack.floors.length} Verified Levels` : unavailable}
+          {floorStack ? `${floorStack.floors.length} Levels (${floorStack.actualFloors})` : unavailable}
         </Field>
         <Field label="3D ULPIN Envelope">
           {floorStack?.ulpin ?? valueFrom(properties, ["ulpin"]) ?? unavailable}
@@ -282,6 +286,45 @@ export function BuildingInformationPanel({
           {floorStack?.municipalSanctionNo ?? unavailable}
         </Field>
       </dl>
+
+      {/* Building Storeys / Level Stepper Simulator */}
+      {onOverrideFloorCountChange && (
+        <div className="p-2.5 bg-slate-900/80 border border-slate-800 rounded-xl mb-3 text-xs">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="font-semibold text-slate-300 flex items-center gap-1.5">
+              <Sparkles size={12} className="text-amber-400" />
+              Storey Level Detection / Simulator:
+            </span>
+            <span className="text-[10px] font-mono text-cyan-300 bg-cyan-950 px-2 py-0.5 rounded border border-cyan-800/60">
+              {overrideFloorCount ? `${overrideFloorCount} Storeys (Manual)` : "Auto-Inferred from Sanction/Height"}
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {[
+              { label: "Auto", count: null },
+              { label: "4 Storeys (G+3)", count: 4 },
+              { label: "7 Storeys (G+6)", count: 7 },
+              { label: "8 Storeys (G+7)", count: 8 },
+              { label: "10 Storeys (G+9)", count: 10 },
+              { label: "12 Storeys (G+11)", count: 12 },
+              { label: "15 Storeys (G+14)", count: 15 },
+            ].map(preset => (
+              <button
+                key={preset.label}
+                type="button"
+                onClick={() => onOverrideFloorCountChange(preset.count)}
+                className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-all ${
+                  overrideFloorCount === preset.count
+                    ? "bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-md shadow-amber-500/25 ring-1 ring-amber-300"
+                    : "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white border border-slate-700/50"
+                }`}
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* 3D Explosion Slicer Slider (Integrated in Panel) */}
       {onExplosionFactorChange && (
