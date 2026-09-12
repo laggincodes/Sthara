@@ -11,7 +11,19 @@ import type {
   GeoJsonDataSource as CesiumGeoJsonDataSource,
   Viewer as CesiumViewer,
 } from "cesium";
-import { AlertTriangle, FileDown, LoaderCircle, RefreshCw } from "lucide-react";
+import {
+  AlertTriangle,
+  Compass,
+  FileDown,
+  LoaderCircle,
+  Navigation2,
+  Pause,
+  Play,
+  RefreshCw,
+  RotateCcw,
+  RotateCw,
+  Sparkles,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 export type SampleMapAsset = {
@@ -174,6 +186,7 @@ export function CesiumSpatialViewer({
     );
   }
   const {
+    BoundingSphere,
     Cartographic,
     Cartesian2,
     Cartesian3,
@@ -188,6 +201,7 @@ export function CesiumSpatialViewer({
     HeadingPitchRange,
     Ion,
     LabelGraphics,
+    Matrix4,
     ModelGraphics,
     OpenStreetMapImageryProvider,
     PointGraphics,
@@ -248,6 +262,9 @@ export function CesiumSpatialViewer({
   const [cameraView, setCameraView] = useState<"perspective" | "plan">(
     "perspective"
   );
+  const [isOrbiting360, setIsOrbiting360] = useState(false);
+  const [currentHeadingDeg, setCurrentHeadingDeg] = useState(0);
+  const [currentPitchDeg, setCurrentPitchDeg] = useState(-45);
   const [measurementMode, setMeasurementMode] = useState<
     "off" | "distance" | "area"
   >("off");
@@ -346,6 +363,149 @@ export function CesiumSpatialViewer({
     pdf.text("3D ULPIN-VPM · source-aware spatial review", left, 790);
     pdf.save("ulpin-vpm-visual-measurement-report.pdf");
   };
+
+  const getOrbitCenter = (): CesiumCartesian3 => {
+    const viewer = viewerRef.current;
+    if (!viewer) return Cartesian3.fromDegrees(85.054779, 25.6124294, 0);
+
+    if (floorStackData?.coordinates) {
+      return Cartesian3.fromDegrees(
+        floorStackData.coordinates.longitude,
+        floorStackData.coordinates.latitude,
+        (floorStackData.actualHeightM || 20) / 2
+      );
+    }
+    const canvas = viewer.scene.canvas;
+    if (canvas && canvas.clientWidth > 0 && canvas.clientHeight > 0) {
+      const centerPos =
+        viewer.scene.pickPosition(
+          new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2)
+        ) ??
+        viewer.camera.pickEllipsoid(
+          new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2),
+          viewer.scene.globe.ellipsoid
+        );
+      if (centerPos) return centerPos;
+    }
+    return Cartesian3.fromDegrees(85.054779, 25.6124294, 0);
+  };
+
+  const rotateHeading = (deltaDegrees: number) => {
+    const viewer = viewerRef.current;
+    if (!viewer) return;
+    if (isOrbiting360) setIsOrbiting360(false);
+    const target = getOrbitCenter();
+    const currentHeading = viewer.camera.heading;
+    const currentPitch = viewer.camera.pitch;
+    const currentRange = Math.max(
+      Cartesian3.distance(viewer.camera.position, target),
+      65
+    );
+
+    const newHeading =
+      (currentHeading + (deltaDegrees * Math.PI) / 180) % (2 * Math.PI);
+    viewer.camera.flyToBoundingSphere(new BoundingSphere(target, 0), {
+      offset: new HeadingPitchRange(newHeading, currentPitch, currentRange),
+      duration: 0.35,
+    });
+    const deg = Math.round((newHeading * 180) / Math.PI) % 360;
+    setCurrentHeadingDeg(deg >= 0 ? deg : deg + 360);
+  };
+
+  const setCameraPitchAngle = (pitchDegrees: number) => {
+    const viewer = viewerRef.current;
+    if (!viewer) return;
+    if (isOrbiting360) setIsOrbiting360(false);
+    const target = getOrbitCenter();
+    const currentHeading = viewer.camera.heading;
+    const currentRange = Math.max(
+      Cartesian3.distance(viewer.camera.position, target),
+      65
+    );
+    const pitchRad = (pitchDegrees * Math.PI) / 180;
+    viewer.camera.flyToBoundingSphere(new BoundingSphere(target, 0), {
+      offset: new HeadingPitchRange(currentHeading, pitchRad, currentRange),
+      duration: 0.45,
+    });
+    setCurrentPitchDeg(pitchDegrees);
+  };
+
+  const resetToNorth = () => {
+    const viewer = viewerRef.current;
+    if (!viewer) return;
+    if (isOrbiting360) setIsOrbiting360(false);
+    const target = getOrbitCenter();
+    const currentRange = Math.max(
+      Cartesian3.distance(viewer.camera.position, target),
+      85
+    );
+    viewer.camera.flyToBoundingSphere(new BoundingSphere(target, 0), {
+      offset: new HeadingPitchRange(0, -0.78, currentRange),
+      duration: 0.5,
+    });
+    setCurrentHeadingDeg(0);
+    setCurrentPitchDeg(-45);
+  };
+
+  const toggle360Orbit = () => {
+    setIsOrbiting360(current => !current);
+  };
+
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    if (!viewer || !viewerReady) return;
+
+    const handleCameraMoveEnd = () => {
+      if (!isOrbiting360) {
+        const hDeg =
+          Math.round((viewer.camera.heading * 180) / Math.PI) % 360;
+        setCurrentHeadingDeg(hDeg >= 0 ? hDeg : hDeg + 360);
+        const pDeg = Math.round((viewer.camera.pitch * 180) / Math.PI);
+        setCurrentPitchDeg(pDeg);
+      }
+    };
+
+    const removeListener = viewer.camera.moveEnd.addEventListener(
+      handleCameraMoveEnd
+    );
+    return () => {
+      removeListener();
+    };
+  }, [viewerReady, isOrbiting360]);
+
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    if (!viewer || !viewerReady || !isOrbiting360) return;
+
+    const target = getOrbitCenter();
+    const range = Math.max(
+      Cartesian3.distance(viewer.camera.position, target),
+      80
+    );
+    const pitch = Math.min(viewer.camera.pitch, -0.35);
+    let heading = viewer.camera.heading;
+
+    const removeTick = viewer.clock.onTick.addEventListener(() => {
+      heading = (heading + 0.005) % (2 * Math.PI);
+      viewer.camera.lookAt(
+        target,
+        new HeadingPitchRange(heading, pitch, range)
+      );
+      const deg = Math.round((heading * 180) / Math.PI) % 360;
+      setCurrentHeadingDeg(deg >= 0 ? deg : deg + 360);
+    });
+
+    return () => {
+      removeTick();
+      if (viewer && !viewer.isDestroyed()) {
+        try {
+          viewer.camera.lookAtTransform(Matrix4.IDENTITY);
+        } catch {
+          // ignore
+        }
+      }
+    };
+  }, [isOrbiting360, viewerReady, floorStackData]);
 
   useEffect(() => {
     measurementModeRef.current = measurementMode;
@@ -1087,7 +1247,7 @@ export function CesiumSpatialViewer({
                         material: new ColorMaterialProperty(materialColor),
                         outline: new ConstantProperty(true),
                         outlineColor: new ConstantProperty(outlineColor),
-                        outlineWidth: isSelected ? 3 : 2,
+                        outlineWidth: isSelected ? 4 : 2,
                       }),
                       label: new LabelGraphics({
                         text: isSelected
@@ -1109,6 +1269,38 @@ export function CesiumSpatialViewer({
                   );
                   mockFloorEntitiesRef.current.push(floorEntity);
                 });
+
+                // Add 3D Vertical Cadastre Benchmark Axis / Height Pillar
+                const totalHeight = floorStackData.actualHeightM || (floors.length * 3.2);
+                const maxExplosionZ = (floorExplosionFactor || 0) * (floors.length + 1) * 5.5;
+                const pillarTop = totalHeight + maxExplosionZ + 4;
+                const coord = floorStackData.coordinates;
+                
+                const pillarEntity = viewer.entities.add(
+                  new Entity({
+                    name: `3D Vertical Cadastre Benchmark Axis · ${floorStackData.buildingName}`,
+                    polyline: new PolylineGraphics({
+                      positions: [
+                        Cartesian3.fromDegrees(coord.longitude, coord.latitude, 0),
+                        Cartesian3.fromDegrees(coord.longitude, coord.latitude, pillarTop),
+                      ],
+                      width: 3,
+                      material: new ColorMaterialProperty(
+                        Color.fromCssColorString("#2ad4d9").withAlpha(0.75)
+                      ),
+                    }),
+                    label: new LabelGraphics({
+                      text: `3D CADASTRE ENVELOPE: ${totalHeight.toFixed(1)}m [${floorStackData.actualFloors}]`,
+                      font: "bold 11px sans-serif",
+                      fillColor: Color.fromCssColorString("#73fff1"),
+                      outlineColor: Color.fromCssColorString("#082126"),
+                      outlineWidth: 3,
+                      pixelOffset: new Cartesian2(0, -18),
+                      show: (floorExplosionFactor || 0) > 0.05 || isOrbiting360,
+                    }),
+                  })
+                );
+                mockFloorEntitiesRef.current.push(pillarEntity);
               } else {
                 const floorCount = Math.min(
                   Math.max(Math.round(mockFloorLevels), 1),
@@ -1468,6 +1660,88 @@ export function CesiumSpatialViewer({
           </span>
           <button type="button" onClick={retryViewer}>
             <RefreshCw size={13} /> Retry 3D map
+          </button>
+        </div>
+      )}
+      {viewerState === "ready" && (
+        <div
+          className="cesium-360-rotation-deck"
+          aria-label="360 Camera Rotation Deck"
+        >
+          <button
+            type="button"
+            onClick={toggle360Orbit}
+            className={`orbit-toggle-btn ${isOrbiting360 ? "orbiting-active" : ""}`}
+            title={
+              isOrbiting360
+                ? "Pause 360° Continuous Turntable Orbit"
+                : "Start 360° Continuous Turntable Orbit"
+            }
+          >
+            {isOrbiting360 ? (
+              <Pause size={13} className="text-cyan-300 animate-pulse" />
+            ) : (
+              <Play size={13} className="text-emerald-400" />
+            )}
+            <span>{isOrbiting360 ? "360° Orbiting..." : "360° Orbit"}</span>
+          </button>
+
+          <div className="stepper-group">
+            <button
+              type="button"
+              onClick={() => rotateHeading(-45)}
+              title="Rotate Left 45°"
+            >
+              <RotateCcw size={11} /> 45°
+            </button>
+            <button
+              type="button"
+              onClick={() => rotateHeading(45)}
+              title="Rotate Right 45°"
+            >
+              <RotateCw size={11} /> 45°
+            </button>
+          </div>
+
+          <div className="tilt-group">
+            <button
+              type="button"
+              className={currentPitchDeg > -35 ? "active" : ""}
+              onClick={() => setCameraPitchAngle(-22)}
+              title="Cinematic Low-Angle 3D View (22°)"
+            >
+              Cinematic
+            </button>
+            <button
+              type="button"
+              className={
+                currentPitchDeg <= -35 && currentPitchDeg >= -60 ? "active" : ""
+              }
+              onClick={() => setCameraPitchAngle(-45)}
+              title="Standard 3D Isometric View (45°)"
+            >
+              3D Iso
+            </button>
+            <button
+              type="button"
+              className={currentPitchDeg < -60 ? "active" : ""}
+              onClick={() => setCameraPitchAngle(-89)}
+              title="2D Top-Down Plan View (90°)"
+            >
+              Plan
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={resetToNorth}
+            className="compass-btn"
+            title="Reset Compass to Due North (0°)"
+          >
+            <Compass size={13} className="text-cyan-400" />
+            <span className="font-mono text-[10px] text-cyan-200">
+              {String(currentHeadingDeg).padStart(3, "0")}°
+            </span>
           </button>
         </div>
       )}

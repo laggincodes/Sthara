@@ -9350,3 +9350,105 @@ input[data-otp-input="true"]:focus,
   color: #64748b !important;
 }
 
+/* 360-Degree Camera Rotation & Visual Deck */
+.cesium-360-rotation-deck {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: rgba(10, 22, 29, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(42, 212, 217, 0.28);
+  border-radius: 12px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45), 0 0 16px rgba(42, 212, 217, 0.15);
+}
+
+.cesium-360-rotation-deck .orbit-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 9px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #e2fdfd;
+  background: rgba(42, 212, 217, 0.12);
+  border: 1px solid rgba(42, 212, 217, 0.35);
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cesium-360-rotation-deck .orbit-toggle-btn:hover {
+  background: rgba(42, 212, 217, 0.24);
+  border-color: rgba(42, 212, 217, 0.6);
+  transform: translateY(-1px);
+}
+
+.cesium-360-rotation-deck .orbit-toggle-btn.orbiting-active {
+  background: linear-gradient(135deg, rgba(42, 212, 217, 0.35), rgba(56, 189, 248, 0.35));
+  border-color: #38bdf8;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.5);
+}
+
+.cesium-360-rotation-deck .stepper-group,
+.cesium-360-rotation-deck .tilt-group {
+  display: flex;
+  align-items: center;
+  background: rgba(15, 30, 39, 0.7);
+  border: 1px solid rgba(209, 234, 228, 0.15);
+  border-radius: 7px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.cesium-360-rotation-deck .stepper-group button,
+.cesium-360-rotation-deck .tilt-group button {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 7px;
+  font-size: 10px;
+  font-weight: 500;
+  color: #94a3b8;
+  background: transparent;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.cesium-360-rotation-deck .stepper-group button:hover,
+.cesium-360-rotation-deck .tilt-group button:hover {
+  color: #f1f5f9;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.cesium-360-rotation-deck .tilt-group button.active {
+  color: #2ad4d9;
+  background: rgba(42, 212, 217, 0.18);
+  font-weight: 700;
+}
+
+.cesium-360-rotation-deck .compass-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: rgba(15, 30, 39, 0.85);
+  border: 1px solid rgba(42, 212, 217, 0.3);
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.cesium-360-rotation-deck .compass-btn:hover {
+  border-color: #2ad4d9;
+  background: rgba(42, 212, 217, 0.15);
+}
+
+
