@@ -451,20 +451,55 @@ export function CesiumSpatialViewer({
       const originalColor = feature.color;
       feature.color = Color.fromCssColorString("#ffe17a").withAlpha(0.92);
       selectedOsmFeatureRef.current = { feature, originalColor };
+
+      const rawHeight =
+        feature.getProperty?.("cesium#estimatedHeight") ??
+        feature.getProperty?.("height") ??
+        feature.getProperty?.("building:height") ??
+        feature.getProperty?.("render_height");
+      const numericHeight =
+        typeof rawHeight === "number"
+          ? rawHeight
+          : typeof rawHeight === "string" && !isNaN(parseFloat(rawHeight))
+            ? parseFloat(rawHeight)
+            : undefined;
+
+      const rawLevels =
+        feature.getProperty?.("building:levels") ??
+        feature.getProperty?.("levels");
+      const numericLevels =
+        typeof rawLevels === "number"
+          ? rawLevels
+          : typeof rawLevels === "string" && !isNaN(parseInt(rawLevels, 10))
+            ? parseInt(rawLevels, 10)
+            : undefined;
+
+      const buildingName = osmProperty(feature, ["name", "addr:housename"]);
+      const buildingType = osmProperty(feature, ["building", "building:use"]);
+      const osmIdentifier = osmProperty(feature, ["osm_id", "id"]);
+      const street = osmProperty(feature, ["addr:street", "addr:city"]);
+
       setOsmBuildingSelection({
-        name: osmProperty(feature, ["name", "addr:housename"]),
-        buildingType: osmProperty(feature, ["building", "building:use"]),
-        osmIdentifier: osmProperty(feature, ["osm_id", "id"]),
+        name: buildingName,
+        buildingType: buildingType,
+        osmIdentifier: osmIdentifier,
       });
+
       onDetailedFeatureSelect?.({
         kind: "osm-3d-tile",
         properties: {
-          name: osmProperty(feature, ["name", "addr:housename"]),
-          buildingType: osmProperty(feature, ["building", "building:use"]),
-          osmIdentifier: osmProperty(feature, ["osm_id", "id"]),
-          source: "OpenStreetMap 3D Tiles",
+          name: buildingName,
+          buildingType: buildingType,
+          osmIdentifier: osmIdentifier,
+          approvedHeightMetres: numericHeight,
+          heightMetres: numericHeight,
+          levels: numericLevels,
+          approvedFloorCount: numericLevels,
+          address: street !== "Not exposed by OSM tile" ? street : undefined,
+          source: "OpenStreetMap / Cesium Ion 3D Photogrammetry Tile",
+          heightSource: "Real-World Cesium Ion 3D Mesh / OSM Attributes",
         },
-        sourceReference: osmProperty(feature, ["osm_id", "id"]),
+        sourceReference: osmIdentifier,
         coordinates,
       });
       viewer.selectedEntity = undefined;
