@@ -21,6 +21,13 @@ import {
 } from "@shared/placeExplorer";
 import { resolveBuildingEvidenceLevel } from "@/lib/buildingEvidenceLevel";
 import BuildingInformationPanel from "@/components/BuildingInformationPanel";
+import {
+  resolveFloorStackForSelection,
+  type BuildingFloorStackRecord,
+  type FloorStackLevel,
+  type FloorUnitCadastre,
+} from "@shared/floorCadastre";
+import { FloorUnitInspectorDrawer } from "@/components/FloorUnitInspectorDrawer";
 import { trpc } from "@/lib/trpc";
 import {
   ArrowLeft,
@@ -253,6 +260,13 @@ export default function SpatialWorkspace() {
     null
   );
   const [hoveredMockFloor, setHoveredMockFloor] = useState<number | null>(null);
+  const [activeFloorIndex, setActiveFloorIndex] = useState<number | null>(null);
+  const [floorExplosionFactor, setFloorExplosionFactor] = useState<number>(0);
+  const [selectedUnitCadastre, setSelectedUnitCadastre] = useState<{
+    floor: FloorStackLevel;
+    unit: FloorUnitCadastre;
+  } | null>(null);
+  const [isUnitDrawerOpen, setIsUnitDrawerOpen] = useState(false);
   const [demoRole, setDemoRole] = useState<DemoRole>("citizen");
   const [reviewedMockRequest, setReviewedMockRequest] = useState<string | null>(
     null
@@ -270,6 +284,13 @@ export default function SpatialWorkspace() {
   const placeFacts = trpc.postgis.placeFacts.useQuery({ query: siteQuery });
   const liveGeometry = trpc.postgis.geojson.useQuery();
   const resolveBuilding = trpc.postgis.resolveBuilding.useMutation();
+
+  const floorStackData = useMemo<BuildingFloorStackRecord>(() => {
+    return resolveFloorStackForSelection(
+      buildingSelection?.properties ?? selected?.properties,
+      siteQuery
+    );
+  }, [buildingSelection, selected, siteQuery]);
 
   const selectedName =
     typeof selected?.properties.name === "string"
@@ -408,6 +429,10 @@ export default function SpatialWorkspace() {
     setSelected(null);
     setBuildingSelection(null);
     setMockUlpIn(null);
+    setActiveFloorIndex(null);
+    setFloorExplosionFactor(0);
+    setIsUnitDrawerOpen(false);
+    setSelectedUnitCadastre(null);
   }, [requestedSite]);
 
   useEffect(() => {
@@ -660,9 +685,6 @@ export default function SpatialWorkspace() {
           <button type="button" onClick={() => setLocation("/overview")}>
             <Layers3 size={17} /> Command home
           </button>
-          <button type="button" onClick={() => setLocation("/floor-explorer")}>
-            <Layers3 size={17} className="text-sky-400" /> 3D Floor Explorer
-          </button>
           <button type="button" onClick={() => setLocation("/ulpin-registry")}>
             <ShieldCheck size={17} /> ULPIN registry
           </button>
@@ -733,13 +755,17 @@ export default function SpatialWorkspace() {
 
         <div className="spatial-model-layout">
           <div className="spatial-map-column">
-            <section className="spatial-model-stage">
+            <section className="spatial-model-stage relative">
               <CesiumSpatialViewer
                 command={command}
                 layers={layers}
                 focusUlpins={activeMapUlpins}
                 sourceMapView={sourceMapView}
                 mockFloorLevels={activeMapUlpins.length > 0 ? 4 : 0}
+                floorExplosionFactor={floorExplosionFactor}
+                activeFloorIndex={activeFloorIndex}
+                floorStackData={floorStackData}
+                onFloorSelect={setActiveFloorIndex}
                 measurementControlsOnly
                 onFeatureSelect={onFeatureSelect}
                 onDetailedFeatureSelect={onDetailedFeatureSelect}
@@ -747,6 +773,80 @@ export default function SpatialWorkspace() {
                 onMockFloorHover={setHoveredMockFloor}
                 sampleAsset={sampleAsset}
               />
+
+              {/* Floating On-Map 3D Floor Slicer & Explosion Dock */}
+              {sourceMapView === "3d" && floorStackData && (
+                <div className="absolute top-4 left-4 z-20 flex flex-col gap-2 p-3 bg-slate-950/90 backdrop-blur-md border border-cyan-500/40 rounded-2xl shadow-2xl max-w-sm text-slate-100 ring-1 ring-cyan-500/20">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse" />
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-cyan-300">
+                        3D Floor Slicer
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-mono bg-cyan-950/90 px-2 py-0.5 rounded text-cyan-200 border border-cyan-700/60">
+                      {activeFloorIndex === null
+                        ? "All Floors (Stacked)"
+                        : `Level ${floorStackData.floors.find(f => f.floorIndex === activeFloorIndex)?.floorCode || ""}`}
+                    </span>
+                  </div>
+
+                  {/* Floor Level Buttons */}
+                  <div className="flex flex-wrap gap-1 items-center mt-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setActiveFloorIndex(null)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                        activeFloorIndex === null
+                          ? "bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/30"
+                          : "bg-slate-900/90 text-slate-300 hover:bg-slate-800 border border-slate-700/60"
+                      }`}
+                    >
+                      All
+                    </button>
+                    {floorStackData.floors.map(floor => {
+                      const isActive = activeFloorIndex === floor.floorIndex;
+                      return (
+                        <button
+                          key={floor.floorIndex}
+                          type="button"
+                          onClick={() => setActiveFloorIndex(floor.floorIndex)}
+                          className={`px-2 py-1 rounded-lg text-xs font-bold transition-all ${
+                            isActive
+                              ? "bg-gradient-to-r from-cyan-400 to-sky-400 text-slate-950 shadow-md shadow-cyan-500/40 ring-2 ring-cyan-200 font-extrabold"
+                              : floor.isUnauthorizedFloor
+                                ? "bg-rose-950/60 text-rose-300 border border-rose-700 hover:bg-rose-900/60"
+                                : "bg-slate-900/90 text-slate-300 hover:bg-slate-800 border border-slate-700/60"
+                          }`}
+                          title={`${floor.floorName} (${floor.elevationMsl})`}
+                        >
+                          {floor.floorCode}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Explosion Separation Slider */}
+                  <div className="mt-1 pt-2 border-t border-slate-800/90">
+                    <div className="flex items-center justify-between text-[11px] text-slate-300 mb-1">
+                      <span className="font-semibold text-slate-300">Vertical Explosion (Separate Floors)</span>
+                      <span className="font-mono text-cyan-400 font-bold">
+                        {Math.round(floorExplosionFactor * 100)}%
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min={0}
+                      max={1}
+                      step={0.05}
+                      value={floorExplosionFactor}
+                      onChange={e => setFloorExplosionFactor(parseFloat(e.target.value))}
+                      className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+                    />
+                  </div>
+                </div>
+              )}
+
               <div className="spatial-stage-grid" />
               <div className="spatial-stage-vignette" />
             </section>
@@ -953,7 +1053,18 @@ export default function SpatialWorkspace() {
                 <span>LIVE POSTGIS · individual footprints only</span>
               </div>
             </section>
-            <BuildingInformationPanel selection={buildingSelection} />
+            <BuildingInformationPanel
+              selection={buildingSelection}
+              floorStack={floorStackData}
+              activeFloorIndex={activeFloorIndex}
+              onFloorSelect={setActiveFloorIndex}
+              onUnitSelect={(floor, unit) => {
+                setSelectedUnitCadastre({ floor, unit });
+                setIsUnitDrawerOpen(true);
+              }}
+              explosionFactor={floorExplosionFactor}
+              onExplosionFactorChange={setFloorExplosionFactor}
+            />
           </div>
 
           <aside className="spatial-dossier">
@@ -1678,6 +1789,16 @@ export default function SpatialWorkspace() {
           </div>
         </section>
       </section>
+
+      {floorStackData && (
+        <FloorUnitInspectorDrawer
+          building={floorStackData}
+          floor={selectedUnitCadastre?.floor ?? null}
+          unit={selectedUnitCadastre?.unit ?? null}
+          isOpen={isUnitDrawerOpen}
+          onClose={() => setIsUnitDrawerOpen(false)}
+        />
+      )}
     </main>
   );
 }

@@ -36,7 +36,6 @@ const navItems = [
   { href: "/admin/authorities", label: "Authority Roster", icon: ShieldCheck },
   { href: "/admin/departments", label: "Departments & Districts", icon: FolderTree },
   { href: "/admin/roles", label: "Roles & Permissions", icon: Shield },
-  { href: "/floor-explorer", label: "3D Floor Cadastre", icon: Layers },
   { href: "/workspace", label: "3D GIS Explorer", icon: Globe2 },
   { href: "/admin/audit-logs", label: "Audit Logs", icon: History },
   { href: "/admin/settings", label: "System Settings", icon: Sliders },
