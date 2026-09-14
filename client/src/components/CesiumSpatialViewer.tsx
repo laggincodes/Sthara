@@ -13,18 +13,36 @@ import type {
 } from "cesium";
 import {
   AlertTriangle,
+  Building2,
   Compass,
+  Eye,
   FileDown,
+  Info,
+  Layers3,
   LoaderCircle,
+  Maximize2,
   Navigation2,
   Pause,
   Play,
   RefreshCw,
   RotateCcw,
   RotateCw,
+  ScanSearch,
   Sparkles,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
+
+export type VisualMode = "standard" | "height" | "footprint" | "inspection";
+
+export type HoverTooltipInfo = {
+  x: number;
+  y: number;
+  name: string;
+  id: string;
+  height: string;
+  floors: string;
+  source: string;
+};
 
 export type SampleMapAsset = {
   kind: "floor-plan" | "model";
@@ -190,6 +208,7 @@ export function CesiumSpatialViewer({
     Cartographic,
     Cartesian2,
     Cartesian3,
+    Cesium3DTileStyle,
     Color,
     ColorMaterialProperty,
     ConstantProperty,
@@ -216,12 +235,19 @@ export function CesiumSpatialViewer({
   const dataSourceRef = useRef<CesiumGeoJsonDataSource | null>(null);
   const osmBuildingsRef = useRef<{
     show: boolean;
+    style?: unknown;
     destroy?: () => void;
   } | null>(null);
   const selectedOsmFeatureRef = useRef<{
     feature: OsmTileFeature;
     originalColor: unknown;
   } | null>(null);
+  const hoveredOsmFeatureRef = useRef<{
+    feature: OsmTileFeature;
+    originalColor: unknown;
+  } | null>(null);
+  const selectedBuildingLabelEntityRef = useRef<CesiumEntity | null>(null);
+  const selectedBuildingIdRef = useRef<string | null>(null);
   const imageryLayerRef = useRef<{ show: boolean } | null>(null);
   const streetImageryLayerRef = useRef<{ show: boolean } | null>(null);
   const authorityMarkerRef = useRef<CesiumEntity | null>(null);
@@ -252,6 +278,25 @@ export function CesiumSpatialViewer({
     "loading" | "ready" | "unavailable"
   >("loading");
   const [osmBuildingsVisible, setOsmBuildingsVisible] = useState(true);
+  const [visualMode, setVisualMode] = useState<VisualMode>("standard");
+  const visualModeRef = useRef<VisualMode>("standard");
+  const [cutawayMode, setCutawayMode] = useState(false);
+  const [hoverTooltip, setHoverTooltip] = useState<HoverTooltipInfo | null>(null);
+  const [selectedBuildingData, setSelectedBuildingData] = useState<{
+    id: string;
+    name: string;
+    height?: number;
+    floors?: number;
+    source: string;
+    ulpin?: string;
+    areaSqM?: number;
+    coordinates?: {
+      latitude: number;
+      longitude: number;
+      basis: "source-geometry" | "map-pick";
+    };
+    positionCartesian?: CesiumCartesian3;
+  } | null>(null);
   const [osmBuildingSelection, setOsmBuildingSelection] =
     useState<OsmBuildingSelection | null>(null);
   const [sourceBuildingSelection, setSourceBuildingSelection] = useState<{
@@ -451,139 +496,217 @@ export function CesiumSpatialViewer({
     setIsOrbiting360(current => !current);
   };
 
-  useEffect(() => {
-    const viewer = viewerRef.current;
-    if (!viewer || !viewerReady) return;
+  const applyOsmBuildingsStyle = useCallback(
+    (mode: VisualMode, selectedId: string | null) => {
+      const osmBuildings = osmBuildingsRef.current as any;
+      if (!osmBuildings || !cesiumRuntime?.Cesium3DTileStyle) return;
 
-    const handleCameraMoveEnd = () => {
-      if (!isOrbiting360) {
-        const hDeg =
-          Math.round((viewer.camera.heading * 180) / Math.PI) % 360;
-        setCurrentHeadingDeg(hDeg >= 0 ? hDeg : hDeg + 360);
-        const pDeg = Math.round((viewer.camera.pitch * 180) / Math.PI);
-        setCurrentPitchDeg(pDeg);
-      }
-    };
+      try {
+        const isSelectedExpr = selectedId
+          ? `\${feature['osm_id']} === '${selectedId}' || \${feature['id']} === '${selectedId}'`
+          : "false";
 
-    const removeListener = viewer.camera.moveEnd.addEventListener(
-      handleCameraMoveEnd
-    );
-    return () => {
-      removeListener();
-    };
-  }, [viewerReady, isOrbiting360]);
-
-  useEffect(() => {
-    const viewer = viewerRef.current;
-    if (!viewer || !viewerReady || !isOrbiting360) return;
-
-    const target = getOrbitCenter();
-    const range = Math.max(
-      Cartesian3.distance(viewer.camera.position, target),
-      80
-    );
-    const pitch = Math.min(viewer.camera.pitch, -0.35);
-    let heading = viewer.camera.heading;
-
-    const removeTick = viewer.clock.onTick.addEventListener(() => {
-      heading = (heading + 0.005) % (2 * Math.PI);
-      viewer.camera.lookAt(
-        target,
-        new HeadingPitchRange(heading, pitch, range)
-      );
-      const deg = Math.round((heading * 180) / Math.PI) % 360;
-      setCurrentHeadingDeg(deg >= 0 ? deg : deg + 360);
-    });
-
-    return () => {
-      removeTick();
-      if (viewer && !viewer.isDestroyed()) {
-        try {
-          viewer.camera.lookAtTransform(Matrix4.IDENTITY);
-        } catch {
-          // ignore
+        if (mode === "height") {
+          osmBuildings.style = new cesiumRuntime.Cesium3DTileStyle({
+            color: {
+              conditions: [
+                [isSelectedExpr, "color('#00f3ff', 0.98)"],
+                [
+                  "${feature['cesium#estimatedHeight']} >= 35 || ${feature['height']} >= 35",
+                  "color('#f59e0b', 0.88)",
+                ],
+                [
+                  "${feature['cesium#estimatedHeight']} >= 18 || ${feature['height']} >= 18",
+                  "color('#0ea5e9', 0.82)",
+                ],
+                [
+                  "${feature['cesium#estimatedHeight']} > 0 || ${feature['height']} > 0",
+                  "color('#14b8a6', 0.76)",
+                ],
+                [selectedId ? "true" : "false", "color('#0d282d', 0.25)"],
+                ["true", "color('#14b8a6', 0.65)"],
+              ],
+            },
+          });
+        } else if (mode === "footprint") {
+          osmBuildings.style = new cesiumRuntime.Cesium3DTileStyle({
+            color: {
+              conditions: [
+                [isSelectedExpr, "color('#00f3ff', 0.98)"],
+                [selectedId ? "true" : "false", "color('#071a1e', 0.18)"],
+                ["true", "color('#0284c7', 0.35)"],
+              ],
+            },
+          });
+        } else if (mode === "inspection") {
+          osmBuildings.style = new cesiumRuntime.Cesium3DTileStyle({
+            color: {
+              conditions: [
+                [isSelectedExpr, "color('#00f3ff', 0.98)"],
+                ["true", "color('#0b242a', 0.20)"],
+              ],
+            },
+          });
+        } else {
+          // Standard Mode: Semi-transparent cyan/teal with outline distinction and non-selected dimming
+          osmBuildings.style = new cesiumRuntime.Cesium3DTileStyle({
+            color: {
+              conditions: [
+                [isSelectedExpr, "color('#00f3ff', 0.98)"],
+                [selectedId ? "true" : "false", "color('#0c292f', 0.28)"],
+                ["true", "color('#188f9a', 0.65)"],
+              ],
+            },
+          });
         }
+        viewerRef.current?.scene.requestRender();
+      } catch (err) {
+        console.warn("[Cesium] Failed to apply 3D tile style", err);
       }
-    };
-  }, [isOrbiting360, viewerReady, floorStackData]);
+    },
+    [cesiumRuntime]
+  );
 
-  useEffect(() => {
-    measurementModeRef.current = measurementMode;
-  }, [measurementMode]);
+  const updateSelectedBuildingLabel = useCallback(
+    (
+      position: CesiumCartesian3,
+      name: string,
+      id: string,
+      height = 15
+    ) => {
+      const viewer = viewerRef.current;
+      if (!viewer) return;
 
-  useEffect(() => {
-    const viewer = viewerRef.current;
-    if (!viewer || !viewerReady) return;
-    if (sampleAssetEntityRef.current) {
-      viewer.entities.remove(sampleAssetEntityRef.current);
-      sampleAssetEntityRef.current = null;
-    }
-    if (sampleAsset?.kind === "model") {
-      sampleAssetEntityRef.current = viewer.entities.add(
+      if (selectedBuildingLabelEntityRef.current) {
+        viewer.entities.remove(selectedBuildingLabelEntityRef.current);
+        selectedBuildingLabelEntityRef.current = null;
+      }
+
+      const carto = Cartographic.fromCartesian(position);
+      const labelPos = Cartesian3.fromRadians(
+        carto.longitude,
+        carto.latitude,
+        carto.height + Math.max(4, height + 4)
+      );
+
+      const entity = viewer.entities.add(
         new Entity({
-          name: `DEMO sample 3D model · ${sampleAsset.name}`,
-          position: Cartesian3.fromDegrees(85.071159, 25.63366, 0),
-          model: new ModelGraphics({
-            uri: sampleAsset.url,
-            scale: 1,
-            minimumPixelSize: 48,
+          name: `Selected building label · ${name}`,
+          position: labelPos,
+          label: new LabelGraphics({
+            text: `${name.toUpperCase()}\n[${id}]`,
+            font: "bold 11px system-ui, -apple-system, sans-serif",
+            fillColor: Color.fromCssColorString("#e0f7fa"),
+            outlineColor: Color.fromCssColorString("#031b22"),
+            outlineWidth: 3,
+            showBackground: true,
+            backgroundColor: Color.fromCssColorString("rgba(5, 23, 29, 0.88)"),
+            backgroundPadding: new Cartesian2(8, 5),
+            pixelOffset: new Cartesian2(0, -22),
+            disableDepthTestDistance: Number.POSITIVE_INFINITY,
+            scale: 1.0,
+          }),
+          point: new PointGraphics({
+            pixelSize: 6,
+            color: Color.fromCssColorString("#00f3ff"),
+            outlineColor: Color.WHITE,
+            outlineWidth: 1.5,
+            disableDepthTestDistance: Number.POSITIVE_INFINITY,
           }),
         })
       );
+      selectedBuildingLabelEntityRef.current = entity;
       viewer.scene.requestRender();
+    },
+    [Cartesian2, Cartesian3, Cartographic, Color, Entity, LabelGraphics, PointGraphics]
+  );
+
+  const clearSelectedBuilding = useCallback(() => {
+    const viewer = viewerRef.current;
+    if (selectedBuildingLabelEntityRef.current && viewer) {
+      viewer.entities.remove(selectedBuildingLabelEntityRef.current);
+      selectedBuildingLabelEntityRef.current = null;
     }
-    return () => {
-      if (sampleAssetEntityRef.current) {
-        viewer.entities.remove(sampleAssetEntityRef.current);
-        sampleAssetEntityRef.current = null;
-      }
-    };
-  }, [sampleAsset, viewerReady]);
+    const selection = selectedOsmFeatureRef.current;
+    if (selection) {
+      selection.feature.color = selection.originalColor;
+      selectedOsmFeatureRef.current = null;
+    }
+    selectedBuildingIdRef.current = null;
+    setOsmBuildingSelection(null);
+    setSourceBuildingSelection(null);
+    setSelectedBuildingData(null);
+    applyOsmBuildingsStyle(visualModeRef.current, null);
+    if (viewer) viewer.scene.requestRender();
+  }, [applyOsmBuildingsStyle]);
+
+  const focusBuilding = (targetPos?: CesiumCartesian3, height = 25) => {
+    const viewer = viewerRef.current;
+    if (!viewer) return;
+    if (isOrbiting360) setIsOrbiting360(false);
+    const target = targetPos ?? selectedBuildingData?.positionCartesian ?? getOrbitCenter();
+    const range = Math.max(75, height * 2.8);
+    viewer.camera.flyToBoundingSphere(new BoundingSphere(target, 0), {
+      offset: new HeadingPitchRange(viewer.camera.heading, -0.62, range),
+      duration: 0.75,
+    });
+  };
+
+  useEffect(() => {
+    visualModeRef.current = visualMode;
+    const selectedId = selectedBuildingData?.id ?? null;
+    applyOsmBuildingsStyle(visualMode, selectedId);
+  }, [visualMode, selectedBuildingData?.id, applyOsmBuildingsStyle]);
 
   useEffect(() => {
     if (!containerRef.current || viewerRef.current) return;
-    let viewer: CesiumViewer | null = null;
+    let viewer: CesiumViewer;
     try {
       Ion.defaultAccessToken =
         import.meta.env.VITE_CESIUM_ION_ACCESS_TOKEN || "";
       viewer = new Viewer(containerRef.current, {
         animation: false,
-        baseLayer: false,
         baseLayerPicker: false,
         fullscreenButton: false,
         geocoder: false,
         homeButton: false,
         infoBox: false,
-        navigationHelpButton: false,
         sceneModePicker: false,
         selectionIndicator: false,
         timeline: false,
-        terrainProvider: new EllipsoidTerrainProvider(),
+        navigationHelpButton: false,
         shouldAnimate: false,
+        requestRenderMode: true,
+        maximumRenderTimeChange: Number.POSITIVE_INFINITY,
       });
+      viewer.scene.globe.depthTestAgainstTerrain = true;
+      viewer.scene.screenSpaceCameraController.enableCollisionDetection = true;
     } catch (error) {
-      console.error("[Cesium] Failed to initialize the 3D viewer", error);
-      setViewerError("The 3D scene could not start on this device.");
       setViewerState("error");
+      setViewerError(
+        error instanceof Error
+          ? error.message
+          : "Unable to initialize Cesium WebGL context"
+      );
       return;
     }
-    if (!viewer) return;
-    viewer.scene.backgroundColor = Color.fromCssColorString("#081217");
-    viewer.scene.globe.baseColor = Color.fromCssColorString("#162a2c");
-    viewer.scene.globe.depthTestAgainstTerrain = false;
-    if (viewer.scene.skyAtmosphere) viewer.scene.skyAtmosphere.show = false;
-    viewer.scene.skyBox = undefined;
-    viewer.camera.setView({
-      destination: Cartesian3.fromDegrees(77.6245, 12.9352, 2300),
-    });
-    let highlightedEntity: CesiumEntity | null = null;
+
     const restoreOsmBuildingHighlight = (clearSelection = true) => {
       const selection = selectedOsmFeatureRef.current;
       if (selection) {
         selection.feature.color = selection.originalColor;
         selectedOsmFeatureRef.current = null;
       }
-      if (clearSelection) setOsmBuildingSelection(null);
+      if (clearSelection) {
+        setOsmBuildingSelection(null);
+        setSelectedBuildingData(null);
+        selectedBuildingIdRef.current = null;
+        if (selectedBuildingLabelEntityRef.current) {
+          viewer.entities.remove(selectedBuildingLabelEntityRef.current);
+          selectedBuildingLabelEntityRef.current = null;
+        }
+        applyOsmBuildingsStyle(visualModeRef.current, null);
+      }
     };
     const isOsmBuildingFeature = (
       picked: unknown
@@ -605,11 +728,12 @@ export function CesiumSpatialViewer({
     };
     const selectOsmBuilding = (
       feature: OsmTileFeature,
-      coordinates?: DetailedMapSelection["coordinates"]
+      coordinates?: DetailedMapSelection["coordinates"],
+      pickedPosition?: CesiumCartesian3
     ) => {
       restoreOsmBuildingHighlight(false);
       const originalColor = feature.color;
-      feature.color = Color.fromCssColorString("#ffe17a").withAlpha(0.92);
+      feature.color = Color.fromCssColorString("#00f3ff").withAlpha(0.98);
       selectedOsmFeatureRef.current = { feature, originalColor };
 
       const rawHeight =
@@ -639,18 +763,62 @@ export function CesiumSpatialViewer({
       const osmIdentifier = osmProperty(feature, ["osm_id", "id"]);
       const street = osmProperty(feature, ["addr:street", "addr:city"]);
 
-      setOsmBuildingSelection({
-        name: buildingName,
-        buildingType: buildingType,
-        osmIdentifier: osmIdentifier,
+      const displayName =
+        buildingName !== "Not exposed by OSM tile"
+          ? buildingName
+          : "Unnamed Building";
+      const displayId =
+        osmIdentifier !== "Not exposed by OSM tile"
+          ? osmIdentifier
+          : "Not available";
+
+      selectedBuildingIdRef.current = osmIdentifier;
+      setSelectedBuildingData({
+        id: displayId,
+        name: displayName,
+        height: numericHeight,
+        floors: numericLevels,
+        source: "OpenStreetMap 3D Photogrammetry Tiles",
+        coordinates,
+        positionCartesian: pickedPosition,
       });
+
+      setOsmBuildingSelection({
+        name: displayName,
+        buildingType: buildingType,
+        osmIdentifier: displayId,
+      });
+
+      applyOsmBuildingsStyle(visualModeRef.current, osmIdentifier);
+
+      if (pickedPosition) {
+        updateSelectedBuildingLabel(
+          pickedPosition,
+          displayName,
+          displayId,
+          numericHeight || 16
+        );
+
+        const targetRange = Math.max(85, (numericHeight || 25) * 2.8);
+        viewer.camera.flyToBoundingSphere(
+          new BoundingSphere(pickedPosition, 0),
+          {
+            offset: new HeadingPitchRange(
+              viewer.camera.heading,
+              -0.62,
+              targetRange
+            ),
+            duration: 0.75,
+          }
+        );
+      }
 
       onDetailedFeatureSelect?.({
         kind: "osm-3d-tile",
         properties: {
-          name: buildingName,
+          name: displayName,
           buildingType: buildingType,
-          osmIdentifier: osmIdentifier,
+          osmIdentifier: displayId,
           approvedHeightMetres: numericHeight,
           heightMetres: numericHeight,
           levels: numericLevels,
@@ -659,7 +827,7 @@ export function CesiumSpatialViewer({
           source: "OpenStreetMap / Cesium Ion 3D Photogrammetry Tile",
           heightSource: "Real-World Cesium Ion 3D Mesh / OSM Attributes",
         },
-        sourceReference: osmIdentifier,
+        sourceReference: displayId,
         coordinates,
       });
       viewer.selectedEntity = undefined;
@@ -798,6 +966,7 @@ export function CesiumSpatialViewer({
       }
       viewer.scene.requestRender();
     };
+    let highlightedEntity: CesiumEntity | null = null;
     viewer.screenSpaceEventHandler.setInputAction(
       (movement: { position: CesiumCartesian2 }) => {
         const activeMeasurementMode = measurementModeRef.current;
@@ -874,24 +1043,60 @@ export function CesiumSpatialViewer({
         restoreFootprintStyle(highlightedEntity);
         if (selectedEntity.polygon) {
           selectedEntity.polygon.material = new ColorMaterialProperty(
-            Color.fromCssColorString("#73fff1").withAlpha(0.78)
+            Color.fromCssColorString("#00f3ff").withAlpha(0.88)
           );
           selectedEntity.polygon.outlineColor = new ConstantProperty(
-            Color.fromCssColorString("#fff3b0")
+            Color.fromCssColorString("#ffffff")
           );
         }
         highlightedEntity = selectedEntity;
         viewer.selectedEntity = selectedEntity;
+        const buildingName =
+          typeof properties.name === "string"
+            ? properties.name
+            : "Source-backed PostGIS footprint";
+        const h =
+          typeof properties.approvedHeightMetres === "number"
+            ? properties.approvedHeightMetres
+            : undefined;
+        const l =
+          typeof properties.approvedFloorCount === "number"
+            ? properties.approvedFloorCount
+            : undefined;
+
+        selectedBuildingIdRef.current = ulpin;
+        setSelectedBuildingData({
+          id: ulpin,
+          name: buildingName,
+          height: h,
+          floors: l,
+          source: "PostGIS Municipal Survey",
+          ulpin,
+          areaSqM:
+            typeof properties.areaSqM === "number"
+              ? properties.areaSqM
+              : undefined,
+        });
+
         setSourceBuildingSelection({
-          name:
-            typeof properties.name === "string"
-              ? properties.name
-              : "Source-backed PostGIS footprint",
+          name: buildingName,
           ulpin,
         });
+
+        applyOsmBuildingsStyle(visualModeRef.current, ulpin);
+
+        const centerPos = entity.position?.getValue(viewer.clock.currentTime);
+        if (centerPos) {
+          updateSelectedBuildingLabel(centerPos, buildingName, ulpin, h || 15);
+        }
+
         void viewer.flyTo(selectedEntity, {
-          duration: 0.45,
-          offset: new HeadingPitchRange(0.32, -0.86, 180),
+          duration: 0.55,
+          offset: new HeadingPitchRange(
+            viewer.camera.heading,
+            -0.65,
+            Math.max(80, (h || 20) * 3)
+          ),
         });
         onFeatureSelect?.({ ulpin, properties });
         onDetailedFeatureSelect?.({
@@ -907,12 +1112,123 @@ export function CesiumSpatialViewer({
     viewer.screenSpaceEventHandler.setInputAction(
       (movement: { endPosition: CesiumCartesian2 }) => {
         const picked = viewer.scene.pick(movement.endPosition);
+        if (isOsmBuildingFeature(picked)) {
+          const rawH =
+            picked.getProperty?.("cesium#estimatedHeight") ??
+            picked.getProperty?.("height") ??
+            picked.getProperty?.("building:height") ??
+            picked.getProperty?.("render_height");
+          const numericHeight =
+            typeof rawH === "number"
+              ? rawH
+              : typeof rawH === "string" && !isNaN(parseFloat(rawH))
+                ? parseFloat(rawH)
+                : undefined;
+
+          const rawL =
+            picked.getProperty?.("building:levels") ??
+            picked.getProperty?.("levels");
+          const numericLevels =
+            typeof rawL === "number"
+              ? rawL
+              : typeof rawL === "string" && !isNaN(parseInt(rawL, 10))
+                ? parseInt(rawL, 10)
+                : undefined;
+
+          const bName = osmProperty(picked, ["name", "addr:housename"]);
+          const bId = osmProperty(picked, ["osm_id", "id"]);
+
+          setHoverTooltip({
+            x: movement.endPosition.x + 14,
+            y: movement.endPosition.y + 14,
+            name:
+              bName !== "Not exposed by OSM tile"
+                ? bName
+                : "Unnamed Building",
+            id: bId !== "Not exposed by OSM tile" ? bId : "Not available",
+            height: numericHeight
+              ? `${numericHeight.toFixed(1)} m`
+              : "Not available",
+            floors: numericLevels
+              ? `${numericLevels} Levels`
+              : "Not available",
+            source: "OpenStreetMap 3D Tiles",
+          });
+
+          if (hoveredOsmFeatureRef.current?.feature !== picked) {
+            if (
+              hoveredOsmFeatureRef.current &&
+              hoveredOsmFeatureRef.current.feature !==
+                selectedOsmFeatureRef.current?.feature
+            ) {
+              hoveredOsmFeatureRef.current.feature.color =
+                hoveredOsmFeatureRef.current.originalColor;
+            }
+            if (picked !== selectedOsmFeatureRef.current?.feature) {
+              hoveredOsmFeatureRef.current = {
+                feature: picked,
+                originalColor: picked.color,
+              };
+              picked.color = Color.fromCssColorString("#67e8f9").withAlpha(
+                0.88
+              );
+            }
+          }
+          return;
+        }
+
         const entity =
           defined(picked) && picked.id && typeof picked.id === "object"
             ? (picked.id as CesiumEntity)
             : undefined;
+
+        if (entity && entity.polygon) {
+          const properties = (entity.properties?.getValue?.() ?? {}) as Record<
+            string,
+            unknown
+          >;
+          const ulpin =
+            typeof properties.ulpin === "string" ? properties.ulpin : null;
+          const h =
+            typeof properties.approvedHeightMetres === "number"
+              ? properties.approvedHeightMetres
+              : undefined;
+          const l =
+            typeof properties.approvedFloorCount === "number"
+              ? properties.approvedFloorCount
+              : undefined;
+          const name =
+            typeof properties.name === "string"
+              ? properties.name
+              : "Source-backed PostGIS footprint";
+
+          setHoverTooltip({
+            x: movement.endPosition.x + 14,
+            y: movement.endPosition.y + 14,
+            name,
+            id: ulpin ?? "Not available",
+            height: h ? `${h.toFixed(1)} m` : "Not available",
+            floors: l ? `${l} Levels` : "Not available",
+            source: "PostGIS Municipal Survey",
+          });
+        } else {
+          setHoverTooltip(null);
+        }
+
+        if (
+          hoveredOsmFeatureRef.current &&
+          hoveredOsmFeatureRef.current.feature !==
+            selectedOsmFeatureRef.current?.feature
+        ) {
+          hoveredOsmFeatureRef.current.feature.color =
+            hoveredOsmFeatureRef.current.originalColor;
+          hoveredOsmFeatureRef.current = null;
+        }
+
         const floorIdxProp = entity?.properties?.floorIndex?.getValue?.();
-        const floorMatch = entity?.name?.match(/^(?:DEMO floor level|3D Cadastre Level)\s*(-?\d+|[A-Z0-9]+)/i);
+        const floorMatch = entity?.name?.match(
+          /^(?:DEMO floor level|3D Cadastre Level)\s*(-?\d+|[A-Z0-9]+)/i
+        );
         const floorLevel =
           floorIdxProp !== undefined
             ? Number(floorIdxProp)
@@ -920,7 +1236,9 @@ export function CesiumSpatialViewer({
               ? Number(floorMatch[1])
               : null;
         onMockFloorHover?.(
-          floorLevel !== null && Number.isFinite(floorLevel) ? floorLevel : null
+          floorLevel !== null && Number.isFinite(floorLevel)
+            ? floorLevel
+            : null
         );
         const properties = (entity?.properties?.getValue?.() ?? {}) as Record<
           string,
@@ -1665,84 +1983,271 @@ export function CesiumSpatialViewer({
       )}
       {viewerState === "ready" && (
         <div
-          className="cesium-360-rotation-deck"
-          aria-label="360 Camera Rotation Deck"
+          className="cesium-3d-building-control-bar"
+          aria-label="3D Building GIS Controls"
         >
-          <button
-            type="button"
-            onClick={toggle360Orbit}
-            className={`orbit-toggle-btn ${isOrbiting360 ? "orbiting-active" : ""}`}
-            title={
-              isOrbiting360
-                ? "Pause 360° Continuous Turntable Orbit"
-                : "Start 360° Continuous Turntable Orbit"
-            }
-          >
-            {isOrbiting360 ? (
-              <Pause size={13} className="text-cyan-300 animate-pulse" />
-            ) : (
-              <Play size={13} className="text-emerald-400" />
-            )}
-            <span>{isOrbiting360 ? "360° Orbiting..." : "360° Orbit"}</span>
-          </button>
-
-          <div className="stepper-group">
+          {/* Visual Modes Group */}
+          <div className="mode-pill-group">
+            <span className="mode-label">Mode:</span>
             <button
               type="button"
-              onClick={() => rotateHeading(-45)}
-              title="Rotate Left 45°"
+              className={`mode-btn ${visualMode === "standard" ? "active" : ""}`}
+              onClick={() => setVisualMode("standard")}
+              title="Standard 3D Buildings with satellite context"
             >
-              <RotateCcw size={11} /> 45°
+              Standard
             </button>
             <button
               type="button"
-              onClick={() => rotateHeading(45)}
-              title="Rotate Right 45°"
+              className={`mode-btn ${visualMode === "height" ? "active" : ""}`}
+              onClick={() => setVisualMode("height")}
+              title="Height-aware color analysis"
             >
-              <RotateCw size={11} /> 45°
+              Height
+            </button>
+            <button
+              type="button"
+              className={`mode-btn ${visualMode === "footprint" ? "active" : ""}`}
+              onClick={() => setVisualMode("footprint")}
+              title="Emphasize building footprints and parcel boundaries"
+            >
+              Footprint
+            </button>
+            <button
+              type="button"
+              className={`mode-btn ${visualMode === "inspection" ? "active" : ""}`}
+              onClick={() => setVisualMode("inspection")}
+              title="Inspection Mode: Isolate selected building and subdue background"
+            >
+              Inspection
             </button>
           </div>
 
-          <div className="tilt-group">
+          <div className="control-divider" />
+
+          {/* Camera Angles Group */}
+          <div className="camera-pill-group">
             <button
               type="button"
-              className={currentPitchDeg > -35 ? "active" : ""}
-              onClick={() => setCameraPitchAngle(-22)}
-              title="Cinematic Low-Angle 3D View (22°)"
-            >
-              Cinematic
-            </button>
-            <button
-              type="button"
-              className={
-                currentPitchDeg <= -35 && currentPitchDeg >= -60 ? "active" : ""
+              onClick={toggle360Orbit}
+              className={`cam-btn ${isOrbiting360 ? "active-orbit" : ""}`}
+              title={
+                isOrbiting360
+                  ? "Pause 360° Turntable Orbit"
+                  : "Start 360° Continuous Turntable Orbit"
               }
-              onClick={() => setCameraPitchAngle(-45)}
-              title="Standard 3D Isometric View (45°)"
             >
-              3D Iso
+              {isOrbiting360 ? (
+                <Pause size={12} className="text-cyan-300 animate-pulse" />
+              ) : (
+                <Play size={12} className="text-emerald-400" />
+              )}
+              <span>Orbit</span>
+            </button>
+
+            <button
+              type="button"
+              className={`cam-btn ${currentPitchDeg < -60 ? "active" : ""}`}
+              onClick={() => setCameraPitchAngle(-89)}
+              title="2D Top-Down Nadir/Plan View (90°)"
+            >
+              Top
             </button>
             <button
               type="button"
-              className={currentPitchDeg < -60 ? "active" : ""}
-              onClick={() => setCameraPitchAngle(-89)}
-              title="2D Top-Down Plan View (90°)"
+              className={`cam-btn ${
+                currentPitchDeg <= -35 && currentPitchDeg >= -60 ? "active" : ""
+              }`}
+              onClick={() => setCameraPitchAngle(-45)}
+              title="Perspective View (45°)"
             >
-              Plan
+              45°
+            </button>
+            <button
+              type="button"
+              className={`cam-btn ${currentPitchDeg > -35 ? "active" : ""}`}
+              onClick={() => setCameraPitchAngle(-25)}
+              title="Isometric 3D View"
+            >
+              Isometric
             </button>
           </div>
 
-          <button
-            type="button"
-            onClick={resetToNorth}
-            className="compass-btn"
-            title="Reset Compass to Due North (0°)"
-          >
-            <Compass size={13} className="text-cyan-400" />
-            <span className="font-mono text-[10px] text-cyan-200">
-              {String(currentHeadingDeg).padStart(3, "0")}°
+          <div className="control-divider" />
+
+          {/* Inspection & Tools Group */}
+          <div className="tools-pill-group">
+            <button
+              type="button"
+              className="tool-btn"
+              onClick={() => focusBuilding()}
+              title="Focus and frame selected building in 3D"
+            >
+              <ScanSearch size={12} className="text-cyan-400" />
+              <span>Inspect</span>
+            </button>
+            <button
+              type="button"
+              className={`tool-btn ${cutawayMode ? "active" : ""}`}
+              onClick={() => setCutawayMode(c => !c)}
+              title="Toggle Vertical Cutaway & Height Elevation Ruler"
+            >
+              <Layers3 size={12} className="text-cyan-400" />
+              <span>Cutaway</span>
+            </button>
+            <button
+              type="button"
+              onClick={resetToNorth}
+              className="tool-btn compass-reset"
+              title="Reset View and Compass to Due North (0°)"
+            >
+              <Compass size={12} className="text-cyan-400" />
+              <span className="font-mono text-[10px] text-cyan-200">
+                {String(currentHeadingDeg).padStart(3, "0")}°
+              </span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Cursor-Attached Hover Inspection Tooltip */}
+      {hoverTooltip && (
+        <div
+          className="cesium-hover-inspector-tooltip"
+          style={{ left: hoverTooltip.x, top: hoverTooltip.y }}
+          role="tooltip"
+        >
+          <div className="tooltip-header">
+            <Building2 size={13} className="text-cyan-400 shrink-0" />
+            <span className="font-bold text-slate-100 truncate">
+              {hoverTooltip.name}
             </span>
-          </button>
+          </div>
+          <div className="tooltip-body">
+            <div className="tooltip-row">
+              <span className="label">Building ID:</span>
+              <span className="val font-mono">{hoverTooltip.id}</span>
+            </div>
+            <div className="tooltip-row">
+              <span className="label">Height:</span>
+              <span className="val">{hoverTooltip.height}</span>
+            </div>
+            <div className="tooltip-row">
+              <span className="label">Floors:</span>
+              <span className="val">{hoverTooltip.floors}</span>
+            </div>
+            <div className="tooltip-row">
+              <span className="label">Source:</span>
+              <span className="val text-cyan-300 font-medium">
+                {hoverTooltip.source}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Vertical Cutaway Height Profile Ruler */}
+      {cutawayMode && (
+        <div
+          className="cesium-vertical-cutaway-ruler"
+          role="region"
+          aria-label="Vertical Cutaway Height Ruler"
+        >
+          <div className="cutaway-header">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-300 flex items-center gap-1.5">
+              <Layers3 size={12} className="text-cyan-400" />
+              Vertical Height Profile
+            </span>
+            <span className="text-[10px] text-slate-400 font-mono">
+              {selectedBuildingData?.height
+                ? `${selectedBuildingData.height.toFixed(1)} m Total`
+                : "MSL Elevation"}
+            </span>
+          </div>
+
+          <div className="cutaway-body">
+            {/* Roof Marker */}
+            <div className="ruler-level roof">
+              <div className="level-badge">Roof</div>
+              <div className="level-line" />
+              <div className="level-val">
+                {selectedBuildingData?.height
+                  ? `${selectedBuildingData.height.toFixed(1)} m`
+                  : "Not available"}
+              </div>
+            </div>
+
+            {/* Real Floor Levels (if present in authoritative dataset) */}
+            {floorStackData?.floors && floorStackData.floors.length > 0 ? (
+              <div className="ruler-floors-stack">
+                {[...floorStackData.floors].reverse().map(floor => {
+                  const isSelected = activeFloorIndex === floor.floorIndex;
+                  return (
+                    <button
+                      key={floor.floorIndex}
+                      type="button"
+                      onClick={() => onFloorSelect?.(floor.floorIndex)}
+                      className={`ruler-floor-item ${isSelected ? "selected" : ""}`}
+                    >
+                      <span className="code">Lvl {floor.floorCode}</span>
+                      <span className="name truncate">{floor.floorName}</span>
+                      <span className="msl font-mono">{floor.elevationMsl}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="ruler-no-floors">
+                <Info size={12} className="text-amber-400 shrink-0" />
+                <span>
+                  Floor geometry: <b>Not available</b>
+                </span>
+              </div>
+            )}
+
+            {/* Ground Baseline Marker */}
+            <div className="ruler-level ground">
+              <div className="level-badge">Ground</div>
+              <div className="level-line" />
+              <div className="level-val">0.0 m (Baseline)</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Height Mode Interactive Scale Legend */}
+      {visualMode === "height" && (
+        <div className="cesium-height-legend" role="note">
+          <span className="legend-title">Height Analysis Scale</span>
+          <div className="legend-items">
+            <div className="legend-item">
+              <span className="color-swatch bg-[#f59e0b]" /> High (≥ 35 m)
+            </div>
+            <div className="legend-item">
+              <span className="color-swatch bg-[#0ea5e9]" /> Medium (18 - 35 m)
+            </div>
+            <div className="legend-item">
+              <span className="color-swatch bg-[#14b8a6]" /> Low (&lt; 18 m)
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Footprint Mode Layer Legend */}
+      {visualMode === "footprint" && (
+        <div className="cesium-footprint-legend" role="note">
+          <span className="legend-title">Cadastral Visual Layers</span>
+          <div className="legend-items">
+            <div className="legend-item">
+              <span className="line-swatch border-cyan-400" /> Building Footprint
+            </div>
+            <div className="legend-item">
+              <span className="line-swatch border-emerald-400" /> Parcel Boundary
+            </div>
+            <div className="legend-item">
+              <span className="line-swatch border-sky-400" /> 3D Extrusion
+            </div>
+          </div>
         </div>
       )}
       {viewerState === "ready" && (

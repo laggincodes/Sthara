@@ -16,6 +16,8 @@ import {
   ShieldCheck,
   AlertTriangle,
   Info,
+  Scale,
+  FileText,
 } from "lucide-react";
 import type { DetailedMapSelection } from "@/components/CesiumSpatialViewer";
 import type {
@@ -38,7 +40,7 @@ type BuildingInformationPanelProps = {
   onOverrideFloorCountChange?: (count: number | null) => void;
 };
 
-const unavailable = "Data not available / Not verified";
+const notAvailable = "Not available";
 
 function valueFrom(properties: Record<string, unknown>, keys: string[]) {
   for (const key of keys) {
@@ -48,12 +50,6 @@ function valueFrom(properties: Record<string, unknown>, keys: string[]) {
       return String(value);
   }
   return null;
-}
-
-function formatNumber(value: number | null) {
-  return value === null || !Number.isFinite(value)
-    ? unavailable
-    : value.toLocaleString(undefined, { maximumFractionDigits: 6 });
 }
 
 function numberFrom(properties: Record<string, unknown>, keys: string[]) {
@@ -91,13 +87,28 @@ function centroidFromGeometry(geometry: unknown) {
   };
 }
 
-function Field({ label, children }: { label: string; children: string }) {
+function InspectorField({
+  label,
+  value,
+  isCode = false,
+  highlight = false,
+}: {
+  label: string;
+  value: string | null | undefined;
+  isCode?: boolean;
+  highlight?: boolean;
+}) {
+  const isUnavail = !value || value === notAvailable || value === "Not exposed by OSM tile";
+  const displayVal = isUnavail ? notAvailable : value;
+
   return (
-    <div className="building-info-field">
-      <dt>{label}</dt>
-      <dd className={children === unavailable ? "unavailable" : ""}>
-        {children}
-      </dd>
+    <div className="inspector-field-row">
+      <span className="field-label">{label}</span>
+      <span
+        className={`field-value ${isUnavail ? "text-slate-500 italic" : highlight ? "text-cyan-300 font-semibold" : "text-slate-200"} ${isCode && !isUnavail ? "font-mono text-[11px]" : ""}`}
+      >
+        {displayVal}
+      </span>
     </div>
   );
 }
@@ -153,23 +164,23 @@ export function BuildingInformationPanel({
   overrideFloorCount = null,
   onOverrideFloorCountChange,
 }: BuildingInformationPanelProps) {
-  const [copiedUlpin, setCopiedUlpin] = useState<string | null>(null);
+  const [copiedText, setCopiedText] = useState<string | null>(null);
 
   if (!selection && !floorStack) {
     return (
       <section
         className="building-information-panel empty"
-        aria-label="Building information panel"
+        aria-label="Building inspector panel"
       >
         <div className="building-information-heading">
           <div>
-            <p>3D Cadastral & Floor Information</p>
-            <h2>Select a visible building or search for a place</h2>
+            <p>3D Spatial Cadastre</p>
+            <h2>BUILDING INSPECTOR</h2>
           </div>
-          <Building2 size={18} />
+          <Building2 size={20} className="text-cyan-400/60" />
         </div>
         <p className="building-information-empty-copy">
-          Search for an institution (e.g. <b>IIT Patna</b>, <b>Amity University</b>, or <b>Patna Central Heights</b>) or click any building on the 3D map to inspect multi-storey floor stacks and cadastral units.
+          Select any 3D building on the map or search for an institution (e.g. <b>IIT Patna</b>, <b>AIIMS Patna</b>, or <b>Patna Central Heights</b>) to inspect source-backed identification, geometry, and vertical cadastre attributes.
         </p>
       </section>
     );
@@ -198,26 +209,58 @@ export function BuildingInformationPanel({
     floorStack?.coordinates.longitude ??
     geometryCentroid?.longitude ??
     null;
-  const name =
+
+  const rawName =
     floorStack?.buildingName ??
-    valueFrom(properties, ["name", "title", "buildingName"]) ??
-    unavailable;
-  const location =
-    floorStack?.address ??
-    valueFrom(properties, ["location", "address", "locality", "place"]) ??
-    unavailable;
-  const buildingType =
-    valueFrom(properties, [
-      "buildingType",
-      "propertyType",
-      "buildingUse",
-      "use",
-    ]) ?? "Institutional / Multi-Storey";
-  const height = floorStack
-    ? `${floorStack.actualHeightM.toFixed(1)} m (${floorStack.actualFloors})`
-    : valueFrom(properties, ["approvedHeightMetres", "heightMetres"])
-      ? `${valueFrom(properties, ["approvedHeightMetres", "heightMetres"])} m`
-      : unavailable;
+    valueFrom(properties, ["name", "title", "buildingName", "addr:housename"]);
+  const buildingName = rawName && rawName !== "Not exposed by OSM tile" ? rawName : "Unnamed Building";
+
+  const rawBuildingId =
+    floorStack?.id ??
+    valueFrom(properties, ["buildingId", "osmIdentifier", "osm_id", "id", "featureId"]);
+  const buildingId = rawBuildingId && rawBuildingId !== "Not exposed by OSM tile" ? rawBuildingId : notAvailable;
+
+  const rawUlpin = floorStack?.ulpin ?? valueFrom(properties, ["ulpin", "ULPIN"]);
+  const ulpin = rawUlpin ? rawUlpin : notAvailable;
+
+  const sourceName = floorStack
+    ? "National 3D ULPIN Cadastre / Municipal Authority"
+    : isOsm
+      ? "OpenStreetMap / Cesium Ion 3D Photogrammetry Tiles"
+      : "PostGIS Municipal GIS Spatial Database";
+
+  const sourceCategory = isOsm ? "Visual Context Only" : "Authoritative GIS Survey Layer";
+
+  // Real Geometry Attributes
+  const rawHeight =
+    floorStack?.actualHeightM !== undefined
+      ? `${floorStack.actualHeightM.toFixed(1)} m`
+      : valueFrom(properties, ["approvedHeightMetres", "heightMetres", "cesium#estimatedHeight", "height"])
+        ? `${parseFloat(String(valueFrom(properties, ["approvedHeightMetres", "heightMetres", "cesium#estimatedHeight", "height"]))).toFixed(1)} m`
+        : notAvailable;
+
+  const rawFloors =
+    floorStack?.floors
+      ? `${floorStack.floors.length} Levels`
+      : valueFrom(properties, ["levels", "building:levels", "approvedFloorCount"])
+        ? `${valueFrom(properties, ["levels", "building:levels", "approvedFloorCount"])} Levels`
+        : notAvailable;
+
+  const rawFootprint =
+    floorStack?.floors?.[0]?.grossAreaSqM !== undefined
+      ? `${floorStack.floors[0].grossAreaSqM} m²`
+      : valueFrom(properties, ["areaSqM", "footprintSqM", "area", "calculatedAreaSqM"])
+        ? `${Number(valueFrom(properties, ["areaSqM", "footprintSqM", "area", "calculatedAreaSqM"])).toFixed(1)} m²`
+        : notAvailable;
+
+  // Real Property Attributes (Never fake!)
+  const ownerName =
+    valueFrom(properties, ["ownerName", "owner", "proprietaryName", "holder"]) ??
+    notAvailable;
+
+  const parcelStatus =
+    valueFrom(properties, ["parcelStatus", "landUseStatus", "cadastralStatus", "status"]) ??
+    notAvailable;
 
   const currentFloor =
     activeFloorIndex !== null && floorStack
@@ -235,147 +278,159 @@ export function BuildingInformationPanel({
     }
   }
 
-  const handleCopy = (ulpin: string) => {
-    navigator.clipboard.writeText(ulpin);
-    setCopiedUlpin(ulpin);
-    toast.success("3D ULPIN Copied", { description: ulpin });
-    setTimeout(() => setCopiedUlpin(null), 2000);
+  const handleCopy = (textToCopy: string, label: string) => {
+    navigator.clipboard.writeText(textToCopy);
+    setCopiedText(textToCopy);
+    toast.success(`${label} Copied`, { description: textToCopy });
+    setTimeout(() => setCopiedText(null), 2000);
   };
 
   return (
     <section
       className="building-information-panel"
-      aria-label="Building information panel"
+      aria-label="Building inspector panel"
     >
-      {/* Top Header */}
-      <div className="building-information-heading">
+      {/* 1. Header */}
+      <div className="building-information-heading border-b border-cyan-500/20 pb-3">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-              3D Cadastre Active
+            <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-cyan-950/80 text-cyan-300 border border-cyan-500/30">
+              BUILDING INSPECTOR
             </span>
-            {floorStack?.sanctionStatus === "SANCTIONED_WITH_DEVIATIONS" && (
-              <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
-                <AlertTriangle size={10} /> Sanction Deviation
+            {isOsm ? (
+              <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                Visual Mesh Context
+              </span>
+            ) : (
+              <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                Source-Backed Layer
               </span>
             )}
           </div>
-          <h2 className="text-base font-bold text-slate-100">{name}</h2>
-          <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
-            <MapPin size={12} className="text-cyan-400 shrink-0" />
-            <span className="truncate">{location}</span>
-          </p>
+          <h2 className="text-base font-bold text-slate-100">{buildingName}</h2>
+          {latitude !== null && longitude !== null && (
+            <p className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5 font-mono">
+              <MapPin size={11} className="text-cyan-400 shrink-0" />
+              <span>{latitude.toFixed(6)}°N, {longitude.toFixed(6)}°E</span>
+            </p>
+          )}
         </div>
         {isOsm ? (
-          <ShieldAlert size={20} className="text-amber-400" />
+          <ShieldAlert size={20} className="text-amber-400 shrink-0 mt-1" />
         ) : (
-          <ShieldCheck size={20} className="text-cyan-400" />
+          <ShieldCheck size={20} className="text-cyan-400 shrink-0 mt-1" />
         )}
       </div>
 
-      {/* Building 3D Metrics Grid */}
-      <dl className="building-information-grid">
-        <Field label="Building Height">{height}</Field>
-        <Field label="Total Storeys">
-          {floorStack ? `${floorStack.floors.length} Levels (${floorStack.actualFloors})` : unavailable}
-        </Field>
-        <Field label="3D ULPIN Envelope">
-          {floorStack?.ulpin ?? valueFrom(properties, ["ulpin"]) ?? unavailable}
-        </Field>
-        <Field label="Sanction Number">
-          {floorStack?.municipalSanctionNo ?? unavailable}
-        </Field>
-      </dl>
+      {/* 2. SOURCE Section */}
+      <div className="inspector-section">
+        <h3 className="inspector-section-title">
+          <FileText size={12} className="text-cyan-400" />
+          SOURCE
+        </h3>
+        <div className="inspector-field-grid">
+          <InspectorField label="Data Source" value={sourceName} />
+          <InspectorField label="Category" value={sourceCategory} />
+        </div>
+      </div>
 
-      {/* Building Storeys / Level Stepper Simulator */}
-      {onOverrideFloorCountChange && (
-        <div className="p-2.5 bg-slate-900/80 border border-slate-800 rounded-xl mb-3 text-xs">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="font-semibold text-slate-300 flex items-center gap-1.5">
-              <Sparkles size={12} className="text-amber-400" />
-              Storey Level Detection / Simulator:
-            </span>
-            <span className="text-[10px] font-mono text-cyan-300 bg-cyan-950 px-2 py-0.5 rounded border border-cyan-800/60">
-              {overrideFloorCount ? `${overrideFloorCount} Storeys (Manual)` : "Auto-Inferred from Sanction/Height"}
-            </span>
+      {/* 3. IDENTIFICATION Section */}
+      <div className="inspector-section">
+        <h3 className="inspector-section-title">
+          <Building2 size={12} className="text-cyan-400" />
+          IDENTIFICATION
+        </h3>
+        <div className="inspector-field-grid">
+          <div className="flex items-center justify-between inspector-field-row">
+            <span className="field-label">Building ID:</span>
+            <div className="flex items-center gap-1.5">
+              <span className={`field-value ${buildingId === notAvailable ? "text-slate-500 italic" : "font-mono text-cyan-200"}`}>
+                {buildingId}
+              </span>
+              {buildingId !== notAvailable && (
+                <button
+                  type="button"
+                  onClick={() => handleCopy(buildingId, "Building ID")}
+                  className="p-1 text-slate-400 hover:text-white rounded hover:bg-slate-800"
+                  title="Copy ID"
+                >
+                  <Copy size={10} />
+                </button>
+              )}
+            </div>
           </div>
-          <div className="flex flex-wrap gap-1">
-            {[
-              { label: "Auto", count: null },
-              { label: "4 Storeys (G+3)", count: 4 },
-              { label: "7 Storeys (G+6)", count: 7 },
-              { label: "8 Storeys (G+7)", count: 8 },
-              { label: "10 Storeys (G+9)", count: 10 },
-              { label: "12 Storeys (G+11)", count: 12 },
-              { label: "15 Storeys (G+14)", count: 15 },
-            ].map(preset => (
-              <button
-                key={preset.label}
-                type="button"
-                onClick={() => onOverrideFloorCountChange(preset.count)}
-                className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-all ${
-                  overrideFloorCount === preset.count
-                    ? "bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-md shadow-amber-500/25 ring-1 ring-amber-300"
-                    : "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white border border-slate-700/50"
-                }`}
-              >
-                {preset.label}
-              </button>
-            ))}
+          <div className="flex items-center justify-between inspector-field-row">
+            <span className="field-label">3D ULPIN:</span>
+            <div className="flex items-center gap-1.5">
+              <span className={`field-value ${ulpin === notAvailable ? "text-slate-500 italic" : "font-mono text-cyan-300 font-bold"}`}>
+                {ulpin}
+              </span>
+              {ulpin !== notAvailable && (
+                <button
+                  type="button"
+                  onClick={() => handleCopy(ulpin, "3D ULPIN")}
+                  className="p-1 text-slate-400 hover:text-white rounded hover:bg-slate-800"
+                  title="Copy 14-Digit 3D ULPIN"
+                >
+                  <Copy size={10} />
+                </button>
+              )}
+            </div>
           </div>
         </div>
-      )}
+      </div>
 
-      {/* 3D Explosion Slicer Slider (Integrated in Panel) */}
-      {onExplosionFactorChange && (
-        <div className="p-3 bg-slate-900/80 border border-slate-800 rounded-xl mb-3">
-          <div className="flex items-center justify-between text-xs mb-1.5">
-            <span className="font-semibold text-slate-300 flex items-center gap-1.5">
-              <Sliders size={13} className="text-cyan-400" />
-              3D Floor Separation (Explode View)
-            </span>
-            <span className="font-mono text-cyan-400 font-bold">
-              {Math.round(explosionFactor * 100)}%
-            </span>
-          </div>
-          <input
-            type="range"
-            min={0}
-            max={1}
-            step={0.05}
-            value={explosionFactor}
-            onChange={e => onExplosionFactorChange(parseFloat(e.target.value))}
-            className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-400"
-          />
-          <div className="flex justify-between text-[10px] text-slate-500 mt-1">
-            <span>0% Compact</span>
-            <span>50% Layered</span>
-            <span>100% Fully Exploded</span>
-          </div>
+      {/* 4. GEOMETRY Section */}
+      <div className="inspector-section">
+        <h3 className="inspector-section-title">
+          <Layers size={12} className="text-cyan-400" />
+          GEOMETRY
+        </h3>
+        <div className="inspector-field-grid">
+          <InspectorField label="Footprint Area" value={rawFootprint} />
+          <InspectorField label="Building Height" value={rawHeight} highlight={rawHeight !== notAvailable} />
+          <InspectorField label="Floors / Levels" value={rawFloors} highlight={rawFloors !== notAvailable} />
         </div>
-      )}
+      </div>
 
-      {/* Floor-by-Floor Quick Slicer Selector */}
+      {/* 5. PROPERTY Section */}
+      <div className="inspector-section">
+        <h3 className="inspector-section-title">
+          <Scale size={12} className="text-cyan-400" />
+          PROPERTY & CADASTRE
+        </h3>
+        <div className="inspector-field-grid">
+          <InspectorField label="Registered Owner" value={ownerName} />
+          <InspectorField label="Parcel Cadastre Status" value={parcelStatus} />
+        </div>
+      </div>
+
+      {/* 6. Real Floor Stack & Cadastral Units (If Present) */}
       {floorStack && (
-        <div className="mb-4">
+        <div className="inspector-section bg-slate-950/70 p-3 rounded-xl border border-cyan-500/25">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-              <Layers size={13} className="text-cyan-400" />
-              Select Floor Level
-            </span>
-            <span className="text-[11px] text-slate-400 font-medium">
-              {activeFloorIndex === null ? "Viewing All Floors" : `Level ${currentFloor?.floorCode || ""}`}
+            <h3 className="inspector-section-title mb-0">
+              <Layers size={12} className="text-cyan-400" />
+              FLOOR-BY-FLOOR CADASTRE
+            </h3>
+            <span className="text-[11px] text-cyan-300 font-mono">
+              {activeFloorIndex === null ? "All Floors" : `Level ${currentFloor?.floorCode}`}
             </span>
           </div>
 
-          <div className="flex flex-wrap gap-1.5">
+          <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1.5">
+            Select Floor Level
+          </div>
+
+          {/* Floor Level Pills */}
+          <div className="flex flex-wrap gap-1.5 my-2">
             <button
               type="button"
               onClick={() => onFloorSelect?.(null)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${
                 activeFloorIndex === null
-                  ? "bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20"
-                  : "bg-slate-800/80 text-slate-300 hover:bg-slate-700/80 border border-slate-700/50"
+                  ? "bg-cyan-500 text-slate-950 font-extrabold shadow-sm shadow-cyan-500/40"
+                  : "bg-slate-800 text-slate-300 hover:bg-slate-700"
               }`}
             >
               All Floors
@@ -387,132 +442,103 @@ export function BuildingInformationPanel({
                   key={floor.floorIndex}
                   type="button"
                   onClick={() => onFloorSelect?.(floor.floorIndex)}
-                  className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all relative ${
+                  className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${
                     isActive
-                      ? "bg-gradient-to-r from-cyan-400 to-sky-500 text-slate-950 font-extrabold shadow-md shadow-cyan-500/30 ring-2 ring-cyan-300"
-                      : floor.isUnauthorizedFloor
-                        ? "bg-rose-950/40 text-rose-300 border border-rose-700/50 hover:bg-rose-900/50"
-                        : "bg-slate-800/80 text-slate-300 hover:bg-slate-700 border border-slate-700/50"
+                      ? "bg-gradient-to-r from-cyan-400 to-sky-400 text-slate-950 ring-1 ring-cyan-200 font-extrabold"
+                      : "bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700/60"
                   }`}
                   title={`${floor.floorName} (${floor.elevationMsl})`}
                 >
                   {floor.floorCode}
-                  {floor.isUnauthorizedFloor && (
-                    <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-slate-900" />
-                  )}
                 </button>
               );
             })}
           </div>
 
-          {currentFloor && (
-            <div className="mt-2.5 p-2.5 rounded-xl bg-cyan-950/30 border border-cyan-500/30 text-xs">
-              <div className="flex items-center justify-between font-bold text-cyan-300 mb-1">
-                <span>{currentFloor.floorName}</span>
-                <span className="font-mono text-[11px] bg-cyan-500/20 px-2 py-0.5 rounded text-cyan-200">
-                  {currentFloor.elevationMsl}
-                </span>
+          {/* Registered Units on Floor */}
+          {unitsToDisplay.length > 0 && (
+            <div className="mt-3 space-y-1.5 max-h-56 overflow-y-auto pr-1 custom-scrollbar">
+              <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1">
+                Registered Cadastral Units ({unitsToDisplay.length})
               </div>
-              <div className="text-[11px] text-slate-400 flex items-center gap-3 mt-1">
-                <span>Floor Area: <b>{currentFloor.grossAreaSqM} m²</b></span>
-                <span>Units on Floor: <b>{currentFloor.units.length}</b></span>
+              {unitsToDisplay.map(({ floor, unit }) => {
+                const badge = getUnitTypeBadge(unit.unitType);
+                return (
+                  <div
+                    key={unit.id}
+                    onClick={() => onUnitSelect?.(floor, unit)}
+                    className="p-2 rounded-lg bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-cyan-500/50 cursor-pointer transition-all"
+                  >
+                    <div className="flex items-center justify-between text-xs font-semibold">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded border ${badge.bg}`}>
+                          {badge.label}
+                        </span>
+                        <span className="text-slate-200">{unit.unitNumber}</span>
+                      </div>
+                      <span className="text-[10px] font-mono text-cyan-300">{unit.carpetAreaSqM} m²</span>
+                    </div>
+                    <div className="mt-1 flex items-center justify-between text-[10px] text-slate-400">
+                      <span>Owner: <b className="text-slate-300">{unit.owner.name}</b></span>
+                      <span className="font-mono text-slate-500 truncate max-w-[120px]">{unit.ulpin3d}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* 3D Floor Separation (Explode View) */}
+          {onExplosionFactorChange && (
+            <div className="mt-3 pt-2.5 border-t border-slate-800/80">
+              <div className="flex items-center justify-between text-[11px] text-slate-300 font-semibold mb-1">
+                <span>3D Floor Separation (Explode View)</span>
+                <span className="font-mono text-cyan-300">{Math.round(explosionFactor * 100)}%</span>
               </div>
-              {currentFloor.isUnauthorizedFloor && (
-                <div className="mt-2 p-1.5 rounded bg-rose-950/60 border border-rose-500/40 text-rose-300 text-[11px] flex items-center gap-1.5">
-                  <AlertTriangle size={12} className="shrink-0" />
-                  <span>{currentFloor.heightViolationNotice || "Floor built without approved municipal height sanction."}</span>
-                </div>
-              )}
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                value={explosionFactor}
+                onChange={e => onExplosionFactorChange(parseFloat(e.target.value))}
+                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+              />
             </div>
           )}
         </div>
       )}
 
-      {/* Cadastral Units List */}
-      {floorStack && unitsToDisplay.length > 0 && (
-        <div className="space-y-2 mb-3">
-          <div className="flex items-center justify-between text-xs font-bold text-slate-300 uppercase tracking-wider">
-            <span>Registered Cadastral Units ({unitsToDisplay.length})</span>
-            <span className="text-[10px] text-cyan-400 font-normal">Click unit for Deed & Clearances</span>
+      {/* 7. EVIDENCE Section */}
+      <div className="inspector-section border-t border-slate-800/80 pt-3">
+        <h3 className="inspector-section-title">
+          <ShieldCheck size={12} className="text-cyan-400" />
+          EVIDENCE & INTEGRITY
+        </h3>
+        <div className="text-[10px] text-slate-400 space-y-1.5">
+          <div className="flex items-center justify-between">
+            <span>Evidence Basis:</span>
+            <b className="text-slate-300">
+              {isOsm ? "OSM 3D Photogrammetry Tile" : "Live PostGIS Geometry"}
+            </b>
+          </div>
+          <div className="flex items-center justify-between">
+            <span>Confidence:</span>
+            <b className={isOsm ? "text-amber-400" : "text-emerald-400"}>
+              {isOsm ? "Visual Context / Non-Cadastral" : "Source-backed"}
+            </b>
           </div>
 
-          <div className="max-h-72 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
-            {unitsToDisplay.map(({ floor, unit }) => {
-              const badge = getUnitTypeBadge(unit.unitType);
-              return (
-                <div
-                  key={unit.id}
-                  onClick={() => onUnitSelect?.(floor, unit)}
-                  className="p-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800/90 border border-slate-800 hover:border-cyan-500/50 transition-all cursor-pointer group"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${badge.bg}`}>
-                          {badge.label}
-                        </span>
-                        <span className="text-[10px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded">
-                          Lvl {floor.floorCode}
-                        </span>
-                      </div>
-                      <h4 className="text-xs font-bold text-slate-100 truncate group-hover:text-cyan-300 transition-colors">
-                        {unit.unitNumber}
-                      </h4>
-                    </div>
-                    <ChevronRight size={15} className="text-slate-500 group-hover:text-cyan-400 group-hover:translate-x-0.5 transition-all shrink-0 mt-1" />
-                  </div>
-
-                  {/* 3D ULPIN Row */}
-                  <div className="mt-2 flex items-center justify-between gap-2 bg-slate-950/60 p-1.5 rounded-lg border border-slate-800">
-                    <span className="font-mono text-[10px] text-cyan-300 truncate">
-                      {unit.ulpin3d}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={e => {
-                        e.stopPropagation();
-                        handleCopy(unit.ulpin3d);
-                      }}
-                      className="p-1 text-slate-400 hover:text-white rounded hover:bg-slate-800 transition-colors"
-                      title="Copy 14-Digit 3D ULPIN"
-                    >
-                      <Copy size={11} />
-                    </button>
-                  </div>
-
-                  {/* Unit Area / Owner / Clearances row */}
-                  <div className="mt-2 grid grid-cols-2 gap-1.5 text-[10px] text-slate-400">
-                    <div>Carpet: <b className="text-slate-200">{unit.carpetAreaSqM} m²</b> ({unit.volumeCuM} m³)</div>
-                    <div>Owner: <b className="text-slate-200 truncate inline-block max-w-[110px] align-bottom">{unit.owner.name}</b></div>
-                  </div>
-
-                  <div className="mt-2 flex items-center gap-2 pt-1 border-t border-slate-800/80 text-[10px]">
-                    <span className="flex items-center gap-1 text-emerald-400">
-                      <Flame size={10} /> Fire NOC {unit.clearances.fireNoc}
-                    </span>
-                    <span className="flex items-center gap-1 text-sky-400">
-                      <Zap size={10} /> {unit.clearances.electricitySanctionedKw} kW
-                    </span>
-                    <span className="flex items-center gap-1 text-amber-400">
-                      <CheckCircle2 size={10} /> Tax {unit.clearances.municipalTaxStatus}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
+          <div className="mt-2 p-2 rounded bg-cyan-950/40 border border-cyan-500/20 text-[10px] text-cyan-200/90 leading-relaxed">
+            <span className="font-semibold text-cyan-300 block mb-0.5">Data Integrity</span>
+            The system does not invent cadastral facts—it visualizes authoritative data and explicitly reports unavailable attributes.
           </div>
+
+          <p className="mt-1.5 p-2 rounded bg-slate-950/80 border border-slate-800 text-[10px] text-slate-400 leading-relaxed">
+            <Info size={11} className="inline mr-1 text-cyan-400" />
+            Statutory Notice: 3D models and extruded geometries represent visual spatial context. Authoritative parcel boundaries, heights, ownership, and vertical ULPINs require verification by the state land revenue department.
+          </p>
         </div>
-      )}
-
-      {/* Verification footer */}
-      <div className="building-information-verification">
-        <MapPin size={14} className="text-cyan-400 shrink-0" />
-        <span>
-          <b>Source / Cadastral Verification</b>
-          {floorStack
-            ? `National 3D ULPIN Cadastre · Institutional Block · Verified with ${floorStack.floors.length} levels & ${floorStack.totalUnits} volumetric units.`
-            : "Live PostGIS source layer; floor levels rendered dynamically for this footprint."}
-        </span>
       </div>
     </section>
   );
