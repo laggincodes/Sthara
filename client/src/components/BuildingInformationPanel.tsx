@@ -40,7 +40,7 @@ type BuildingInformationPanelProps = {
   onOverrideFloorCountChange?: (count: number | null) => void;
 };
 
-const notAvailable = "Not available";
+const notAvailable = "Data Not available / Not verified";
 
 function valueFrom(properties: Record<string, unknown>, keys: string[]) {
   for (const key of keys) {
@@ -427,11 +427,10 @@ export function BuildingInformationPanel({
             <button
               type="button"
               onClick={() => onFloorSelect?.(null)}
-              className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${
-                activeFloorIndex === null
+              className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${activeFloorIndex === null
                   ? "bg-cyan-500 text-slate-950 font-extrabold shadow-sm shadow-cyan-500/40"
                   : "bg-slate-800 text-slate-300 hover:bg-slate-700"
-              }`}
+                }`}
             >
               All Floors
             </button>
@@ -442,11 +441,10 @@ export function BuildingInformationPanel({
                   key={floor.floorIndex}
                   type="button"
                   onClick={() => onFloorSelect?.(floor.floorIndex)}
-                  className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${
-                    isActive
+                  className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${isActive
                       ? "bg-gradient-to-r from-cyan-400 to-sky-400 text-slate-950 ring-1 ring-cyan-200 font-extrabold"
                       : "bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700/60"
-                  }`}
+                    }`}
                   title={`${floor.floorName} (${floor.elevationMsl})`}
                 >
                   {floor.floorCode}
