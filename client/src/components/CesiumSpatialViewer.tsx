@@ -503,26 +503,24 @@ export function CesiumSpatialViewer({
 
       try {
         const isSelectedExpr = selectedId
-          ? `\${feature['osm_id']} === '${selectedId}' || \${feature['id']} === '${selectedId}'`
+          ? `(defined(\${feature['osm_id']}) && \${feature['osm_id']} === '${selectedId}') || (defined(\${feature['id']}) && \${feature['id']} === '${selectedId}')`
           : "false";
 
         if (mode === "height") {
+          const isHighRise =
+            "(defined(${feature['cesium#estimatedHeight']}) && ${feature['cesium#estimatedHeight']} >= 35) || (defined(${feature['height']}) && ${feature['height']} >= 35) || (defined(${feature['building:height']}) && ${feature['building:height']} >= 35) || (defined(${feature['render_height']}) && ${feature['render_height']} >= 35)";
+          const isMidRise =
+            "(defined(${feature['cesium#estimatedHeight']}) && ${feature['cesium#estimatedHeight']} >= 18) || (defined(${feature['height']}) && ${feature['height']} >= 18) || (defined(${feature['building:height']}) && ${feature['building:height']} >= 18) || (defined(${feature['render_height']}) && ${feature['render_height']} >= 18)";
+          const isLowRise =
+            "(defined(${feature['cesium#estimatedHeight']}) && ${feature['cesium#estimatedHeight']} > 0) || (defined(${feature['height']}) && ${feature['height']} > 0) || (defined(${feature['building:height']}) && ${feature['building:height']} > 0) || (defined(${feature['render_height']}) && ${feature['render_height']} > 0)";
+
           osmBuildings.style = new cesiumRuntime.Cesium3DTileStyle({
             color: {
               conditions: [
                 [isSelectedExpr, "color('#00f3ff', 0.98)"],
-                [
-                  "${feature['cesium#estimatedHeight']} >= 35 || ${feature['height']} >= 35",
-                  "color('#f59e0b', 0.88)",
-                ],
-                [
-                  "${feature['cesium#estimatedHeight']} >= 18 || ${feature['height']} >= 18",
-                  "color('#0ea5e9', 0.82)",
-                ],
-                [
-                  "${feature['cesium#estimatedHeight']} > 0 || ${feature['height']} > 0",
-                  "color('#14b8a6', 0.76)",
-                ],
+                [isHighRise, "color('#f59e0b', 0.88)"],
+                [isMidRise, "color('#0ea5e9', 0.82)"],
+                [isLowRise, "color('#14b8a6', 0.76)"],
                 [selectedId ? "true" : "false", "color('#0d282d', 0.25)"],
                 ["true", "color('#14b8a6', 0.65)"],
               ],
@@ -657,6 +655,43 @@ export function CesiumSpatialViewer({
     const selectedId = selectedBuildingData?.id ?? null;
     applyOsmBuildingsStyle(visualMode, selectedId);
   }, [visualMode, selectedBuildingData?.id, applyOsmBuildingsStyle]);
+
+  useEffect(() => {
+    if (!isOrbiting360) return;
+    const viewer = viewerRef.current;
+    if (!viewer) return;
+
+    let animFrameId: number;
+    const target = selectedBuildingData?.positionCartesian ?? getOrbitCenter();
+    let heading = viewer.camera.heading;
+    const pitch = viewer.camera.pitch;
+    const range = Math.max(
+      Cartesian3.distance(viewer.camera.position, target),
+      65
+    );
+
+    const orbitLoop = () => {
+      const v = viewerRef.current;
+      if (!v) return;
+      heading = (heading + 0.0075) % (Math.PI * 2);
+      v.camera.lookAt(target, new HeadingPitchRange(heading, pitch, range));
+      v.camera.lookAtTransform(Matrix4.IDENTITY);
+      const deg = Math.round((heading * 180) / Math.PI) % 360;
+      setCurrentHeadingDeg(deg >= 0 ? deg : deg + 360);
+      v.scene.requestRender();
+      animFrameId = requestAnimationFrame(orbitLoop);
+    };
+
+    animFrameId = requestAnimationFrame(orbitLoop);
+
+    return () => {
+      if (animFrameId) cancelAnimationFrame(animFrameId);
+      const v = viewerRef.current;
+      if (v) {
+        v.camera.lookAtTransform(Matrix4.IDENTITY);
+      }
+    };
+  }, [isOrbiting360, selectedBuildingData?.positionCartesian, Cartesian3, HeadingPitchRange, Matrix4]);
 
   useEffect(() => {
     if (!containerRef.current || viewerRef.current) return;
@@ -2040,9 +2075,26 @@ export function CesiumSpatialViewer({
               {isOrbiting360 ? (
                 <Pause size={12} className="text-cyan-300 animate-pulse" />
               ) : (
-                <Play size={12} className="text-emerald-400" />
+                <RotateCw size={12} className="text-emerald-400" />
               )}
-              <span>Orbit</span>
+              <span>360° Orbit</span>
+            </button>
+
+            <button
+              type="button"
+              className="cam-btn px-1.5"
+              onClick={() => rotateHeading(-45)}
+              title="Step Rotate 45° Counter-Clockwise"
+            >
+              <RotateCcw size={11} className="text-slate-400" />
+            </button>
+            <button
+              type="button"
+              className="cam-btn px-1.5"
+              onClick={() => rotateHeading(45)}
+              title="Step Rotate 45° Clockwise"
+            >
+              <RotateCw size={11} className="text-slate-400" />
             </button>
 
             <button
