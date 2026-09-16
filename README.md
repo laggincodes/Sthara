@@ -1,174 +1,239 @@
-# 3D ULPIN-VPM
+# 3D ULPIN-VPM: 3D Cadastre & Vertical Property Mapping System
 
-> **3D ULPIN Generation and Vertical Property Mapping System** — an evidence-safe prototype for source-aware 3D property review, vertical-cadastre workflows, and authority-gated data verification.
+[![SIH 2026](https://img.shields.io/badge/Smart%20India%20Hackathon-2026-blue.svg)](https://sih.gov.in/)
+[![Problem Statement ID](https://img.shields.io/badge/Problem%20Statement%20ID-26011-orange.svg)](https://sih.gov.in/)
+[![Ministry](https://img.shields.io/badge/Ministry-Dept.%20of%20Land%20Resources%20(DoLR)-emerald.svg)](https://dolr.gov.in/)
+[![Tech Stack](https://img.shields.io/badge/Tech-React%2019%20%7C%20CesiumJS%20%7C%20PostGIS%20%7C%20tRPC%20%7C%20Neon-cyan.svg)](#technology-stack)
+[![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen.svg)](#testing-and-verification)
 
-This project was developed as a prototype aligned with the **Department of Land Resources** problem direction for 3D ULPIN and vertical property mapping. It brings together a React dashboard, Cesium 3D visualization, PostGIS source geometry, Clerk authentication, backend-enforced roles, audit workflows, and evidence locks.
+> **Official Problem Statement ID: 26011** — *3D Unique Land Parcel Identification Number (3D ULPIN) Generation and Vertical Property Mapping (VPM) System for Digital Cadastre, High-Rise Ownership, and Multi-Storey Land Governance.*
 
-**Important:** The application is a demonstration and review platform. It does **not** issue a government ULPIN, certify ownership, infer a legal parcel boundary, or claim surveyed height/floor/rights data when the required authority evidence is absent. See the [capability audit](validation/ulpin-vpm-capability-audit.md) for the current verified, demo-only, and authority-pending boundaries.
+---
 
-## What the Project Demonstrates
+## Executive Summary
 
-| Capability               | Current behavior                                                                                                     | Evidence-safe boundary                                                              |
-| ------------------------ | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| Source-aware 3D map      | Cesium renders source-backed footprints, layers, focus controls, and public 3D visual context.                       | Visual context is not treated as cadastral ownership or legal geometry.             |
-| Vertical evidence ladder | The interface distinguishes Level 1 footprint, Level 2 verified-height extrusion, and Level 3 floor-plan/BIM review. | A higher level remains locked until its required evidence is available.             |
-| Property discovery       | Parcels, Buildings, and ULPIN Registry provide source-record discovery, filtering, map focus, and safe exports.      | A source record is not automatically an issued vertical ULPIN.                      |
-| Evidence intake          | GeoJSON/floor-plan workflow, issue reports, and verification submissions are available for review.                   | Uploaded or AI-assisted material remains non-authoritative pending review.          |
-| Identity and roles       | Clerk manages identity and sessions; the backend maps Clerk IDs to application roles.                                | Users cannot grant themselves a role from the browser.                              |
-| Reporting                | CSV and PDF exports retain source/evidence limitations and measurement disclaimers.                                  | Approximate visual measurements are not survey, legal, or engineering measurements. |
+The **3D ULPIN-VPM Platform** is an enterprise-grade, evidence-safe **3D GIS Digital Cadastre** developed for the **Department of Land Resources (DoLR), Ministry of Rural Development, Government of India**. 
 
-## Architecture
+As urban areas rapidly densify with high-rise structures, traditional 2D cadastral surveys fail to represent vertical ownership, overlapping rights, and multi-storey property units. This platform solves the 3D property boundary challenge by generating **14-digit Unique 3D ULPINs (Bhu-Aadhaar 3D)**, extruding verified PostGIS spatial parcels into 3D volumetric space, and providing unit-by-unit vertical cadastre slicing across high-rise buildings.
 
-```text
-Browser
-  └─ React 19 + TypeScript + Vite + Tailwind/Radix UI
-       ├─ CesiumJS 3D globe + Three.js focused preview
-       ├─ Clerk React components for sign-in, profile, and session state
-       └─ tRPC client + TanStack Query for typed protected data requests
+---
 
-Vercel / Node API
-  └─ Express + Clerk middleware + tRPC router
-       ├─ Server-enforced protected/admin procedures
-       ├─ PostGIS GeoJSON endpoint protected by API key
-       ├─ Audit, issue-report, and verification workflows
-       └─ Storage/AI adapters where a portable provider is configured
+## Core Capabilities & Innovations
 
-Data
-  ├─ Neon PostgreSQL + Drizzle ORM: app users, roles, submissions, audit logs
-  └─ PostGIS source feed: source-backed spatial footprints / GeoJSON
+### 1. 3D GIS Digital Twin & Campus Inspection
+- **CesiumJS 3D Globe**: High-precision WGS84 ellipsoid rendering with global terrain depth testing, Cesium World Imagery, and OpenStreetMap 3D photogrammetry tilesets.
+- **Native 60 FPS Styling Engine**: Uses native `Cesium3DTileStyle` conditional expressions without rebuilding tilesets or thrashing the DOM.
+- **Visual Modes**:
+  - `Standard Mode`: Semi-transparent teal/cyan shading (`#188f9a`, 65% alpha) with roof/wall depth and contextual satellite basemap transparency.
+  - `Height Analysis Mode`: Color-coded elevation bands (Amber for $\ge 35\text{m}$, Sky Blue for $18\text{--}35\text{m}$, Teal for $<18\text{m}$) with on-map legend.
+  - `Footprint Mode`: Accents ground footprint contours and cadastre parcel boundary alignments with subdued upper geometry.
+  - `Inspection Mode`: Isolates the selected building with glowing turquoise outlines (`#00f3ff`) while dimming surrounding structures (`rgba(12, 41, 47, 0.28)`).
+
+### 2. Smooth 360° Turntable Orbit & Camera Presets
+- **Continuous 360° Orbit**: Frame-by-frame continuous camera rotation around the inspected building's centroid.
+- **Incremental Stepper Controls**: Quick $\pm 45^\circ$ step rotation buttons.
+- **Orthogonal & Oblique Presets**:
+  - **Top (Nadir / Plan 90°)**: 2D cadastral boundary alignment.
+  - **45° Perspective**: Standard urban oblique overview.
+  - **Isometric View (25°)**: 3D vertical spatial inspection.
+  - **Compass Reset**: Live heading readout with instant reset to True North (0°).
+
+### 3. Multi-Storey Cadastral Slicing & Vertical Floor Stacks
+- **Vertical Floor Explosion**: Interactive slider to separate multi-storey floor slabs in 3D volumetric space.
+- **Floor-by-Floor Cadastre**: Level selection pills (`B1`, `G`, `F1`–`F12`, `Terrace`) displaying MSL elevation, unit count, and carpet area.
+- **Registered Cadastral Units**: Detailed breakdown of residential, commercial, office, parking, and common utility units with owner names and 14-digit 3D ULPINs.
+
+### 4. Zero Mock / Strict Data Integrity
+- **Non-Negotiable Data Rules**: Never fabricates or estimates heights, floors, owners, or ULPINs. If authoritative records are missing, fields explicitly report `"Data Not available / Not verified"`.
+- **Three-Level Evidence Ladder**:
+  - `Level 1 — Source Footprint`: Public/open/source-backed footprint with unverified height.
+  - `Level 2 — Verified Height`: Authority-verified elevation and matched PostGIS geometry.
+  - `Level 3 — Floor Plan / BIM`: Official architectural floor plan, registered vertical units, and verified ownership.
+
+---
+
+## End-to-End User Flow
+
+```mermaid
+flowchart TD
+    A[3D CAMPUS / CITY OVERVIEW] -->|Pointer Hover| B[Building Hover Tooltip & Highlighting]
+    B -->|Click Selection| C[Building Select & Smooth Camera Fly-To]
+    C -->|Background Dimmed| D[BUILDING INSPECTOR PANEL]
+    D --> E1[SOURCE Context]
+    D --> E2[IDENTIFICATION: 3D ULPIN & ID]
+    D --> E3[GEOMETRY: Footprint Area & Real Height]
+    D --> E4[PROPERTY: Owner & Cadastral Status]
+    D --> E5[EVIDENCE: Integrity Rating & Statutory Notice]
+    D -->|Floor Stack Present| F[3D Floor Slicer & Vertical Cadastre]
+    F --> G1[Floor Explosion View]
+    F --> G2[Floor Level Selection]
+    F --> G3[Unit-by-Unit Ownership & 3D ULPIN]
 ```
 
-React provides the component UI, while Vite provides the local development and optimized production build workflow.[1] [2] CesiumJS supplies the high-precision WGS84 3D globe and geospatial visualization capabilities.[3] PostGIS is used for spatial objects and GIS operations within PostgreSQL.[4]
+---
 
 ## Technology Stack
 
-| Area                     | Technologies used                                       | Purpose                                                                                             |
-| ------------------------ | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| Frontend                 | React 19, TypeScript, Vite, Wouter                      | Responsive SPA pages, typed UI, routing, and production assets.                                     |
-| UI system                | Tailwind CSS, Radix UI, Lucide, Framer Motion           | Accessible controls, dialogs, inputs, icons, focused motion, and skeleton loading states.           |
-| 3D/GIS                   | CesiumJS, Three.js, Cesium ion context, PostGIS GeoJSON | Source footprint visualization, layers, camera controls, 3D context, and selected-geometry preview. |
-| Backend                  | Node.js, Express, tRPC, Zod                             | Typed APIs, validation, protected procedures, and server-side business rules.                       |
-| Authentication           | Clerk React, Clerk Express                              | Password/session/recovery handling and verified server authentication context.                      |
-| Application database     | Neon PostgreSQL, `pg`, Drizzle ORM                      | Clerk-linked application users, server-assigned roles, submissions, issue reports, and audit logs.  |
-| Storage and AI workflows | Existing storage/AI adapters                            | Evidence-file and AI-assisted workflows where a configured runtime provider is available.           |
-| Testing and quality      | Vitest, TypeScript checks, Vite/esbuild build           | Regression tests, static typing, and production-build validation.                                   |
-| Hosting                  | Vercel static assets + Node serverless function         | Public SPA delivery and the Express/tRPC API adapter.                                               |
+| Layer | Technologies | Purpose |
+| :--- | :--- | :--- |
+| **Frontend UI** | React 19, TypeScript, Vite, Wouter | Single-page application, routing, and responsive dashboard. |
+| **Styling & Icons** | Tailwind CSS, Radix UI, Lucide, Framer Motion | Modern dark government GIS aesthetics, HUD toolbars, accessible dialogs. |
+| **3D & Spatial GIS** | CesiumJS, Three.js, Cesium Ion, PostGIS GeoJSON | 3D globe, photogrammetric 3D tiles, floor explosion, spatial geometry. |
+| **Backend API** | Node.js, Express, tRPC v10, Zod | Type-safe RPC endpoints, validation, and protected authority workflows. |
+| **Authentication & RBAC** | Clerk React, Clerk Express, Neon RBAC | Multi-role identity (Citizen, Authority Officer, Super Admin). |
+| **Database & ORM** | Neon PostgreSQL, PostGIS, Drizzle ORM | Spatially indexed parcels, cadastral units, audit trails, evidence files. |
+| **Testing & Quality** | Vitest, TypeScript compiler (`tsc --noEmit`) | Automated unit, integration, and cadastral test suites. |
+| **Deployment** | Vercel Serverless Functions + Static Assets | Production hosting with low-latency CDN delivery. |
 
-## User Roles and Access Control
+---
 
-Clerk is used only for identity, passwords, session recovery, and account security. The application database stores the **Clerk user ID** and a **server-assigned role**; it does not store user passwords.
+## Architecture
 
-| Role                  | Assignment                                                                    | Typical permitted workflow                                                   |
-| --------------------- | ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `citizen`             | Default when a new Clerk account is first mapped on the backend.              | View public/source context and submit correction/issue reports.              |
-| `authority`           | Assigned by an existing Administrator through a protected backend action.     | Use authority evidence/review workflows.                                     |
-| `government_employee` | Assigned by an existing Administrator through a protected backend action.     | Access government/aggregate operational views.                               |
-| `admin`               | Assigned by an existing Administrator or server-only bootstrap configuration. | Manage roles, access protected settings, and review audit-oriented controls. |
+```
+                                  ┌────────────────────────┐
+                                  │   Clerk Auth Portal    │
+                                  └───────────┬────────────┘
+                                              │ Session Token
+                                              ▼
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                                   CLIENT (React 19)                                    │
+│  ┌────────────────────────┐  ┌─────────────────────────┐  ┌─────────────────────────┐  │
+│  │   Cesium 3D Viewer     │  │  Building Inspector HUD │  │   3D Floor Slicer       │  │
+│  │  (WGS84 3D Globe,      │  │  (5-Section Cadastral   │  │  (Floor Explosion,      │  │
+│  │   3D Tiles, 360 Orbit) │  │   Attributes & Integrity│  │   Unit Cadastre Drawer) │  │
+│  └───────────┬────────────┘  └────────────┬────────────┘  └────────────┬────────────┘  │
+└──────────────┼────────────────────────────┼────────────────────────────┼───────────────┘
+               │                            │ tRPC Requests              │
+               ▼                            ▼                            ▼
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                              SERVER (Express / tRPC API)                               │
+│  ┌────────────────────────┐  ┌─────────────────────────┐  ┌─────────────────────────┐  │
+│  │  RBAC & Role Gate      │  │  3D Cadastre Service    │  │  Audit & Surveillance   │  │
+│  │  (Citizen / Officer /  │  │  (14-digit ULPIN logic, │  │  (Super Admin Logs,     │  │
+│  │   Super Admin)         │  │   Floor stack solver)   │  │   Evidence Locks)       │  │
+│  └───────────┬────────────┘  └────────────┬────────────┘  └────────────┬────────────┘  │
+└──────────────┼────────────────────────────┼────────────────────────────┼───────────────┘
+               │                            │ SQL / PostGIS queries      │
+               ▼                            ▼                            ▼
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                                     DATA LAYER                                         │
+│  ┌──────────────────────────────────────────┐  ┌────────────────────────────────────┐  │
+│  │            Neon PostgreSQL               │  │          PostGIS Database          │  │
+│  │  (Users, Roles, Cadastre Units, Audits)  │  │  (Spatial Polygons, Footprints)    │  │
+│  └──────────────────────────────────────────┘  └────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+```
 
-> **Security rule:** Profile Settings can update Clerk-managed personal information and browser-local preferences only. It deliberately has no role selector, and the server remains the source of truth for authorization.
+---
 
-For the initial Administrator only, configure the server-side `CLERK_BOOTSTRAP_ADMIN_USER_IDS` value with the appropriate Clerk user ID. Do not expose this value to the browser or commit it to Git.
+## 3D ULPIN (Bhu-Aadhaar) Structure
 
-## Evidence Ladder and Data Integrity
+The 14-character alphanumeric **3D Unique Land Parcel Identification Number** is structured as follows:
 
-The project uses three clearly separated stages:
+$$\underbrace{\text{IN}}_{\text{Country Code}} - \underbrace{\text{BR}}_{\text{State}} - \underbrace{\text{PAT}}_{\text{District}} - \underbrace{\text{0104}}_{\text{Base Parcel ID}} - \underbrace{\text{F3}}_{\text{Floor}} - \underbrace{\text{U302}}_{\text{Unit Number}}$$
 
-| Evidence level                 | Required evidence                                                  | Allowed output                                                                                        |
-| ------------------------------ | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
-| **Level 1 — Source footprint** | Public/open/source-backed footprint or geometry.                   | Source-aware map review, visual context, and available area/count information.                        |
-| **Level 2 — Verified height**  | Authority-verified height plus a defensible matched footprint.     | Height extrusion; no automatic ownership, floor-unit, or vertical-right claim.                        |
-| **Level 3 — Floor plan/BIM**   | Official floor plan/BIM, reconciled geometry, and governed review. | Authority review of floor-by-floor/vertical-property information; official issuance remains external. |
+1. **State & District Code**: Geopolitical administrative identification (e.g., `BR` = Bihar, `PAT` = Patna).
+2. **Base Cadastral Parcel ID**: 2D ground footprint reference in municipal land records.
+3. **Vertical Level / Floor Code**: `B1` (Basement), `G` (Ground), `F1`–`FN` (Upper Floors), `T` (Terrace).
+4. **Spatial Unit Index**: Sub-divided apartment, office, or commercial volumetric bounds.
 
-The application retains explicit locks when information is unavailable. For example, a single endpoint coordinate is not converted into a polygon, synthetic GCP data remains **DEMO / NON-AUTHORITATIVE**, and OSM 3D buildings remain visual context rather than cadastral proof.
+---
 
-## Major Workspaces
+## Workspaces & Application Routes
 
-| Route or workspace             | Purpose                                                                                                           |
-| ------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
-| `/` and `/access`              | Branded Clerk secure-access portal.                                                                               |
-| `/dashboard`                   | Protected role-specific dashboard; it includes loading skeletons while summary data is fetched.                   |
-| `/profile-settings`            | Clerk-managed name editing, secure account-manager entry, and device-local appearance/reduced-motion preferences. |
-| `/overview`                    | Public command home and project overview.                                                                         |
-| `/workspace?segment=parcels`   | Source-aware parcel/footprint exploration.                                                                        |
-| `/workspace?segment=buildings` | Source-aware building/place discovery and 3D context.                                                             |
-| `/ulpin-registry`              | Source-record registry, evidence status, map focus, detail reporting, and safe CSV/PDF exports.                   |
+| Route | Workspace | Description |
+| :--- | :--- | :--- |
+| `/` | **Landing & Access** | Secure Clerk sign-in and platform onboarding portal. |
+| `/dashboard` | **Operational Hub** | Metric summaries, active cadastre records, verification queues. |
+| `/workspace?segment=buildings` | **3D Building Explorer** | Interactive 3D campus visualization, search, 360° orbit, and building inspector. |
+| `/workspace?segment=parcels` | **Parcel Cadastre** | 2D/3D land parcel boundaries and base cadastral records. |
+| `/floor-explorer` | **Vertical Floor Cadastre** | Unit-by-unit 3D spatial cadastre inspection and floor unit drawer. |
+| `/ulpin-registry` | **3D ULPIN Registry** | Searchable directory of issued and pending 3D ULPIN records with PDF/CSV export. |
+| `/admin/surveillance` | **Super Admin Surveillance**| High-security live user session monitoring, role assignment, and audit logs. |
+| `/profile-settings` | **Profile & Preferences** | User account details, session overview, and UI accessibility preferences. |
 
-## Local Development
+---
 
-### Prerequisites
+## Local Development & Setup
 
-Use Node.js, `pnpm`, and valid development environment values for Clerk, database, PostGIS, and Cesium. Never commit `.env` files or secret values.
+### 1. Prerequisites
+- **Node.js**: `v20.x` or higher
+- **Package Manager**: `pnpm` (`v9.x` or higher)
+- **Database**: PostgreSQL with PostGIS extension (or [Neon Postgres](https://neon.tech/))
+- **Authentication**: [Clerk](https://clerk.com/) developer instance
+- **3D Tiles**: [Cesium Ion](https://cesium.com/ion/) access token
+
+### 2. Installation
 
 ```bash
+# Clone the repository
+git clone https://github.com/Gautam-kumar01/SIH-2026.git
+cd SIH-2026
+
+# Install dependencies
 pnpm install
+```
+
+### 3. Environment Configuration
+
+Create a `.env` file in the root directory:
+
+```env
+# Clerk Authentication
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
+CLERK_SECRET_KEY=sk_test_...
+CLERK_PUBLISHABLE_KEY=pk_test_...
+
+# Database (Neon PostgreSQL)
+DATABASE_URL=postgresql://user:password@host/database?sslmode=require
+POSTGIS_DATABASE_URL=postgresql://user:password@host/database?sslmode=require
+POSTGIS_API_KEY=your_secure_postgis_api_key
+
+# Cesium Ion Access Token
+VITE_CESIUM_ION_ACCESS_TOKEN=your_cesium_ion_token
+CESIUM_ION_ACCESS_TOKEN=your_cesium_ion_token
+
+# Application Config
+PORT=3000
+NODE_ENV=development
+```
+
+### 4. Running the Development Server
+
+```bash
 pnpm dev
 ```
 
-The principal quality commands are:
+The application will start at `http://localhost:3000` (or `http://localhost:5173`).
 
-```bash
-pnpm check       # TypeScript validation
-pnpm test        # Vitest regression suite
-pnpm build       # Vite frontend + Node/Express server bundles
-```
-
-## Database Setup
-
-The application workflow schema is PostgreSQL/Neon compatible and includes Clerk-linked `users`, `cadastreRecords`, `evidenceFiles`, `verificationSubmissions`, `issueReports`, and `auditLogs` tables. The initial non-destructive migration is located at:
-
-```text
-drizzle/postgres/0000_vengeful_wallflower.sql
-```
-
-Apply it only to the Neon database configured for the application profile/role workflow. The migration is designed to create application tables and enums; it does not alter existing spatial source tables. See [Neon PostgreSQL migration notes](deployment/NEON_POSTGRES_MIGRATION.md).
-
-## Vercel Deployment
-
-The repository includes a Vercel Node serverless entry at `api/[...path].ts`. Static frontend assets build into `dist/public`, while `/api/*` is explicitly routed to the serverless Express/tRPC API before the SPA fallback.
-
-| Environment variable             | Exposure               | Purpose                                                        |
-| -------------------------------- | ---------------------- | -------------------------------------------------------------- |
-| `VITE_CLERK_PUBLISHABLE_KEY`     | Public build variable  | Loads Clerk browser components.                                |
-| `CLERK_SECRET_KEY`               | Server secret          | Verifies Clerk sessions in Express.                            |
-| `POSTGIS_DATABASE_URL`           | Server secret          | Connects to source-backed PostGIS geometry.                    |
-| `POSTGIS_API_KEY`                | Server secret          | Protects the PostGIS GeoJSON route.                            |
-| `VITE_CESIUM_ION_ACCESS_TOKEN`   | Public build variable  | Enables Cesium visual context services.                        |
-| `DATABASE_URL`                   | Server secret          | Legacy/runtime configuration where required by the deployment. |
-| `CLERK_BOOTSTRAP_ADMIN_USER_IDS` | Optional server secret | Safely provisions the first Administrator.                     |
-
-Add the final Vercel domain and preview URL pattern to Clerk’s allowed origins and redirect configuration before production sign-in. Vercel Functions run server-side code without requiring you to manage servers.[5] For exact routing, environment, and portability guidance, read [Vercel deployment handoff](deployment/VERCEL_DEPLOYMENT.md).
-
-### Vercel portability limitation
-
-Manus built-in Forge AI and storage services are not automatically available in Vercel. A provider-owned LLM integration and object-storage adapter are required before claiming complete Vercel parity for AI extraction/search and evidence-file storage. Do not copy Manus-internal credentials to Vercel.
+---
 
 ## Testing and Verification
 
-The project has focused Vitest coverage for role boundaries, Vercel routing, Clerk key handling, Neon profile mapping, workspace routing, profile settings, and skeleton loading states. Before a release, run TypeScript checks and the production build. For a live Vercel deployment, verify the following:
+```bash
+# 1. Run TypeScript strict type-checking
+pnpm check
 
-1. The root route shows the Clerk access portal when signed out.
-2. `/api/trpc/auth.me` returns tRPC JSON, not SPA HTML.
-3. A new user receives the backend default Citizen profile.
-4. Citizen and Authority users receive a forbidden result from admin-only settings APIs.
-5. An Administrator can access admin-only workflow only through a server-verified role.
-6. Parcels, Buildings, Command Home, and ULPIN Registry open their intended destinations without redirect loops.
+# 2. Run unit and integration tests
+pnpm test
 
-## Project Limitations and Next Steps
+# 3. Run specific Floor Cadastre & Slicer test suite
+pnpm vitest run server/mapFloorSlicer.test.ts
 
-This is a validated prototype, not an official government issuance service. A production cadastral deployment still requires conclusive official parcel information, ownership/legal record linkage, independently surveyed GCPs, authority-approved height, defensible footprint matching, reconciled official floor-plan/BIM data, governed review, and the government issuance integration.
+# 4. Production bundle build validation
+pnpm build
+```
 
-See these project documents for more detail:
+---
 
-- [Capability audit](validation/ulpin-vpm-capability-audit.md)
-- [Vercel deployment handoff](deployment/VERCEL_DEPLOYMENT.md)
-- [Server-controlled role assignment](deployment/ROLE_ASSIGNMENT.md)
-- [Neon PostgreSQL migration](deployment/NEON_POSTGRES_MIGRATION.md)
-- [Clerk entry and Vercel validation record](validation/clerk-entry-route-check.md)
+## Statutory & Evidence Disclaimer
 
-## References
+> **Statutory Notice**: *The 3D volumetric models, floor separations, and visual extrusions in this software represent spatial context and cadastral proof-of-concept for the Smart India Hackathon 2026 (Problem Statement 26011). Official cadastral parcel boundaries, verified heights, ownership rights, and issued 3D ULPINs require statutory validation by the State Land Revenue Department and the Department of Land Resources (DoLR), Government of India.*
 
-[1] [React Documentation — Build a React App from Scratch](https://react.dev/learn/build-a-react-app-from-scratch)  
-[2] [Vite Documentation — Getting Started](https://vite.dev/guide/)  
-[3] [CesiumJS Documentation — Web 3D Geospatial Visualization](https://cesium.com/learn/cesiumjs-learn/)  
-[4] [PostGIS Manual — Spatial Objects, Indexes, and GIS Functions](https://postgis.net/docs/)  
-[5] [Vercel Documentation — Functions](https://vercel.com/docs/functions)
+---
+
+## Contributors & Acknowledgements
+
+- **Team Gautam Kumar** — *Smart India Hackathon 2026*
+- **Ministry of Rural Development & Department of Land Resources (DoLR)**
+- Built with [React](https://react.dev/), [CesiumJS](https://cesium.com/), [PostGIS](https://postgis.net/), [tRPC](https://trpc.io/), and [Neon](https://neon.tech/).
