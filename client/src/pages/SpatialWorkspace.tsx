@@ -762,8 +762,21 @@ export default function SpatialWorkspace() {
                 command={command}
                 layers={layers}
                 focusUlpins={activeMapUlpins}
+                selectedUlpin={
+                  buildingSelection?.ulpin ??
+                  (typeof selected?.properties?.ulpin === "string"
+                    ? selected.properties.ulpin
+                    : null) ??
+                  (selected?.ulpin && selected.ulpin !== "Select a live footprint"
+                    ? selected.ulpin
+                    : null)
+                }
                 sourceMapView={sourceMapView}
-                mockFloorLevels={activeMapUlpins.length > 0 ? 4 : 0}
+                mockFloorLevels={
+                  buildingSelection || selected
+                    ? (overrideFloorCount ?? 4)
+                    : 0
+                }
                 floorExplosionFactor={floorExplosionFactor}
                 activeFloorIndex={activeFloorIndex}
                 floorStackData={floorStackData}

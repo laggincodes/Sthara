@@ -80,4 +80,13 @@ describe("Map-Native Multi-Storey Floor Slicer & Cadastral Slicing", () => {
     expect(buildingInfoPanelSource).toContain("Copy 14-Digit 3D ULPIN");
     expect(buildingInfoPanelSource).toContain("3D Floor Separation (Explode View)");
   });
+
+  it("CesiumSpatialViewer isolates floor cadastre slicing to the single selected building while other search-area buildings remain solid 3D structures", () => {
+    expect(cesiumViewerSource).toContain("selectedUlpin?: string | null");
+    expect(cesiumViewerSource).toContain("targetFloorEntity");
+    expect(cesiumViewerSource).toContain("activeTargetUlpin");
+    expect(cesiumViewerSource).toContain("All other non-selected buildings remain continuous, solid 3D structures");
+    expect(workspaceSource).toContain("selectedUlpin=");
+  });
 });
+

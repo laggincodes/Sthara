@@ -136,6 +136,7 @@ export function CesiumSpatialViewer({
   measurementControlsOnly = false,
   onSyntheticDemoSelect,
   focusUlpins,
+  selectedUlpin,
   onFeatureSelect,
   onDetailedFeatureSelect,
   sampleAsset,
@@ -167,6 +168,7 @@ export function CesiumSpatialViewer({
   measurementControlsOnly?: boolean;
   onSyntheticDemoSelect?: () => void;
   focusUlpins?: string[];
+  selectedUlpin?: string | null;
   onFeatureSelect?: (feature: {
     ulpin: string;
     properties: Record<string, unknown>;
@@ -624,6 +626,12 @@ export function CesiumSpatialViewer({
     if (selectedBuildingLabelEntityRef.current && viewer) {
       viewer.entities.remove(selectedBuildingLabelEntityRef.current);
       selectedBuildingLabelEntityRef.current = null;
+    }
+    if (viewer && mockFloorEntitiesRef.current.length > 0) {
+      mockFloorEntitiesRef.current.forEach(entity =>
+        viewer.entities.remove(entity)
+      );
+      mockFloorEntitiesRef.current = [];
     }
     const selection = selectedOsmFeatureRef.current;
     if (selection) {
@@ -1519,11 +1527,26 @@ export function CesiumSpatialViewer({
         markerColor: Color.fromCssColorString("#2ad4d9"),
       });
       if (cancelled) return;
+      const activeTargetUlpin =
+        selectedUlpin ??
+        selectedBuildingData?.ulpin ??
+        selectedBuildingIdRef.current ??
+        null;
+
       dataSource.entities.values.forEach(entity => {
         const properties = (entity.properties?.getValue?.() ?? {}) as Record<
           string,
           unknown
         >;
+        const entityUlpin = String(properties.ulpin ?? "");
+        const isTargetBuilding = Boolean(
+          activeTargetUlpin && entityUlpin === activeTargetUlpin
+        );
+        const shouldShowFloors =
+          isTargetBuilding &&
+          sourceMapView === "3d" &&
+          (Boolean(floorStackData?.floors?.length) || mockFloorLevels > 0);
+
         entity.name =
           typeof properties.name === "string"
             ? properties.name
@@ -1532,7 +1555,9 @@ export function CesiumSpatialViewer({
         if (entity.position) {
           entity.point = new PointGraphics({
             pixelSize: 14,
-            color: Color.fromCssColorString("#2ad4d9"),
+            color: Color.fromCssColorString(
+              isTargetBuilding ? "#00f3ff" : "#2ad4d9"
+            ),
             outlineColor: Color.WHITE,
             outlineWidth: 2,
           });
@@ -1541,7 +1566,7 @@ export function CesiumSpatialViewer({
               typeof properties.name === "string"
                 ? properties.name
                 : "Live PostGIS reference",
-            font: "600 13px sans-serif",
+            font: isTargetBuilding ? "bold 13px sans-serif" : "600 13px sans-serif",
             fillColor: Color.fromCssColorString("#eaffff"),
             outlineColor: Color.fromCssColorString("#082126"),
             outlineWidth: 3,
@@ -1550,20 +1575,27 @@ export function CesiumSpatialViewer({
         }
         if (entity.polygon) {
           const extrusionHeight = getApprovedExtrusionHeight(properties);
-          entity.polygon.material = new ColorMaterialProperty(
-            Color.fromCssColorString("#2ad4d9").withAlpha(0.34)
-          );
           entity.polygon.outline = new ConstantProperty(true);
           entity.polygon.outlineColor = new ConstantProperty(
-            Color.fromCssColorString("#e9ffff")
+            Color.fromCssColorString(isTargetBuilding ? "#00f3ff" : "#e9ffff")
           );
           entity.polygon.height = new ConstantProperty(1);
-          if (extrusionHeight && sourceMapView === "3d") {
+
+          if (shouldShowFloors) {
+            // When floor slices are rendered on the target building, subdue its solid extruded shell to prevent z-fighting
+            entity.polygon.extrudedHeight = new ConstantProperty(0.2);
+            entity.polygon.material = new ColorMaterialProperty(
+              Color.fromCssColorString("#00f3ff").withAlpha(0.12)
+            );
+          } else if (extrusionHeight && sourceMapView === "3d") {
+            // All other non-selected buildings remain continuous, solid 3D structures
             entity.polygon.extrudedHeight = new ConstantProperty(
               extrusionHeight
             );
             entity.polygon.material = new ColorMaterialProperty(
-              Color.fromCssColorString("#55dcb4").withAlpha(0.62)
+              Color.fromCssColorString(
+                isTargetBuilding ? "#00f3ff" : "#55dcb4"
+              ).withAlpha(isTargetBuilding ? 0.85 : 0.62)
             );
           } else {
             entity.polygon.extrudedHeight = undefined;
@@ -1582,174 +1614,182 @@ export function CesiumSpatialViewer({
               {}) as Record<string, unknown>;
             return focusUlpins.includes(String(properties.ulpin ?? ""));
           });
-          const focusedEntity = focusedEntities[0];
+
+          // Single target entity for 3D floor cadastre slicing:
+          // Slices are generated ONLY for the specifically selected building
+          const targetFloorEntity = activeTargetUlpin
+            ? dataSource.entities.values.find(entity => {
+                const properties = (entity.properties?.getValue?.() ??
+                  {}) as Record<string, unknown>;
+                return String(properties.ulpin ?? "") === activeTargetUlpin;
+              })
+            : null;
+
           if (
-            focusedEntities.length > 0 &&
+            targetFloorEntity &&
+            targetFloorEntity.polygon?.hierarchy &&
             sourceMapView === "3d" &&
             (floorStackData?.floors?.length || mockFloorLevels > 0)
           ) {
-            focusedEntities.forEach(focusedLayerTarget => {
-              if (focusedLayerTarget.polygon?.hierarchy) {
-              if (floorStackData?.floors?.length) {
-                const floors = floorStackData.floors;
-                floors.forEach(floor => {
-                  const explosionOffset =
-                    (floorExplosionFactor || 0) *
-                    (floor.floorIndex >= 0 ? floor.floorIndex + 1 : floor.floorIndex) *
-                    5.5;
-                  const baseHeight = Math.max(0.2, (floor.elevationBaseM || 0) + explosionOffset);
-                  const extrudedHeight = baseHeight + Math.max(1.2, floor.floorHeightM || 3.0);
+            if (floorStackData?.floors?.length) {
+              const floors = floorStackData.floors;
+              floors.forEach(floor => {
+                const explosionOffset =
+                  (floorExplosionFactor || 0) *
+                  (floor.floorIndex >= 0 ? floor.floorIndex + 1 : floor.floorIndex) *
+                  5.5;
+                const baseHeight = Math.max(0.2, (floor.elevationBaseM || 0) + explosionOffset);
+                const extrudedHeight = baseHeight + Math.max(1.2, floor.floorHeightM || 3.0);
 
-                  const isSelected =
-                    activeFloorIndex !== null &&
-                    activeFloorIndex !== undefined &&
-                    floor.floorIndex === activeFloorIndex;
-                  const isAllFloors = activeFloorIndex === null || activeFloorIndex === undefined;
+                const isSelected =
+                  activeFloorIndex !== null &&
+                  activeFloorIndex !== undefined &&
+                  floor.floorIndex === activeFloorIndex;
+                const isAllFloors = activeFloorIndex === null || activeFloorIndex === undefined;
 
-                  let floorColorHex = "#38bdf8";
-                  if (floor.floorType === "UNDERGROUND_BASEMENT") floorColorHex = "#0284c7";
-                  else if (floor.floorType === "GROUND_RETAIL") floorColorHex = "#10b981";
-                  else if (floor.floorType === "RESIDENTIAL_LEVEL") floorColorHex = "#06b6d4";
-                  else if (floor.floorType === "COMMERCIAL_OFFICES") floorColorHex = "#6366f1";
-                  else if (floor.floorType === "ROOFTOP_TERRACE") floorColorHex = "#f59e0b";
+                let floorColorHex = "#38bdf8";
+                if (floor.floorType === "UNDERGROUND_BASEMENT") floorColorHex = "#0284c7";
+                else if (floor.floorType === "GROUND_RETAIL") floorColorHex = "#10b981";
+                else if (floor.floorType === "RESIDENTIAL_LEVEL") floorColorHex = "#06b6d4";
+                else if (floor.floorType === "COMMERCIAL_OFFICES") floorColorHex = "#6366f1";
+                else if (floor.floorType === "ROOFTOP_TERRACE") floorColorHex = "#f59e0b";
 
-                  const materialColor = isSelected
-                    ? Color.fromCssColorString(floorColorHex).withAlpha(0.92)
-                    : isAllFloors
-                      ? Color.fromCssColorString(floorColorHex).withAlpha(0.52)
-                      : Color.fromCssColorString("#64748b").withAlpha(0.12);
+                const materialColor = isSelected
+                  ? Color.fromCssColorString(floorColorHex).withAlpha(0.92)
+                  : isAllFloors
+                    ? Color.fromCssColorString(floorColorHex).withAlpha(0.52)
+                    : Color.fromCssColorString("#64748b").withAlpha(0.12);
 
-                  const outlineColor = isSelected
-                    ? Color.fromCssColorString("#ffffff")
-                    : isAllFloors
-                      ? Color.fromCssColorString("#f8fafc").withAlpha(0.85)
-                      : Color.fromCssColorString("#475569").withAlpha(0.25);
+                const outlineColor = isSelected
+                  ? Color.fromCssColorString("#ffffff")
+                  : isAllFloors
+                    ? Color.fromCssColorString("#f8fafc").withAlpha(0.85)
+                    : Color.fromCssColorString("#475569").withAlpha(0.25);
 
-                  const floorEntity = viewer.entities.add(
-                    new Entity({
-                      name: `3D Cadastre Level ${floor.floorCode} · ${floor.floorName}`,
-                      properties: {
-                        floorIndex: floor.floorIndex,
-                        floorCode: floor.floorCode,
-                        floorName: floor.floorName,
-                        elevationMsl: floor.elevationMsl,
-                        ulpin: floorStackData.ulpin,
-                      },
-                      polygon: new PolygonGraphics({
-                        hierarchy: focusedLayerTarget.polygon?.hierarchy,
-                        height: baseHeight,
-                        extrudedHeight: extrudedHeight,
-                        material: new ColorMaterialProperty(materialColor),
-                        outline: new ConstantProperty(true),
-                        outlineColor: new ConstantProperty(outlineColor),
-                        outlineWidth: isSelected ? 4 : 2,
-                      }),
-                      label: new LabelGraphics({
-                        text: isSelected
-                          ? `▶ LEVEL ${floor.floorCode}: ${floor.floorName}`
-                          : `LEVEL ${floor.floorCode} [${floor.elevationMsl}]`,
-                        font: isSelected ? "bold 13px sans-serif" : "600 11px sans-serif",
-                        fillColor: isSelected
-                          ? Color.fromCssColorString("#ffffff")
-                          : Color.fromCssColorString("#f1f5f9"),
-                        outlineColor: Color.fromCssColorString("#0f172a"),
-                        outlineWidth: 3,
-                        pixelOffset: new Cartesian2(0, -18),
-                        show:
-                          isSelected ||
-                          (floorExplosionFactor || 0) > 0.05 ||
-                          floor.floorIndex === floors[floors.length - 1].floorIndex,
-                      }),
-                    })
-                  );
-                  mockFloorEntitiesRef.current.push(floorEntity);
-                });
-
-                // Add 3D Vertical Cadastre Benchmark Axis / Height Pillar
-                const totalHeight = floorStackData.actualHeightM || (floors.length * 3.2);
-                const maxExplosionZ = (floorExplosionFactor || 0) * (floors.length + 1) * 5.5;
-                const pillarTop = totalHeight + maxExplosionZ + 4;
-                const coord = floorStackData.coordinates;
-                
-                const pillarEntity = viewer.entities.add(
+                const floorEntity = viewer.entities.add(
                   new Entity({
-                    name: `3D Vertical Cadastre Benchmark Axis · ${floorStackData.buildingName}`,
-                    polyline: new PolylineGraphics({
-                      positions: [
-                        Cartesian3.fromDegrees(coord.longitude, coord.latitude, 0),
-                        Cartesian3.fromDegrees(coord.longitude, coord.latitude, pillarTop),
-                      ],
-                      width: 3,
-                      material: new ColorMaterialProperty(
-                        Color.fromCssColorString("#2ad4d9").withAlpha(0.75)
-                      ),
+                    name: `3D Cadastre Level ${floor.floorCode} · ${floor.floorName}`,
+                    properties: {
+                      floorIndex: floor.floorIndex,
+                      floorCode: floor.floorCode,
+                      floorName: floor.floorName,
+                      elevationMsl: floor.elevationMsl,
+                      ulpin: floorStackData.ulpin,
+                    },
+                    polygon: new PolygonGraphics({
+                      hierarchy: targetFloorEntity.polygon?.hierarchy,
+                      height: baseHeight,
+                      extrudedHeight: extrudedHeight,
+                      material: new ColorMaterialProperty(materialColor),
+                      outline: new ConstantProperty(true),
+                      outlineColor: new ConstantProperty(outlineColor),
+                      outlineWidth: isSelected ? 4 : 2,
                     }),
                     label: new LabelGraphics({
-                      text: `3D CADASTRE ENVELOPE: ${totalHeight.toFixed(1)}m [${floorStackData.actualFloors}]`,
-                      font: "bold 11px sans-serif",
-                      fillColor: Color.fromCssColorString("#73fff1"),
-                      outlineColor: Color.fromCssColorString("#082126"),
+                      text: isSelected
+                        ? `▶ LEVEL ${floor.floorCode}: ${floor.floorName}`
+                        : `LEVEL ${floor.floorCode} [${floor.elevationMsl}]`,
+                      font: isSelected ? "bold 13px sans-serif" : "600 11px sans-serif",
+                      fillColor: isSelected
+                        ? Color.fromCssColorString("#ffffff")
+                        : Color.fromCssColorString("#f1f5f9"),
+                      outlineColor: Color.fromCssColorString("#0f172a"),
                       outlineWidth: 3,
                       pixelOffset: new Cartesian2(0, -18),
-                      show: (floorExplosionFactor || 0) > 0.05 || isOrbiting360,
+                      show:
+                        isSelected ||
+                        (floorExplosionFactor || 0) > 0.05 ||
+                        floor.floorIndex === floors[floors.length - 1].floorIndex,
                     }),
                   })
                 );
-                mockFloorEntitiesRef.current.push(pillarEntity);
-              } else {
-                const floorCount = Math.min(
-                  Math.max(Math.round(mockFloorLevels), 1),
-                  12
+                mockFloorEntitiesRef.current.push(floorEntity);
+              });
+
+              // Add 3D Vertical Cadastre Benchmark Axis / Height Pillar
+              const totalHeight = floorStackData.actualHeightM || (floors.length * 3.2);
+              const maxExplosionZ = (floorExplosionFactor || 0) * (floors.length + 1) * 5.5;
+              const pillarTop = totalHeight + maxExplosionZ + 4;
+              const coord = floorStackData.coordinates;
+              
+              const pillarEntity = viewer.entities.add(
+                new Entity({
+                  name: `3D Vertical Cadastre Benchmark Axis · ${floorStackData.buildingName}`,
+                  polyline: new PolylineGraphics({
+                    positions: [
+                      Cartesian3.fromDegrees(coord.longitude, coord.latitude, 0),
+                      Cartesian3.fromDegrees(coord.longitude, coord.latitude, pillarTop),
+                    ],
+                    width: 3,
+                    material: new ColorMaterialProperty(
+                      Color.fromCssColorString("#2ad4d9").withAlpha(0.75)
+                    ),
+                  }),
+                  label: new LabelGraphics({
+                    text: `3D CADASTRE ENVELOPE: ${totalHeight.toFixed(1)}m [${floorStackData.actualFloors}]`,
+                    font: "bold 11px sans-serif",
+                    fillColor: Color.fromCssColorString("#73fff1"),
+                    outlineColor: Color.fromCssColorString("#082126"),
+                    outlineWidth: 3,
+                    pixelOffset: new Cartesian2(0, -18),
+                    show: (floorExplosionFactor || 0) > 0.05 || isOrbiting360,
+                  }),
+                })
+              );
+              mockFloorEntitiesRef.current.push(pillarEntity);
+            } else {
+              const floorCount = Math.min(
+                Math.max(Math.round(mockFloorLevels), 1),
+                12
+              );
+              for (
+                let floorIndex = 0;
+                floorIndex < floorCount;
+                floorIndex += 1
+              ) {
+                const explosionOffset = (floorExplosionFactor || 0) * (floorIndex + 1) * 5.5;
+                const floorHeight = 2 + floorIndex * 3.2 + explosionOffset;
+                const isSelected = activeFloorIndex === floorIndex;
+                const isAll = activeFloorIndex === null || activeFloorIndex === undefined;
+                const floorEntity = viewer.entities.add(
+                  new Entity({
+                    name: `DEMO floor level ${floorIndex + 1}`,
+                    properties: {
+                      floorIndex,
+                    },
+                    polygon: new PolygonGraphics({
+                      hierarchy: targetFloorEntity.polygon?.hierarchy,
+                      height: floorHeight,
+                      extrudedHeight: floorHeight + 2.6,
+                      material: new ColorMaterialProperty(
+                        Color.fromCssColorString(
+                          isSelected ? "#00f5d4" : floorIndex % 2 === 0 ? "#72e3df" : "#b48cff"
+                        ).withAlpha(isSelected ? 0.9 : isAll ? 0.45 : 0.12)
+                      ),
+                      outline: new ConstantProperty(true),
+                      outlineColor: new ConstantProperty(
+                        Color.fromCssColorString(isSelected ? "#ffffff" : "#fff0b3").withAlpha(0.85)
+                      ),
+                      outlineWidth: isSelected ? 3 : 2,
+                    }),
+                    label: new LabelGraphics({
+                      text: `LEVEL F${floorIndex + 1}`,
+                      font: "600 10px sans-serif",
+                      fillColor: Color.fromCssColorString("#fff5ca"),
+                      outlineColor: Color.fromCssColorString("#132326"),
+                      outlineWidth: 3,
+                      pixelOffset: new Cartesian2(0, -14),
+                      show: isSelected || (floorExplosionFactor || 0) > 0.05 || floorIndex === floorCount - 1,
+                    }),
+                  })
                 );
-                for (
-                  let floorIndex = 0;
-                  floorIndex < floorCount;
-                  floorIndex += 1
-                ) {
-                  const explosionOffset = (floorExplosionFactor || 0) * (floorIndex + 1) * 5.5;
-                  const floorHeight = 2 + floorIndex * 3.2 + explosionOffset;
-                  const isSelected = activeFloorIndex === floorIndex;
-                  const isAll = activeFloorIndex === null || activeFloorIndex === undefined;
-                  const floorEntity = viewer.entities.add(
-                    new Entity({
-                      name: `DEMO floor level ${floorIndex + 1}`,
-                      properties: {
-                        floorIndex,
-                      },
-                      polygon: new PolygonGraphics({
-                        hierarchy: focusedLayerTarget.polygon.hierarchy,
-                        height: floorHeight,
-                        extrudedHeight: floorHeight + 2.6,
-                        material: new ColorMaterialProperty(
-                          Color.fromCssColorString(
-                            isSelected ? "#00f5d4" : floorIndex % 2 === 0 ? "#72e3df" : "#b48cff"
-                          ).withAlpha(isSelected ? 0.9 : isAll ? 0.45 : 0.12)
-                        ),
-                        outline: new ConstantProperty(true),
-                        outlineColor: new ConstantProperty(
-                          Color.fromCssColorString(isSelected ? "#ffffff" : "#fff0b3").withAlpha(0.85)
-                        ),
-                        outlineWidth: isSelected ? 3 : 2,
-                      }),
-                      label: new LabelGraphics({
-                        text: `LEVEL F${floorIndex + 1}`,
-                        font: "600 10px sans-serif",
-                        fillColor: Color.fromCssColorString("#fff5ca"),
-                        outlineColor: Color.fromCssColorString("#132326"),
-                        outlineWidth: 3,
-                        pixelOffset: new Cartesian2(0, -14),
-                        show: isSelected || (floorExplosionFactor || 0) > 0.05 || floorIndex === floorCount - 1,
-                      }),
-                    })
-                  );
-                  mockFloorEntitiesRef.current.push(floorEntity);
-                }
+                mockFloorEntitiesRef.current.push(floorEntity);
               }
-              }
-            });
+            }
           }
-          if (focusedEntity) {
-            const properties = (focusedEntity.properties?.getValue?.() ??
+
+          if (targetFloorEntity) {
+            const properties = (targetFloorEntity.properties?.getValue?.() ??
               {}) as Record<string, unknown>;
             const name =
               typeof properties.name === "string"
@@ -1759,26 +1799,27 @@ export function CesiumSpatialViewer({
               typeof properties.footprintAreaSquareMetres === "number"
                 ? `${properties.footprintAreaSquareMetres.toLocaleString()} m²`
                 : "Area unavailable";
-            focusedEntities.forEach((entity, index) => {
-              const comparisonColor = index === 0 ? "#73fff1" : "#b48cff";
-              const outlineColor = index === 0 ? "#fff3b0" : "#f2dcff";
+            focusedEntities.forEach((entity) => {
+              const isSelectedTarget = entity === targetFloorEntity;
+              const comparisonColor = isSelectedTarget ? "#73fff1" : "#55dcb4";
+              const outlineColor = isSelectedTarget ? "#fff3b0" : "#e9ffff";
               if (entity.polygon) {
                 entity.polygon.material = new ColorMaterialProperty(
-                  Color.fromCssColorString(comparisonColor).withAlpha(0.78)
+                  Color.fromCssColorString(comparisonColor).withAlpha(isSelectedTarget ? 0.85 : 0.58)
                 );
                 entity.polygon.outlineColor = new ConstantProperty(
                   Color.fromCssColorString(outlineColor)
                 );
-                entity.polygon.outlineWidth = new ConstantProperty(3);
+                entity.polygon.outlineWidth = new ConstantProperty(isSelectedTarget ? 3 : 1.5);
               }
               if (entity.point) {
-                entity.point.pixelSize = new ConstantProperty(18);
+                entity.point.pixelSize = new ConstantProperty(isSelectedTarget ? 18 : 12);
                 entity.point.color = new ConstantProperty(
                   Color.fromCssColorString(outlineColor)
                 );
               }
             });
-            viewer.selectedEntity = focusedEntity;
+            viewer.selectedEntity = targetFloorEntity;
             setSourceBuildingSelection({
               name,
               ulpin: String(properties.ulpin ?? "Source record"),
@@ -1820,6 +1861,8 @@ export function CesiumSpatialViewer({
     layers,
     viewerReady,
     focusUlpins,
+    selectedUlpin,
+    selectedBuildingData?.ulpin,
     evidenceFilter,
     syntheticDemoFeature,
     sourceMapView,
