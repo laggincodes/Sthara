@@ -232,6 +232,37 @@ export const passwordResetTokens = pgTable("password_reset_tokens", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
+export const cadastralGrievances = pgTable("cadastralGrievances", {
+  id: serial("id").primaryKey(),
+  grievanceNumber: varchar("grievanceNumber", { length: 64 }).notNull().unique(),
+  ulpinOrReference: varchar("ulpinOrReference", { length: 128 }).notNull(),
+  buildingName: varchar("buildingName", { length: 256 }),
+  category: varchar("category", { length: 64 }).notNull(), // HEIGHT_VIOLATION, ZONING_PROHIBITED_AREA, FIRE_SAFETY_HAZARD, ENCROACHMENT, UNAUTHORIZED_CONSTRUCTION, TITLE_DISPUTE, OTHER
+  title: varchar("title", { length: 256 }).notNull(),
+  details: text("details").notNull(),
+  latitude: text("latitude"),
+  longitude: text("longitude"),
+  evidencePhotos: text("evidencePhotos"), // JSON array of photo URLs or base64 data
+  citizenClerkUserId: varchar("citizenClerkUserId", { length: 96 }).notNull(),
+  citizenName: varchar("citizenName", { length: 160 }),
+  citizenContact: varchar("citizenContact", { length: 96 }),
+  isAnonymous: text("isAnonymous").default("false"),
+  status: varchar("status", { length: 48 }).default("SUBMITTED").notNull(), // SUBMITTED, REJECTED, SURVEYOR_ASSIGNED, FIELD_VERIFIED, SEALED, PENALTY_ISSUED, RESOLVED
+  rejectionReason: text("rejectionReason"),
+  rejectedAt: timestamp("rejectedAt"),
+  rejectedByClerkUserId: varchar("rejectedByClerkUserId", { length: 96 }),
+  assignedSurveyorClerkUserId: varchar("assignedSurveyorClerkUserId", { length: 96 }),
+  assignedSurveyorName: varchar("assignedSurveyorName", { length: 160 }),
+  dispatchInstructions: text("dispatchInstructions"),
+  priority: varchar("priority", { length: 24 }).default("MEDIUM"),
+  dispatchedAt: timestamp("dispatchedAt"),
+  targetInspectionDate: timestamp("targetInspectionDate"),
+  surveyorReport: text("surveyorReport"), // JSON: { actualHeightMetres, approvedHeightMetres, actualFloors, approvedFloors, fireSafetyClearance, setbackEncroachmentM, sitePhotos, remarks, verdict, submittedAt }
+  enforcementAction: text("enforcementAction"), // JSON: { actionType, orderNumber, fineAmount, legalNoticeText, issuedByClerkUserId, issuedByRole, executedAt }
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
@@ -255,4 +286,8 @@ export type InsertInvitation = typeof invitations.$inferInsert;
 
 export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
 export type InsertPasswordResetToken = typeof passwordResetTokens.$inferInsert;
+
+export type CadastralGrievance = typeof cadastralGrievances.$inferSelect;
+export type InsertCadastralGrievance = typeof cadastralGrievances.$inferInsert;
+
 

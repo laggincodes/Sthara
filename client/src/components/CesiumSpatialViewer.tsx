@@ -715,6 +715,8 @@ export function CesiumSpatialViewer({
         maximumRenderTimeChange: Number.POSITIVE_INFINITY,
       });
       viewer.scene.globe.depthTestAgainstTerrain = true;
+      viewer.scene.globe.baseColor = Color.fromCssColorString("#0d1b22");
+      viewer.scene.globe.enableLighting = false;
       viewer.scene.screenSpaceCameraController.enableCollisionDetection = true;
     } catch (error) {
       setViewerState("error");
@@ -1287,31 +1289,68 @@ export function CesiumSpatialViewer({
     setViewerReady(true);
     setViewerState("ready");
     let cancelled = false;
-    if (osmBuildingsEnabled) {
-      void Promise.resolve(cesiumRuntime).then(
-        async ({ createWorldImageryAsync }) => {
-          if (cancelled || !viewerRef.current) return;
+
+    // High-reliability Satellite World Imagery with fallback
+    const loadSatelliteImagery = async () => {
+      if (cancelled || !viewerRef.current) return;
+      try {
+        let provider: unknown = null;
+        if (osmBuildingsEnabled && typeof (cesiumRuntime as Record<string, unknown>).createWorldImageryAsync === "function") {
           try {
-            const imageryProvider = await createWorldImageryAsync();
-            if (cancelled || !viewerRef.current) return;
-            const imageryLayer =
-              viewer.imageryLayers.addImageryProvider(imageryProvider);
-            imageryLayer.alpha = 0.9;
-            imageryLayerRef.current = imageryLayer;
-            setImageryState("ready");
-            viewer.scene.requestRender();
-          } catch (error) {
-            setImageryState("unavailable");
-            console.warn(
-              "[Cesium] Optional World Imagery layer unavailable",
-              error
-            );
+            provider = await (cesiumRuntime as { createWorldImageryAsync: () => Promise<unknown> }).createWorldImageryAsync();
+          } catch (ionErr) {
+            console.warn("[Cesium] Ion World Imagery asset rate-limited or unavailable, switching to ArcGIS World Imagery fallback", ionErr);
           }
         }
-      );
-    } else {
-      setImageryState("unavailable");
-    }
+        if (!provider) {
+          const runtimeAny = cesiumRuntime as Record<string, unknown>;
+          if (runtimeAny.ArcGisMapServerImageryProvider && typeof (runtimeAny.ArcGisMapServerImageryProvider as { fromUrl?: (url: string) => Promise<unknown> }).fromUrl === "function") {
+            try {
+              provider = await (runtimeAny.ArcGisMapServerImageryProvider as { fromUrl: (url: string) => Promise<unknown> }).fromUrl(
+                "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer"
+              );
+            } catch (arcErr) {
+              console.warn("[Cesium] ArcGisMapServerImageryProvider.fromUrl fallback attempt", arcErr);
+            }
+          }
+          if (!provider && typeof runtimeAny.ArcGisMapServerImageryProvider === "function") {
+            try {
+              provider = new (runtimeAny.ArcGisMapServerImageryProvider as new (opts: { url: string }) => unknown)({
+                url: "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer",
+              });
+            } catch {
+              // fallback below
+            }
+          }
+          if (!provider && typeof runtimeAny.UrlTemplateImageryProvider === "function") {
+            try {
+              provider = new (runtimeAny.UrlTemplateImageryProvider as new (opts: { url: string }) => unknown)({
+                url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+              });
+            } catch {
+              // fallback below
+            }
+          }
+        }
+
+        if (cancelled || !viewerRef.current) return;
+        if (provider) {
+          const imageryLayer = viewer.imageryLayers.addImageryProvider(provider as Parameters<typeof viewer.imageryLayers.addImageryProvider>[0]);
+          imageryLayer.alpha = 0.95;
+          imageryLayer.show = layers.terrain && basemap === "satellite";
+          imageryLayerRef.current = imageryLayer;
+          setImageryState("ready");
+          viewer.scene.requestRender();
+        } else {
+          setImageryState("unavailable");
+        }
+      } catch (error) {
+        setImageryState("unavailable");
+        console.warn("[Cesium] World Imagery layer setup error", error);
+      }
+    };
+    void loadSatelliteImagery();
+
     try {
       const streetProvider = new OpenStreetMapImageryProvider({
         url: "https://tile.openstreetmap.org/",
@@ -1319,7 +1358,7 @@ export function CesiumSpatialViewer({
       const streetLayer =
         viewer.imageryLayers.addImageryProvider(streetProvider);
       streetLayer.alpha = 0.94;
-      streetLayer.show = false;
+      streetLayer.show = layers.terrain && basemap === "street";
       streetImageryLayerRef.current = streetLayer;
       setStreetState("ready");
       viewer.scene.requestRender();
@@ -1327,6 +1366,7 @@ export function CesiumSpatialViewer({
       setStreetState("unavailable");
       console.warn("[Cesium] Optional street-map layer unavailable", error);
     }
+
     if (osmBuildingsEnabled) {
       void Promise.resolve(cesiumRuntime).then(
         async ({ createOsmBuildingsAsync }) => {
@@ -1341,6 +1381,8 @@ export function CesiumSpatialViewer({
             viewer.scene.primitives.add(osmBuildings);
             osmBuildingsRef.current = osmBuildings;
             setOsmBuildingsState("ready");
+            // Immediately apply the styled semi-transparent cyan/teal theme
+            applyOsmBuildingsStyle(visualModeRef.current, selectedBuildingIdRef.current);
             viewer.scene.requestRender();
           } catch (error) {
             setOsmBuildingsState("unavailable");

@@ -33,16 +33,23 @@ import {
   X,
   Zap,
 } from "lucide-react";
+import { AuthorityGrievanceDesk } from "@/components/AuthorityGrievanceDesk";
+import { PropertySealingOrderModal } from "@/components/PropertySealingOrderModal";
+import type { CadastralGrievance } from "@shared/cadastralGrievance";
 import React, { useState } from "react";
 import { Link } from "wouter";
 
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<"stream" | "roster" | "health">("stream");
+  const [activeTab, setActiveTab] = useState<"stream" | "roster" | "health" | "grievances">("stream");
   const [streamFilter, setStreamFilter] = useState<string>("ALL");
   const [streamSearch, setStreamSearch] = useState("");
   const [rosterSearch, setRosterSearch] = useState("");
   const [rosterRoleFilter, setRosterRoleFilter] = useState("ALL");
   const [selectedLog, setSelectedLog] = useState<any | null>(null);
+
+  // Sealing Modal State
+  const [sealingGrievance, setSealingGrievance] = useState<CadastralGrievance | null>(null);
+  const [isSealingModalOpen, setIsSealingModalOpen] = useState(false);
 
   const statsQuery = trpc.admin.stats.useQuery(undefined, {
     refetchInterval: 12000,
@@ -283,6 +290,16 @@ export default function AdminDashboard() {
               }`}
             >
               <TrendingUp size={15} /> Role Productivity & System Governance
+            </button>
+            <button
+              onClick={() => setActiveTab("grievances")}
+              className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
+                activeTab === "grievances"
+                  ? "bg-rose-600 text-white shadow-md shadow-rose-600/30"
+                  : "bg-slate-900/60 text-slate-300 hover:bg-slate-800"
+              }`}
+            >
+              <ShieldAlert size={15} className="text-rose-400" /> Cadastral Violations & Sealing Enforcement
             </button>
           </div>
 
@@ -663,6 +680,35 @@ export default function AdminDashboard() {
               </div>
             </div>
           )}
+
+          {/* TAB 4: Cadastral Violations & Sealing Enforcement */}
+          {activeTab === "grievances" && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  <ShieldAlert size={22} className="text-rose-400" />
+                  Cadastral Violations & Property Sealing Enforcement Hub
+                </h2>
+                <p className="text-xs text-slate-400">
+                  Super Admin & Municipal Magistrate command desk: review verified field surveyor reports, issue statutory property sealing orders, levy penalties, or order structural demolition squads.
+                </p>
+              </div>
+
+              <AuthorityGrievanceDesk
+                onOpenSealingModal={g => {
+                  setSealingGrievance(g);
+                  setIsSealingModalOpen(true);
+                }}
+              />
+            </div>
+          )}
+
+          {/* Property Sealing Order Modal */}
+          <PropertySealingOrderModal
+            isOpen={isSealingModalOpen}
+            onClose={() => setIsSealingModalOpen(false)}
+            grievance={sealingGrievance}
+          />
 
           {/* Deep Event Details Inspection Modal */}
           {selectedLog && (

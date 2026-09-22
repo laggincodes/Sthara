@@ -32,11 +32,18 @@ import {
   AlertCircle,
   UserCheck,
 } from "lucide-react";
+import { AuthorityGrievanceDesk } from "@/components/AuthorityGrievanceDesk";
+import { PropertySealingOrderModal } from "@/components/PropertySealingOrderModal";
+import type { CadastralGrievance } from "@shared/cadastralGrievance";
 import { toast } from "sonner";
 
 export default function AuthorityDashboard() {
   const { user, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState<"queue" | "sanction" | "cadastre">("queue");
+  const [activeTab, setActiveTab] = useState<"queue" | "sanction" | "cadastre" | "grievances">("queue");
+
+  // Sealing Modal State
+  const [sealingGrievance, setSealingGrievance] = useState<CadastralGrievance | null>(null);
+  const [isSealingModalOpen, setIsSealingModalOpen] = useState(false);
 
   // Review state
   const [selectedSubmission, setSelectedSubmission] = useState<any | null>(null);
@@ -230,6 +237,16 @@ export default function AuthorityDashboard() {
               }`}
             >
               <Building2 size={15} /> Jurisdiction Cadastre ({(propertiesQuery.data || []).length})
+            </button>
+            <button
+              onClick={() => setActiveTab("grievances")}
+              className={`pb-2.5 transition flex items-center gap-2 ${
+                activeTab === "grievances"
+                  ? "text-amber-400 border-b-2 border-amber-400 font-bold"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <ShieldAlert size={15} className="text-amber-400" /> Citizen Grievances & Violation Triage
             </button>
           </div>
         </header>
@@ -555,7 +572,36 @@ export default function AuthorityDashboard() {
               </div>
             </div>
           )}
+
+          {/* Citizen Grievances & Violation Triage Tab */}
+          {activeTab === "grievances" && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  <ShieldAlert size={20} className="text-amber-400" />
+                  Citizen Grievances & Cadastral Violation Triage
+                </h2>
+                <p className="text-xs text-slate-400">
+                  Review citizen complaints against illegal heights, unapproved construction, fire safety hazards, and dispatch field surveyors or execute statutory sealing orders.
+                </p>
+              </div>
+
+              <AuthorityGrievanceDesk
+                onOpenSealingModal={g => {
+                  setSealingGrievance(g);
+                  setIsSealingModalOpen(true);
+                }}
+              />
+            </div>
+          )}
         </main>
+
+        {/* Property Sealing Order Modal */}
+        <PropertySealingOrderModal
+          isOpen={isSealingModalOpen}
+          onClose={() => setIsSealingModalOpen(false)}
+          grievance={sealingGrievance}
+        />
 
         {/* Review Decision Modal */}
         {selectedSubmission && (

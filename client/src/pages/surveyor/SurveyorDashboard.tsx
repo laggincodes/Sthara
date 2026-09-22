@@ -24,15 +24,22 @@ import {
   X,
   Radio,
   Crosshair,
+  ShieldAlert,
   ShieldCheck,
   Clock,
   ArrowRight,
 } from "lucide-react";
+import { SurveyorGrievanceAuditModal } from "@/components/SurveyorGrievanceAuditModal";
+import type { CadastralGrievance } from "@shared/cadastralGrievance";
 import { toast } from "sonner";
 
 export default function SurveyorDashboard() {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<"missions" | "upload" | "gcp">("missions");
+
+  // Grievance Audit modal state
+  const [selectedGrievance, setSelectedGrievance] = useState<CadastralGrievance | null>(null);
+  const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
 
   // Upload modal state
   const [category, setCategory] = useState<"geojson" | "floorplan">("geojson");
@@ -71,6 +78,7 @@ export default function SurveyorDashboard() {
   const utils = trpc.useUtils();
   const statsQuery = trpc.surveyor.stats.useQuery();
   const missionsQuery = trpc.surveyor.assignedMissions.useQuery();
+  const assignedGrievancesQuery = trpc.grievance.list.useQuery();
 
   const uploadMutation = trpc.surveyor.uploadSurveyData.useMutation({
     onSuccess: res => {
@@ -293,10 +301,80 @@ export default function SurveyorDashboard() {
           {/* TAB 1: ASSIGNED SURVEY MISSIONS */}
           {activeTab === "missions" && (
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
+              {/* Assigned Citizen Grievance Field Audits */}
+              <div className="p-5 bg-purple-950/30 border border-purple-500/40 rounded-2xl space-y-4 shadow-xl">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ShieldAlert size={18} className="text-purple-400" />
+                    <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+                      Assigned Grievance Field Audits ({(assignedGrievancesQuery.data || []).filter(g => g.status === "SURVEYOR_ASSIGNED").length})
+                    </h3>
+                  </div>
+                  <span className="text-[10px] text-purple-300 font-mono bg-purple-950 px-2 py-0.5 rounded border border-purple-700/50">
+                    Physical Ground Check Mandate
+                  </span>
+                </div>
+
+                {assignedGrievancesQuery.isLoading ? (
+                  <div className="text-xs text-slate-400 py-4 text-center">Loading assigned field audits...</div>
+                ) : (assignedGrievancesQuery.data || []).filter(g => g.status === "SURVEYOR_ASSIGNED").length === 0 ? (
+                  <div className="text-xs text-slate-400 py-3 text-center bg-slate-950/40 rounded-xl border border-slate-800">
+                    No pending citizen grievance audits assigned at this time.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-3">
+                    {(assignedGrievancesQuery.data || [])
+                      .filter(g => g.status === "SURVEYOR_ASSIGNED")
+                      .map(g => (
+                        <div
+                          key={g.id}
+                          className="p-4 bg-slate-900 border border-slate-800 hover:border-purple-500/50 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-3 transition-all"
+                        >
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono font-bold text-xs text-cyan-300">
+                                #{g.grievanceNumber}
+                              </span>
+                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                {g.category.replace("_", " ")}
+                              </span>
+                              <span className="text-[10px] text-rose-400 font-bold uppercase font-mono">
+                                {g.priority} Priority
+                              </span>
+                            </div>
+                            <div className="text-xs font-bold text-slate-100">
+                              {g.title}
+                            </div>
+                            <div className="text-[11px] text-slate-400 font-mono">
+                              Target: {g.buildingName || "Building"} ({g.ulpinOrReference})
+                            </div>
+                            {g.dispatchInstructions && (
+                              <p className="text-[11px] text-slate-300 italic bg-slate-950/80 p-2 rounded border border-slate-800/80 max-w-xl">
+                                Instruction: "{g.dispatchInstructions}"
+                              </p>
+                            )}
+                          </div>
+
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              setSelectedGrievance(g);
+                              setIsAuditModalOpen(true);
+                            }}
+                            className="bg-gradient-to-r from-purple-500 to-indigo-500 hover:brightness-110 text-white font-bold text-xs shrink-0 shadow-md shadow-purple-500/20"
+                          >
+                            <FileCheck size={13} className="mr-1.5" /> Conduct Field Verification Audit
+                          </Button>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between pt-2">
                 <div>
                   <h2 className="text-base font-bold text-white tracking-tight">
-                    Active Field Survey Tasks & Ground Missions
+                    Standard Survey Tasks & Ground Missions
                   </h2>
                   <p className="text-xs text-slate-400">
                     Missions assigned by Line Authorities for on-ground GNSS benchmark verification and height measurement.
@@ -613,6 +691,12 @@ export default function SurveyorDashboard() {
             </div>
           )}
         </main>
+
+        <SurveyorGrievanceAuditModal
+          isOpen={isAuditModalOpen}
+          onClose={() => setIsAuditModalOpen(false)}
+          grievance={selectedGrievance}
+        />
       </div>
     </ProtectedRoute>
   );

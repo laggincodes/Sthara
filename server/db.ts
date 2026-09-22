@@ -4,11 +4,13 @@ import { Pool } from "pg";
 import * as schema from "../drizzle/schema";
 import {
   auditLogs,
+  cadastralGrievances,
   cadastreRecords,
   departments,
   districts,
   evidenceFiles,
   InsertAuditLog,
+  InsertCadastralGrievance,
   InsertDepartment,
   InsertDistrict,
   InsertOrganization,
@@ -18,6 +20,7 @@ import {
   rolePermissions,
   users,
   verificationSubmissions,
+  type CadastralGrievance,
 } from "../drizzle/schema";
 import {
   INITIAL_CADASTRE_RECORDS,
@@ -1653,4 +1656,580 @@ export async function getUnitCadastreDetails(ulpin3d: string): Promise<{
 } | null> {
   return getUnitDetailsFromCadastre(ulpin3d);
 }
+
+// ==========================================
+// CADASTRAL GRIEVANCES & ENFORCEMENT ENGINE
+// ==========================================
+
+import type {
+  CitizenGrievanceInput,
+  EnforcementActionData,
+  GrievanceCategory,
+  GrievanceStatus,
+  SurveyorReportData,
+} from "@shared/cadastralGrievance";
+
+let _grievanceSequence = 1004;
+
+const _inMemoryGrievances: CadastralGrievance[] = [
+  {
+    id: 1,
+    grievanceNumber: "GRV-2026-PAT-1001",
+    ulpinOrReference: "IN-BR-PAT-0042-3D-B01",
+    buildingName: "IIT Patna Admin Complex - Block B",
+    category: "HEIGHT_VIOLATION",
+    title: "Unapproved 5th Floor Construction and Height Limit Breach",
+    details: "The sanctioned map allows ground + 3 floors (14.5m), but contractor is actively constructing a 5th floor (exceeding 21m) without clearance.",
+    latitude: "25.6124294",
+    longitude: "85.054779",
+    evidencePhotos: JSON.stringify([
+      "https://images.unsplash.com/photo-1590381105924-c72589b9ef3f?auto=format&fit=crop&w=800&q=80"
+    ]),
+    citizenClerkUserId: "user_citizen_demo",
+    citizenName: "Rahul Sharma",
+    citizenContact: "+91 98765 43210",
+    isAnonymous: "false",
+    status: "SURVEYOR_ASSIGNED",
+    rejectionReason: null,
+    rejectedAt: null,
+    rejectedByClerkUserId: null,
+    assignedSurveyorClerkUserId: "user_surveyor_demo",
+    assignedSurveyorName: "Officer Vikram Singh (Field Cadastre)",
+    dispatchInstructions: "Conduct GNSS RTK CORS height audit and laser measure total building height against sanctioned 14.5m municipal limit.",
+    priority: "HIGH",
+    dispatchedAt: new Date(Date.now() - 3600000 * 36),
+    targetInspectionDate: new Date(Date.now() + 3600000 * 24),
+    surveyorReport: null,
+    enforcementAction: null,
+    createdAt: new Date(Date.now() - 3600000 * 48),
+    updatedAt: new Date(Date.now() - 3600000 * 36),
+  },
+  {
+    id: 2,
+    grievanceNumber: "GRV-2026-PAT-1002",
+    ulpinOrReference: "IN-BR-PAT-0012-3D-U02",
+    buildingName: "Exhibition Road Commercial Tower",
+    category: "FIRE_SAFETY_HAZARD",
+    title: "Emergency Fire Escape Blocked by Commercial Stalls",
+    details: "Main emergency stairway and fire tender movement corridor blocked by unapproved retail extensions. Zero setback clearance.",
+    latitude: "25.608120",
+    longitude: "85.141230",
+    evidencePhotos: JSON.stringify([
+      "https://images.unsplash.com/photo-1541888946425-d0fbb180c5f7?auto=format&fit=crop&w=800&q=80"
+    ]),
+    citizenClerkUserId: "user_citizen_demo2",
+    citizenName: "Priya Verma",
+    citizenContact: "+91 98111 22334",
+    isAnonymous: "false",
+    status: "FIELD_VERIFIED",
+    rejectionReason: null,
+    rejectedAt: null,
+    rejectedByClerkUserId: null,
+    assignedSurveyorClerkUserId: "user_surveyor_demo",
+    assignedSurveyorName: "Officer Vikram Singh (Field Cadastre)",
+    dispatchInstructions: "Verify 6-metre minimum fire driveway corridor and emergency exit compliance.",
+    priority: "HIGH",
+    dispatchedAt: new Date(Date.now() - 3600000 * 72),
+    targetInspectionDate: new Date(Date.now() - 3600000 * 24),
+    surveyorReport: JSON.stringify({
+      actualHeightMetres: 24.2,
+      approvedHeightMetres: 24.0,
+      actualFloors: 6,
+      approvedFloors: 6,
+      fireSafetyClearance: "FAILED",
+      setbackEncroachmentMetres: 2.8,
+      remarks: "Field audit confirmed emergency exit corridor is encroached by 2.8m permanent structures. Fire tender access completely obstructed.",
+      verdict: "VIOLATION_CONFIRMED",
+      submittedAt: new Date(Date.now() - 3600000 * 12).toISOString(),
+      surveyorClerkUserId: "user_surveyor_demo",
+      surveyorName: "Officer Vikram Singh (Field Cadastre)",
+    } satisfies SurveyorReportData),
+    enforcementAction: null,
+    createdAt: new Date(Date.now() - 3600000 * 96),
+    updatedAt: new Date(Date.now() - 3600000 * 12),
+  },
+  {
+    id: 3,
+    grievanceNumber: "GRV-2026-PAT-1003",
+    ulpinOrReference: "IN-BR-PAT-0099-3D-Z04",
+    buildingName: "Ganga Riverfront Prohibited Eco-Zone",
+    category: "ZONING_PROHIBITED_AREA",
+    title: "Illegal Resort Construction Inside Prohibited Eco-Sensitive Zone",
+    details: "Heavy concrete construction in progress within 200m prohibited river embankment green buffer zone.",
+    latitude: "25.623400",
+    longitude: "85.184200",
+    evidencePhotos: JSON.stringify([]),
+    citizenClerkUserId: "user_citizen_demo3",
+    citizenName: "Amit Kumar",
+    citizenContact: "+91 97766 55443",
+    isAnonymous: "false",
+    status: "SEALED",
+    rejectionReason: null,
+    rejectedAt: null,
+    rejectedByClerkUserId: null,
+    assignedSurveyorClerkUserId: "user_surveyor_demo",
+    assignedSurveyorName: "Officer Vikram Singh (Field Cadastre)",
+    dispatchInstructions: "Confirm geo-coordinates against state riverfront master plan boundary.",
+    priority: "HIGH",
+    dispatchedAt: new Date(Date.now() - 3600000 * 120),
+    targetInspectionDate: new Date(Date.now() - 3600000 * 90),
+    surveyorReport: JSON.stringify({
+      actualHeightMetres: 12.0,
+      approvedHeightMetres: 0,
+      actualFloors: 3,
+      approvedFloors: 0,
+      fireSafetyClearance: "FAILED",
+      setbackEncroachmentMetres: 180,
+      remarks: "Structure is fully located within Non-Development Zone buffer. No municipal building permission exists on record.",
+      verdict: "VIOLATION_CONFIRMED",
+      submittedAt: new Date(Date.now() - 3600000 * 80).toISOString(),
+      surveyorClerkUserId: "user_surveyor_demo",
+      surveyorName: "Officer Vikram Singh (Field Cadastre)",
+    } satisfies SurveyorReportData),
+    enforcementAction: JSON.stringify({
+      actionType: "SEAL_PROPERTY",
+      orderNumber: "SEAL-ORD-2026-PAT-0089",
+      fineAmountInr: 500000,
+      legalNoticeText: "By order of the Competent Municipal Authority & District Magistrate, this unauthorized structure is hereby IMMEDIATELY SEALED under Bihar Municipal Act Sec 314. Trespassers and unauthorized occupants will face immediate penal prosecution.",
+      issuedByClerkUserId: "user_admin_demo",
+      issuedByName: "Super Administrator / DM Patna",
+      issuedByRole: "SUPER_ADMIN",
+      executedAt: new Date(Date.now() - 3600000 * 40).toISOString(),
+    } satisfies EnforcementActionData),
+    createdAt: new Date(Date.now() - 3600000 * 140),
+    updatedAt: new Date(Date.now() - 3600000 * 40),
+  }
+];
+
+export async function createCadastralGrievance(input: CitizenGrievanceInput & {
+  citizenClerkUserId: string;
+  actorRole?: string;
+  actorName?: string;
+}): Promise<CadastralGrievance> {
+  const grievanceNumber = `GRV-2026-PAT-${++_grievanceSequence}`;
+  const now = new Date();
+
+  const grievanceRecord: CadastralGrievance = {
+    id: _grievanceSequence,
+    grievanceNumber,
+    ulpinOrReference: input.ulpinOrReference,
+    buildingName: input.buildingName || "Reference Cadastral Footprint",
+    category: input.category,
+    title: input.title,
+    details: input.details,
+    latitude: input.latitude || null,
+    longitude: input.longitude || null,
+    evidencePhotos: JSON.stringify(input.evidencePhotos || []),
+    citizenClerkUserId: input.citizenClerkUserId,
+    citizenName: input.isAnonymous ? "Anonymous Citizen" : (input.citizenName || input.actorName || "Concerned Citizen"),
+    citizenContact: input.isAnonymous ? null : (input.citizenContact || null),
+    isAnonymous: input.isAnonymous ? "true" : "false",
+    status: "SUBMITTED",
+    rejectionReason: null,
+    rejectedAt: null,
+    rejectedByClerkUserId: null,
+    assignedSurveyorClerkUserId: null,
+    assignedSurveyorName: null,
+    dispatchInstructions: null,
+    priority: "MEDIUM",
+    dispatchedAt: null,
+    targetInspectionDate: null,
+    surveyorReport: null,
+    enforcementAction: null,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  _inMemoryGrievances.unshift(grievanceRecord);
+
+  const db = await getDb();
+  if (db) {
+    try {
+      await db.insert(cadastralGrievances).values({
+        grievanceNumber: grievanceRecord.grievanceNumber,
+        ulpinOrReference: grievanceRecord.ulpinOrReference,
+        buildingName: grievanceRecord.buildingName,
+        category: grievanceRecord.category,
+        title: grievanceRecord.title,
+        details: grievanceRecord.details,
+        latitude: grievanceRecord.latitude,
+        longitude: grievanceRecord.longitude,
+        evidencePhotos: grievanceRecord.evidencePhotos,
+        citizenClerkUserId: grievanceRecord.citizenClerkUserId,
+        citizenName: grievanceRecord.citizenName,
+        citizenContact: grievanceRecord.citizenContact,
+        isAnonymous: grievanceRecord.isAnonymous,
+        status: grievanceRecord.status,
+        createdAt: now,
+        updatedAt: now,
+      });
+    } catch (err) {
+      console.warn("[Database] cadastralGrievances table insert fallback to memory:", err);
+    }
+  }
+
+  await createAuditLog({
+    actorClerkUserId: input.citizenClerkUserId,
+    actorRole: input.actorRole || "CITIZEN",
+    actorName: grievanceRecord.citizenName,
+    action: "CADASTRAL_GRIEVANCE_SUBMITTED",
+    entityType: "cadastral_grievance",
+    entityId: grievanceNumber,
+    targetResource: input.ulpinOrReference,
+    newValue: JSON.stringify({
+      grievanceNumber,
+      category: input.category,
+      title: input.title,
+      ulpin: input.ulpinOrReference,
+    }),
+  });
+
+  return grievanceRecord;
+}
+
+export async function getCadastralGrievances(filters?: {
+  status?: string;
+  category?: string;
+  citizenClerkUserId?: string;
+  assignedSurveyorClerkUserId?: string;
+  ulpinOrReference?: string;
+  limit?: number;
+}): Promise<CadastralGrievance[]> {
+  const db = await getDb();
+  if (db) {
+    try {
+      let query = db.select().from(cadastralGrievances).$dynamic();
+      const conditions = [];
+
+      if (filters?.status) {
+        conditions.push(eq(cadastralGrievances.status, filters.status));
+      }
+      if (filters?.category) {
+        conditions.push(eq(cadastralGrievances.category, filters.category));
+      }
+      if (filters?.citizenClerkUserId) {
+        conditions.push(eq(cadastralGrievances.citizenClerkUserId, filters.citizenClerkUserId));
+      }
+      if (filters?.assignedSurveyorClerkUserId) {
+        conditions.push(eq(cadastralGrievances.assignedSurveyorClerkUserId, filters.assignedSurveyorClerkUserId));
+      }
+      if (filters?.ulpinOrReference) {
+        conditions.push(eq(cadastralGrievances.ulpinOrReference, filters.ulpinOrReference));
+      }
+
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+      }
+
+      const dbRows = await query.orderBy(desc(cadastralGrievances.createdAt)).limit(filters?.limit ?? 50);
+      if (dbRows && dbRows.length > 0) {
+        return dbRows;
+      }
+    } catch {
+      // Fallback to memory
+    }
+  }
+
+  // In-memory filter
+  return _inMemoryGrievances.filter(g => {
+    if (filters?.status && g.status !== filters.status) return false;
+    if (filters?.category && g.category !== filters.category) return false;
+    if (filters?.citizenClerkUserId && g.citizenClerkUserId !== filters.citizenClerkUserId) return false;
+    if (filters?.assignedSurveyorClerkUserId && g.assignedSurveyorClerkUserId !== filters.assignedSurveyorClerkUserId) return false;
+    if (filters?.ulpinOrReference && g.ulpinOrReference !== filters.ulpinOrReference) return false;
+    return true;
+  }).slice(0, filters?.limit ?? 50);
+}
+
+export async function getGrievanceById(idOrNumber: string | number): Promise<CadastralGrievance | null> {
+  const match = _inMemoryGrievances.find(
+    g => g.id === Number(idOrNumber) || g.grievanceNumber === String(idOrNumber)
+  );
+  if (match) return match;
+
+  const db = await getDb();
+  if (db) {
+    try {
+      const rows = await db
+        .select()
+        .from(cadastralGrievances)
+        .where(
+          typeof idOrNumber === "number" || !isNaN(Number(idOrNumber))
+            ? or(eq(cadastralGrievances.id, Number(idOrNumber)), eq(cadastralGrievances.grievanceNumber, String(idOrNumber)))
+            : eq(cadastralGrievances.grievanceNumber, String(idOrNumber))
+        )
+        .limit(1);
+      if (rows[0]) return rows[0];
+    } catch {
+      // ignore
+    }
+  }
+
+  return null;
+}
+
+export async function rejectGrievanceByAuthority(input: {
+  grievanceId: number | string;
+  rejectionReason: string;
+  actorClerkUserId: string;
+  actorRole: string;
+  actorName?: string | null;
+}): Promise<CadastralGrievance> {
+  const grievance = await getGrievanceById(input.grievanceId);
+  if (!grievance) throw new Error("Grievance record not found.");
+
+  const now = new Date();
+  grievance.status = "REJECTED";
+  grievance.rejectionReason = input.rejectionReason;
+  grievance.rejectedAt = now;
+  grievance.rejectedByClerkUserId = input.actorClerkUserId;
+  grievance.updatedAt = now;
+
+  const db = await getDb();
+  if (db) {
+    try {
+      await db
+        .update(cadastralGrievances)
+        .set({
+          status: "REJECTED",
+          rejectionReason: input.rejectionReason,
+          rejectedAt: now,
+          rejectedByClerkUserId: input.actorClerkUserId,
+          updatedAt: now,
+        })
+        .where(eq(cadastralGrievances.id, grievance.id));
+    } catch {
+      // memory updated
+    }
+  }
+
+  await createAuditLog({
+    actorClerkUserId: input.actorClerkUserId,
+    actorRole: input.actorRole,
+    actorName: input.actorName,
+    action: "GRIEVANCE_REJECTED_BY_AUTHORITY",
+    entityType: "cadastral_grievance",
+    entityId: grievance.grievanceNumber,
+    targetResource: grievance.ulpinOrReference,
+    newValue: JSON.stringify({
+      grievanceNumber: grievance.grievanceNumber,
+      rejectionReason: input.rejectionReason,
+    }),
+  });
+
+  return grievance;
+}
+
+export async function assignGrievanceToSurveyor(input: {
+  grievanceId: number | string;
+  surveyorClerkUserId: string;
+  surveyorName?: string;
+  instructions: string;
+  priority?: "LOW" | "MEDIUM" | "HIGH";
+  targetInspectionDays?: number;
+  actorClerkUserId: string;
+  actorRole: string;
+  actorName?: string | null;
+}): Promise<CadastralGrievance> {
+  const grievance = await getGrievanceById(input.grievanceId);
+  if (!grievance) throw new Error("Grievance record not found.");
+
+  const now = new Date();
+  const targetDate = new Date(Date.now() + (input.targetInspectionDays || 3) * 86400000);
+
+  grievance.status = "SURVEYOR_ASSIGNED";
+  grievance.assignedSurveyorClerkUserId = input.surveyorClerkUserId;
+  grievance.assignedSurveyorName = input.surveyorName || "Assigned Field Cadastre Surveyor";
+  grievance.dispatchInstructions = input.instructions;
+  grievance.priority = input.priority || "MEDIUM";
+  grievance.dispatchedAt = now;
+  grievance.targetInspectionDate = targetDate;
+  grievance.updatedAt = now;
+
+  const db = await getDb();
+  if (db) {
+    try {
+      await db
+        .update(cadastralGrievances)
+        .set({
+          status: "SURVEYOR_ASSIGNED",
+          assignedSurveyorClerkUserId: input.surveyorClerkUserId,
+          assignedSurveyorName: grievance.assignedSurveyorName,
+          dispatchInstructions: input.instructions,
+          priority: grievance.priority,
+          dispatchedAt: now,
+          targetInspectionDate: targetDate,
+          updatedAt: now,
+        })
+        .where(eq(cadastralGrievances.id, grievance.id));
+    } catch {
+      // memory updated
+    }
+  }
+
+  await createAuditLog({
+    actorClerkUserId: input.actorClerkUserId,
+    actorRole: input.actorRole,
+    actorName: input.actorName,
+    action: "GRIEVANCE_SURVEYOR_ASSIGNED",
+    entityType: "cadastral_grievance",
+    entityId: grievance.grievanceNumber,
+    targetUserId: input.surveyorClerkUserId,
+    targetResource: grievance.ulpinOrReference,
+    newValue: JSON.stringify({
+      grievanceNumber: grievance.grievanceNumber,
+      surveyorClerkUserId: input.surveyorClerkUserId,
+      instructions: input.instructions,
+      priority: grievance.priority,
+    }),
+  });
+
+  return grievance;
+}
+
+export async function submitSurveyorVerificationReport(input: {
+  grievanceId: number | string;
+  report: Omit<SurveyorReportData, "submittedAt" | "surveyorClerkUserId" | "surveyorName">;
+  actorClerkUserId: string;
+  actorRole: string;
+  actorName?: string | null;
+}): Promise<CadastralGrievance> {
+  const grievance = await getGrievanceById(input.grievanceId);
+  if (!grievance) throw new Error("Grievance record not found.");
+
+  const now = new Date();
+  const fullReport: SurveyorReportData = {
+    ...input.report,
+    submittedAt: now.toISOString(),
+    surveyorClerkUserId: input.actorClerkUserId,
+    surveyorName: input.actorName || "Field Surveyor",
+  };
+
+  grievance.status = "FIELD_VERIFIED";
+  grievance.surveyorReport = JSON.stringify(fullReport);
+  grievance.updatedAt = now;
+
+  const db = await getDb();
+  if (db) {
+    try {
+      await db
+        .update(cadastralGrievances)
+        .set({
+          status: "FIELD_VERIFIED",
+          surveyorReport: grievance.surveyorReport,
+          updatedAt: now,
+        })
+        .where(eq(cadastralGrievances.id, grievance.id));
+    } catch {
+      // memory updated
+    }
+  }
+
+  await createAuditLog({
+    actorClerkUserId: input.actorClerkUserId,
+    actorRole: input.actorRole,
+    actorName: input.actorName,
+    action: "GRIEVANCE_FIELD_AUDIT_SUBMITTED",
+    entityType: "cadastral_grievance",
+    entityId: grievance.grievanceNumber,
+    targetResource: grievance.ulpinOrReference,
+    newValue: JSON.stringify(fullReport),
+  });
+
+  return grievance;
+}
+
+export async function executeEnforcementOrder(input: {
+  grievanceId: number | string;
+  actionType: "SEAL_PROPERTY" | "DEMOLITION_ORDER" | "PENALTY" | "CLEARED" | "RE_SURVEY";
+  fineAmountInr?: number | null;
+  legalNoticeText: string;
+  actorClerkUserId: string;
+  actorRole: string;
+  actorName?: string | null;
+}): Promise<CadastralGrievance> {
+  const grievance = await getGrievanceById(input.grievanceId);
+  if (!grievance) throw new Error("Grievance record not found.");
+
+  const now = new Date();
+  const orderNumber = `${input.actionType === "SEAL_PROPERTY" ? "SEAL-ORD" : input.actionType === "DEMOLITION_ORDER" ? "DEMO-ORD" : "ENF-ORD"}-2026-PAT-${Math.floor(1000 + Math.random() * 9000)}`;
+
+  const enforcementData: EnforcementActionData = {
+    actionType: input.actionType,
+    orderNumber,
+    fineAmountInr: input.fineAmountInr || null,
+    legalNoticeText: input.legalNoticeText,
+    issuedByClerkUserId: input.actorClerkUserId,
+    issuedByName: input.actorName || "Executive Enforcement Authority",
+    issuedByRole: input.actorRole,
+    executedAt: now.toISOString(),
+  };
+
+  const statusMap: Record<typeof input.actionType, GrievanceStatus> = {
+    SEAL_PROPERTY: "SEALED",
+    DEMOLITION_ORDER: "DEMOLITION_ORDER",
+    PENALTY: "PENALTY_ISSUED",
+    CLEARED: "RESOLVED",
+    RE_SURVEY: "SURVEYOR_ASSIGNED",
+  };
+
+  grievance.status = statusMap[input.actionType] || "RESOLVED";
+  grievance.enforcementAction = JSON.stringify(enforcementData);
+  grievance.updatedAt = now;
+
+  const db = await getDb();
+  if (db) {
+    try {
+      await db
+        .update(cadastralGrievances)
+        .set({
+          status: grievance.status,
+          enforcementAction: grievance.enforcementAction,
+          updatedAt: now,
+        })
+        .where(eq(cadastralGrievances.id, grievance.id));
+    } catch {
+      // memory updated
+    }
+  }
+
+  await createAuditLog({
+    actorClerkUserId: input.actorClerkUserId,
+    actorRole: input.actorRole,
+    actorName: input.actorName,
+    action: input.actionType === "SEAL_PROPERTY" ? "PROPERTY_SEALING_ORDER_EXECUTED" : "CADASTRAL_ENFORCEMENT_ORDER_EXECUTED",
+    entityType: "cadastral_grievance",
+    entityId: grievance.grievanceNumber,
+    targetResource: grievance.ulpinOrReference,
+    newValue: JSON.stringify(enforcementData),
+  });
+
+  return grievance;
+}
+
+export async function getGrievanceStats(): Promise<{
+  totalGrievances: number;
+  submittedPendingTriage: number;
+  surveyorAssigned: number;
+  fieldVerified: number;
+  sealedProperties: number;
+  demolitionOrders: number;
+  penaltiesIssued: number;
+  resolvedClosed: number;
+  rejectedCount: number;
+}> {
+  const grievances = await getCadastralGrievances({ limit: 1000 });
+  return {
+    totalGrievances: grievances.length,
+    submittedPendingTriage: grievances.filter(g => g.status === "SUBMITTED").length,
+    surveyorAssigned: grievances.filter(g => g.status === "SURVEYOR_ASSIGNED").length,
+    fieldVerified: grievances.filter(g => g.status === "FIELD_VERIFIED").length,
+    sealedProperties: grievances.filter(g => g.status === "SEALED").length,
+    demolitionOrders: grievances.filter(g => g.status === "DEMOLITION_ORDER").length,
+    penaltiesIssued: grievances.filter(g => g.status === "PENALTY_ISSUED").length,
+    resolvedClosed: grievances.filter(g => g.status === "RESOLVED").length,
+    rejectedCount: grievances.filter(g => g.status === "REJECTED").length,
+  };
+}
+
 

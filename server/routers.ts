@@ -36,12 +36,21 @@ import {
   getBuildingFloorStack,
   getAllBuildingFloorStacks,
   getUnitCadastreDetails,
+  createCadastralGrievance,
+  getCadastralGrievances,
+  getGrievanceById,
+  rejectGrievanceByAuthority,
+  assignGrievanceToSurveyor,
+  submitSurveyorVerificationReport,
+  executeEnforcementOrder,
+  getGrievanceStats,
   inviteAuthorityUser,
   reviewVerificationSubmission,
   setPlatformUserRole,
   setPlatformUserStatus,
   updateUserJurisdiction,
 } from "./db";
+import { citizenGrievanceInputSchema } from "@shared/cadastralGrievance";
 import { extractEvidenceMetadata } from "./evidenceExtraction";
 import {
   getPendingClerkInvitations,
@@ -1210,6 +1219,140 @@ export const appRouter = router({
       }),
     auditLogs: adminProcedure.query(async () => getRecentAuditLogs()),
   }),
+
+  // Cadastral Grievances & Property Sealing Enforcement Router
+  grievance: router({
+    submit: publicProcedure
+      .input(citizenGrievanceInputSchema)
+      .mutation(async ({ input, ctx }) => {
+        const citizenClerkUserId = ctx.user?.clerkUserId || `anon_${Date.now()}`;
+        return createCadastralGrievance({
+          ...input,
+          citizenClerkUserId,
+          actorRole: ctx.user?.role ? String(ctx.user.role) : "CITIZEN",
+          actorName: ctx.user?.name || input.citizenName,
+        });
+      }),
+
+    list: publicProcedure
+      .input(
+        z
+          .object({
+            status: z.string().optional(),
+            category: z.string().optional(),
+            citizenClerkUserId: z.string().optional(),
+            assignedSurveyorClerkUserId: z.string().optional(),
+            ulpinOrReference: z.string().optional(),
+            limit: z.number().max(200).default(50),
+          })
+          .optional()
+      )
+      .query(async ({ input }) => getCadastralGrievances(input)),
+
+    getById: publicProcedure
+      .input(z.object({ idOrNumber: z.union([z.string(), z.number()]) }))
+      .query(async ({ input }) => getGrievanceById(input.idOrNumber)),
+
+    authorityAction: authorityProcedure
+      .input(
+        z.object({
+          grievanceId: z.union([z.string(), z.number()]),
+          action: z.enum(["REJECT", "ASSIGN_SURVEYOR"]),
+          rejectionReason: z.string().trim().optional(),
+          surveyorClerkUserId: z.string().trim().optional(),
+          surveyorName: z.string().trim().optional(),
+          instructions: z.string().trim().optional(),
+          priority: z.enum(["LOW", "MEDIUM", "HIGH"]).default("MEDIUM"),
+          targetInspectionDays: z.number().int().min(1).max(30).default(3),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        if (input.action === "REJECT") {
+          if (!input.rejectionReason || input.rejectionReason.trim().length < 5) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "A formal rejection justification of at least 5 characters is required.",
+            });
+          }
+          return rejectGrievanceByAuthority({
+            grievanceId: input.grievanceId,
+            rejectionReason: input.rejectionReason.trim(),
+            actorClerkUserId: ctx.user.clerkUserId,
+            actorRole: String(ctx.user.role),
+            actorName: ctx.user.name,
+          });
+        }
+
+        if (!input.surveyorClerkUserId) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "A field surveyor must be selected for on-site inspection dispatch.",
+          });
+        }
+
+        return assignGrievanceToSurveyor({
+          grievanceId: input.grievanceId,
+          surveyorClerkUserId: input.surveyorClerkUserId,
+          surveyorName: input.surveyorName,
+          instructions: input.instructions || "Conduct on-site physical measurement, fire clearance audit, and photo documentation.",
+          priority: input.priority,
+          targetInspectionDays: input.targetInspectionDays,
+          actorClerkUserId: ctx.user.clerkUserId,
+          actorRole: String(ctx.user.role),
+          actorName: ctx.user.name,
+        });
+      }),
+
+    surveyorSubmitReport: surveyorProcedure
+      .input(
+        z.object({
+          grievanceId: z.union([z.string(), z.number()]),
+          actualHeightMetres: z.number().nullable().optional(),
+          approvedHeightMetres: z.number().nullable().optional(),
+          actualFloors: z.number().int().nullable().optional(),
+          approvedFloors: z.number().int().nullable().optional(),
+          fireSafetyClearance: z.enum(["PASSED", "FAILED", "NOT_APPLICABLE"]),
+          setbackEncroachmentMetres: z.number().nullable().optional(),
+          sitePhotos: z.array(z.string()).optional(),
+          remarks: z.string().trim().min(5, "Surveyor remarks must be at least 5 characters"),
+          verdict: z.enum(["VIOLATION_CONFIRMED", "COMPLIANT_NO_VIOLATION", "RE_SURVEY_RECOMMENDED"]),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const { grievanceId, ...report } = input;
+        return submitSurveyorVerificationReport({
+          grievanceId,
+          report,
+          actorClerkUserId: ctx.user.clerkUserId,
+          actorRole: String(ctx.user.role),
+          actorName: ctx.user.name,
+        });
+      }),
+
+    adminEnforcement: authorityAdminProcedure
+      .input(
+        z.object({
+          grievanceId: z.union([z.string(), z.number()]),
+          actionType: z.enum(["SEAL_PROPERTY", "DEMOLITION_ORDER", "PENALTY", "CLEARED", "RE_SURVEY"]),
+          fineAmountInr: z.number().nullable().optional(),
+          legalNoticeText: z.string().trim().min(5, "Legal notice text must be at least 5 characters"),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        return executeEnforcementOrder({
+          grievanceId: input.grievanceId,
+          actionType: input.actionType,
+          fineAmountInr: input.fineAmountInr,
+          legalNoticeText: input.legalNoticeText,
+          actorClerkUserId: ctx.user.clerkUserId,
+          actorRole: String(ctx.user.role),
+          actorName: ctx.user.name,
+        });
+      }),
+
+    stats: publicProcedure.query(async () => getGrievanceStats()),
+  }),
 });
 
 export type AppRouter = typeof appRouter;
+

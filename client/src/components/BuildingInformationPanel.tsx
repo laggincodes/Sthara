@@ -26,6 +26,8 @@ import type {
   FloorUnitCadastre,
   UnitType,
 } from "@shared/floorCadastre";
+import { CitizenGrievanceModal } from "./CitizenGrievanceModal";
+import { GrievanceTrackerModal } from "./GrievanceTrackerModal";
 import { toast } from "sonner";
 
 type BuildingInformationPanelProps = {
@@ -165,6 +167,8 @@ export function BuildingInformationPanel({
   onOverrideFloorCountChange,
 }: BuildingInformationPanelProps) {
   const [copiedText, setCopiedText] = useState<string | null>(null);
+  const [isGrievanceOpen, setIsGrievanceOpen] = useState(false);
+  const [isTrackerOpen, setIsTrackerOpen] = useState(false);
 
   if (!selection && !floorStack) {
     return (
@@ -179,9 +183,22 @@ export function BuildingInformationPanel({
           </div>
           <Building2 size={20} className="text-cyan-400/60" />
         </div>
-        <p className="building-information-empty-copy">
-          Select any 3D building on the map or search for an institution (e.g. <b>IIT Patna</b>, <b>AIIMS Patna</b>, or <b>Patna Central Heights</b>) to inspect source-backed identification, geometry, and vertical cadastre attributes.
-        </p>
+        <div className="building-information-empty">
+          <p>
+            Click any building, parcel volume, or 3D OSM mesh on the map to inspect its cadastral attributes, floor stacks, or file a violation report.
+          </p>
+          <button
+            type="button"
+            onClick={() => setIsTrackerOpen(true)}
+            className="mt-3 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 text-xs font-semibold flex items-center gap-1.5 border border-slate-700 transition-colors"
+          >
+            <FileText size={13} /> Track Existing Grievances
+          </button>
+        </div>
+        <GrievanceTrackerModal
+          isOpen={isTrackerOpen}
+          onClose={() => setIsTrackerOpen(false)}
+        />
       </section>
     );
   }
@@ -314,6 +331,24 @@ export function BuildingInformationPanel({
               <span>{latitude.toFixed(6)}°N, {longitude.toFixed(6)}°E</span>
             </p>
           )}
+          {/* Grievance Action Ribbon */}
+          <div className="flex items-center gap-2 mt-2">
+            <button
+              type="button"
+              onClick={() => setIsGrievanceOpen(true)}
+              className="flex-1 py-1.5 px-2.5 rounded-lg bg-gradient-to-r from-amber-500/20 to-orange-500/20 hover:from-amber-500/30 hover:to-orange-500/30 border border-amber-500/40 text-amber-300 text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all shadow-sm"
+            >
+              <ShieldAlert size={13} className="text-amber-400" /> Report Grievance
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsTrackerOpen(true)}
+              className="py-1.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-[11px] font-semibold flex items-center justify-center gap-1 transition-all"
+              title="Track Grievances"
+            >
+              <FileText size={13} /> Tracker
+            </button>
+          </div>
         </div>
         {isOsm ? (
           <ShieldAlert size={20} className="text-amber-400 shrink-0 mt-1" />
@@ -538,6 +573,21 @@ export function BuildingInformationPanel({
           </p>
         </div>
       </div>
+
+      <CitizenGrievanceModal
+        isOpen={isGrievanceOpen}
+        onClose={() => setIsGrievanceOpen(false)}
+        defaultUlpin={ulpin !== notAvailable ? ulpin : ""}
+        defaultBuildingName={buildingName}
+        defaultLatitude={latitude || ""}
+        defaultLongitude={longitude || ""}
+      />
+
+      <GrievanceTrackerModal
+        isOpen={isTrackerOpen}
+        onClose={() => setIsTrackerOpen(false)}
+        initialGrievanceId={ulpin !== notAvailable ? ulpin : ""}
+      />
     </section>
   );
 }
