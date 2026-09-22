@@ -1651,7 +1651,6 @@ export default function Home() {
                 evidenceFilter={evidenceFilter}
                 authorityReference={reraEndpointReference}
                 focusUlpins={areaSearch.data?.matchedUlpins}
-                selectedUlpin={selectedLiveFeature?.ulpin ?? null}
                 onFeatureSelect={onMapFeatureSelect}
               />
               <div className="map-grid" />
