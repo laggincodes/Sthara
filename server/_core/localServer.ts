@@ -3,41 +3,50 @@ import net from "net";
 import { createApp } from "./index";
 import { serveStatic, setupVite } from "./vite";
 
-function isPortAvailable(port: number): Promise<boolean> {
-  return new Promise(resolve => {
-    const server = net.createServer();
-    server.listen(port, () => {
-      server.close(() => resolve(true));
-    });
-    server.on("error", () => resolve(false));
-  });
-}
-
-async function findAvailablePort(startPort = 3000): Promise<number> {
-  for (let port = startPort; port < startPort + 20; port++) {
-    if (await isPortAvailable(port)) return port;
-  }
-  throw new Error(`No available port found starting from ${startPort}`);
-}
-
 async function startServer() {
+  process.env.NODE_ENV = process.env.NODE_ENV || "development";
+  console.log("Initializing Express app...");
   const app = createApp();
   const server = createServer(app);
 
   if (process.env.NODE_ENV === "development") {
+    console.log("Setting up Vite middleware...");
     await setupVite(app, server);
+    console.log("Vite middleware initialized.");
   } else {
     serveStatic(app);
   }
 
-  const preferredPort = parseInt(process.env.PORT || "3000");
-  const port = await findAvailablePort(preferredPort);
-  if (port !== preferredPort) {
-    console.log(`Port ${preferredPort} is busy, using port ${port}`);
-  }
-  server.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}`);
-  });
+  const basePort = parseInt(process.env.PORT || "5173", 10);
+
+  const listenOnPort = (port: number): Promise<number> => {
+    return new Promise((resolve, reject) => {
+      const errorHandler = (err: any) => {
+        if (err.code === "EADDRINUSE") {
+          console.log(`Port ${port} is in use, trying port ${port + 1}...`);
+          server.removeListener("error", errorHandler);
+          resolve(listenOnPort(port + 1));
+        } else {
+          server.removeListener("error", errorHandler);
+          reject(err);
+        }
+      };
+
+      server.once("error", errorHandler);
+      server.listen(port, "0.0.0.0", () => {
+        server.removeListener("error", errorHandler);
+        resolve(port);
+      });
+    });
+  };
+
+  const activePort = await listenOnPort(basePort);
+
+  console.log(`\n========================================`);
+  console.log(`🚀 SIH-2026 ULPIN-VPM Cadastre Platform`);
+  console.log(`📡 Local:   http://localhost:${activePort}`);
+  console.log(`🌐 Network: http://127.0.0.1:${activePort}`);
+  console.log(`========================================\n`);
 }
 
 startServer().catch(console.error);
