@@ -1,5 +1,10 @@
-﻿import { TopologyCard } from "@/components/cadastral/TopologyCard";
-import React from "react";
+import { TopologyCard } from "@/components/cadastral/TopologyCard";
+import React, { useState, useEffect } from "react";
+import { useCadastreContext } from "@/context/CadastreContext";
+import { cadastreApi, BuildingBlueprintRecord, DrawingAnalysis } from "@/lib/api/client";
+import { BuildingBlueprintViewerModal } from "./BuildingBlueprintViewerModal";
+import { DrawingImportModal } from "../drawing/DrawingImportModal";
+import { DrawingReviewWorkspace } from "../drawing/DrawingReviewWorkspace";
 import {
   NormalizedParcel,
   BuildingAssociationResult,
@@ -53,6 +58,7 @@ interface ParcelInspectorProps {
   onSwitchTo3D?: () => void;
   onSwitchToFloors3D?: () => void;
   onSwitchToProperty3D?: () => void;
+  onConfigureFloors?: () => void;
   topologyData?: import("@/types/cadastre").TopologyValidationResponse | null;
   isAuditingTopology?: boolean;
   onRunTopologyAudit?: () => void;
@@ -380,11 +386,13 @@ function Floor3DVolumeCard({
   selectedFloorId,
   onSelectFloorId,
   onSwitchToFloors3D,
+  onConfigureFloors,
 }: {
   floors3D?: BuildingFloors3DResult | null;
   selectedFloorId?: string | null;
   onSelectFloorId?: (floorId: string) => void;
   onSwitchToFloors3D?: () => void;
+  onConfigureFloors?: () => void;
 }) {
   if (!floors3D || floors3D.geometry_status !== "VALID" || !floors3D.floors || floors3D.floors.length === 0) {
     return (
@@ -400,9 +408,21 @@ function Floor3DVolumeCard({
             {floors3D?.geometry_status || "NOT GENERATED"}
           </span>
         </div>
-        <p className="text-[11px] text-[#77786F] font-mono">
+        <p className="text-[11px] text-[#77786F] font-mono mb-2">
           Generate stratified 3D floor solids to view individual floor volumes and heights.
         </p>
+        {onConfigureFloors && (
+          <button
+            type="button"
+            onClick={onConfigureFloors}
+            className="w-full inline-flex items-center justify-center gap-1.5 rounded border border-[#DDBCB4] bg-[#FDF9F6] py-1.5 px-2 text-[10px] font-mono font-medium text-[#A85D48] hover:bg-[#F8EFEB] transition-colors cursor-pointer"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            2D → 3D: Configure Floors
+          </button>
+        )}
       </div>
     );
   }
@@ -442,6 +462,10 @@ function Floor3DVolumeCard({
       <div className="space-y-1 mb-2 max-h-44 overflow-y-auto">
         {floors3D.floors.map((fl) => {
           const isSelected = selectedFloorId === fl.floor_id;
+          const isBasement =
+            fl.level_type === "Basement" ||
+            fl.floor_name.toLowerCase().includes("basement") ||
+            (fl.floor_index !== undefined && fl.floor_index < 0);
           return (
             <div
               key={fl.floor_id}
@@ -452,11 +476,22 @@ function Floor3DVolumeCard({
                   : "bg-[#E9E5DA] hover:bg-[#E9E5DA] border border-[#D7D4CB] text-[#252622]"
               }`}
             >
-              <div>
-                <span className="font-semibold text-[#A85D48]">{fl.floor_name}</span>
-                <span className="text-[#77786F] ml-1.5">[{fl.base_elevation.toFixed(1)}m – {fl.top_elevation.toFixed(1)}m]</span>
+              <div className="flex items-center gap-1.5 truncate">
+                <span className="font-semibold text-[#A85D48] truncate">{fl.floor_name}</span>
+                <span
+                  className={`text-[9px] px-1 py-0.2 rounded border font-semibold shrink-0 ${
+                    isBasement
+                      ? "border-blue-400 text-blue-600 bg-blue-50"
+                      : "border-emerald-500/30 text-[#788575] bg-emerald-950/20"
+                  }`}
+                >
+                  {fl.level_type || (isBasement ? "Basement" : "Above Ground")}
+                </span>
+                <span className="text-[#77786F] shrink-0">
+                  [{fl.base_elevation.toFixed(1)}m – {fl.top_elevation.toFixed(1)}m]
+                </span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 shrink-0">
                 <span className="text-[#62635D]">{fl.height.toFixed(1)}m</span>
                 <span className="text-[#A85D48] font-medium">{fl.volume_cubic_m.toFixed(1)} m³</span>
               </div>
@@ -465,18 +500,30 @@ function Floor3DVolumeCard({
         })}
       </div>
 
-      {onSwitchToFloors3D && (
-        <button
-          type="button"
-          onClick={onSwitchToFloors3D}
-          className="w-full inline-flex items-center justify-center gap-1.5 rounded border border-[#DDBCB4] bg-cyan-900/30 py-1.5 px-2 text-[10px] font-mono font-medium text-[#A85D48] hover:bg-cyan-800/40 transition-colors"
-        >
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-          </svg>
-          View Stratified Floors in 3D
-        </button>
-      )}
+      <div className="flex items-center gap-2">
+        {onSwitchToFloors3D && (
+          <button
+            type="button"
+            onClick={onSwitchToFloors3D}
+            className="flex-1 inline-flex items-center justify-center gap-1.5 rounded border border-[#DDBCB4] bg-cyan-900/30 py-1.5 px-2 text-[10px] font-mono font-medium text-[#A85D48] hover:bg-cyan-800/40 transition-colors cursor-pointer"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+            View in 3D
+          </button>
+        )}
+        {onConfigureFloors && (
+          <button
+            type="button"
+            onClick={onConfigureFloors}
+            className="inline-flex items-center justify-center gap-1 rounded border border-[#DDBCB4] bg-[#FDF9F6] py-1.5 px-2 text-[10px] font-mono font-medium text-[#A85D48] hover:bg-[#F8EFEB] transition-colors cursor-pointer"
+            title="Reconfigure Floors"
+          >
+            ⚙ Reconfigure
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -573,7 +620,7 @@ function Property3DVolumeCard({
               <div className="pt-1.5 border-t border-violet-800/40 mt-1">
                 <div className="flex items-center justify-between text-[8px] font-mono text-[#62635D] mb-1">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-violet-300 font-semibold uppercase">3D ULPIN</span>
+                    <span className="text-violet-300 font-semibold uppercase">STHARA SPATIAL ID</span>
                     <span className="px-1 py-0.5 rounded bg-[#F8F6F0]mber-950/70 border border-amber-500/40 text-[7px] text-amber-300 font-bold uppercase tracking-wider">
                       Prototype Identifier
                     </span>
@@ -601,7 +648,7 @@ function Property3DVolumeCard({
                     </span>
                     <button
                       type="button"
-                      title="Copy 3D ULPIN"
+                      title="Copy STHARA Spatial ID"
                       onClick={(e) => {
                         e.stopPropagation();
                         navigator.clipboard?.writeText(ulpinInfo.ulpin || "");
@@ -613,7 +660,7 @@ function Property3DVolumeCard({
                   </div>
                 ) : (
                   <div className="text-[8px] font-mono text-[#77786F] bg-[#E9E5DA] p-1 rounded border border-[#D7D4CB]">
-                    {ulpinInfo?.warnings?.[0] || "Prototype ULPIN will be issued upon property volume validation."}
+                    {ulpinInfo?.warnings?.[0] || "STHARA Spatial ID will be issued upon property volume validation."}
                   </div>
                 )}
                 <div className="text-[7px] font-mono text-[#77786F] mt-1 italic leading-tight">
@@ -860,11 +907,11 @@ function UnitInspectorCard({
               </span>
             </div>
 
-            {/* 3D ULPIN Prototype (Authoritative Versioned SHA-256 Spatial Hash) */}
+            {/* STHARA Spatial ID Prototype (Authoritative Versioned SHA-256 Spatial Hash) */}
             <div className="rounded bg-[#E9E5DA] border border-[#DDBCB4] p-2 space-y-1.5 font-mono text-[9px]">
               <div className="flex items-center justify-between">
                 <span className="text-[#A85D48] uppercase font-bold text-[9px]">
-                  3D ULPIN PROTOTYPE (RESEARCH IMPLEMENTATION)
+                  STHARA SPATIAL ID (PROTOTYPE)
                 </span>
                 <span className="rounded bg-cyan-950/80 text-[#A85D48] border border-[#DDBCB4] px-1 py-0.5 text-[7px] font-bold">
                   DETERMINISTIC HASH
@@ -1048,11 +1095,13 @@ export function ParcelInspector({
   onSwitchTo3D,
   onSwitchToFloors3D,
   onSwitchToProperty3D,
+  onConfigureFloors,
   topologyData,
   isAuditingTopology,
   onRunTopologyAudit,
   onLoadDemoTopology,
 }: ParcelInspectorProps) {
+  const { activeDatasetId } = useCadastreContext();
   const [userSelectedTab, setUserSelectedTab] = React.useState<
     "parcel" | "building" | "units" | "summary" | "topology" | null
   >(null);
@@ -1310,6 +1359,7 @@ export function ParcelInspector({
               const associatedParcel = assoc?.associated_parcel_id || "Not available";
               const overlapPct = assoc?.overlap_percentage !== undefined ? `${assoc.overlap_percentage}%` : "Not available";
               const properties = assoc?.properties || rawFeat?.properties || {};
+              const selectedBuildingName = (properties.name as string) || buildingSpec?.name || buildingId;
 
               const statusBadgeColor =
                 status === "WITHIN"
@@ -1351,6 +1401,25 @@ export function ParcelInspector({
                       </div>
                     </div>
                   </div>
+
+                  {/* 2D -> 3D Floor Configuration CTA */}
+                  {onConfigureFloors && (
+                    <button
+                      type="button"
+                      onClick={onConfigureFloors}
+                      className="w-full inline-flex items-center justify-center gap-2 rounded-lg py-2 px-3 text-xs font-mono font-semibold transition-all shadow-sm cursor-pointer hover:opacity-95"
+                      style={{
+                        backgroundColor: "var(--sth-accent)",
+                        color: "#fff",
+                        border: "1px solid #DDBCB4",
+                      }}
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                      </svg>
+                      <span>2D → 3D: Configure Floors</span>
+                    </button>
+                  )}
 
                   {/* Building Spatial Attributes */}
                   <div className="grid grid-cols-2 gap-2">
@@ -1429,12 +1498,27 @@ export function ParcelInspector({
                     onSwitchTo3D={onSwitchTo3D}
                   />
 
+                  {/* Building Blueprint Attachment Inspector Card */}
+                  <BuildingBlueprintInspectorCard
+                    datasetId={activeDatasetId || "ds_tagore_garden_map_osm"}
+                    buildingId={buildingId}
+                    buildingName={selectedBuildingName}
+                  />
+
+                  {/* Drawing Intelligence Document Provenance Card */}
+                  <DrawingIntelligenceInspectorCard
+                    datasetId={activeDatasetId || "ds_tagore_garden_map_osm"}
+                    buildingId={buildingId}
+                    onConfigureFloors={onConfigureFloors}
+                  />
+
                   {/* STEP 12: 3D Stratified Floor Volumes */}
                   <Floor3DVolumeCard
                     floors3D={buildingFloors3D}
                     selectedFloorId={selectedFloorId}
                     onSelectFloorId={onSelectFloorId}
                     onSwitchToFloors3D={onSwitchToFloors3D}
+                    onConfigureFloors={onConfigureFloors}
                   />
 
                   {/* STEP 12 & 13: 3D Property Units, Volumes & 3D ULPIN Prototype */}
@@ -1676,6 +1760,233 @@ export function ParcelInspector({
             }}
           />
         </div>
+      )}
+    </div>
+  );
+}
+
+function BuildingBlueprintInspectorCard({
+  datasetId,
+  buildingId,
+  buildingName,
+}: {
+  datasetId: string;
+  buildingId: string;
+  buildingName?: string | null;
+}) {
+  const [blueprint, setBlueprint] = useState<BuildingBlueprintRecord | null>(null);
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
+  const [viewerOpen, setViewerOpen] = useState<boolean>(false);
+
+  const currentKey = `${datasetId}_${buildingId}`;
+  const loading = loadedKey !== currentKey;
+
+  useEffect(() => {
+    let isMounted = true;
+    if (!datasetId || !buildingId) return;
+
+    const key = `${datasetId}_${buildingId}`;
+    cadastreApi
+      .getBuildingBlueprint(datasetId, buildingId)
+      .then((res) => {
+        if (!isMounted) return;
+        setBlueprint(res.success && res.blueprint ? res.blueprint : null);
+        setLoadedKey(key);
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setBlueprint(null);
+        setLoadedKey(key);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [datasetId, buildingId]);
+
+  if (!datasetId || !buildingId || loading) return null;
+
+  return (
+    <div className="rounded-lg border border-[#D7D4CB] bg-[#F8F6F0] p-3 space-y-2 font-mono text-xs shadow-sm">
+      <div className="flex items-center justify-between border-b border-[#D7D4CB] pb-1.5">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-[#77786F]">
+          Building Blueprint
+        </span>
+        <span
+          className={`text-[9px] font-semibold px-1.5 py-0.5 rounded border ${
+            blueprint
+              ? "bg-[#EFF2EE] text-[#788575] border-[#C0CAC0]"
+              : "bg-[#E9E5DA] text-[#6F7069] border-[#D7D4CB]"
+          }`}
+        >
+          {blueprint ? "Attached" : "Unattached"}
+        </span>
+      </div>
+
+      {blueprint ? (
+        <div className="space-y-1.5">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <div className="font-bold text-[#252622] truncate text-[11px]">
+                {blueprint.filename}
+              </div>
+              <div className="text-[10px] text-[#6F7069] mt-0.5">
+                SOURCE: <span className="text-[#A85D48] font-medium">{blueprint.source}</span>
+              </div>
+              <div className="text-[9px] text-[#77786F] mt-0.5">
+                {blueprint.file_type} • {(blueprint.file_size_bytes / (1024 * 1024)).toFixed(2)} MB
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setViewerOpen(true)}
+              className="px-3 py-1 rounded bg-[#E9E5DA] hover:bg-[#D7D4CB] text-[#252622] font-semibold text-[11px] border border-[#D7D4CB] transition-colors shrink-0 cursor-pointer"
+            >
+              View
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="text-[10px] text-[#6F7069] italic">
+          No building blueprint attached.
+        </div>
+      )}
+
+      {blueprint && (
+        <BuildingBlueprintViewerModal
+          isOpen={viewerOpen}
+          onClose={() => setViewerOpen(false)}
+          blueprint={blueprint}
+          buildingName={buildingName || buildingId}
+        />
+      )}
+    </div>
+  );
+}
+
+function DrawingIntelligenceInspectorCard({
+  datasetId,
+  buildingId: _buildingId,
+  onConfigureFloors,
+}: {
+  datasetId: string;
+  buildingId?: string;
+  onConfigureFloors?: () => void;
+}) {
+  const [analysis, setAnalysis] = useState<DrawingAnalysis | null>(null);
+  const [loadedDatasetId, setLoadedDatasetId] = useState<string | null>(null);
+  const [isImportOpen, setIsImportOpen] = useState<boolean>(false);
+  const [isReviewOpen, setIsReviewOpen] = useState<boolean>(false);
+
+  const loading = loadedDatasetId !== datasetId;
+
+  useEffect(() => {
+    let isMounted = true;
+    if (!datasetId) return;
+
+    cadastreApi
+      .getLatestDrawingAnalysis(datasetId)
+      .then((res) => {
+        if (!isMounted) return;
+        setAnalysis(res);
+        setLoadedDatasetId(datasetId);
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setAnalysis(null);
+        setLoadedDatasetId(datasetId);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [datasetId]);
+
+  if (!datasetId || loading) return null;
+
+  const primaryDoc = analysis?.documents.find((d) => d.role === "PRIMARY_SPATIAL") || analysis?.documents[0];
+
+  return (
+    <div className="rounded-lg border border-[#DDBCB4] bg-[#F4F1EA] p-3 space-y-2 font-mono text-xs shadow-sm">
+      <div className="flex items-center justify-between border-b border-[#D7D4CB] pb-1.5">
+        <div className="flex items-center gap-1.5">
+          <span className="h-2 w-2 rounded-full bg-[#A85D48]" />
+          <span className="text-[10px] font-bold uppercase tracking-wider text-[#A85D48]">
+            Drawing Intelligence
+          </span>
+        </div>
+        <span
+          className={`text-[9px] font-semibold px-1.5 py-0.5 rounded border ${
+            analysis
+              ? "bg-[#EFF2EE] text-[#788575] border-[#C0CAC0]"
+              : "bg-[#E9E5DA] text-[#6F7069] border-[#D7D4CB]"
+          }`}
+        >
+          {analysis ? "Model Linked" : "Standby"}
+        </span>
+      </div>
+
+      {analysis && primaryDoc ? (
+        <div className="space-y-1.5">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <div className="font-bold text-[#252622] truncate text-[11px]">
+                {primaryDoc.filename}
+              </div>
+              <div className="text-[10px] text-[#6F7069] mt-0.5">
+                ROLE: <span className="text-[#A85D48] font-medium">{primaryDoc.role}</span>
+              </div>
+              <div className="text-[9px] text-[#77786F] mt-0.5">
+                Floors: {analysis.summary.detected_floors_count} Levels • Units: {analysis.summary.unit_candidates_count} Candidates
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsReviewOpen(true)}
+              className="px-2.5 py-1 rounded bg-[#A85D48] hover:opacity-90 text-white font-semibold text-[10px] transition-all shrink-0 cursor-pointer shadow-sm"
+            >
+              View Drawing
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between gap-2">
+          <div className="text-[10px] text-[#6F7069] italic">
+            Import project drawings to extract 3D floors and units.
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsImportOpen(true)}
+            className="px-2 py-1 rounded bg-[#A85D48] text-white text-[10px] font-semibold hover:opacity-90 transition-opacity shrink-0 cursor-pointer"
+          >
+            + Import Drawings
+          </button>
+        </div>
+      )}
+
+      {/* Import Modal */}
+      <DrawingImportModal
+        isOpen={isImportOpen}
+        onClose={() => setIsImportOpen(false)}
+        datasetId={datasetId}
+        onAnalysisReady={(newAnalysis) => {
+          setAnalysis(newAnalysis);
+          setIsReviewOpen(true);
+        }}
+      />
+
+      {/* Review Workspace */}
+      {analysis && (
+        <DrawingReviewWorkspace
+          isOpen={isReviewOpen}
+          onClose={() => setIsReviewOpen(false)}
+          analysis={analysis}
+          datasetId={datasetId}
+          onModelBuilt={() => {
+            setIsReviewOpen(false);
+            if (onConfigureFloors) onConfigureFloors();
+          }}
+        />
       )}
     </div>
   );

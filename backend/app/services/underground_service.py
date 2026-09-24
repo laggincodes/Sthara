@@ -49,6 +49,7 @@ from app.schemas.underground import (
     DemoUndergroundResponse,
 )
 from app.services.extrusion_service import ExtrusionService
+from app.utils.crs import transform_geometry
 
 
 class UndergroundService:
@@ -340,9 +341,12 @@ class UndergroundService:
                     if not bld_shape.contains(feat_poly):
                         # Calculate basement encroachment past building footprint
                         ext = feat_poly.difference(bld_shape)
-                        if ext.area > 0.1:
+                        b_bnds = feat_poly.bounds
+                        is_deg = abs(b_bnds[0]) <= 180 and abs(b_bnds[1]) <= 90
+                        min_ext_area = 1e-9 if is_deg else 0.1
+                        if ext.area > min_ext_area:
                             warnings.append(
-                                f"Basement extends {round(ext.area, 2)}m2 beyond parent building footprint (podium/cantilever basement)."
+                                f"Basement extends {round(ext.area, 6 if is_deg else 2)}{'deg2' if is_deg else 'm2'} beyond parent building footprint (podium/cantilever basement)."
                             )
                 except Exception as e:
                     warnings.append(f"Could not check building footprint alignment: {e}")
@@ -395,8 +399,11 @@ class UndergroundService:
                 continue
 
             inter_2d = cand_shape.intersection(exist_shape)
-            overlap_area = round(float(inter_2d.area), 3)
-            if overlap_area < 0.001:
+            cand_bnds = cand_shape.bounds
+            is_deg = abs(cand_bnds[0]) <= 180 and abs(cand_bnds[1]) <= 90
+            min_area = 1e-10 if is_deg else 0.001
+            overlap_area = round(float(inter_2d.area), 9 if is_deg else 3)
+            if overlap_area < min_area:
                 continue
 
             # 2. Vertical interval overlap / clearance
@@ -495,6 +502,7 @@ class UndergroundService:
             [775910.0, 1297150.0],
         ]
         b_poly = Polygon(b_coords)
+        b_poly_wgs84, _ = transform_geometry(b_poly, self.DEFAULT_CRS, self.DEFAULT_SOURCE_CRS)
         b_top = 920.0
         b_base = 916.0
         b_d_top, b_d_base, b_thick, _ = self.derive_depths(ground_z, b_top, b_base)
@@ -527,7 +535,7 @@ class UndergroundService:
             depth_to_top_m=b_d_top,
             depth_to_base_m=b_d_base,
             thickness_m=b_thick,
-            geometry_2d=mapping(b_poly),
+            geometry_2d=mapping(b_poly_wgs84),
             mesh_3d=b_mesh_res.mesh_3d,
             geometry_status=b_mesh_res.geometry_status,
             spatial_status=UndergroundSpatialStatus.WITHIN,
@@ -536,7 +544,7 @@ class UndergroundService:
                 source_dataset="Urban_Parcel_Tower1_BIM",
                 source_type="SYNTHETIC_DEMO",
                 source_file="tower1_subsurface_asbuilt.ifc",
-                crs=self.DEFAULT_CRS,
+                crs=self.DEFAULT_SOURCE_CRS,
                 vertical_datum="EGM2008 / AMSL",
                 survey_method="As-built structural drawing",
                 created_at=timestamp,
@@ -552,6 +560,7 @@ class UndergroundService:
         ]
         u1_line = LineString(u1_coords)
         u1_poly = u1_line.buffer(1.2)  # 2.4m width pipe corridor
+        u1_poly_wgs84, _ = transform_geometry(u1_poly, self.DEFAULT_CRS, self.DEFAULT_SOURCE_CRS)
         u1_top = 918.5
         u1_base = 917.0
         u1_d_top, u1_d_base, u1_thick, _ = self.derive_depths(ground_z, u1_top, u1_base)
@@ -585,7 +594,7 @@ class UndergroundService:
             depth_to_top_m=u1_d_top,
             depth_to_base_m=u1_d_base,
             thickness_m=u1_thick,
-            geometry_2d=mapping(u1_poly),
+            geometry_2d=mapping(u1_poly_wgs84),
             mesh_3d=u1_mesh_res.mesh_3d,
             geometry_status=u1_mesh_res.geometry_status,
             spatial_status=UndergroundSpatialStatus.INTERSECTS,
@@ -594,7 +603,7 @@ class UndergroundService:
                 source_dataset="BWSSB_Water_Distribution_GIS",
                 source_type="SYNTHETIC_DEMO",
                 source_file="water_trunk_alignment.geojson",
-                crs=self.DEFAULT_CRS,
+                crs=self.DEFAULT_SOURCE_CRS,
                 vertical_datum="EGM2008 / AMSL",
                 survey_method="Municipal GIS Cadastre & GPR",
                 created_at=timestamp,
@@ -612,6 +621,7 @@ class UndergroundService:
         ]
         u2_line = LineString(u2_coords)
         u2_poly = u2_line.buffer(0.8)  # 1.6m width duct bank
+        u2_poly_wgs84, _ = transform_geometry(u2_poly, self.DEFAULT_CRS, self.DEFAULT_SOURCE_CRS)
         u2_top = 919.2
         u2_base = 918.4
         u2_d_top, u2_d_base, u2_thick, _ = self.derive_depths(ground_z, u2_top, u2_base)
@@ -646,7 +656,7 @@ class UndergroundService:
             depth_to_top_m=u2_d_top,
             depth_to_base_m=u2_d_base,
             thickness_m=u2_thick,
-            geometry_2d=mapping(u2_poly),
+            geometry_2d=mapping(u2_poly_wgs84),
             mesh_3d=u2_mesh_res.mesh_3d,
             geometry_status=u2_mesh_res.geometry_status,
             spatial_status=UndergroundSpatialStatus.WITHIN,
@@ -654,10 +664,6 @@ class UndergroundService:
             provenance=UndergroundProvenance(
                 source_dataset="Subsurface_Utility_Engineering_L2",
                 source_type="SYNTHETIC_DEMO",
-                source_file="duct_bank_sue.geojson",
-                crs=self.DEFAULT_CRS,
-                vertical_datum="EGM2008 / AMSL",
-                survey_method="Ground Penetrating Radar (GPR)",
                 created_at=timestamp,
             ),
             warnings=[

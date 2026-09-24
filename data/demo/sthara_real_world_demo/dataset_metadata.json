@@ -1,0 +1,15 @@
+{
+  "dataset_id": "STHARA-REALWORLD-DEMO",
+  "property_name": "Connaught Tower A - Commercial & Public Complex",
+  "location": "Connaught Place, New Delhi",
+  "center_coordinates": [
+    77.2186,
+    28.6326
+  ],
+  "source": "OpenStreetMap (ODbL)",
+  "source_crs": "EPSG:4326",
+  "working_crs": "EPSG:32643",
+  "buildings_count": 156,
+  "floors_count": 4,
+  "units_count": 7
+}

@@ -1,0 +1,61 @@
+{
+  "ds_tagore_garden_map_osm:SRC-OSM-TAGORE": {
+    "source_id": "SRC-OSM-TAGORE",
+    "dataset_id": "ds_tagore_garden_map_osm",
+    "source_name": "OpenStreetMap Building Footprints",
+    "source_type": "OSM",
+    "file_name": "map.osm",
+    "format": "OSM XML / GeoJSON",
+    "crs": "EPSG:4326",
+    "working_crs": "EPSG:32643",
+    "feature_count": 155,
+    "imported_at": "2026-09-23T06:23:59.198573+00:00",
+    "status": "Imported",
+    "provenance": {
+      "source": "OpenStreetMap contributors (ODbL)",
+      "transformation": "EPSG:4326 -> EPSG:32643",
+      "transformation_status": "PASS"
+    },
+    "description": "Physical surface building observations extracted from OpenStreetMap.",
+    "disclaimer": "This source represents reference spatial geometry only and does not establish legal ownership or title."
+  },
+  "ds_tagore_garden_map_osm:SRC-DATAMEET-TAGORE": {
+    "source_id": "SRC-DATAMEET-TAGORE",
+    "dataset_id": "ds_tagore_garden_map_osm",
+    "source_name": "DataMeet Delhi Assembly Boundary (AC 27)",
+    "source_type": "DataMeet",
+    "file_name": "delhi_assembly_boundaries.geojson",
+    "format": "GeoJSON",
+    "crs": "EPSG:4326",
+    "working_crs": "EPSG:32643",
+    "feature_count": 1,
+    "imported_at": "2026-09-23T06:23:59.198573+00:00",
+    "status": "Imported",
+    "provenance": {
+      "source": "DataMeet Maps (ODbL / CC-BY 2.5 India)",
+      "transformation": "EPSG:4326 -> EPSG:32643",
+      "transformation_status": "PASS"
+    },
+    "description": "Administrative spatial reference boundary for Rajouri Garden / Tagore Garden.",
+    "disclaimer": "This source represents reference spatial geometry only and does not establish legal ownership or title."
+  },
+  "STHARA-REALWORLD-DEMO:SRC-OSM-CONNAUGHT": {
+    "source_id": "SRC-OSM-CONNAUGHT",
+    "dataset_id": "STHARA-REALWORLD-DEMO",
+    "source_name": "OpenStreetMap Real Building Footprints",
+    "source_type": "OSM",
+    "file_name": "connaught_sample.geojson",
+    "format": "GeoJSON Reference",
+    "crs": "EPSG:4326",
+    "working_crs": "EPSG:32643",
+    "feature_count": 1,
+    "status": "IMPORTED",
+    "provenance": {
+      "source": "OpenStreetMap contributors (ODbL)",
+      "transformation": "EPSG:4326 -> EPSG:32643",
+      "transformation_status": "PASS"
+    },
+    "description": "Physical surface building footprints extracted from OpenStreetMap for Connaught Place.",
+    "disclaimer": "Reference spatial geometry only. Does not establish legal title or official ULPIN ownership."
+  }
+}

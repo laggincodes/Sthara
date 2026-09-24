@@ -16,7 +16,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Main Workspace Frame */}
       <div className="flex flex-1 flex-col h-full overflow-hidden min-w-0">
         <AppHeader />
-        <div className="flex-1 h-full overflow-hidden relative min-w-0">
+        <div className="flex-1 h-full overflow-y-auto relative min-w-0">
           {children}
         </div>
       </div>

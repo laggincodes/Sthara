@@ -1,6 +1,20 @@
 from enum import Enum
 from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
+
+
+def generate_sthara_spatial_id(dataset_id: str, building_id: str, floor_id: str, unit_id: str) -> str:
+    """
+    Deterministically constructs the canonical STHARA Spatial ID.
+    Format: <dataset_id>-<building_id>-<floor_id>-<unit_id>
+    Example: DELHI-TAGORE-B001-F01-U101
+    """
+    ds = (dataset_id or "default").strip()
+    bld = (building_id or "").strip()
+    fl = (floor_id or "").strip()
+    u = (unit_id or "").strip()
+    return f"{ds}-{bld}-{fl}-{u}"
+
 
 from app.schemas.geometry_3d import (
     SCHEMA_VERSION,
@@ -54,6 +68,7 @@ class Unit(BaseModel):
     A unit represents physical geometry and spatial evidence; it does NOT constitute legal ownership.
     """
     unit_id: str = Field(..., description="Stable internal system identifier (e.g. 'BLD-DEMO-002-FL05-U501')")
+    dataset_id: str = Field("default", description="Parent dataset identifier")
     property_id: Optional[str] = Field(None, description="Associated property entity identifier if assigned")
     parcel_id: str = Field(..., description="Parent cadastral parcel ID")
     building_id: str = Field(..., description="Parent building structure ID")
@@ -68,11 +83,38 @@ class Unit(BaseModel):
     height: Optional[float] = Field(None, description="Computed vertical height in meters (top - base)")
     footprint_area: Optional[float] = Field(None, description="Floor footprint area in square meters")
     volume_cubic_m: Optional[float] = Field(None, description="Enclosed mathematical volume in cubic meters")
-    source: str = Field("SYNTHETIC_DEMO", description="Source description or dataset origin")
-    source_type: UnitSourceType = Field(UnitSourceType.DEMO, description="Provenance classification")
+    z_min: Optional[float] = Field(None, description="Minimum vertical elevation in meters AMSL (alias of base_elevation)")
+    z_max: Optional[float] = Field(None, description="Maximum vertical elevation in meters AMSL (alias of top_elevation)")
+    spatial_id: Optional[str] = Field(None, description="Deterministic STHARA Spatial ID: <dataset_id>-<building_id>-<floor_id>-<unit_id>")
+    geometry_status: str = Field("PASS", description="Geometry validation status ('PASS' or 'VALID')")
+    source: str = Field("Configured / Derived", description="Source description or dataset origin")
+    source_type: UnitSourceType = Field(UnitSourceType.DERIVED, description="Provenance classification")
     status: UnitStatus = Field(UnitStatus.VALID, description="Validation / completeness status")
     warnings: List[str] = Field(default_factory=list, description="Non-fatal warnings or sanity notes")
     provenance: Dict[str, Any] = Field(default_factory=dict, description="Detailed provenance telemetry")
+
+    @model_validator(mode="before")
+    @classmethod
+    def populate_spatial_and_z_bounds(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            ds = str(data.get("dataset_id") or "default").strip()
+            bld = str(data.get("building_id") or "").strip()
+            fl = str(data.get("floor_id") or "").strip()
+            u = str(data.get("unit_id") or "").strip()
+            if not data.get("spatial_id") and bld and fl and u:
+                data["spatial_id"] = generate_sthara_spatial_id(ds, bld, fl, u)
+            base_z = data.get("base_elevation")
+            top_z = data.get("top_elevation")
+            if data.get("z_min") is None and base_z is not None:
+                data["z_min"] = base_z
+            if data.get("z_max") is None and top_z is not None:
+                data["z_max"] = top_z
+            if "geometry_status" not in data or data.get("geometry_status") is None:
+                data["geometry_status"] = "PASS"
+            if "source" not in data or not data.get("source"):
+                data["source"] = "Configured / Derived"
+        return data
+
 
 
 class UnitCreate(BaseModel):
@@ -80,7 +122,8 @@ class UnitCreate(BaseModel):
     Payload for proposing or registering a new unit.
     """
     unit_id: Optional[str] = Field(None, description="Optional custom ID; deterministically generated if omitted")
-    parcel_id: str = Field(..., description="Parent parcel ID")
+    dataset_id: str = Field("default", description="Parent dataset identifier")
+    parcel_id: Optional[str] = Field("PARCEL-UNREGISTERED", description="Parent parcel ID")
     building_id: str = Field(..., description="Parent building ID")
     floor_id: str = Field(..., description="Parent floor ID")
     unit_number: str = Field(..., description="Unit number/label (e.g. '501')")
@@ -89,7 +132,8 @@ class UnitCreate(BaseModel):
     geometry_2d: Optional[Dict[str, Any]] = Field(None, description="GeoJSON Polygon footprint")
     base_elevation: Optional[float] = Field(None, description="Base elevation in meters AMSL")
     top_elevation: Optional[float] = Field(None, description="Top elevation in meters AMSL")
-    source: str = Field("USER_SUBMITTED", description="Source description")
+    parent_floor_geometry: Optional[Dict[str, Any]] = Field(None, description="Parent floor footprint for containment validation")
+    source: str = Field("Configured / Derived", description="Source description")
     source_type: UnitSourceType = Field(UnitSourceType.DERIVED, description="Source classification")
 
 
@@ -181,6 +225,7 @@ class Unit3DRequest(BaseModel):
     Request parameters to generate a watertight 3D solid mesh for a unit.
     """
     unit_id: str = Field(..., description="Canonical unit identifier (e.g. 'BLD-DEMO-002-FL05-U501')")
+    dataset_id: Optional[str] = Field("default", description="Parent dataset identifier")
     property_id: Optional[str] = Field(None, description="Cadastral property identifier")
     parcel_id: str = Field(..., description="Parent cadastral parcel identifier")
     building_id: str = Field(..., description="Parent building identifier")
@@ -213,6 +258,7 @@ class Unit3DResult(BaseModel):
     Canonical result for an individual 3D unit solid conforming to 3D Geometry Contract v1.0.
     """
     unit_id: str = Field(..., description="Unit identifier")
+    dataset_id: Optional[str] = Field("default", description="Parent dataset identifier")
     property_id: Optional[str] = Field(None, description="Cadastral property identifier")
     parcel_id: str = Field(..., description="Parent parcel identifier")
     building_id: str = Field(..., description="Parent building identifier")
@@ -227,9 +273,48 @@ class Unit3DResult(BaseModel):
     volume_cubic_m: Optional[float] = Field(None, description="Watertight polyhedral volume in m3")
     surface_area_sqm: Optional[float] = Field(None, description="Outer surface area in m2")
     geometry_status: Geometry3DStatus = Field(..., description="Status of 3D geometry generation")
+    spatial_id: Optional[str] = Field(None, description="Deterministic STHARA Spatial ID: <dataset_id>-<building_id>-<floor_id>-<unit_id>")
+    z_min: Optional[float] = Field(None, description="Resolved minimum vertical elevation in meters AMSL")
+    z_max: Optional[float] = Field(None, description="Resolved maximum vertical elevation in meters AMSL")
     geometry: Optional[Mesh3DCollection] = Field(None, description="Canonical 3D mesh collection for this unit")
     warnings: List[str] = Field(default_factory=list, description="Validation warnings or notes")
     provenance: Dict[str, Any] = Field(default_factory=dict, description="Metadata on elevation resolution and source")
+
+    @model_validator(mode="before")
+    @classmethod
+    def populate_spatial_and_z_bounds(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            ds = str(data.get("dataset_id") or "default").strip()
+            bld = str(data.get("building_id") or "").strip()
+            fl = str(data.get("floor_id") or "").strip()
+            u = str(data.get("unit_id") or "").strip()
+            if not data.get("spatial_id") and bld and fl and u:
+                data["spatial_id"] = generate_sthara_spatial_id(ds, bld, fl, u)
+            base_z = data.get("base_elevation")
+            top_z = data.get("top_elevation")
+            if data.get("z_min") is None and base_z is not None:
+                data["z_min"] = base_z
+            if data.get("z_max") is None and top_z is not None:
+                data["z_max"] = top_z
+        return data
+
+
+
+class UnitDeleteResponse(BaseModel):
+    status: str = Field("success", description="Status string")
+    message: str = Field(..., description="Outcome explanation")
+    dataset_id: str = Field(..., description="Dataset ID")
+    building_id: str = Field(..., description="Building ID")
+    floor_id: str = Field(..., description="Floor ID")
+    unit_id: str = Field(..., description="Deleted Unit ID")
+
+
+class UnitListResponse(BaseModel):
+    dataset_id: str = Field(..., description="Dataset ID")
+    building_id: Optional[str] = Field(None, description="Building ID filter")
+    floor_id: Optional[str] = Field(None, description="Floor ID filter")
+    total_count: int = Field(..., description="Total units count")
+    units: List[Unit] = Field(..., description="List of registered units")
 
 
 class GenerateUnits3DResponse(BaseModel):

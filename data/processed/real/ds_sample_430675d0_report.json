@@ -1,10 +1,11 @@
 {
   "success": true,
+  "status": "success",
   "dataset_id": "ds_sample_430675d0",
   "dataset_name": "sample.osm",
   "source_name": "sample.osm",
   "content_hash": "430675d09b7268ac3fb9dc4582e05abaff9284092a8f494931471074ce00ed32",
-  "converted_at": "2026-09-09T09:47:40.429941Z",
+  "converted_at": "2026-09-24T22:57:25.256081Z",
   "target_crs": "EPSG:32643",
   "viewer_origin": [
     706438.9040099336,
@@ -17,7 +18,7 @@
     "faces": 12,
     "surface_area_sqm": 96725.17,
     "volume_cubic_m": 520265.88,
-    "processing_time_s": 0.029,
+    "processing_time_s": 0.027,
     "bounding_box": {
       "min": [
         -99.729,
@@ -46,7 +47,7 @@
       "features": null,
       "vertices": null,
       "faces": null,
-      "duration_ms": 0.01,
+      "duration_ms": 0.03,
       "details": {
         "source_type": "memory_buffer",
         "size_bytes": 569,
@@ -60,7 +61,7 @@
       "features": null,
       "vertices": null,
       "faces": null,
-      "duration_ms": 0.11,
+      "duration_ms": 0.15,
       "details": {
         "nodes_count": 4,
         "ways_count": 1,
@@ -75,7 +76,7 @@
       "features": 1,
       "vertices": null,
       "faces": null,
-      "duration_ms": 0.16,
+      "duration_ms": 0.25,
       "details": {
         "extracted_buildings": 1,
         "degenerate_count": 0
@@ -88,7 +89,7 @@
       "features": null,
       "vertices": null,
       "faces": null,
-      "duration_ms": 1.19,
+      "duration_ms": 1.16,
       "details": {
         "source_crs": "EPSG:4326",
         "target_crs": "EPSG:32643",
@@ -108,7 +109,7 @@
       "features": null,
       "vertices": null,
       "faces": null,
-      "duration_ms": 0.1,
+      "duration_ms": 0.14,
       "details": {
         "explicit_osm_heights": 0,
         "levels_derived_heights": 0,
@@ -124,7 +125,7 @@
       "features": 1,
       "vertices": 8,
       "faces": 12,
-      "duration_ms": 0.7,
+      "duration_ms": 0.74,
       "details": {
         "solids_count": 1,
         "total_vertices": 8,
@@ -139,7 +140,7 @@
       "features": null,
       "vertices": null,
       "faces": null,
-      "duration_ms": 0.1,
+      "duration_ms": 0.09,
       "details": {
         "valid_solids": 1,
         "invalid_solids": 0
@@ -152,7 +153,7 @@
       "features": null,
       "vertices": null,
       "faces": null,
-      "duration_ms": 23.5,
+      "duration_ms": 19.82,
       "details": {
         "dataset_id": "ds_sample_430675d0",
         "glb_bytes": 1256,
@@ -174,11 +175,28 @@
       "z_min": 0.0,
       "z_max": 12.0,
       "levels": 5,
+      "underground_levels": null,
+      "min_level": null,
       "floor_unit_available": false,
       "height_source": "DEFAULT_CONFIG",
       "area_sqm": 43355.49,
       "volume_cubic_m": 520265.88,
       "source": "OpenStreetMap",
+      "source_attributes": {
+        "detected_height": 15.0,
+        "detected_levels": 5,
+        "detected_underground_levels": null,
+        "detected_min_level": null,
+        "has_height": true,
+        "has_levels": true,
+        "has_underground": false,
+        "raw_tags": {
+          "building": "residential",
+          "name": "Test Villa",
+          "height": "15",
+          "building:levels": "5"
+        }
+      },
       "is_cadastral": false,
       "validation_status": "PASS",
       "watertight": true,
@@ -201,7 +219,20 @@
         -0.0,
         -0.0,
         6.0
-      ]
+      ],
+      "dataset_id": "ds_sample_430675d0",
+      "data_quality_status": "WARNING",
+      "containment_status": "PASS",
+      "provenance": {
+        "source": "OpenStreetMap",
+        "height_source": "Default (Inferred)",
+        "floor_source": "Source-derived",
+        "geometry_validated": true,
+        "watertight": true,
+        "is_government_record": false,
+        "disclaimer": "STHARA Spatial ID is a prototype spatial identifier and is not an official government property or ownership identifier."
+      },
+      "disclaimer": "STHARA Spatial ID is a prototype spatial identifier and is not an official government property or ownership identifier."
     }
   ],
   "mesh_data": {

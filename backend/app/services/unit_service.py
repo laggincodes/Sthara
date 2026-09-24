@@ -1,4 +1,6 @@
-﻿import math
+import json
+import math
+from pathlib import Path
 from typing import List, Optional, Dict, Any, Tuple
 from shapely.geometry import shape, mapping, Polygon, MultiPolygon, GeometryCollection
 from shapely.validation import explain_validity, make_valid
@@ -17,6 +19,7 @@ from app.schemas.geometry_3d import (
 )
 from app.schemas.unit import (
     Unit,
+    UnitCreate,
     UnitStatus,
     UnitType,
     UnitSourceType,
@@ -32,6 +35,13 @@ from app.services.extrusion_service import ExtrusionService
 from app.services.ulpin_service import ULPINService
 from app.core.logging import logger
 
+DATA_DIR = Path(__file__).resolve().parent.parent.parent.parent / "data"
+UNITS_REGISTRY_PATH = DATA_DIR / "processed" / "units_registry.json"
+
+
+def _make_unit_key(dataset_id: str, building_id: str, floor_id: str, unit_id: str) -> str:
+    return f"{dataset_id.strip()}:{building_id.strip()}:{floor_id.strip()}:{unit_id.strip()}"
+
 
 class UnitService:
     """
@@ -45,12 +55,13 @@ class UnitService:
         Deterministically constructs a stable internal unit identifier.
         Example: BLD-DEMO-002-FL05-U501
         """
-        # Extract clean floor token (e.g. FL05 from BLD-DEMO-002-FL05 or 05)
-        floor_token = floor_id.split("-")[-1] if "-" in floor_id else f"FL{floor_id}"
+        # Extract clean floor token (e.g. FL05 from BLD-DEMO-002-FL05, FL05, or 05)
+        floor_token = floor_id.split("-")[-1] if "-" in floor_id else floor_id
         if not floor_token.startswith("FL"):
             floor_token = f"FL{floor_token}"
         clean_unit_num = str(unit_number).strip().replace(" ", "")
         return f"{building_id}-{floor_token}-U{clean_unit_num}"
+
 
     @classmethod
     def calculate_polygon_area_sqm(
@@ -605,6 +616,7 @@ class UnitService:
                 warnings.extend([f"Mesh validation error in part {part_id}: {err}" for err in val_res.errors])
                 return Unit3DResult(
                     unit_id=req.unit_id,
+                    dataset_id=req.dataset_id or "default",
                     property_id=req.property_id,
                     parcel_id=req.parcel_id,
                     building_id=req.building_id,
@@ -629,6 +641,7 @@ class UnitService:
             warnings.append("Zero valid mesh parts extruded from footprint geometry.")
             return Unit3DResult(
                 unit_id=req.unit_id,
+                dataset_id=req.dataset_id or "default",
                 property_id=req.property_id,
                 parcel_id=req.parcel_id,
                 building_id=req.building_id,
@@ -674,6 +687,7 @@ class UnitService:
 
         return Unit3DResult(
             unit_id=req.unit_id,
+            dataset_id=req.dataset_id or "default",
             property_id=req.property_id,
             parcel_id=req.parcel_id,
             building_id=req.building_id,
@@ -692,6 +706,7 @@ class UnitService:
             warnings=warnings,
             provenance=provenance,
         )
+
 
     @classmethod
     def generate_batch_units_3d(cls, req: BatchUnit3DRequest) -> GenerateUnits3DResponse:
@@ -848,3 +863,290 @@ class UnitService:
             results=results,
             summary=summary,
         )
+
+    # =========================================================================
+    # STEP 4: PERSISTENT UNIT MANAGEMENT & REGISTRY
+    # =========================================================================
+
+    @classmethod
+    def _ensure_dirs(cls) -> None:
+        UNITS_REGISTRY_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+    @classmethod
+    def _load_registry(cls) -> Dict[str, Dict[str, Any]]:
+        cls._ensure_dirs()
+        if not UNITS_REGISTRY_PATH.exists():
+            return {}
+        try:
+            with open(UNITS_REGISTRY_PATH, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            logger.warning(f"Error loading units registry: {e}. Reinitializing empty.")
+            return {}
+
+    @classmethod
+    def _save_registry(cls, registry: Dict[str, Dict[str, Any]]) -> None:
+        cls._ensure_dirs()
+        tmp_path = UNITS_REGISTRY_PATH.with_suffix(".tmp")
+        with open(tmp_path, "w", encoding="utf-8") as f:
+            json.dump(registry, f, indent=2)
+        tmp_path.replace(UNITS_REGISTRY_PATH)
+
+    @classmethod
+    def clear_registry_for_testing(cls) -> None:
+        """Test helper to clear the units registry."""
+        cls._save_registry({})
+
+    @classmethod
+    def create_and_register_unit(
+        cls,
+        req: UnitCreate,
+        scene_origin: Optional[Tuple[float, float, float]] = None,
+        target_crs: str = "EPSG:32643",
+    ) -> Unit:
+        """
+        Validates unit polygon, containment, non-overlap with siblings,
+        extrudes watertight 3D solid, and commits to units registry.
+        """
+        ds_id = req.dataset_id.strip() if req.dataset_id else "default"
+        bld_id = req.building_id.strip()
+        floor_id = req.floor_id.strip()
+        unit_num = str(req.unit_number).strip()
+
+        if not bld_id or not floor_id or not unit_num:
+            raise ValueError("building_id, floor_id, and unit_number must all be non-empty strings.")
+
+        unit_id = req.unit_id.strip() if req.unit_id and req.unit_id.strip() else cls.generate_unit_id(bld_id, floor_id, unit_num)
+
+        registry = cls._load_registry()
+        key = _make_unit_key(ds_id, bld_id, floor_id, unit_id)
+        if key in registry:
+            raise ValueError(f"Unit '{unit_id}' already exists on floor '{floor_id}' in dataset '{ds_id}'.")
+
+        # 1. Geometry Footprint Validation
+        if not req.geometry_2d or "type" not in req.geometry_2d:
+            raise ValueError("Missing unit 2D footprint geometry.")
+
+        geom_type = req.geometry_2d.get("type")
+        if geom_type != "Polygon":
+            raise ValueError(f"Unit footprint must be a GeoJSON Polygon (got '{geom_type}').")
+
+        coords = req.geometry_2d.get("coordinates", [])
+        if not coords or len(coords[0]) < 4:
+            raise ValueError("Unit polygon must have at least 4 coordinate tuples (minimum 3 distinct vertices + closure).")
+
+        first_pt, last_pt = coords[0][0], coords[0][-1]
+        if first_pt != last_pt:
+            raise ValueError("Unit polygon ring is not closed: first and last coordinates must match.")
+
+        try:
+            unit_shapely = shape(req.geometry_2d)
+        except Exception as e:
+            raise ValueError(f"Failed to parse unit polygon: {e}")
+
+        if not unit_shapely.is_valid:
+            validity_err = explain_validity(unit_shapely)
+            raise ValueError(f"Invalid or self-intersecting unit polygon: {validity_err}.")
+
+        if unit_shapely.is_empty:
+            raise ValueError("Unit polygon geometry is empty.")
+
+        # Area check
+        area_sqm = cls.calculate_polygon_area_sqm(req.geometry_2d)
+        if area_sqm <= 0.01:
+            raise ValueError(f"Unit footprint area ({area_sqm:.2f} m²) is too small or zero. Positive area required.")
+
+        # 2. Containment Validation within Parent Floor / Building Footprint
+        if req.parent_floor_geometry:
+            try:
+                parent_shape = shape(req.parent_floor_geometry)
+                if not parent_shape.is_valid:
+                    parent_shape = parent_shape.buffer(0)
+
+                # Tolerance buffer 1e-8 deg (~1mm)
+                diff = unit_shapely.difference(parent_shape.buffer(1e-8))
+                if not diff.is_empty and diff.area > 1e-12:
+                    raise ValueError(
+                        "Unit footprint extends outside parent floor footprint boundary. Silently clipping is prohibited."
+                    )
+            except ValueError:
+                raise
+            except Exception as e:
+                logger.warning(f"Error checking parent footprint containment: {e}")
+
+        # 3. Sibling Non-Overlap & Duplicate Number Validation
+        existing_floor_units = cls.get_floor_units(ds_id, bld_id, floor_id)
+        for sibling in existing_floor_units:
+            if sibling.unit_number.strip().lower() == unit_num.lower():
+                raise ValueError(f"Duplicate unit_number '{unit_num}' found on floor '{floor_id}' (conflicts with unit '{sibling.unit_id}').")
+
+            if sibling.geometry_2d:
+                try:
+                    sib_shape = shape(sibling.geometry_2d)
+                    if not sib_shape.is_valid:
+                        sib_shape = sib_shape.buffer(0)
+                    intersection = unit_shapely.intersection(sib_shape)
+                    # Positive area overlap rule: boundary touch has area == 0.0; overlap area > 1e-12 is rejected
+                    if not intersection.is_empty and intersection.area > 1e-12:
+                        raise ValueError(
+                            f"Positive area overlap detected between unit '{unit_id}' and sibling unit '{sibling.unit_id}'. Overlapping units on the same floor are invalid."
+                        )
+                except ValueError:
+                    raise
+                except Exception as e:
+                    logger.warning(f"Error checking sibling overlap: {e}")
+
+        # 4. Vertical Interval Validation
+        base_z = req.base_elevation
+        top_z = req.top_elevation
+        if base_z is None or top_z is None:
+            raise ValueError("Both base_elevation and top_elevation must be provided.")
+        if top_z <= base_z:
+            raise ValueError(f"Unit top_elevation ({top_z}m) must be strictly greater than base_elevation ({base_z}m).")
+
+        unit_height = round(top_z - base_z, 3)
+
+        # 5. Generate Watertight 3D Solid Mesh
+        req_3d = Unit3DRequest(
+            unit_id=unit_id,
+            dataset_id=ds_id,
+            parcel_id=req.parcel_id or "PARCEL-UNREGISTERED",
+            building_id=bld_id,
+            floor_id=floor_id,
+            unit_number=unit_num,
+            unit_name=req.unit_name or f"Unit {unit_num}",
+            unit_type=req.unit_type,
+            geometry_2d=req.geometry_2d,
+            base_elevation=base_z,
+            top_elevation=top_z,
+            height=unit_height,
+            source_crs="EPSG:4326",
+            target_crs=target_crs,
+        )
+
+        res_3d = cls.generate_unit_3d(req_3d, scene_origin=scene_origin, target_crs=target_crs)
+        if res_3d.geometry_status != Geometry3DStatus.VALID or not res_3d.geometry:
+            warn_msg = "; ".join(res_3d.warnings) if res_3d.warnings else "Watertight mesh audit failed."
+            raise ValueError(f"Failed to generate watertight 3D solid for unit: {warn_msg}")
+
+        # 6. Construct and Commit Unit Entity
+        spatial_id = f"{ds_id}-{bld_id}-{floor_id}-{unit_id}"
+        unit_obj = Unit(
+            unit_id=unit_id,
+            dataset_id=ds_id,
+            spatial_id=spatial_id,
+            property_id=None,
+            parcel_id=req.parcel_id or "PARCEL-UNREGISTERED",
+            building_id=bld_id,
+            floor_id=floor_id,
+            unit_number=unit_num,
+            unit_name=req.unit_name or f"Unit {unit_num}",
+            unit_type=req.unit_type,
+            geometry_2d=req.geometry_2d,
+            geometry_3d=res_3d.geometry,
+            base_elevation=round(base_z, 3),
+            top_elevation=round(top_z, 3),
+            z_min=round(base_z, 3),
+            z_max=round(top_z, 3),
+            height=unit_height,
+            footprint_area=res_3d.footprint_area or area_sqm,
+            volume_cubic_m=res_3d.volume_cubic_m or round(area_sqm * unit_height, 3),
+            source="Configured / Derived",
+            source_type=UnitSourceType.DERIVED,
+            geometry_status="PASS",
+            status=UnitStatus.VALID,
+            warnings=res_3d.warnings,
+            provenance={
+                **res_3d.provenance,
+                "surface_area_sqm": res_3d.surface_area_sqm,
+            },
+        )
+
+
+        registry[key] = unit_obj.model_dump()
+        cls._save_registry(registry)
+
+        logger.info(
+            f"Unit registered: dataset='{ds_id}' building='{bld_id}' floor='{floor_id}' unit='{unit_id}' "
+            f"area={unit_obj.footprint_area}m² vol={unit_obj.volume_cubic_m}m³"
+        )
+        return unit_obj
+
+    @classmethod
+    def get_floor_units(cls, dataset_id: str, building_id: str, floor_id: str) -> List[Unit]:
+        """Returns all units registered strictly under the given dataset, building, and floor."""
+        ds_clean = dataset_id.strip()
+        bld_clean = building_id.strip()
+        fl_clean = floor_id.strip()
+
+        registry = cls._load_registry()
+        units: List[Unit] = []
+        for entry in registry.values():
+            if (
+                entry.get("dataset_id") == ds_clean
+                and entry.get("building_id") == bld_clean
+                and entry.get("floor_id") == fl_clean
+            ):
+                units.append(Unit(**entry))
+        return units
+
+    @classmethod
+    def list_dataset_units(
+        cls,
+        dataset_id: str,
+        building_id: Optional[str] = None,
+        floor_id: Optional[str] = None,
+    ) -> List[Unit]:
+        """Lists all units in a dataset, optionally filtered by building and floor."""
+        ds_clean = dataset_id.strip()
+        bld_clean = building_id.strip() if building_id else None
+        fl_clean = floor_id.strip() if floor_id else None
+
+        registry = cls._load_registry()
+        units: List[Unit] = []
+        for entry in registry.values():
+            if entry.get("dataset_id") != ds_clean:
+                continue
+            if bld_clean and entry.get("building_id") != bld_clean:
+                continue
+            if fl_clean and entry.get("floor_id") != fl_clean:
+                continue
+            units.append(Unit(**entry))
+        return units
+
+    @classmethod
+    def delete_unit(cls, dataset_id: str, building_id: str, floor_id: str, unit_id: str) -> bool:
+        """Removes a unit from the registry. Preserves parent floor, building, and siblings."""
+        key = _make_unit_key(dataset_id, building_id, floor_id, unit_id)
+        registry = cls._load_registry()
+        if key not in registry:
+            return False
+        del registry[key]
+        cls._save_registry(registry)
+        logger.info(f"Unit deleted: {key}")
+        return True
+
+    @classmethod
+    def cleanup_stale_units_for_building(
+        cls, dataset_id: str, building_id: str, active_floor_ids: List[str]
+    ) -> int:
+        """Removes units belonging to floors that no longer exist after building reconfiguration."""
+        ds_clean = dataset_id.strip()
+        bld_clean = building_id.strip()
+        active_set = set(active_floor_ids)
+
+        registry = cls._load_registry()
+        keys_to_delete = []
+        for k, entry in registry.items():
+            if entry.get("dataset_id") == ds_clean and entry.get("building_id") == bld_clean:
+                if entry.get("floor_id") not in active_set:
+                    keys_to_delete.append(k)
+
+        for k in keys_to_delete:
+            del registry[k]
+
+        if keys_to_delete:
+            cls._save_registry(registry)
+            logger.info(f"Cleaned up {len(keys_to_delete)} stale units for building '{bld_clean}'.")
+        return len(keys_to_delete)
+

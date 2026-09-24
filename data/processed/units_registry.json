@@ -1,0 +1,1583 @@
+{
+  "ds_tagore_garden_map_osm:OSM-BUILDING-001:OSM-BUILDING-001-FL01:OSM-BUILDING-001-FL01-U101": {
+    "unit_id": "OSM-BUILDING-001-FL01-U101",
+    "dataset_id": "ds_tagore_garden_map_osm",
+    "spatial_id": "ds_tagore_garden_map_osm-OSM-BUILDING-001-OSM-BUILDING-001-FL01-OSM-BUILDING-001-FL01-U101",
+    "property_id": null,
+    "parcel_id": "P-DRAWING-01",
+    "building_id": "OSM-BUILDING-001",
+    "floor_id": "OSM-BUILDING-001-FL01",
+    "unit_number": "101",
+    "unit_name": "Unit 101",
+    "unit_type": "APARTMENT_UNIT",
+    "geometry_2d": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            -9.5,
+            -6.5
+          ],
+          [
+            -1.0,
+            -6.5
+          ],
+          [
+            -1.0,
+            6.5
+          ],
+          [
+            -9.5,
+            6.5
+          ],
+          [
+            -9.5,
+            -6.5
+          ]
+        ]
+      ]
+    },
+    "geometry_3d": null,
+    "base_elevation": 3.8,
+    "top_elevation": 6.8,
+    "z_min": 3.8,
+    "z_max": 6.8,
+    "height": 3.0,
+    "footprint_area": 92.4,
+    "volume_cubic_m": 277.2,
+    "source": "Drawing Intelligence v1",
+    "source_type": "DERIVED",
+    "geometry_status": "PASS",
+    "status": "VALID",
+    "warnings": [],
+    "rooms": [
+      "Living / Dining",
+      "Kitchen",
+      "Bedroom 1",
+      "Bedroom 2",
+      "Balcony",
+      "Toilet 1",
+      "Toilet 2"
+    ],
+    "provenance": {
+      "source_document": "20 ARCH PLAN.pdf",
+      "drawing_region": "Typical Floor Plan",
+      "extraction_method": "Drawing Intelligence v1",
+      "confidence": "HIGH",
+      "status": "User Confirmed",
+      "spatial_source_mode": "OSM_AND_DRAWINGS"
+    }
+  },
+  "ds_tagore_garden_map_osm:OSM-BUILDING-001:OSM-BUILDING-001-FL01:OSM-BUILDING-001-FL01-U102": {
+    "unit_id": "OSM-BUILDING-001-FL01-U102",
+    "dataset_id": "ds_tagore_garden_map_osm",
+    "spatial_id": "ds_tagore_garden_map_osm-OSM-BUILDING-001-OSM-BUILDING-001-FL01-OSM-BUILDING-001-FL01-U102",
+    "property_id": null,
+    "parcel_id": "P-DRAWING-01",
+    "building_id": "OSM-BUILDING-001",
+    "floor_id": "OSM-BUILDING-001-FL01",
+    "unit_number": "102",
+    "unit_name": "Unit 102",
+    "unit_type": "APARTMENT_UNIT",
+    "geometry_2d": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            1.0,
+            0.0
+          ],
+          [
+            9.5,
+            0.0
+          ],
+          [
+            9.5,
+            6.5
+          ],
+          [
+            1.0,
+            6.5
+          ],
+          [
+            1.0,
+            0.0
+          ]
+        ]
+      ]
+    },
+    "geometry_3d": null,
+    "base_elevation": 3.8,
+    "top_elevation": 6.8,
+    "z_min": 3.8,
+    "z_max": 6.8,
+    "height": 3.0,
+    "footprint_area": 86.2,
+    "volume_cubic_m": 258.6,
+    "source": "Drawing Intelligence v1",
+    "source_type": "DERIVED",
+    "geometry_status": "PASS",
+    "status": "VALID",
+    "warnings": [],
+    "rooms": [
+      "Living / Dining",
+      "Master Bedroom",
+      "Kitchen",
+      "Balcony",
+      "Toilet"
+    ],
+    "provenance": {
+      "source_document": "20 ARCH PLAN.pdf",
+      "drawing_region": "Typical Floor Plan",
+      "extraction_method": "Drawing Intelligence v1",
+      "confidence": "HIGH",
+      "status": "User Confirmed",
+      "spatial_source_mode": "OSM_AND_DRAWINGS"
+    }
+  },
+  "ds_tagore_garden_map_osm:OSM-BUILDING-001:OSM-BUILDING-001-FL01:OSM-BUILDING-001-FL01-U103": {
+    "unit_id": "OSM-BUILDING-001-FL01-U103",
+    "dataset_id": "ds_tagore_garden_map_osm",
+    "spatial_id": "ds_tagore_garden_map_osm-OSM-BUILDING-001-OSM-BUILDING-001-FL01-OSM-BUILDING-001-FL01-U103",
+    "property_id": null,
+    "parcel_id": "P-DRAWING-01",
+    "building_id": "OSM-BUILDING-001",
+    "floor_id": "OSM-BUILDING-001-FL01",
+    "unit_number": "103",
+    "unit_name": "Unit 103",
+    "unit_type": "APARTMENT_UNIT",
+    "geometry_2d": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            1.0,
+            -6.5
+          ],
+          [
+            9.5,
+            -6.5
+          ],
+          [
+            9.5,
+            -0.5
+          ],
+          [
+            1.0,
+            -0.5
+          ],
+          [
+            1.0,
+            -6.5
+          ]
+        ]
+      ]
+    },
+    "geometry_3d": null,
+    "base_elevation": 3.8,
+    "top_elevation": 6.8,
+    "z_min": 3.8,
+    "z_max": 6.8,
+    "height": 3.0,
+    "footprint_area": 88.5,
+    "volume_cubic_m": 265.5,
+    "source": "Drawing Intelligence v1",
+    "source_type": "DERIVED",
+    "geometry_status": "PASS",
+    "status": "VALID",
+    "warnings": [],
+    "rooms": [
+      "Living / Dining",
+      "Bedroom 1",
+      "Kitchen",
+      "Toilet"
+    ],
+    "provenance": {
+      "source_document": "20 ARCH PLAN.pdf",
+      "drawing_region": "Typical Floor Plan",
+      "extraction_method": "Drawing Intelligence v1",
+      "confidence": "HIGH",
+      "status": "User Confirmed",
+      "spatial_source_mode": "OSM_AND_DRAWINGS"
+    }
+  },
+  "ds_tagore_garden_map_osm:OSM-BUILDING-001:OSM-BUILDING-001-FL02:OSM-BUILDING-001-FL02-U201": {
+    "unit_id": "OSM-BUILDING-001-FL02-U201",
+    "dataset_id": "ds_tagore_garden_map_osm",
+    "spatial_id": "ds_tagore_garden_map_osm-OSM-BUILDING-001-OSM-BUILDING-001-FL02-OSM-BUILDING-001-FL02-U201",
+    "property_id": null,
+    "parcel_id": "P-DRAWING-01",
+    "building_id": "OSM-BUILDING-001",
+    "floor_id": "OSM-BUILDING-001-FL02",
+    "unit_number": "201",
+    "unit_name": "Unit 201",
+    "unit_type": "APARTMENT_UNIT",
+    "geometry_2d": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            -9.5,
+            -6.5
+          ],
+          [
+            -1.0,
+            -6.5
+          ],
+          [
+            -1.0,
+            6.5
+          ],
+          [
+            -9.5,
+            6.5
+          ],
+          [
+            -9.5,
+            -6.5
+          ]
+        ]
+      ]
+    },
+    "geometry_3d": null,
+    "base_elevation": 7.0,
+    "top_elevation": 10.0,
+    "z_min": 7.0,
+    "z_max": 10.0,
+    "height": 3.0,
+    "footprint_area": 92.4,
+    "volume_cubic_m": 277.2,
+    "source": "Drawing Intelligence v1",
+    "source_type": "DERIVED",
+    "geometry_status": "PASS",
+    "status": "VALID",
+    "warnings": [],
+    "rooms": [
+      "Living / Dining",
+      "Kitchen",
+      "Bedroom 1",
+      "Bedroom 2",
+      "Balcony",
+      "Toilet 1",
+      "Toilet 2"
+    ],
+    "provenance": {
+      "source_document": "20 ARCH PLAN.pdf",
+      "drawing_region": "Typical Floor Plan",
+      "extraction_method": "Drawing Intelligence v1",
+      "confidence": "HIGH",
+      "status": "User Confirmed",
+      "spatial_source_mode": "OSM_AND_DRAWINGS"
+    }
+  },
+  "ds_tagore_garden_map_osm:OSM-BUILDING-001:OSM-BUILDING-001-FL02:OSM-BUILDING-001-FL02-U202": {
+    "unit_id": "OSM-BUILDING-001-FL02-U202",
+    "dataset_id": "ds_tagore_garden_map_osm",
+    "spatial_id": "ds_tagore_garden_map_osm-OSM-BUILDING-001-OSM-BUILDING-001-FL02-OSM-BUILDING-001-FL02-U202",
+    "property_id": null,
+    "parcel_id": "P-DRAWING-01",
+    "building_id": "OSM-BUILDING-001",
+    "floor_id": "OSM-BUILDING-001-FL02",
+    "unit_number": "202",
+    "unit_name": "Unit 202",
+    "unit_type": "APARTMENT_UNIT",
+    "geometry_2d": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            1.0,
+            0.0
+          ],
+          [
+            9.5,
+            0.0
+          ],
+          [
+            9.5,
+            6.5
+          ],
+          [
+            1.0,
+            6.5
+          ],
+          [
+            1.0,
+            0.0
+          ]
+        ]
+      ]
+    },
+    "geometry_3d": null,
+    "base_elevation": 7.0,
+    "top_elevation": 10.0,
+    "z_min": 7.0,
+    "z_max": 10.0,
+    "height": 3.0,
+    "footprint_area": 86.2,
+    "volume_cubic_m": 258.6,
+    "source": "Drawing Intelligence v1",
+    "source_type": "DERIVED",
+    "geometry_status": "PASS",
+    "status": "VALID",
+    "warnings": [],
+    "rooms": [
+      "Living / Dining",
+      "Master Bedroom",
+      "Kitchen",
+      "Balcony",
+      "Toilet"
+    ],
+    "provenance": {
+      "source_document": "20 ARCH PLAN.pdf",
+      "drawing_region": "Typical Floor Plan",
+      "extraction_method": "Drawing Intelligence v1",
+      "confidence": "HIGH",
+      "status": "User Confirmed",
+      "spatial_source_mode": "OSM_AND_DRAWINGS"
+    }
+  },
+  "ds_tagore_garden_map_osm:OSM-BUILDING-001:OSM-BUILDING-001-FL02:OSM-BUILDING-001-FL02-U203": {
+    "unit_id": "OSM-BUILDING-001-FL02-U203",
+    "dataset_id": "ds_tagore_garden_map_osm",
+    "spatial_id": "ds_tagore_garden_map_osm-OSM-BUILDING-001-OSM-BUILDING-001-FL02-OSM-BUILDING-001-FL02-U203",
+    "property_id": null,
+    "parcel_id": "P-DRAWING-01",
+    "building_id": "OSM-BUILDING-001",
+    "floor_id": "OSM-BUILDING-001-FL02",
+    "unit_number": "203",
+    "unit_name": "Unit 203",
+    "unit_type": "APARTMENT_UNIT",
+    "geometry_2d": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            1.0,
+            -6.5
+          ],
+          [
+            9.5,
+            -6.5
+          ],
+          [
+            9.5,
+            -0.5
+          ],
+          [
+            1.0,
+            -0.5
+          ],
+          [
+            1.0,
+            -6.5
+          ]
+        ]
+      ]
+    },
+    "geometry_3d": null,
+    "base_elevation": 7.0,
+    "top_elevation": 10.0,
+    "z_min": 7.0,
+    "z_max": 10.0,
+    "height": 3.0,
+    "footprint_area": 88.5,
+    "volume_cubic_m": 265.5,
+    "source": "Drawing Intelligence v1",
+    "source_type": "DERIVED",
+    "geometry_status": "PASS",
+    "status": "VALID",
+    "warnings": [],
+    "rooms": [
+      "Living / Dining",
+      "Bedroom 1",
+      "Kitchen",
+      "Toilet"
+    ],
+    "provenance": {
+      "source_document": "20 ARCH PLAN.pdf",
+      "drawing_region": "Typical Floor Plan",
+      "extraction_method": "Drawing Intelligence v1",
+      "confidence": "HIGH",
+      "status": "User Confirmed",
+      "spatial_source_mode": "OSM_AND_DRAWINGS"
+    }
+  },
+  "ds_tagore_garden_map_osm:OSM-BUILDING-001:OSM-BUILDING-001-FL03:OSM-BUILDING-001-FL03-U301": {
+    "unit_id": "OSM-BUILDING-001-FL03-U301",
+    "dataset_id": "ds_tagore_garden_map_osm",
+    "spatial_id": "ds_tagore_garden_map_osm-OSM-BUILDING-001-OSM-BUILDING-001-FL03-OSM-BUILDING-001-FL03-U301",
+    "property_id": null,
+    "parcel_id": "P-DRAWING-01",
+    "building_id": "OSM-BUILDING-001",
+    "floor_id": "OSM-BUILDING-001-FL03",
+    "unit_number": "301",
+    "unit_name": "Unit 301",
+    "unit_type": "APARTMENT_UNIT",
+    "geometry_2d": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            -9.5,
+            -6.5
+          ],
+          [
+            -1.0,
+            -6.5
+          ],
+          [
+            -1.0,
+            6.5
+          ],
+          [
+            -9.5,
+            6.5
+          ],
+          [
+            -9.5,
+            -6.5
+          ]
+        ]
+      ]
+    },
+    "geometry_3d": null,
+    "base_elevation": 10.2,
+    "top_elevation": 13.2,
+    "z_min": 10.2,
+    "z_max": 13.2,
+    "height": 3.0,
+    "footprint_area": 92.4,
+    "volume_cubic_m": 277.2,
+    "source": "Drawing Intelligence v1",
+    "source_type": "DERIVED",
+    "geometry_status": "PASS",
+    "status": "VALID",
+    "warnings": [],
+    "rooms": [
+      "Living / Dining",
+      "Kitchen",
+      "Bedroom 1",
+      "Bedroom 2",
+      "Balcony",
+      "Toilet 1",
+      "Toilet 2"
+    ],
+    "provenance": {
+      "source_document": "20 ARCH PLAN.pdf",
+      "drawing_region": "Typical Floor Plan",
+      "extraction_method": "Drawing Intelligence v1",
+      "confidence": "HIGH",
+      "status": "User Confirmed",
+      "spatial_source_mode": "OSM_AND_DRAWINGS"
+    }
+  },
+  "ds_tagore_garden_map_osm:OSM-BUILDING-001:OSM-BUILDING-001-FL03:OSM-BUILDING-001-FL03-U302": {
+    "unit_id": "OSM-BUILDING-001-FL03-U302",
+    "dataset_id": "ds_tagore_garden_map_osm",
+    "spatial_id": "ds_tagore_garden_map_osm-OSM-BUILDING-001-OSM-BUILDING-001-FL03-OSM-BUILDING-001-FL03-U302",
+    "property_id": null,
+    "parcel_id": "P-DRAWING-01",
+    "building_id": "OSM-BUILDING-001",
+    "floor_id": "OSM-BUILDING-001-FL03",
+    "unit_number": "302",
+    "unit_name": "Unit 302",
+    "unit_type": "APARTMENT_UNIT",
+    "geometry_2d": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            1.0,
+            0.0
+          ],
+          [
+            9.5,
+            0.0
+          ],
+          [
+            9.5,
+            6.5
+          ],
+          [
+            1.0,
+            6.5
+          ],
+          [
+            1.0,
+            0.0
+          ]
+        ]
+      ]
+    },
+    "geometry_3d": null,
+    "base_elevation": 10.2,
+    "top_elevation": 13.2,
+    "z_min": 10.2,
+    "z_max": 13.2,
+    "height": 3.0,
+    "footprint_area": 86.2,
+    "volume_cubic_m": 258.6,
+    "source": "Drawing Intelligence v1",
+    "source_type": "DERIVED",
+    "geometry_status": "PASS",
+    "status": "VALID",
+    "warnings": [],
+    "rooms": [
+      "Living / Dining",
+      "Master Bedroom",
+      "Kitchen",
+      "Balcony",
+      "Toilet"
+    ],
+    "provenance": {
+      "source_document": "20 ARCH PLAN.pdf",
+      "drawing_region": "Typical Floor Plan",
+      "extraction_method": "Drawing Intelligence v1",
+      "confidence": "HIGH",
+      "status": "User Confirmed",
+      "spatial_source_mode": "OSM_AND_DRAWINGS"
+    }
+  },
+  "ds_tagore_garden_map_osm:OSM-BUILDING-001:OSM-BUILDING-001-FL03:OSM-BUILDING-001-FL03-U303": {
+    "unit_id": "OSM-BUILDING-001-FL03-U303",
+    "dataset_id": "ds_tagore_garden_map_osm",
+    "spatial_id": "ds_tagore_garden_map_osm-OSM-BUILDING-001-OSM-BUILDING-001-FL03-OSM-BUILDING-001-FL03-U303",
+    "property_id": null,
+    "parcel_id": "P-DRAWING-01",
+    "building_id": "OSM-BUILDING-001",
+    "floor_id": "OSM-BUILDING-001-FL03",
+    "unit_number": "303",
+    "unit_name": "Unit 303",
+    "unit_type": "APARTMENT_UNIT",
+    "geometry_2d": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            1.0,
+            -6.5
+          ],
+          [
+            9.5,
+            -6.5
+          ],
+          [
+            9.5,
+            -0.5
+          ],
+          [
+            1.0,
+            -0.5
+          ],
+          [
+            1.0,
+            -6.5
+          ]
+        ]
+      ]
+    },
+    "geometry_3d": null,
+    "base_elevation": 10.2,
+    "top_elevation": 13.2,
+    "z_min": 10.2,
+    "z_max": 13.2,
+    "height": 3.0,
+    "footprint_area": 88.5,
+    "volume_cubic_m": 265.5,
+    "source": "Drawing Intelligence v1",
+    "source_type": "DERIVED",
+    "geometry_status": "PASS",
+    "status": "VALID",
+    "warnings": [],
+    "rooms": [
+      "Living / Dining",
+      "Bedroom 1",
+      "Kitchen",
+      "Toilet"
+    ],
+    "provenance": {
+      "source_document": "20 ARCH PLAN.pdf",
+      "drawing_region": "Typical Floor Plan",
+      "extraction_method": "Drawing Intelligence v1",
+      "confidence": "HIGH",
+      "status": "User Confirmed",
+      "spatial_source_mode": "OSM_AND_DRAWINGS"
+    }
+  },
+  "ds_tagore_garden_map_osm:OSM-BUILDING-001:OSM-BUILDING-001-FL04:OSM-BUILDING-001-FL04-U401": {
+    "unit_id": "OSM-BUILDING-001-FL04-U401",
+    "dataset_id": "ds_tagore_garden_map_osm",
+    "spatial_id": "ds_tagore_garden_map_osm-OSM-BUILDING-001-OSM-BUILDING-001-FL04-OSM-BUILDING-001-FL04-U401",
+    "property_id": null,
+    "parcel_id": "P-DRAWING-01",
+    "building_id": "OSM-BUILDING-001",
+    "floor_id": "OSM-BUILDING-001-FL04",
+    "unit_number": "401",
+    "unit_name": "Unit 401",
+    "unit_type": "APARTMENT_UNIT",
+    "geometry_2d": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            -9.5,
+            -6.5
+          ],
+          [
+            -1.0,
+            -6.5
+          ],
+          [
+            -1.0,
+            6.5
+          ],
+          [
+            -9.5,
+            6.5
+          ],
+          [
+            -9.5,
+            -6.5
+          ]
+        ]
+      ]
+    },
+    "geometry_3d": null,
+    "base_elevation": 13.4,
+    "top_elevation": 16.4,
+    "z_min": 13.4,
+    "z_max": 16.4,
+    "height": 3.0,
+    "footprint_area": 92.4,
+    "volume_cubic_m": 277.2,
+    "source": "Drawing Intelligence v1",
+    "source_type": "DERIVED",
+    "geometry_status": "PASS",
+    "status": "VALID",
+    "warnings": [],
+    "rooms": [
+      "Living / Dining",
+      "Kitchen",
+      "Bedroom 1",
+      "Bedroom 2",
+      "Balcony",
+      "Toilet 1",
+      "Toilet 2"
+    ],
+    "provenance": {
+      "source_document": "20 ARCH PLAN.pdf",
+      "drawing_region": "Typical Floor Plan",
+      "extraction_method": "Drawing Intelligence v1",
+      "confidence": "HIGH",
+      "status": "User Confirmed",
+      "spatial_source_mode": "OSM_AND_DRAWINGS"
+    }
+  },
+  "ds_tagore_garden_map_osm:OSM-BUILDING-001:OSM-BUILDING-001-FL04:OSM-BUILDING-001-FL04-U402": {
+    "unit_id": "OSM-BUILDING-001-FL04-U402",
+    "dataset_id": "ds_tagore_garden_map_osm",
+    "spatial_id": "ds_tagore_garden_map_osm-OSM-BUILDING-001-OSM-BUILDING-001-FL04-OSM-BUILDING-001-FL04-U402",
+    "property_id": null,
+    "parcel_id": "P-DRAWING-01",
+    "building_id": "OSM-BUILDING-001",
+    "floor_id": "OSM-BUILDING-001-FL04",
+    "unit_number": "402",
+    "unit_name": "Unit 402",
+    "unit_type": "APARTMENT_UNIT",
+    "geometry_2d": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            1.0,
+            0.0
+          ],
+          [
+            9.5,
+            0.0
+          ],
+          [
+            9.5,
+            6.5
+          ],
+          [
+            1.0,
+            6.5
+          ],
+          [
+            1.0,
+            0.0
+          ]
+        ]
+      ]
+    },
+    "geometry_3d": null,
+    "base_elevation": 13.4,
+    "top_elevation": 16.4,
+    "z_min": 13.4,
+    "z_max": 16.4,
+    "height": 3.0,
+    "footprint_area": 86.2,
+    "volume_cubic_m": 258.6,
+    "source": "Drawing Intelligence v1",
+    "source_type": "DERIVED",
+    "geometry_status": "PASS",
+    "status": "VALID",
+    "warnings": [],
+    "rooms": [
+      "Living / Dining",
+      "Master Bedroom",
+      "Kitchen",
+      "Balcony",
+      "Toilet"
+    ],
+    "provenance": {
+      "source_document": "20 ARCH PLAN.pdf",
+      "drawing_region": "Typical Floor Plan",
+      "extraction_method": "Drawing Intelligence v1",
+      "confidence": "HIGH",
+      "status": "User Confirmed",
+      "spatial_source_mode": "OSM_AND_DRAWINGS"
+    }
+  },
+  "ds_tagore_garden_map_osm:OSM-BUILDING-001:OSM-BUILDING-001-FL04:OSM-BUILDING-001-FL04-U403": {
+    "unit_id": "OSM-BUILDING-001-FL04-U403",
+    "dataset_id": "ds_tagore_garden_map_osm",
+    "spatial_id": "ds_tagore_garden_map_osm-OSM-BUILDING-001-OSM-BUILDING-001-FL04-OSM-BUILDING-001-FL04-U403",
+    "property_id": null,
+    "parcel_id": "P-DRAWING-01",
+    "building_id": "OSM-BUILDING-001",
+    "floor_id": "OSM-BUILDING-001-FL04",
+    "unit_number": "403",
+    "unit_name": "Unit 403",
+    "unit_type": "APARTMENT_UNIT",
+    "geometry_2d": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            1.0,
+            -6.5
+          ],
+          [
+            9.5,
+            -6.5
+          ],
+          [
+            9.5,
+            -0.5
+          ],
+          [
+            1.0,
+            -0.5
+          ],
+          [
+            1.0,
+            -6.5
+          ]
+        ]
+      ]
+    },
+    "geometry_3d": null,
+    "base_elevation": 13.4,
+    "top_elevation": 16.4,
+    "z_min": 13.4,
+    "z_max": 16.4,
+    "height": 3.0,
+    "footprint_area": 88.5,
+    "volume_cubic_m": 265.5,
+    "source": "Drawing Intelligence v1",
+    "source_type": "DERIVED",
+    "geometry_status": "PASS",
+    "status": "VALID",
+    "warnings": [],
+    "rooms": [
+      "Living / Dining",
+      "Bedroom 1",
+      "Kitchen",
+      "Toilet"
+    ],
+    "provenance": {
+      "source_document": "20 ARCH PLAN.pdf",
+      "drawing_region": "Typical Floor Plan",
+      "extraction_method": "Drawing Intelligence v1",
+      "confidence": "HIGH",
+      "status": "User Confirmed",
+      "spatial_source_mode": "OSM_AND_DRAWINGS"
+    }
+  },
+  "ds_tagore_garden_map_osm:OSM-BUILDING-001:OSM-BUILDING-001-FL05:OSM-BUILDING-001-FL05-U501": {
+    "unit_id": "OSM-BUILDING-001-FL05-U501",
+    "dataset_id": "ds_tagore_garden_map_osm",
+    "spatial_id": "ds_tagore_garden_map_osm-OSM-BUILDING-001-OSM-BUILDING-001-FL05-OSM-BUILDING-001-FL05-U501",
+    "property_id": null,
+    "parcel_id": "P-DRAWING-01",
+    "building_id": "OSM-BUILDING-001",
+    "floor_id": "OSM-BUILDING-001-FL05",
+    "unit_number": "501",
+    "unit_name": "Unit 501",
+    "unit_type": "APARTMENT_UNIT",
+    "geometry_2d": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            -9.5,
+            -6.5
+          ],
+          [
+            -1.0,
+            -6.5
+          ],
+          [
+            -1.0,
+            6.5
+          ],
+          [
+            -9.5,
+            6.5
+          ],
+          [
+            -9.5,
+            -6.5
+          ]
+        ]
+      ]
+    },
+    "geometry_3d": null,
+    "base_elevation": 16.6,
+    "top_elevation": 19.6,
+    "z_min": 16.6,
+    "z_max": 19.6,
+    "height": 3.0,
+    "footprint_area": 92.4,
+    "volume_cubic_m": 277.2,
+    "source": "Drawing Intelligence v1",
+    "source_type": "DERIVED",
+    "geometry_status": "PASS",
+    "status": "VALID",
+    "warnings": [],
+    "rooms": [
+      "Living / Dining",
+      "Kitchen",
+      "Bedroom 1",
+      "Bedroom 2",
+      "Balcony",
+      "Toilet 1",
+      "Toilet 2"
+    ],
+    "provenance": {
+      "source_document": "20 ARCH PLAN.pdf",
+      "drawing_region": "Typical Floor Plan",
+      "extraction_method": "Drawing Intelligence v1",
+      "confidence": "HIGH",
+      "status": "User Confirmed",
+      "spatial_source_mode": "OSM_AND_DRAWINGS"
+    }
+  },
+  "ds_tagore_garden_map_osm:OSM-BUILDING-001:OSM-BUILDING-001-FL05:OSM-BUILDING-001-FL05-U502": {
+    "unit_id": "OSM-BUILDING-001-FL05-U502",
+    "dataset_id": "ds_tagore_garden_map_osm",
+    "spatial_id": "ds_tagore_garden_map_osm-OSM-BUILDING-001-OSM-BUILDING-001-FL05-OSM-BUILDING-001-FL05-U502",
+    "property_id": null,
+    "parcel_id": "P-DRAWING-01",
+    "building_id": "OSM-BUILDING-001",
+    "floor_id": "OSM-BUILDING-001-FL05",
+    "unit_number": "502",
+    "unit_name": "Unit 502",
+    "unit_type": "APARTMENT_UNIT",
+    "geometry_2d": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            1.0,
+            0.0
+          ],
+          [
+            9.5,
+            0.0
+          ],
+          [
+            9.5,
+            6.5
+          ],
+          [
+            1.0,
+            6.5
+          ],
+          [
+            1.0,
+            0.0
+          ]
+        ]
+      ]
+    },
+    "geometry_3d": null,
+    "base_elevation": 16.6,
+    "top_elevation": 19.6,
+    "z_min": 16.6,
+    "z_max": 19.6,
+    "height": 3.0,
+    "footprint_area": 86.2,
+    "volume_cubic_m": 258.6,
+    "source": "Drawing Intelligence v1",
+    "source_type": "DERIVED",
+    "geometry_status": "PASS",
+    "status": "VALID",
+    "warnings": [],
+    "rooms": [
+      "Living / Dining",
+      "Master Bedroom",
+      "Kitchen",
+      "Balcony",
+      "Toilet"
+    ],
+    "provenance": {
+      "source_document": "20 ARCH PLAN.pdf",
+      "drawing_region": "Typical Floor Plan",
+      "extraction_method": "Drawing Intelligence v1",
+      "confidence": "HIGH",
+      "status": "User Confirmed",
+      "spatial_source_mode": "OSM_AND_DRAWINGS"
+    }
+  },
+  "ds_tagore_garden_map_osm:OSM-BUILDING-001:OSM-BUILDING-001-FL05:OSM-BUILDING-001-FL05-U503": {
+    "unit_id": "OSM-BUILDING-001-FL05-U503",
+    "dataset_id": "ds_tagore_garden_map_osm",
+    "spatial_id": "ds_tagore_garden_map_osm-OSM-BUILDING-001-OSM-BUILDING-001-FL05-OSM-BUILDING-001-FL05-U503",
+    "property_id": null,
+    "parcel_id": "P-DRAWING-01",
+    "building_id": "OSM-BUILDING-001",
+    "floor_id": "OSM-BUILDING-001-FL05",
+    "unit_number": "503",
+    "unit_name": "Unit 503",
+    "unit_type": "APARTMENT_UNIT",
+    "geometry_2d": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            1.0,
+            -6.5
+          ],
+          [
+            9.5,
+            -6.5
+          ],
+          [
+            9.5,
+            -0.5
+          ],
+          [
+            1.0,
+            -0.5
+          ],
+          [
+            1.0,
+            -6.5
+          ]
+        ]
+      ]
+    },
+    "geometry_3d": null,
+    "base_elevation": 16.6,
+    "top_elevation": 19.6,
+    "z_min": 16.6,
+    "z_max": 19.6,
+    "height": 3.0,
+    "footprint_area": 88.5,
+    "volume_cubic_m": 265.5,
+    "source": "Drawing Intelligence v1",
+    "source_type": "DERIVED",
+    "geometry_status": "PASS",
+    "status": "VALID",
+    "warnings": [],
+    "rooms": [
+      "Living / Dining",
+      "Bedroom 1",
+      "Kitchen",
+      "Toilet"
+    ],
+    "provenance": {
+      "source_document": "20 ARCH PLAN.pdf",
+      "drawing_region": "Typical Floor Plan",
+      "extraction_method": "Drawing Intelligence v1",
+      "confidence": "HIGH",
+      "status": "User Confirmed",
+      "spatial_source_mode": "OSM_AND_DRAWINGS"
+    }
+  },
+  "ds_tagore_garden_map_osm:OSM-BUILDING-001:OSM-BUILDING-001-FL06:OSM-BUILDING-001-FL06-U601": {
+    "unit_id": "OSM-BUILDING-001-FL06-U601",
+    "dataset_id": "ds_tagore_garden_map_osm",
+    "spatial_id": "ds_tagore_garden_map_osm-OSM-BUILDING-001-OSM-BUILDING-001-FL06-OSM-BUILDING-001-FL06-U601",
+    "property_id": null,
+    "parcel_id": "P-DRAWING-01",
+    "building_id": "OSM-BUILDING-001",
+    "floor_id": "OSM-BUILDING-001-FL06",
+    "unit_number": "601",
+    "unit_name": "Unit 601",
+    "unit_type": "APARTMENT_UNIT",
+    "geometry_2d": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            -9.5,
+            -6.5
+          ],
+          [
+            -1.0,
+            -6.5
+          ],
+          [
+            -1.0,
+            6.5
+          ],
+          [
+            -9.5,
+            6.5
+          ],
+          [
+            -9.5,
+            -6.5
+          ]
+        ]
+      ]
+    },
+    "geometry_3d": null,
+    "base_elevation": 19.8,
+    "top_elevation": 22.8,
+    "z_min": 19.8,
+    "z_max": 22.8,
+    "height": 3.0,
+    "footprint_area": 92.4,
+    "volume_cubic_m": 277.2,
+    "source": "Drawing Intelligence v1",
+    "source_type": "DERIVED",
+    "geometry_status": "PASS",
+    "status": "VALID",
+    "warnings": [],
+    "rooms": [
+      "Living / Dining",
+      "Kitchen",
+      "Bedroom 1",
+      "Bedroom 2",
+      "Balcony",
+      "Toilet 1",
+      "Toilet 2"
+    ],
+    "provenance": {
+      "source_document": "20 ARCH PLAN.pdf",
+      "drawing_region": "Typical Floor Plan",
+      "extraction_method": "Drawing Intelligence v1",
+      "confidence": "HIGH",
+      "status": "User Confirmed",
+      "spatial_source_mode": "OSM_AND_DRAWINGS"
+    }
+  },
+  "ds_tagore_garden_map_osm:OSM-BUILDING-001:OSM-BUILDING-001-FL06:OSM-BUILDING-001-FL06-U602": {
+    "unit_id": "OSM-BUILDING-001-FL06-U602",
+    "dataset_id": "ds_tagore_garden_map_osm",
+    "spatial_id": "ds_tagore_garden_map_osm-OSM-BUILDING-001-OSM-BUILDING-001-FL06-OSM-BUILDING-001-FL06-U602",
+    "property_id": null,
+    "parcel_id": "P-DRAWING-01",
+    "building_id": "OSM-BUILDING-001",
+    "floor_id": "OSM-BUILDING-001-FL06",
+    "unit_number": "602",
+    "unit_name": "Unit 602",
+    "unit_type": "APARTMENT_UNIT",
+    "geometry_2d": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            1.0,
+            0.0
+          ],
+          [
+            9.5,
+            0.0
+          ],
+          [
+            9.5,
+            6.5
+          ],
+          [
+            1.0,
+            6.5
+          ],
+          [
+            1.0,
+            0.0
+          ]
+        ]
+      ]
+    },
+    "geometry_3d": null,
+    "base_elevation": 19.8,
+    "top_elevation": 22.8,
+    "z_min": 19.8,
+    "z_max": 22.8,
+    "height": 3.0,
+    "footprint_area": 86.2,
+    "volume_cubic_m": 258.6,
+    "source": "Drawing Intelligence v1",
+    "source_type": "DERIVED",
+    "geometry_status": "PASS",
+    "status": "VALID",
+    "warnings": [],
+    "rooms": [
+      "Living / Dining",
+      "Master Bedroom",
+      "Kitchen",
+      "Balcony",
+      "Toilet"
+    ],
+    "provenance": {
+      "source_document": "20 ARCH PLAN.pdf",
+      "drawing_region": "Typical Floor Plan",
+      "extraction_method": "Drawing Intelligence v1",
+      "confidence": "HIGH",
+      "status": "User Confirmed",
+      "spatial_source_mode": "OSM_AND_DRAWINGS"
+    }
+  },
+  "ds_tagore_garden_map_osm:OSM-BUILDING-001:OSM-BUILDING-001-FL06:OSM-BUILDING-001-FL06-U603": {
+    "unit_id": "OSM-BUILDING-001-FL06-U603",
+    "dataset_id": "ds_tagore_garden_map_osm",
+    "spatial_id": "ds_tagore_garden_map_osm-OSM-BUILDING-001-OSM-BUILDING-001-FL06-OSM-BUILDING-001-FL06-U603",
+    "property_id": null,
+    "parcel_id": "P-DRAWING-01",
+    "building_id": "OSM-BUILDING-001",
+    "floor_id": "OSM-BUILDING-001-FL06",
+    "unit_number": "603",
+    "unit_name": "Unit 603",
+    "unit_type": "APARTMENT_UNIT",
+    "geometry_2d": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            1.0,
+            -6.5
+          ],
+          [
+            9.5,
+            -6.5
+          ],
+          [
+            9.5,
+            -0.5
+          ],
+          [
+            1.0,
+            -0.5
+          ],
+          [
+            1.0,
+            -6.5
+          ]
+        ]
+      ]
+    },
+    "geometry_3d": null,
+    "base_elevation": 19.8,
+    "top_elevation": 22.8,
+    "z_min": 19.8,
+    "z_max": 22.8,
+    "height": 3.0,
+    "footprint_area": 88.5,
+    "volume_cubic_m": 265.5,
+    "source": "Drawing Intelligence v1",
+    "source_type": "DERIVED",
+    "geometry_status": "PASS",
+    "status": "VALID",
+    "warnings": [],
+    "rooms": [
+      "Living / Dining",
+      "Bedroom 1",
+      "Kitchen",
+      "Toilet"
+    ],
+    "provenance": {
+      "source_document": "20 ARCH PLAN.pdf",
+      "drawing_region": "Typical Floor Plan",
+      "extraction_method": "Drawing Intelligence v1",
+      "confidence": "HIGH",
+      "status": "User Confirmed",
+      "spatial_source_mode": "OSM_AND_DRAWINGS"
+    }
+  },
+  "STHARA-REALWORLD-DEMO:DEMO-BUILDING-001:FL-00:UNT-101": {
+    "unit_id": "UNT-101",
+    "unit_number": "101",
+    "building_id": "DEMO-BUILDING-001",
+    "floor_id": "FL-00",
+    "floor_number": "00",
+    "dataset_id": "STHARA-REALWORLD-DEMO",
+    "parcel_id": "PARCEL-DELHI-CP-001",
+    "use_category": "Main Entrance & Public Reception",
+    "geometry_2d": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            77.2181,
+            28.6325
+          ],
+          [
+            77.2186,
+            28.6323
+          ],
+          [
+            77.2186,
+            28.6334
+          ],
+          [
+            77.2181,
+            28.6331
+          ],
+          [
+            77.2179,
+            28.6327
+          ],
+          [
+            77.2181,
+            28.6325
+          ]
+        ]
+      ]
+    },
+    "base_elevation": 0.0,
+    "top_elevation": 3.5,
+    "z_min": 0.0,
+    "z_max": 3.5,
+    "height_m": 3.5,
+    "area_sqm": 185.0,
+    "volume_cum": 647.5,
+    "status": "VALID",
+    "spatial_id": "STHARA-IN-DL-DELHI-CP-B001-FL00-U101",
+    "watertight": true
+  },
+  "STHARA-REALWORLD-DEMO:DEMO-BUILDING-001:FL-00:UNT-102": {
+    "unit_id": "UNT-102",
+    "unit_number": "102",
+    "building_id": "DEMO-BUILDING-001",
+    "floor_id": "FL-00",
+    "floor_number": "00",
+    "dataset_id": "STHARA-REALWORLD-DEMO",
+    "parcel_id": "PARCEL-DELHI-CP-001",
+    "use_category": "Commercial Retail Arcade 102",
+    "geometry_2d": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            77.2186,
+            28.6323
+          ],
+          [
+            77.2191,
+            28.6325
+          ],
+          [
+            77.2193,
+            28.6329
+          ],
+          [
+            77.2191,
+            28.6333
+          ],
+          [
+            77.2186,
+            28.6334
+          ],
+          [
+            77.2186,
+            28.6323
+          ]
+        ]
+      ]
+    },
+    "base_elevation": 0.0,
+    "top_elevation": 3.5,
+    "z_min": 0.0,
+    "z_max": 3.5,
+    "height_m": 3.5,
+    "area_sqm": 210.0,
+    "volume_cum": 735.0,
+    "status": "VALID",
+    "spatial_id": "STHARA-IN-DL-DELHI-CP-B001-FL00-U102",
+    "watertight": true
+  },
+  "STHARA-REALWORLD-DEMO:DEMO-BUILDING-001:FL-01:UNT-201": {
+    "unit_id": "UNT-201",
+    "unit_number": "201",
+    "building_id": "DEMO-BUILDING-001",
+    "floor_id": "FL-01",
+    "floor_number": "01",
+    "dataset_id": "STHARA-REALWORLD-DEMO",
+    "parcel_id": "PARCEL-DELHI-CP-001",
+    "use_category": "Executive Office Suite 201",
+    "geometry_2d": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            77.2181,
+            28.6325
+          ],
+          [
+            77.2186,
+            28.6323
+          ],
+          [
+            77.2186,
+            28.6334
+          ],
+          [
+            77.2181,
+            28.6331
+          ],
+          [
+            77.2179,
+            28.6327
+          ],
+          [
+            77.2181,
+            28.6325
+          ]
+        ]
+      ]
+    },
+    "base_elevation": 3.5,
+    "top_elevation": 7.0,
+    "z_min": 3.5,
+    "z_max": 7.0,
+    "height_m": 3.5,
+    "area_sqm": 195.0,
+    "volume_cum": 682.5,
+    "status": "VALID",
+    "spatial_id": "STHARA-IN-DL-DELHI-CP-B001-FL01-U201",
+    "watertight": true
+  },
+  "STHARA-REALWORLD-DEMO:DEMO-BUILDING-001:FL-01:UNT-202": {
+    "unit_id": "UNT-202",
+    "unit_number": "202",
+    "building_id": "DEMO-BUILDING-001",
+    "floor_id": "FL-01",
+    "floor_number": "01",
+    "dataset_id": "STHARA-REALWORLD-DEMO",
+    "parcel_id": "PARCEL-DELHI-CP-001",
+    "use_category": "Conference & Seminar Center 202",
+    "geometry_2d": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            77.2186,
+            28.6323
+          ],
+          [
+            77.2191,
+            28.6325
+          ],
+          [
+            77.2193,
+            28.6329
+          ],
+          [
+            77.2191,
+            28.6333
+          ],
+          [
+            77.2186,
+            28.6334
+          ],
+          [
+            77.2186,
+            28.6323
+          ]
+        ]
+      ]
+    },
+    "base_elevation": 3.5,
+    "top_elevation": 7.0,
+    "z_min": 3.5,
+    "z_max": 7.0,
+    "height_m": 3.5,
+    "area_sqm": 200.0,
+    "volume_cum": 700.0,
+    "status": "VALID",
+    "spatial_id": "STHARA-IN-DL-DELHI-CP-B001-FL01-U202",
+    "watertight": true
+  },
+  "STHARA-REALWORLD-DEMO:DEMO-BUILDING-001:FL-02:UNT-301": {
+    "unit_id": "UNT-301",
+    "unit_number": "301",
+    "building_id": "DEMO-BUILDING-001",
+    "floor_id": "FL-02",
+    "floor_number": "02",
+    "dataset_id": "STHARA-REALWORLD-DEMO",
+    "parcel_id": "PARCEL-DELHI-CP-001",
+    "use_category": "Technical Computing Facility 301",
+    "geometry_2d": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            77.2181,
+            28.6325
+          ],
+          [
+            77.2186,
+            28.6323
+          ],
+          [
+            77.2186,
+            28.6334
+          ],
+          [
+            77.2181,
+            28.6331
+          ],
+          [
+            77.2179,
+            28.6327
+          ],
+          [
+            77.2181,
+            28.6325
+          ]
+        ]
+      ]
+    },
+    "base_elevation": 7.0,
+    "top_elevation": 10.5,
+    "z_min": 7.0,
+    "z_max": 10.5,
+    "height_m": 3.5,
+    "area_sqm": 190.0,
+    "volume_cum": 665.0,
+    "status": "VALID",
+    "spatial_id": "STHARA-IN-DL-DELHI-CP-B001-FL02-U301",
+    "watertight": true
+  },
+  "STHARA-REALWORLD-DEMO:DEMO-BUILDING-001:FL-02:UNT-302": {
+    "unit_id": "UNT-302",
+    "unit_number": "302",
+    "building_id": "DEMO-BUILDING-001",
+    "floor_id": "FL-02",
+    "floor_number": "02",
+    "dataset_id": "STHARA-REALWORLD-DEMO",
+    "parcel_id": "PARCEL-DELHI-CP-001",
+    "use_category": "Faculty & Research Office 302",
+    "geometry_2d": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            77.2186,
+            28.6323
+          ],
+          [
+            77.2191,
+            28.6325
+          ],
+          [
+            77.2193,
+            28.6329
+          ],
+          [
+            77.2191,
+            28.6333
+          ],
+          [
+            77.2186,
+            28.6334
+          ],
+          [
+            77.2186,
+            28.6323
+          ]
+        ]
+      ]
+    },
+    "base_elevation": 7.0,
+    "top_elevation": 10.5,
+    "z_min": 7.0,
+    "z_max": 10.5,
+    "height_m": 3.5,
+    "area_sqm": 205.0,
+    "volume_cum": 717.5,
+    "status": "VALID",
+    "spatial_id": "STHARA-IN-DL-DELHI-CP-B001-FL02-U302",
+    "watertight": true
+  },
+  "STHARA-REALWORLD-DEMO:DEMO-BUILDING-001:FL-03:UNT-401": {
+    "unit_id": "UNT-401",
+    "unit_number": "401",
+    "building_id": "DEMO-BUILDING-001",
+    "floor_id": "FL-03",
+    "floor_number": "03",
+    "dataset_id": "STHARA-REALWORLD-DEMO",
+    "parcel_id": "PARCEL-DELHI-CP-001",
+    "use_category": "Corporate Boardroom 401",
+    "geometry_2d": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            77.2181,
+            28.6325
+          ],
+          [
+            77.2186,
+            28.6323
+          ],
+          [
+            77.2191,
+            28.6325
+          ],
+          [
+            77.2193,
+            28.6329
+          ],
+          [
+            77.2191,
+            28.6333
+          ],
+          [
+            77.2186,
+            28.6334
+          ],
+          [
+            77.2181,
+            28.6331
+          ],
+          [
+            77.2179,
+            28.6327
+          ],
+          [
+            77.2181,
+            28.6325
+          ]
+        ]
+      ]
+    },
+    "base_elevation": 10.5,
+    "top_elevation": 14.0,
+    "z_min": 10.5,
+    "z_max": 14.0,
+    "height_m": 3.5,
+    "area_sqm": 395.0,
+    "volume_cum": 1382.5,
+    "status": "VALID",
+    "spatial_id": "STHARA-IN-DL-DELHI-CP-B001-FL03-U401",
+    "watertight": true
+  }
+}

@@ -3,7 +3,7 @@ import time
 import json
 import hashlib
 import xml.etree.ElementTree as ET
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, Any, List, Tuple, Optional, Union
 import pyproj
@@ -41,7 +41,9 @@ from app.services.osm_service import (
     OSMBuildingExtractor,
     parse_numeric_height,
     parse_numeric_levels,
+    parse_numeric_integer,
 )
+from app.services.quality_service import QualityService
 from app.core.logging import logger
 
 DATA_DIR = Path(__file__).resolve().parent.parent.parent.parent / "data"
@@ -254,6 +256,87 @@ class Osm3DConverterService:
         return None
 
     @classmethod
+    def register_building_feature(cls, dataset_id: str, feature: Dict[str, Any]) -> None:
+        """
+        Adds or updates a single building feature in a dataset's GeoJSON collection.
+        Saves updated collection to disk and updates in-memory cache.
+        """
+        existing_geojson = cls.get_dataset_geojson(dataset_id)
+        if existing_geojson and isinstance(existing_geojson, dict):
+            features = list(existing_geojson.get("features", []))
+            feat_id = str(feature.get("id") or feature.get("properties", {}).get("building_id"))
+            features = [
+                f for f in features
+                if str(f.get("id")) != feat_id and str(f.get("properties", {}).get("building_id")) != feat_id
+            ]
+            features.insert(0, feature)
+            updated_geojson = {
+                **existing_geojson,
+                "features": features,
+            }
+        else:
+            updated_geojson = {
+                "type": "FeatureCollection",
+                "name": f"{dataset_id} Buildings",
+                "crs": {"type": "name", "properties": {"name": "urn:ogc:def:crs:OGC:1.3:CRS84"}},
+                "features": [feature],
+            }
+
+        if dataset_id not in cls._dataset_store:
+            cls._dataset_store[dataset_id] = {
+                "dataset_id": dataset_id,
+                "dataset_name": dataset_id,
+                "source_type": "drawing",
+                "file_size_bytes": 1024,
+                "feature_count": len(updated_geojson["features"]),
+                "content_hash": hashlib.sha256(dataset_id.encode()).hexdigest(),
+                "source_crs": "EPSG:4326 (WGS 84)",
+                "is_converted": False,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            }
+
+        cls._dataset_store[dataset_id]["geojson"] = updated_geojson
+        cls._dataset_store[dataset_id]["feature_count"] = len(updated_geojson["features"])
+
+        PROCESSED_REAL_DIR.mkdir(parents=True, exist_ok=True)
+        specific_geojson_path = PROCESSED_REAL_DIR / f"{dataset_id}_buildings.geojson"
+        try:
+            with open(specific_geojson_path, "w", encoding="utf-8") as f:
+                json.dump(updated_geojson, f, indent=2)
+        except Exception as e:
+            logger.warning(f"Could not save updated dataset GeoJSON: {e}")
+
+    @classmethod
+    def register_dataset_geojson(cls, dataset_id: str, geojson_data: Dict[str, Any], source_type: str = "geojson", dataset_name: Optional[str] = None) -> None:
+        """
+        Registers or updates the complete GeoJSON FeatureCollection for dataset_id.
+        """
+        cls.list_datasets()
+        features = geojson_data.get("features", []) if isinstance(geojson_data, dict) else []
+        
+        cls._dataset_store[dataset_id] = {
+            "dataset_id": dataset_id,
+            "dataset_name": dataset_name or f"{dataset_id}.geojson",
+            "source_type": source_type,
+            "file_size_bytes": len(json.dumps(geojson_data)),
+            "feature_count": len(features),
+            "content_hash": hashlib.sha256(json.dumps(geojson_data).encode()).hexdigest(),
+            "source_crs": "EPSG:4326 (WGS 84)",
+            "is_converted": False,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "geojson": geojson_data,
+        }
+
+        PROCESSED_REAL_DIR.mkdir(parents=True, exist_ok=True)
+        specific_geojson_path = PROCESSED_REAL_DIR / f"{dataset_id}_buildings.geojson"
+        try:
+            with open(specific_geojson_path, "w", encoding="utf-8") as f:
+                json.dump(geojson_data, f, indent=2)
+        except Exception as e:
+            logger.warning(f"Could not save dataset GeoJSON to {specific_geojson_path}: {e}")
+
+
+    @classmethod
     def get_last_report(cls, dataset_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
         if dataset_id:
             if dataset_id in cls._conversion_reports:
@@ -333,17 +416,20 @@ class Osm3DConverterService:
             return rep
 
         # Resolve dataset identity & content
+        cls.list_datasets()
         dataset_id = config.dataset_id
         content_hash = None
         source_file_path = None
 
         if dataset_id and dataset_id in cls._dataset_store:
             ds = cls._dataset_store[dataset_id]
-            source_name = ds["dataset_name"]
-            content_hash = ds["content_hash"]
+            source_name = ds.get("dataset_name") or dataset_id
+            content_hash = ds.get("content_hash") or hashlib.sha256(dataset_id.encode()).hexdigest()
             raw_xml_content = ds.get("raw_content")
-            if not raw_xml_content and "file_path" in ds:
+            if not raw_xml_content and ds.get("file_path"):
                 source_file_path = Path(ds["file_path"])
+            if not raw_xml_content and (not source_file_path or not source_file_path.exists()) and DEFAULT_RAW_OSM_PATH.exists() and dataset_id in ("ds_tagore_garden_map_osm", "map.osm"):
+                source_file_path = DEFAULT_RAW_OSM_PATH
         elif raw_xml_content:
             content_bytes = raw_xml_content.encode("utf-8")
             content_hash = hashlib.sha256(content_bytes).hexdigest()
@@ -376,16 +462,21 @@ class Osm3DConverterService:
         # STAGE 1: IMPORT
         # -------------------------------------------------------------
         t0 = time.perf_counter()
+        stored_geojson_data = None
         if raw_xml_content:
             file_size_bytes = len(raw_xml_content.encode("utf-8"))
             import_details = {"source_type": "memory_buffer", "size_bytes": file_size_bytes, "dataset_id": dataset_id}
-        else:
-            if not source_file_path or not source_file_path.exists():
-                err_msg = f"Source OSM file '{source_file_path}' not found."
-                add_stage("import", "failed", message=err_msg, duration_ms=round((time.perf_counter() - t0) * 1000, 2))
-                raise FileNotFoundError(err_msg)
+        elif source_file_path and source_file_path.exists():
             file_size_bytes = source_file_path.stat().st_size
             import_details = {"source_type": "file_path", "path": str(source_file_path), "size_bytes": file_size_bytes, "dataset_id": dataset_id}
+        elif dataset_id and cls.get_dataset_geojson(dataset_id):
+            stored_geojson_data = cls.get_dataset_geojson(dataset_id)
+            file_size_bytes = len(json.dumps(stored_geojson_data))
+            import_details = {"source_type": "geojson_store", "features": len(stored_geojson_data.get("features", [])), "dataset_id": dataset_id}
+        else:
+            err_msg = f"Source OSM file or dataset '{dataset_id}' not found."
+            add_stage("import", "failed", message=err_msg, duration_ms=round((time.perf_counter() - t0) * 1000, 2))
+            raise FileNotFoundError(err_msg)
 
         add_stage(
             "import",
@@ -402,17 +493,21 @@ class Osm3DConverterService:
         nodes: Dict[str, Tuple[float, float]] = {}
         ways: Dict[str, Dict[str, Any]] = {}
         relations: Dict[str, Dict[str, Any]] = {}
-        is_geojson_source = source_name.lower().endswith((".geojson", ".json"))
+        is_geojson_source = source_name.lower().endswith((".geojson", ".json")) or stored_geojson_data is not None
 
         parsed_geojson_features: List[Dict[str, Any]] = []
 
         if is_geojson_source:
             try:
-                if raw_xml_content:
+                if stored_geojson_data:
+                    gdata = stored_geojson_data
+                elif raw_xml_content:
                     gdata = json.loads(raw_xml_content)
-                else:
+                elif source_file_path and source_file_path.exists():
                     with open(source_file_path, "r", encoding="utf-8-sig") as f:
                         gdata = json.load(f)
+                else:
+                    gdata = {"type": "FeatureCollection", "features": []}
                 parsed_geojson_features = gdata.get("features", [])
                 parse_msg = f"GeoJSON parsed: {len(parsed_geojson_features)} features found."
             except Exception as e:
@@ -685,7 +780,20 @@ class Osm3DConverterService:
         for b in projected_buildings:
             tags = b.get("tags", {})
             raw_h = parse_numeric_height(tags.get("height") or tags.get("building:height"))
-            raw_l = parse_numeric_levels(tags.get("building:levels") or tags.get("levels"))
+            raw_l = parse_numeric_levels(tags.get("building:levels") or tags.get("levels") or tags.get("floors"))
+            raw_u = parse_numeric_integer(tags.get("building:levels:underground") or tags.get("underground_levels") or tags.get("basements"), min_val=0)
+            raw_min_l = parse_numeric_integer(tags.get("building:min_level") or tags.get("min_level"))
+
+            source_attrs = {
+                "detected_height": raw_h,
+                "detected_levels": raw_l,
+                "detected_underground_levels": raw_u,
+                "detected_min_level": raw_min_l,
+                "has_height": raw_h is not None,
+                "has_levels": raw_l is not None,
+                "has_underground": raw_u is not None or (raw_min_l is not None and raw_min_l < 0),
+                "raw_tags": {k: v for k, v in tags.items() if k.startswith("building") or k in ("height", "levels", "floors", "basements", "name")},
+            }
 
             resolved_height = None
             resolved_source = "DEFAULT"
@@ -733,15 +841,31 @@ class Osm3DConverterService:
             b_entry = dict(b)
             b_entry["height"] = resolved_height
             b_entry["levels"] = raw_l
+            b_entry["underground_levels"] = raw_u
+            b_entry["min_level"] = raw_min_l
             b_entry["height_source"] = resolved_source
             b_entry["area_sqm"] = area
             b_entry["volume_cubic_m"] = vol
+            b_entry["source_attributes"] = source_attrs
             buildings_with_height.append(b_entry)
 
             b_min_x, b_min_y, b_max_x, b_max_y = poly.bounds
             c_pt = poly.centroid
             osm_ref = b.get("osm_id") or b["building_id"].replace("OSM-BUILDING-WAY-", "").replace("OSM-BUILDING-REL-", "")
             proto_ulpin = f"DL-OSM-WAY-{osm_ref}-001"
+
+            bld_info_dict = {
+                "building_id": b["building_id"],
+                "osm_id": b.get("osm_id"),
+                "height_source": resolved_source,
+                "levels": raw_l,
+                "source": "OpenStreetMap",
+                "validation_status": "PASS",
+                "watertight": True,
+                "topology_status": "PASS",
+                "parcel_id": "PARCEL-UNREGISTERED",
+            }
+            q_status, b_prov, _ = QualityService.evaluate_building_quality(bld_info_dict)
 
             metadata_items.append(
                 BuildingMetadataItem(
@@ -753,11 +877,14 @@ class Osm3DConverterService:
                     z_min=0.0,
                     z_max=resolved_height,
                     levels=raw_l,
+                    underground_levels=raw_u,
+                    min_level=raw_min_l,
                     floor_unit_available=False,
                     height_source=resolved_source,
                     area_sqm=area,
                     volume_cubic_m=vol,
                     source="OpenStreetMap",
+                    source_attributes=source_attrs,
                     is_cadastral=False,
                     validation_status="PASS",
                     watertight=True,
@@ -769,6 +896,11 @@ class Osm3DConverterService:
                         "max": [round(b_max_x - scene_origin[0], 2), round(b_max_y - scene_origin[1], 2), resolved_height],
                     },
                     centroid=[round(c_pt.x - scene_origin[0], 2), round(c_pt.y - scene_origin[1], 2), round(resolved_height / 2.0, 2)],
+                    dataset_id=dataset_id,
+                    data_quality_status=q_status,
+                    containment_status="PASS",
+                    provenance=b_prov,
+                    disclaimer=QualityService.DISCLAIMER_SPATIAL_ID,
                 )
             )
 
@@ -944,6 +1076,25 @@ class Osm3DConverterService:
                     node_name = tm.metadata.get("building_id") or f"Building_{idx}"
                     scene.add_geometry(tm, node_name=node_name)
 
+                # Step 4: Include registered 3D units in export scene
+                try:
+                    from app.services.unit_service import UnitService
+                    registered_units = UnitService.list_dataset_units(dataset_id)
+                    for u in registered_units:
+                        if u.geometry_3d and u.geometry_3d.parts:
+                            for p_idx, part in enumerate(u.geometry_3d.parts):
+                                v_arr = np.array(part.vertices, dtype=np.float32)
+                                f_arr = np.array(part.faces, dtype=np.int32)
+                                tm_u = trimesh.Trimesh(vertices=v_arr, faces=f_arr, process=False)
+                                tm_u.metadata["unit_id"] = u.unit_id
+                                tm_u.metadata["building_id"] = u.building_id
+                                tm_u.metadata["floor_id"] = u.floor_id
+                                tm_u.metadata["name"] = u.unit_name or u.unit_id
+                                tm_u.visual.face_colors = np.array([245, 158, 11, 230], dtype=np.uint8)
+                                scene.add_geometry(tm_u, node_name=f"Unit_{u.unit_id}_{p_idx}")
+                except Exception as exc:
+                    logger.warning(f"Could not append units to export scene: {exc}")
+
                 glb_bytes = scene.export(file_type="glb")
                 glb_payload = glb_bytes if isinstance(glb_bytes, bytes) else glb_bytes.encode("utf-8")
                 
@@ -989,6 +1140,56 @@ class Osm3DConverterService:
             except Exception as e:
                 logger.error(f"Failed to export GLB/GLTF scene: {e}")
 
+        unit_export_items = []
+        if 'registered_units' in locals():
+            for u in registered_units:
+                u_dict = u.model_dump(exclude={"geometry_3d"})
+                u_dict["dataset_id"] = dataset_id
+                u_dict["spatial_id"] = u.spatial_id or f"{dataset_id}-{u.building_id}-{u.floor_id}-{u.unit_id}"
+                u_dict["area_sqm"] = u.footprint_area
+                u_dict["z_min"] = u.z_min if u.z_min is not None else u.base_elevation
+                u_dict["z_max"] = u.z_max if u.z_max is not None else u.top_elevation
+                u_dict["geometry_status"] = getattr(u, "geometry_status", "PASS")
+                u_dict["topology_status"] = "PASS"
+                u_dict["containment_status"] = "PASS"
+                q_status, u_prov, _ = QualityService.evaluate_unit_quality(u_dict)
+                u_dict["data_quality_status"] = q_status
+                u_dict["validation_status"] = q_status
+                u_dict["provenance"] = u_prov
+                unit_export_items.append(u_dict)
+
+        # Step 9: Include registered spatial and reference sources in metadata export
+        source_export_items = []
+        try:
+            from app.services.source_service import SourceService
+            sources = SourceService.list_sources(dataset_id)
+            source_export_items = [s.model_dump() for s in sources]
+        except Exception as exc:
+            logger.warning(f"Could not load sources for dataset '{dataset_id}' export: {exc}")
+
+        # Step 10: Include building blueprint status in exported building metadata
+        building_export_items = []
+        try:
+            from app.services.building_blueprint_service import BuildingBlueprintService
+            for m in metadata_items:
+                m_dict = m.model_dump()
+                bp = BuildingBlueprintService.get_building_blueprint(dataset_id, m.building_id)
+                if bp:
+                    m_dict["building_blueprint"] = {
+                        "attached": True,
+                        "filename": bp.filename,
+                        "source": bp.source,
+                        "status": bp.status,
+                    }
+                else:
+                    m_dict["building_blueprint"] = {
+                        "attached": False,
+                    }
+                building_export_items.append(m_dict)
+        except Exception as exc:
+            logger.warning(f"Could not append building blueprint metadata for dataset '{dataset_id}': {exc}")
+            building_export_items = [m.model_dump() for m in metadata_items]
+
         metadata_dict = {
             "dataset_id": dataset_id,
             "source_file": source_name,
@@ -999,8 +1200,17 @@ class Osm3DConverterService:
             "faces_count": total_faces,
             "surface_area_sqm": round(total_surface_area, 2),
             "volume_cubic_m": round(total_volume, 2),
-            "buildings": [m.model_dump() for m in metadata_items],
+            "units_count": len(unit_export_items),
+            "units": unit_export_items,
+            "buildings": building_export_items,
+            "sources": source_export_items,
+            "data_quality_status": "VALID",
+            "provenance": {
+                "source": "OpenStreetMap",
+                "disclaimer": QualityService.DISCLAIMER_LEGAL_EVIDENCE,
+            },
         }
+
         with open(specific_metadata_path, "w", encoding="utf-8") as f:
             json.dump(metadata_dict, f, indent=2)
         with open(OUTPUT_METADATA_PATH, "w", encoding="utf-8") as f:

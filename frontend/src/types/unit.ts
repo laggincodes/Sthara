@@ -35,6 +35,7 @@ export type UnitSourceType =
 
 export interface Unit {
   unit_id: string;
+  dataset_id?: string;
   property_id?: string | null;
   parcel_id: string;
   building_id: string;
@@ -51,7 +52,12 @@ export interface Unit {
   top_elevation?: number | null;
   height?: number | null;
   footprint_area?: number | null;
+  area_sqm?: number | null;
   volume_cubic_m?: number | null;
+  z_min?: number | null;
+  z_max?: number | null;
+  spatial_id?: string;
+  geometry_status?: string;
   source: string;
   source_type: UnitSourceType;
   status: UnitStatus;
@@ -148,6 +154,7 @@ export interface BatchUnit3DRequest {
 
 export interface Unit3DResult {
   unit_id: string;
+  dataset_id?: string;
   property_id?: string | null;
   parcel_id: string;
   building_id: string;
@@ -161,10 +168,52 @@ export interface Unit3DResult {
   footprint_area?: number | null;
   volume_cubic_m?: number | null;
   surface_area_sqm?: number | null;
+  spatial_id?: string;
+  z_min?: number | null;
+  z_max?: number | null;
   geometry_status: Geometry3DStatus;
   geometry?: Mesh3DCollection | null;
   warnings: string[];
   provenance: Record<string, unknown>;
+}
+
+export interface UnitCreateRequest {
+  unit_id?: string;
+  dataset_id: string;
+  parcel_id?: string;
+  building_id: string;
+  floor_id: string;
+  unit_number: string;
+  unit_name?: string;
+  unit_type?: UnitType;
+  geometry_2d: {
+    type: "Polygon";
+    coordinates: number[][][];
+  };
+  base_elevation: number;
+  top_elevation: number;
+  parent_floor_geometry?: {
+    type: string;
+    coordinates: unknown;
+  };
+  source?: string;
+}
+
+export interface UnitDeleteResponse {
+  status: string;
+  message: string;
+  dataset_id: string;
+  building_id: string;
+  floor_id: string;
+  unit_id: string;
+}
+
+export interface UnitListResponse {
+  dataset_id: string;
+  building_id?: string;
+  floor_id?: string;
+  total_count: number;
+  units: Unit[];
 }
 
 export interface GenerateUnits3DResponse {
@@ -172,4 +221,5 @@ export interface GenerateUnits3DResponse {
   results: Unit3DResult[];
   summary: BatchSummary3D;
 }
+
 

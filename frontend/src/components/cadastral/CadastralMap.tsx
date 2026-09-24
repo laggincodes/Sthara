@@ -16,6 +16,8 @@ interface CadastralMapProps {
   unitsGeojson?: UnitFeatureCollection | null;
   undergroundGeojson?: GeoJSONFeatureCollection | null;
   aiCandidatesGeojson?: GeoJSONFeatureCollection | null;
+  referenceFeaturesGeojson?: GeoJSONFeatureCollection | null;
+  referenceVisible?: boolean;
   selectedParcelId: string | null;
   selectedBuildingId?: string | null;
   selectedUnitId?: string | null;
@@ -74,6 +76,15 @@ function extractPoints(coordinates: unknown): [number, number][] {
   }
   recurse(coordinates);
   return points;
+}
+
+function isValidWgs84Feature(feat: unknown): boolean {
+  if (!feat || typeof feat !== "object") return false;
+  const geom = (feat as { geometry?: unknown }).geometry;
+  if (!geom || typeof geom !== "object") return false;
+  const coords = (geom as { coordinates?: unknown }).coordinates;
+  const pts = extractPoints(coords);
+  return pts.length > 0;
 }
 
 function fitMapToBounds(
@@ -304,8 +315,8 @@ function updateBuildingsLayer(
       type: "fill",
       source: sourceId,
       paint: {
-        "fill-color": "#8B5CF6",
-        "fill-opacity": 0.5,
+        "fill-color": "#9333EA",
+        "fill-opacity": 0.65,
       },
     });
 
@@ -315,8 +326,8 @@ function updateBuildingsLayer(
       type: "line",
       source: sourceId,
       paint: {
-        "line-color": "#C4B5FD",
-        "line-width": 2.2,
+        "line-color": "#C084FC",
+        "line-width": 2.5,
       },
     });
 
@@ -716,12 +727,88 @@ function updateUndergroundLayer(
   }
 }
 
+function updateReferenceLayer(
+  map: maplibregl.Map,
+  data: GeoJSONFeatureCollection | null | undefined,
+  visible: boolean = true
+) {
+  const sourceId = "cadastral-reference";
+  const vis = visible ? "visible" : "none";
+
+  if (!data || !data.features || data.features.length === 0) {
+    if (map.getSource(sourceId)) {
+      (map.getSource(sourceId) as maplibregl.GeoJSONSource).setData({
+        type: "FeatureCollection",
+        features: [],
+      });
+    }
+    return;
+  }
+
+  if (map.getSource(sourceId)) {
+    (map.getSource(sourceId) as maplibregl.GeoJSONSource).setData(
+      data as unknown as GeoJSON.GeoJSON
+    );
+  } else {
+    map.addSource(sourceId, {
+      type: "geojson",
+      data: data as unknown as GeoJSON.GeoJSON,
+    });
+
+    // Reference Layer Fill (Subtle cyan tone for polygons)
+    map.addLayer({
+      id: "reference-fill",
+      type: "fill",
+      source: sourceId,
+      filter: ["==", "$type", "Polygon"],
+      paint: {
+        "fill-color": "#0284C7",
+        "fill-opacity": 0.25,
+      },
+    });
+
+    // Reference Layer Line (Dashed cyan stroke for line/polygon boundaries)
+    map.addLayer({
+      id: "reference-line",
+      type: "line",
+      source: sourceId,
+      paint: {
+        "line-color": "#38BDF8",
+        "line-width": 2,
+        "line-dasharray": [4, 2],
+      },
+    });
+
+    // Reference Layer Points (Circle markers)
+    map.addLayer({
+      id: "reference-circle",
+      type: "circle",
+      source: sourceId,
+      filter: ["==", "$type", "Point"],
+      paint: {
+        "circle-color": "#38BDF8",
+        "circle-radius": 5,
+        "circle-stroke-width": 1.5,
+        "circle-stroke-color": "#FFFFFF",
+      },
+    });
+  }
+
+  ["reference-fill", "reference-line", "reference-circle"].forEach((layerId) => {
+    if (map.getLayer(layerId)) {
+      map.setLayoutProperty(layerId, "visibility", vis);
+    }
+  });
+}
+
 export function CadastralMap({
   geojson,
   buildingsGeojson,
   unitsGeojson,
   undergroundGeojson,
   aiCandidatesGeojson,
+  referenceFeaturesGeojson,
+  referenceVisible = true,
   selectedParcelId,
   selectedBuildingId,
   selectedUnitId,
@@ -834,6 +921,11 @@ export function CadastralMap({
         onSelectUndergroundCallback,
         layerVisibility.underground ?? true
       );
+      updateReferenceLayer(
+        mapInstance,
+        referenceFeaturesGeojson,
+        referenceVisible
+      );
       fitMapToBounds(mapInstance, geojson, buildingsGeojson);
     };
 
@@ -920,6 +1012,11 @@ export function CadastralMap({
         onSelectUndergroundCallback,
         layerVisibility.underground ?? true
       );
+      updateReferenceLayer(
+        mapRef.current,
+        referenceFeaturesGeojson,
+        referenceVisible
+      );
     }
   }, [
     geojson,
@@ -943,6 +1040,8 @@ export function CadastralMap({
     selectedUndergroundId,
     onSelectUndergroundCallback,
     layerVisibility.underground,
+    referenceFeaturesGeojson,
+    referenceVisible,
   ]);
 
   // 5. Fit bounds when new dataset arrives
@@ -984,7 +1083,7 @@ export function CadastralMap({
             />
             <span className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-sm bg-purple-500/80 border border-purple-400 inline-block" />
-              Buildings
+              Buildings ({buildingsGeojson?.features?.length || 0})
             </span>
           </label>
 

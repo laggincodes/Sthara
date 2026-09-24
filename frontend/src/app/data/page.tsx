@@ -5,10 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCadastreContext } from "@/context/CadastreContext";
 import { HeightSourceOption } from "@/types/cadastre";
+import { ProjectDataEntryWorkspace } from "@/components/project/ProjectDataEntryWorkspace";
 
 export default function ImportDataPage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [dataWorkspaceTab, setDataWorkspaceTab] = useState<"UNIFIED" | "OSM_EXTRUDER">("UNIFIED");
 
   const {
     conversionConfig,
@@ -20,7 +22,6 @@ export default function ImportDataPage() {
     runOsm3DConversion,
     uploadAndConvertOsmFile,
     selectOsmFile,
-    activeProjectName,
     buildingDatasetName,
     buildingsGeojson,
   } = useCadastreContext();
@@ -31,7 +32,6 @@ export default function ImportDataPage() {
   const [selectedDatameetAoi, setSelectedDatameetAoi] = useState<string>("Rajouri Garden");
 
   const defaultFileName = "map.osm";
-  const defaultFileSize = "183.2 KB";
   const defaultFeatureCount = 155;
   const defaultDetectedCrs = "EPSG:4326 (WGS 84)";
 
@@ -92,18 +92,65 @@ export default function ImportDataPage() {
     outline: "none",
   };
 
+  if (dataWorkspaceTab === "UNIFIED") {
+    return (
+      <div className="h-full flex flex-col">
+        <div className="bg-[#22211F] px-6 py-2 border-b border-[#343230] flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setDataWorkspaceTab("UNIFIED")}
+              className="px-3 py-1 rounded text-xs font-mono font-bold bg-[#A85D48] text-white shadow-sm"
+            >
+              📁 Unified Project Data Entry
+            </button>
+            <button
+              type="button"
+              onClick={() => setDataWorkspaceTab("OSM_EXTRUDER")}
+              className="px-3 py-1 rounded text-xs font-mono text-[#9B9994] hover:text-white hover:bg-[#2B2A27]"
+            >
+              ⚙️ Parametric 3D Extruder
+            </button>
+          </div>
+        </div>
+        <div className="flex-1 overflow-hidden">
+          <ProjectDataEntryWorkspace onNavigateTo3D={() => router.push("/workspace/3d")} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className="h-full overflow-y-auto p-6 space-y-6 max-w-4xl mx-auto"
       style={{ fontFamily: "var(--font-sans)" }}
     >
+      <div className="flex items-center justify-between pb-2 border-b border-[#343230]">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setDataWorkspaceTab("UNIFIED")}
+            className="px-3 py-1 rounded text-xs font-mono text-[#9B9994] hover:text-white hover:bg-[#2B2A27]"
+          >
+            📁 Unified Project Data Entry
+          </button>
+          <button
+            type="button"
+            onClick={() => setDataWorkspaceTab("OSM_EXTRUDER")}
+            className="px-3 py-1 rounded text-xs font-mono font-bold bg-[#A85D48] text-white shadow-sm"
+          >
+            ⚙️ Parametric 3D Extruder
+          </button>
+        </div>
+      </div>
+
       {/* ── Header ─────────────────────────────────────────────────── */}
       <div className="space-y-1">
         <h1
           className="text-2xl font-bold tracking-tight"
           style={{ fontFamily: "var(--font-heading)", color: "var(--sth-text)" }}
         >
-          Data Workspace
+          Parametric 3D Extruder
         </h1>
         <p className="text-xs leading-relaxed" style={{ color: "var(--sth-text-2)" }}>
           Import physical OSM XML, OSM.PBF, or GeoJSON footprints, configure parametric vertical heuristics and

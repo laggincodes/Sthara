@@ -57,6 +57,23 @@ def parse_numeric_levels(val: Any) -> Optional[int]:
         return None
 
 
+def parse_numeric_integer(val: Any, min_val: Optional[int] = None) -> Optional[int]:
+    """Safely extracts integer value from tag (e.g. 0, '1', '-2')."""
+    if val is None:
+        return None
+    if isinstance(val, int):
+        return val if min_val is None or val >= min_val else None
+    if isinstance(val, float):
+        num = int(val)
+        return num if min_val is None or num >= min_val else None
+    cleaned = str(val).strip()
+    try:
+        num = int(float(cleaned))
+        return num if min_val is None or num >= min_val else None
+    except (ValueError, TypeError):
+        return None
+
+
 class OSMBuildingExtractor:
     """Extracts, validates, and standardizes OpenStreetMap building polygons."""
 
@@ -213,8 +230,10 @@ class OSMBuildingExtractor:
                             final_geom = combined_outer
 
                         if not final_geom.is_empty and final_geom.area > 0:
-                            h_val = parse_numeric_height(tags.get("height"))
-                            l_val = parse_numeric_levels(tags.get("building:levels"))
+                            h_val = parse_numeric_height(tags.get("height") or tags.get("building:height"))
+                            l_val = parse_numeric_levels(tags.get("building:levels") or tags.get("levels") or tags.get("floors"))
+                            u_val = parse_numeric_integer(tags.get("building:levels:underground") or tags.get("underground_levels") or tags.get("basements"), min_val=0)
+                            min_l_val = parse_numeric_integer(tags.get("building:min_level") or tags.get("min_level"))
                             if h_val is not None:
                                 height_present_count += 1
                             if l_val is not None:
@@ -229,6 +248,8 @@ class OSMBuildingExtractor:
                                 "name": tags.get("name"),
                                 "height": h_val,
                                 "building_levels": l_val,
+                                "underground_levels": u_val,
+                                "min_level": min_l_val,
                                 "roof_elevation": None,
                                 "ground_elevation": None,
                                 "source": "OpenStreetMap",
@@ -237,10 +258,11 @@ class OSMBuildingExtractor:
                                 "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
                                 "ownership_status": "UNKNOWN_UNREGISTERED",
                                 "notes": "Extracted from OpenStreetMap relation. Does not represent cadastral parcel or legal land ownership.",
+                                "tags": dict(tags),
                             }
-                            # Preserve address tags if present
+                            # Preserve address and building tags if present
                             for k, v in tags.items():
-                                if k.startswith("addr:"):
+                                if k.startswith("addr:") or k.startswith("building:"):
                                     props[k] = v
 
                             # Update overall bounding box
@@ -299,8 +321,10 @@ class OSMBuildingExtractor:
                         poly = poly.buffer(0)
 
                     if poly.is_valid and not poly.is_empty and poly.area > 0:
-                        h_val = parse_numeric_height(tags.get("height"))
-                        l_val = parse_numeric_levels(tags.get("building:levels"))
+                        h_val = parse_numeric_height(tags.get("height") or tags.get("building:height"))
+                        l_val = parse_numeric_levels(tags.get("building:levels") or tags.get("levels") or tags.get("floors"))
+                        u_val = parse_numeric_integer(tags.get("building:levels:underground") or tags.get("underground_levels") or tags.get("basements"), min_val=0)
+                        min_l_val = parse_numeric_integer(tags.get("building:min_level") or tags.get("min_level"))
                         if h_val is not None:
                             height_present_count += 1
                         if l_val is not None:
@@ -315,6 +339,8 @@ class OSMBuildingExtractor:
                             "name": tags.get("name"),
                             "height": h_val,
                             "building_levels": l_val,
+                            "underground_levels": u_val,
+                            "min_level": min_l_val,
                             "roof_elevation": None,
                             "ground_elevation": None,
                             "source": "OpenStreetMap",
@@ -323,9 +349,10 @@ class OSMBuildingExtractor:
                             "legal_status": "UNVERIFIED_PHYSICAL_SURFACE",
                             "ownership_status": "UNKNOWN_UNREGISTERED",
                             "notes": "Extracted from OpenStreetMap way. Does not represent cadastral parcel or legal land ownership.",
+                            "tags": dict(tags),
                         }
                         for k, v in tags.items():
-                            if k.startswith("addr:"):
+                            if k.startswith("addr:") or k.startswith("building:"):
                                 props[k] = v
 
                         minx, miny, maxx, maxy = poly.bounds
