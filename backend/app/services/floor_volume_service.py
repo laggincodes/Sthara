@@ -55,7 +55,12 @@ class FloorVolumeService:
         warnings: List[str] = []
         base_z = req.ground_elevation
 
-        if base_z is None or not math.isfinite(base_z):
+        if base_z is None:
+            if req.building_height is not None or req.number_of_floors is not None or req.floors:
+                base_z = 0.0
+            else:
+                return [], None, None, None, "UNAVAILABLE", ["Missing or non-finite ground elevation."]
+        elif not math.isfinite(base_z):
             return [], None, None, None, "UNAVAILABLE", ["Missing or non-finite ground elevation."]
 
         # --- Priority 1: Explicit Floor Intervals ---
@@ -151,9 +156,39 @@ class FloorVolumeService:
             bld_height = req.roof_elevation - base_z
 
         floor_cnt = req.number_of_floors
+        num_basements = req.number_of_basements or 0
+
         if floor_cnt is not None and floor_cnt > 0 and bld_height is not None and bld_height > 0:
             h_fl = round(bld_height / floor_cnt, 3)
-            computed_floors = []
+            computed_floors: List[FloorIntervalSpec] = []
+
+            # 1. Subterranean Basements (if configured)
+            if num_basements > 0:
+                h_bsmt = (
+                    round(req.basement_depth / num_basements, 3)
+                    if req.basement_depth is not None and req.basement_depth > 0
+                    else 3.0
+                )
+                for b in range(num_basements, 0, -1):
+                    b_base = round(base_z - (b * h_bsmt), 3)
+                    b_top = round(base_z - ((b - 1) * h_bsmt), 3)
+                    b_name = f"Basement -{b}"
+                    b_id = f"{req.building_id}-B{str(b).zfill(2)}"
+                    computed_floors.append(
+                        FloorIntervalSpec(
+                            floor_id=b_id,
+                            floor_index=-b,
+                            floor_name=b_name,
+                            base_elevation=b_base,
+                            top_elevation=b_top,
+                            floor_height=round(b_top - b_base, 3),
+                            level_type="Basement",
+                            level_number=-b,
+                            source="Configured / Derived",
+                        )
+                    )
+
+            # 2. Above-Ground Floors
             for i in range(floor_cnt):
                 fl_base = round(base_z + (i * h_fl), 3)
                 fl_top = round(base_z + ((i + 1) * h_fl), 3) if i < floor_cnt - 1 else round(base_z + bld_height, 3)
@@ -167,15 +202,49 @@ class FloorVolumeService:
                         base_elevation=fl_base,
                         top_elevation=fl_top,
                         floor_height=round(fl_top - fl_base, 3),
+                        level_type="Above Ground",
+                        level_number=i,
+                        source="Configured / Derived",
                     )
                 )
+
+            overall_base = computed_floors[0].base_elevation
             overall_top = round(base_z + bld_height, 3)
-            return computed_floors, base_z, overall_top, round(bld_height, 3), "EQUAL_SLICING", warnings
+            total_span = round(overall_top - overall_base, 3)
+            method = "CONFIGURED_VERTICAL_STRUCTURE" if num_basements > 0 else "EQUAL_SLICING"
+            return computed_floors, overall_base, overall_top, total_span, method, warnings
 
         # --- Priority 3b: Floor Count + Single Floor Height ---
         if floor_cnt is not None and floor_cnt > 0 and req.floor_height is not None and req.floor_height > 0:
             h_fl = req.floor_height
             computed_floors = []
+
+            # Subterranean Basements (if configured)
+            if num_basements > 0:
+                h_bsmt = (
+                    round(req.basement_depth / num_basements, 3)
+                    if req.basement_depth is not None and req.basement_depth > 0
+                    else 3.0
+                )
+                for b in range(num_basements, 0, -1):
+                    b_base = round(base_z - (b * h_bsmt), 3)
+                    b_top = round(base_z - ((b - 1) * h_bsmt), 3)
+                    b_name = f"Basement -{b}"
+                    b_id = f"{req.building_id}-B{str(b).zfill(2)}"
+                    computed_floors.append(
+                        FloorIntervalSpec(
+                            floor_id=b_id,
+                            floor_index=-b,
+                            floor_name=b_name,
+                            base_elevation=b_base,
+                            top_elevation=b_top,
+                            floor_height=round(b_top - b_base, 3),
+                            level_type="Basement",
+                            level_number=-b,
+                            source="Configured / Derived",
+                        )
+                    )
+
             for i in range(floor_cnt):
                 fl_base = round(base_z + (i * h_fl), 3)
                 fl_top = round(base_z + ((i + 1) * h_fl), 3)
@@ -189,10 +258,15 @@ class FloorVolumeService:
                         base_elevation=fl_base,
                         top_elevation=fl_top,
                         floor_height=round(fl_top - fl_base, 3),
+                        level_type="Above Ground",
+                        level_number=i,
+                        source="Configured / Derived",
                     )
                 )
+            overall_base = computed_floors[0].base_elevation
             overall_top = round(base_z + (floor_cnt * h_fl), 3)
-            return computed_floors, base_z, overall_top, round(floor_cnt * h_fl, 3), "COUNT_AND_UNIFORM_HEIGHT", warnings
+            total_span = round(overall_top - overall_base, 3)
+            return computed_floors, overall_base, overall_top, total_span, "COUNT_AND_UNIFORM_HEIGHT", warnings
 
         # --- Priority 4: Unavailable ---
         warnings.append(
@@ -298,6 +372,9 @@ class FloorVolumeService:
             geometry_status=status,
             geometry=collection,
             warnings=warnings,
+            level_type=floor_spec.level_type or ("Basement" if floor_spec.floor_index < 0 else "Above Ground"),
+            level_number=floor_spec.level_number if floor_spec.level_number is not None else floor_spec.floor_index,
+            source=floor_spec.source or "Configured / Derived",
         )
 
     @classmethod

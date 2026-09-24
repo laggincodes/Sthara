@@ -181,7 +181,7 @@ export default function ProjectsPage() {
                 Pune Cadastral Benchmark
               </h2>
               <p className="text-xs mt-1 leading-relaxed" style={{ color: "#62635D" }}>
-                Kothrud, Pune, Maharashtra. Multi-tier land parcels with DEM ground elevation and 3D ULPIN registry.
+                Kothrud, Pune, Maharashtra. Multi-tier land parcels with DEM ground elevation and STHARA Spatial ID registry.
               </p>
             </div>
             <span
@@ -227,7 +227,7 @@ export default function ProjectsPage() {
                 REGISTRY
               </div>
               <div className="text-sm font-bold mt-0.5" style={{ color: "#252622" }}>
-                3D ULPIN
+                Spatial ID
               </div>
             </div>
           </div>

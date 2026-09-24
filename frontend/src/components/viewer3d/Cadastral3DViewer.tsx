@@ -158,26 +158,62 @@ export function Cadastral3DViewer({
     setLayers((prev) => ({ ...prev, [layer]: !prev[layer] }));
   };
 
+  const activeBuildingIds = useMemo(() => {
+    return new Set(data?.results?.map((b) => b.building_id) || []);
+  }, [data]);
+
+  const visibleFloorsResults = useMemo(() => {
+    if (!floorsData?.results) return [];
+    if (selectedBuildingId) {
+      return floorsData.results.filter((bf) => bf.building_id === selectedBuildingId);
+    }
+    return floorsData.results.filter((bf) => activeBuildingIds.has(bf.building_id));
+  }, [floorsData, selectedBuildingId, activeBuildingIds]);
+
+  const visibleUnitsResults = useMemo(() => {
+    if (!unitsData?.results) return [];
+    if (selectedBuildingId) {
+      return unitsData.results.filter((u) => u.building_id === selectedBuildingId);
+    }
+    return unitsData.results.filter((u) => activeBuildingIds.has(u.building_id));
+  }, [unitsData, selectedBuildingId, activeBuildingIds]);
+
+  const visiblePropertiesResults = useMemo(() => {
+    if (!propertiesData?.results) return [];
+    if (selectedBuildingId) {
+      return propertiesData.results.filter(
+        (p) => !p.building_id || p.building_id === selectedBuildingId
+      );
+    }
+    return propertiesData.results.filter(
+      (p) => !p.building_id || activeBuildingIds.has(p.building_id)
+    );
+  }, [propertiesData, selectedBuildingId, activeBuildingIds]);
+
   // Compute aggregate visual bounding box for active dataset
   const activeBounds = useMemo(() => {
     const geometriesToBound: (Mesh3D | Mesh3DCollection)[] = [];
 
     if (subView === "building" && data?.results) {
-      data.results.forEach((b) => {
+      const visibleBldgs = selectedBuildingId
+        ? data.results.filter((b) => b.building_id === selectedBuildingId)
+        : data.results;
+      const list = visibleBldgs.length > 0 ? visibleBldgs : data.results;
+      list.forEach((b) => {
         if (b.geometry) geometriesToBound.push(b.geometry);
       });
-    } else if (subView === "floors" && floorsData?.results) {
-      floorsData.results.forEach((bf) => {
+    } else if (subView === "floors" && visibleFloorsResults.length > 0) {
+      visibleFloorsResults.forEach((bf) => {
         bf.floors.forEach((f) => {
           if (f.geometry) geometriesToBound.push(f.geometry);
         });
       });
-    } else if (subView === "property" && propertiesData?.results) {
-      propertiesData.results.forEach((p) => {
+    } else if (subView === "property" && visiblePropertiesResults.length > 0) {
+      visiblePropertiesResults.forEach((p) => {
         if (p.geometry) geometriesToBound.push(p.geometry);
       });
-    } else if (subView === "units" && unitsData?.results) {
-      unitsData.results.forEach((u) => {
+    } else if (subView === "units" && visibleUnitsResults.length > 0) {
+      visibleUnitsResults.forEach((u) => {
         if (u.geometry) geometriesToBound.push(u.geometry);
       });
     } else if (subView === "underground" && undergroundData?.features) {
@@ -191,7 +227,7 @@ export function Cadastral3DViewer({
     }
 
     return computeCollectionBounds(geometriesToBound);
-  }, [data, floorsData, propertiesData, unitsData, undergroundData, subView]);
+  }, [data, visibleFloorsResults, visiblePropertiesResults, visibleUnitsResults, undergroundData, subView, selectedBuildingId]);
 
   const handleResetCamera = useCallback(() => {
     if (!controlsRef.current) return;
@@ -203,10 +239,22 @@ export function Cadastral3DViewer({
     setFitTrigger((c) => c + 1);
   }, []);
 
-  const hasFloors = Boolean(floorsData && floorsData.results.length > 0);
-  const hasProperties = Boolean(propertiesData && propertiesData.results.length > 0);
-  const hasUnits = Boolean(unitsData && unitsData.results.length > 0);
+  const hasFloors = Boolean(visibleFloorsResults.length > 0);
+  const hasProperties = Boolean(visiblePropertiesResults.length > 0);
+  const hasUnits = Boolean(visibleUnitsResults.length > 0);
   const hasUnderground = Boolean(undergroundData && undergroundData.features.length > 0);
+
+  const floorMap = useMemo(() => {
+    const map: Record<string, { floor_index: number; building_id: string }> = {};
+    if (visibleFloorsResults) {
+      for (const bld of visibleFloorsResults) {
+        for (const fl of bld.floors) {
+          map[fl.floor_id] = { floor_index: fl.floor_index, building_id: bld.building_id };
+        }
+      }
+    }
+    return map;
+  }, [visibleFloorsResults]);
 
   const selectedUndergroundFeature = useMemo(() => {
     if (!undergroundData || !selectedUndergroundId) return null;
@@ -389,15 +437,18 @@ export function Cadastral3DViewer({
         {/* ------------------------------------------------------------- */}
         {/* MODE A: Building Envelope View */}
         {/* ------------------------------------------------------------- */}
-        {(subView === "building" || cutawayMode) &&
+        {/* ------------------------------------------------------------- */}
+        {/* MODE A: Building Envelope View */}
+        {/* ------------------------------------------------------------- */}
+        {(subView === "building" || subView === "floors" || cutawayMode) &&
           layers.buildings &&
           data?.results?.map((b) => (
             <BuildingObject
               key={b.building_id}
               building={b}
               isSelected={selectedBuildingId === b.building_id}
-              isDimmed={Boolean((selectedBuildingId && selectedBuildingId !== b.building_id) || cutawayMode)}
-              isWireframe={isWireframe || cutawayMode}
+              isDimmed={Boolean((selectedBuildingId && selectedBuildingId !== b.building_id) || cutawayMode || subView === "floors")}
+              isWireframe={isWireframe || cutawayMode || subView === "floors" || explodeDistance > 0}
               onSelect={(id) => onSelectBuilding(id === selectedBuildingId ? null : id)}
             />
           ))}
@@ -405,9 +456,9 @@ export function Cadastral3DViewer({
         {/* ------------------------------------------------------------- */}
         {/* MODE B: Stratified Floor Level View */}
         {/* ------------------------------------------------------------- */}
-        {subView === "floors" &&
+        {(subView === "floors" || subView === "building" || cutawayMode || explodeDistance > 0) &&
           layers.floors &&
-          floorsData?.results?.map((bf) => (
+          visibleFloorsResults.map((bf) => (
             <group key={bf.building_id}>
               {bf.floors.map((floor) => (
                 <FloorObject
@@ -433,7 +484,7 @@ export function Cadastral3DViewer({
         {/* ------------------------------------------------------------- */}
         {subView === "property" &&
           layers.properties &&
-          propertiesData?.results?.map((prop) => (
+          visiblePropertiesResults.map((prop) => (
             <PropertyVolumeObject
               key={prop.property_id}
               property={prop}
@@ -452,24 +503,30 @@ export function Cadastral3DViewer({
         {/* ------------------------------------------------------------- */}
         {/* MODE D: 3D Unit / Apartment View */}
         {/* ------------------------------------------------------------- */}
-        {subView === "units" &&
-          layers.units &&
-          unitsData?.results?.map((u) => (
-            <UnitObject
-              key={u.unit_id}
-              unit={u}
-              isSelected={selectedUnitId === u.unit_id}
-              isDimmed={Boolean(selectedUnitId && selectedUnitId !== u.unit_id)}
-              isWireframe={isWireframe}
-              explodeDistance={explodeDistance}
-              onSelect={(id) => {
-                onSelectUnit?.(id === selectedUnitId ? null : id);
-                if (u.building_id && u.building_id !== selectedBuildingId) {
-                  onSelectBuilding(u.building_id);
-                }
-              }}
-            />
-          ))}
+        {(subView === "units" || (subView === "floors" && layers.units)) &&
+          visibleUnitsResults.map((u) => {
+            const parentInfo = floorMap[u.floor_id];
+            return (
+              <UnitObject
+                key={u.unit_id}
+                unit={u}
+                floorIndex={parentInfo?.floor_index}
+                isSelected={selectedUnitId === u.unit_id}
+                isDimmed={Boolean(selectedUnitId && selectedUnitId !== u.unit_id)}
+                isWireframe={isWireframe}
+                explodeDistance={explodeDistance}
+                onSelect={(id) => {
+                  onSelectUnit?.(id === selectedUnitId ? null : id);
+                  if (u.floor_id && u.floor_id !== selectedFloorId) {
+                    onSelectFloor?.(u.floor_id);
+                  }
+                  if (u.building_id && u.building_id !== selectedBuildingId) {
+                    onSelectBuilding(u.building_id);
+                  }
+                }}
+              />
+            );
+          })}
 
         {/* ------------------------------------------------------------- */}
         {/* MODE E: Underground / Subsurface Assets (Step 20) */}

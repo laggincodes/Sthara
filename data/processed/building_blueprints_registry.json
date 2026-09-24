@@ -1,0 +1,72 @@
+{
+  "ds_golden_test_05:BLD-DRAWING-TEST-001": {
+    "building_blueprint_id": "BBP-e8a47e47",
+    "dataset_id": "ds_golden_test_05",
+    "building_id": "BLD-DRAWING-TEST-001",
+    "filename": "20_ARCH_PLAN.pdf",
+    "file_type": "PDF",
+    "mime_type": "application/pdf",
+    "file_size_bytes": 14060,
+    "storage_path": "C:\\Users\\Yatha\\.gemini\\antigravity\\scratch\\3d-cadastral-intelligence\\data\\uploads\\building_blueprints\\ds_golden_test_05\\BLD-DRAWING-TEST-001\\BLD-DRAWING-TEST-001_20_ARCH_PLAN.pdf",
+    "view_url": "/api/v1/building-blueprints/ds_golden_test_05/BLD-DRAWING-TEST-001/view",
+    "uploaded_at": "2026-09-24T17:27:06.005257+00:00",
+    "source": "User-provided building blueprint",
+    "status": "Attached"
+  },
+  "ds_tagore_garden_map_osm:OSM-BUILDING-REL-16318240": {
+    "building_blueprint_id": "BBP-a9ac60f8",
+    "dataset_id": "ds_tagore_garden_map_osm",
+    "building_id": "OSM-BUILDING-REL-16318240",
+    "filename": "20_ARCH_PLAN.pdf",
+    "file_type": "PDF",
+    "mime_type": "application/pdf",
+    "file_size_bytes": 2709084,
+    "storage_path": "C:\\Users\\Yatha\\.gemini\\antigravity\\scratch\\3d-cadastral-intelligence\\data\\uploads\\building_blueprints\\ds_tagore_garden_map_osm\\OSM-BUILDING-REL-16318240\\OSM-BUILDING-REL-16318240_20_ARCH_PLAN.pdf",
+    "view_url": "/api/v1/building-blueprints/ds_tagore_garden_map_osm/OSM-BUILDING-REL-16318240/view",
+    "uploaded_at": "2026-09-23T16:58:12.094184+00:00",
+    "source": "User-provided building blueprint",
+    "status": "Attached"
+  },
+  "ds_empty_osm_fallback_test:DRAWING-B001": {
+    "building_blueprint_id": "BBP-7d772851",
+    "dataset_id": "ds_empty_osm_fallback_test",
+    "building_id": "DRAWING-B001",
+    "filename": "20_ARCH_PLAN.pdf",
+    "file_type": "PDF",
+    "mime_type": "application/pdf",
+    "file_size_bytes": 14060,
+    "storage_path": "C:\\Users\\Yatha\\.gemini\\antigravity\\scratch\\3d-cadastral-intelligence\\data\\uploads\\building_blueprints\\ds_empty_osm_fallback_test\\DRAWING-B001\\DRAWING-B001_20_ARCH_PLAN.pdf",
+    "view_url": "/api/v1/building-blueprints/ds_empty_osm_fallback_test/DRAWING-B001/view",
+    "uploaded_at": "2026-09-24T17:27:16.643458+00:00",
+    "source": "User-provided building blueprint",
+    "status": "Attached"
+  },
+  "ds_tagore_garden_map_osm:OSM-WAY-101": {
+    "building_blueprint_id": "BBP-d275283b",
+    "dataset_id": "ds_tagore_garden_map_osm",
+    "building_id": "OSM-WAY-101",
+    "filename": "20_ARCH_PLAN.pdf",
+    "file_type": "PDF",
+    "mime_type": "application/pdf",
+    "file_size_bytes": 14060,
+    "storage_path": "C:\\Users\\Yatha\\.gemini\\antigravity\\scratch\\3d-cadastral-intelligence\\data\\uploads\\building_blueprints\\ds_tagore_garden_map_osm\\OSM-WAY-101\\OSM-WAY-101_20_ARCH_PLAN.pdf",
+    "view_url": "/api/v1/building-blueprints/ds_tagore_garden_map_osm/OSM-WAY-101/view",
+    "uploaded_at": "2026-09-24T17:27:20.021519+00:00",
+    "source": "User-provided building blueprint",
+    "status": "Attached"
+  },
+  "ds_tagore_garden_map_osm:OSM-BUILDING-001": {
+    "building_blueprint_id": "BBP-c211ee89",
+    "dataset_id": "ds_tagore_garden_map_osm",
+    "building_id": "OSM-BUILDING-001",
+    "filename": "20_ARCH_PLAN.pdf",
+    "file_type": "PDF",
+    "mime_type": "application/pdf",
+    "file_size_bytes": 14060,
+    "storage_path": "C:\\Users\\Yatha\\.gemini\\antigravity\\scratch\\3d-cadastral-intelligence\\data\\uploads\\building_blueprints\\ds_tagore_garden_map_osm\\OSM-BUILDING-001\\OSM-BUILDING-001_20_ARCH_PLAN.pdf",
+    "view_url": "/api/v1/building-blueprints/ds_tagore_garden_map_osm/OSM-BUILDING-001/view",
+    "uploaded_at": "2026-09-24T17:47:04.958352+00:00",
+    "source": "User-provided building blueprint",
+    "status": "Attached"
+  }
+}

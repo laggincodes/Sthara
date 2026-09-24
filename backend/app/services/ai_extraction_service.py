@@ -1,4 +1,4 @@
-﻿"""
+"""
 AI/ML Extraction Service for 3D Cadastral Intelligence.
 
 Implements the STHARA Architectural Separation:
@@ -24,6 +24,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 from shapely.geometry import Polygon, MultiPolygon, shape, mapping
 from shapely.validation import explain_validity
+from app.utils.crs import transform_geometry
 
 from app.schemas.ai_extraction import (
     ExtractionType,
@@ -88,13 +89,14 @@ class AiExtractionService:
                 [775910.0, 1297150.0],
             ]
             cand_poly = Polygon(cand_coords)
+            cand_poly_wgs84, _ = transform_geometry(cand_poly, self.default_crs, "EPSG:4326")
             area_m2 = round(float(cand_poly.area), 2)
 
             cand = CandidateFeature(
                 candidate_id="AI-BLD-CAND-001",
                 feature_type=ExtractionType.BUILDING,
                 source_reference=request.source_id,
-                geometry_2d=mapping(cand_poly),
+                geometry_2d=mapping(cand_poly_wgs84),
                 estimated_attributes={
                     "base_elevation_m": 920.0,
                     "top_elevation_m": 935.0,

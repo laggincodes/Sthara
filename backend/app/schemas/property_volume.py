@@ -32,6 +32,9 @@ class FloorIntervalSpec(BaseModel):
     base_elevation: Optional[float] = Field(None, description="Floor slab base elevation in meters AMSL")
     top_elevation: Optional[float] = Field(None, description="Floor ceiling elevation in meters AMSL")
     floor_height: Optional[float] = Field(None, description="Floor height in meters (top_elevation - base_elevation)")
+    level_type: Optional[str] = Field("Above Ground", description="Level type: 'Above Ground' or 'Basement'")
+    level_number: Optional[int] = Field(None, description="Signed level number: negative for basements, 0 for ground, positive for floors")
+    source: Optional[str] = Field("Configured / Derived", description="Provenance of floor definition")
 
 
 class BuildingFloors3DRequest(BaseModel):
@@ -45,6 +48,8 @@ class BuildingFloors3DRequest(BaseModel):
     roof_elevation: Optional[float] = Field(None, description="Roof parapet elevation in meters AMSL")
     building_height: Optional[float] = Field(None, description="Total building height in meters")
     number_of_floors: Optional[int] = Field(None, description="Total number of floors above ground")
+    number_of_basements: Optional[int] = Field(0, ge=0, description="Total number of subterranean basements")
+    basement_depth: Optional[float] = Field(None, gt=0, description="Optional total basement depth in meters")
     floor_height: Optional[float] = Field(None, description="Uniform floor height in meters")
     floors: Optional[List[FloorIntervalSpec]] = Field(None, description="Optional explicit floor specifications")
     source_crs: str = Field("EPSG:4326", description="CRS of the input footprint geometry")
@@ -79,6 +84,9 @@ class Floor3DResult(BaseModel):
     geometry_status: Geometry3DStatus = Field(..., description="Geometric integrity status")
     geometry: Optional[Mesh3DCollection] = Field(None, description="Canonical 3D mesh collection for this floor")
     warnings: List[str] = Field(default_factory=list, description="Non-fatal warnings or sanity notes")
+    level_type: str = Field("Above Ground", description="Level type: 'Above Ground' or 'Basement'")
+    level_number: int = Field(0, description="Signed level number")
+    source: str = Field("Configured / Derived", description="Source description")
 
 
 class BuildingFloors3DResult(BaseModel):

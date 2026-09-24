@@ -1,4 +1,4 @@
-﻿import { ImageResponse } from "next/og";
+import { ImageResponse } from "next/og";
 
 export const alt = "3D Cadastral Intelligence - Spatial Intelligence Platform";
 export const size = {
@@ -78,7 +78,7 @@ export default async function OpenGraphImage() {
               maxWidth: "920px",
             }}
           >
-            Transforming cadastral and geospatial data into validated, stratified 3D property volumes and prototype 3D-ULPIN representations.
+            Transforming cadastral and geospatial data into validated, stratified 3D property volumes and prototype STHARA Spatial ID representations.
           </p>
         </div>
 

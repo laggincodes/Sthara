@@ -405,11 +405,23 @@ export interface BuildingMetadataItem {
   z_min?: number;
   z_max?: number;
   levels?: number | null;
+  underground_levels?: number | null;
+  min_level?: number | null;
   floor_unit_available?: boolean;
   height_source: string;
   area_sqm: number;
   volume_cubic_m: number;
   source: string;
+  source_attributes?: {
+    detected_height?: number | null;
+    detected_levels?: number | null;
+    detected_underground_levels?: number | null;
+    detected_min_level?: number | null;
+    has_height?: boolean;
+    has_levels?: boolean;
+    has_underground?: boolean;
+    raw_tags?: Record<string, unknown>;
+  } | null;
   is_cadastral: boolean;
   validation_status?: string;
   watertight?: boolean;
@@ -513,3 +525,40 @@ export interface DataMeetMetadataResponse {
   delhi_coverage: Record<string, unknown>;
   available_layers: DataMeetLayerInfo[];
 }
+
+export * from "./unit";
+export * from "./spatial_analysis";
+export * from "./measurements";
+export * from "./quality";
+export type {
+  SpatialSourceType,
+  SpatialSource,
+  SourceRegisterRequest,
+  SourceFeaturesRequest,
+  SourceListResponse,
+  SourceDeleteResponse,
+} from "./sources";
+export type {
+  DrawingType,
+  CandidateType,
+  DocumentRole,
+  SpatialSourceMode,
+  SpatialSourceStatus,
+  GeographicPositioning,
+  NormalizedBBox,
+  DrawingEvidence,
+  DrawingRegion,
+  DrawingCandidate,
+  DrawingPage,
+  DrawingDocument,
+  DrawingAnalysisSummary,
+  DrawingAnalysis,
+  DrawingCandidateUpdate,
+  BuildModelRequest,
+  BuildModelResponse,
+  BuildModelResult,
+} from "./drawing_intelligence";
+export * from "./project_data";
+
+
+

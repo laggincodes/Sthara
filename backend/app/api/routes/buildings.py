@@ -253,7 +253,26 @@ from app.services.floor_volume_service import FloorVolumeService
 )
 async def generate_3d_floors(request: BatchBuildingFloors3DRequest) -> GenerateFloors3DResponse:
     try:
-        return FloorVolumeService.generate_floors_batch(request)
+        from app.services.unit_service import UnitService
+        res = FloorVolumeService.generate_floors_batch(request)
+        try:
+            for b_req in request.buildings:
+                matching = next((r for r in res.results if r.building_id == b_req.building_id), None)
+                if matching and matching.floors:
+                    valid_ids = [f.floor_id for f in matching.floors]
+                    registry = UnitService._load_registry()
+                    active_set = set(valid_ids)
+                    keys_to_del = [
+                        k for k, v in registry.items()
+                        if v.get("building_id") == b_req.building_id and v.get("floor_id") not in active_set
+                    ]
+                    for k in keys_to_del:
+                        del registry[k]
+                    if keys_to_del:
+                        UnitService._save_registry(registry)
+        except Exception:
+            pass
+        return res
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

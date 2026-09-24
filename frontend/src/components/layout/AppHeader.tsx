@@ -2,14 +2,16 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useCadastreContext } from "@/context/CadastreContext";
 
 export function AppHeader() {
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const {
     backendConnected,
+    activeDatasetId,
     activeDatasetName,
     buildingDatasetName,
     generalError,
@@ -22,6 +24,7 @@ export function AppHeader() {
     property3DError,
     isDemoRunning,
     runEndToEndDemo,
+    resetRealWorldDemo,
     activeProjectName,
   } = useCadastreContext();
 
@@ -194,20 +197,43 @@ export function AppHeader() {
             </div>
           )}
 
-          {/* Mobile Demo Trigger */}
+          {/* Real-World Demo Button */}
           <button
             type="button"
-            onClick={runEndToEndDemo}
+            onClick={async () => {
+              if (activeDatasetId === "STHARA-REALWORLD-DEMO") {
+                await resetRealWorldDemo();
+              } else {
+                await runEndToEndDemo();
+                if (!pathname.startsWith("/workspace")) {
+                  router.push("/workspace/2d");
+                }
+              }
+            }}
             disabled={isDemoRunning}
-            className="md:hidden inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-md"
-            style={{ backgroundColor: "var(--sth-accent)", color: "#fff" }}
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer shadow-sm shrink-0"
+            style={{
+              backgroundColor: activeDatasetId === "STHARA-REALWORLD-DEMO" ? "var(--sth-sage-bg)" : "var(--sth-accent)",
+              color: activeDatasetId === "STHARA-REALWORLD-DEMO" ? "var(--sth-sage)" : "#FFFFFF",
+              border: activeDatasetId === "STHARA-REALWORLD-DEMO" ? "1px solid #C0CAC0" : "1px solid transparent",
+              fontFamily: "var(--font-mono)",
+            }}
+            title="Connaught Tower A Real-World Property Demo"
           >
-            {isDemoRunning ? "Running…" : "Validate"}
+            <span className={`h-2 w-2 rounded-full ${activeDatasetId === "STHARA-REALWORLD-DEMO" ? "bg-emerald-500 animate-pulse" : "bg-white"}`} />
+            <div className="flex flex-col items-start text-left leading-none">
+              <span className="font-bold tracking-tight text-[11px]">
+                {isDemoRunning ? "LAUNCHING..." : activeDatasetId === "STHARA-REALWORLD-DEMO" ? "DEMO ACTIVE" : "REAL-WORLD DEMO"}
+              </span>
+              <span className="text-[9px] opacity-85 font-normal">
+                {activeDatasetId === "STHARA-REALWORLD-DEMO" ? "Connaught Place (DEL)" : "Connaught Tower A"}
+              </span>
+            </div>
           </button>
 
           {/* Backend status pip */}
           <div
-            className="flex items-center gap-1 text-[11px] px-2 py-1 rounded-md"
+            className="hidden sm:flex items-center gap-1 text-[11px] px-2 py-1 rounded-md"
             style={{
               fontFamily: "var(--font-mono)",
               border: "1px solid var(--sth-border)",

@@ -2,17 +2,23 @@
 
 import React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCadastreContext } from "@/context/CadastreContext";
 import { cadastreApi } from "@/lib/api/client";
 
 export default function DashboardPage() {
+  const router = useRouter();
   const {
     backendConnected,
     buildingsGeojson,
     building3DData,
     conversionResult,
+    activeDatasetId,
     activeProjectName,
     buildingDatasetName,
+    isDemoRunning,
+    runRealWorldDemo,
+    resetRealWorldDemo,
   } = useCadastreContext();
 
   const buildingCount =
@@ -22,6 +28,11 @@ export default function DashboardPage() {
   const verticesCount = conversionResult?.summary.vertices || 1260;
   const facesCount = conversionResult?.summary.faces || 1896;
   const crsName = conversionResult?.target_crs || "EPSG:32643 (UTM 43N)";
+
+  const handleLaunchDemo = async () => {
+    await runRealWorldDemo();
+    router.push("/workspace/2d");
+  };
 
   return (
     <div
@@ -70,19 +81,21 @@ export default function DashboardPage() {
 
           {/* CTAs */}
           <div className="flex flex-wrap items-center gap-3 shrink-0">
-            <Link
-              href="/data"
-              className="inline-flex items-center gap-2 text-sm font-semibold px-5 py-2.5 rounded-md transition-all cursor-pointer"
+            <button
+              type="button"
+              onClick={handleLaunchDemo}
+              disabled={isDemoRunning}
+              className="inline-flex items-center gap-2 text-sm font-semibold px-5 py-2.5 rounded-md transition-all cursor-pointer shadow-sm"
               style={{ backgroundColor: "var(--sth-accent)", color: "#fff" }}
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
               </svg>
-              <span>Import Data</span>
-            </Link>
+              <span>{isDemoRunning ? "Launching…" : "OPEN REAL-WORLD DEMO"}</span>
+            </button>
 
             <Link
-              href="/workspace/3d"
+              href="/workspace/2d"
               className="inline-flex items-center gap-2 text-sm font-medium px-5 py-2.5 rounded-md transition-colors cursor-pointer"
               style={{
                 color: "var(--sth-text)",
@@ -93,8 +106,90 @@ export default function DashboardPage() {
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 7.5-9-5.25L3 7.5m18 0-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
               </svg>
-              <span>3D Cadastre</span>
+              <span>Workspace</span>
             </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Real-World Hero Property Demo Card (Visible Change #1 & #2) ─── */}
+      <div
+        className="rounded-md p-6 border space-y-4"
+        style={{
+          backgroundColor: "var(--sth-card)",
+          borderColor: activeDatasetId === "STHARA-REALWORLD-DEMO" ? "#C0CAC0" : "var(--sth-border)",
+        }}
+      >
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span
+                className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider"
+                style={{ backgroundColor: "var(--sth-sage-bg)", color: "var(--sth-sage)", border: "1px solid #C0CAC0" }}
+              >
+                REAL-WORLD DEMO
+              </span>
+              <span className="text-xs font-mono text-[#62635D]">
+                Dataset: STHARA-REALWORLD-DEMO
+              </span>
+              {activeDatasetId === "STHARA-REALWORLD-DEMO" && (
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-emerald-800 text-white">
+                  ACTIVE
+                </span>
+              )}
+            </div>
+            <h2
+              className="text-xl font-bold tracking-tight"
+              style={{ fontFamily: "var(--font-heading)", color: "var(--sth-text)" }}
+            >
+              Connaught Tower A — Commercial & Public Complex
+            </h2>
+            <p className="text-xs text-[#62635D] max-w-2xl leading-relaxed">
+              Fully prepared real-world property in Connaught Place, New Delhi with 4 vertical floor levels, 7 semantic unit spaces,
+              3D watertight volumes, spatial IDs, and complete topological validation.
+            </p>
+
+            {/* Compact property stats grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 font-mono text-[11px]">
+              <div className="bg-[#F8F6F0] p-2 rounded border border-[#E5E2D9]">
+                <span className="text-[#888A80] text-[9px] block uppercase font-medium">Source</span>
+                <span className="font-semibold text-[#252622]">OpenStreetMap</span>
+              </div>
+              <div className="bg-[#F8F6F0] p-2 rounded border border-[#E5E2D9]">
+                <span className="text-[#888A80] text-[9px] block uppercase font-medium">Building ID</span>
+                <span className="font-semibold text-[#252622]">DEMO-BUILDING-001</span>
+              </div>
+              <div className="bg-[#F8F6F0] p-2 rounded border border-[#E5E2D9]">
+                <span className="text-[#888A80] text-[9px] block uppercase font-medium">Floors / Units</span>
+                <span className="font-semibold text-[#252622]">4 Floors / 7 Units</span>
+              </div>
+              <div className="bg-[#F8F6F0] p-2 rounded border border-[#E5E2D9]">
+                <span className="text-[#888A80] text-[9px] block uppercase font-medium">Provenance / Score</span>
+                <span className="font-semibold text-[#252622]">Source-derived / 0.95</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2 shrink-0 justify-center">
+            <button
+              type="button"
+              onClick={handleLaunchDemo}
+              disabled={isDemoRunning}
+              className="inline-flex items-center justify-center gap-2 text-sm font-semibold px-5 py-2.5 rounded-md transition-all cursor-pointer shadow-sm"
+              style={{ backgroundColor: "var(--sth-accent)", color: "#fff" }}
+            >
+              <span>{isDemoRunning ? "Launching…" : "OPEN REAL-WORLD DEMO"}</span>
+            </button>
+
+            {activeDatasetId === "STHARA-REALWORLD-DEMO" && (
+              <button
+                type="button"
+                onClick={resetRealWorldDemo}
+                className="text-xs text-[#62635D] hover:text-rose-700 underline text-center cursor-pointer font-mono"
+              >
+                Reset Demo State
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -151,7 +246,7 @@ export default function DashboardPage() {
             {
               num: "02",
               title: "Multi-tier Spatial Identity",
-              body: "Resolves vertical property rights through deterministic spatial hierarchy: Parcel → Building → Floor → Unit → 3D ULPIN.",
+              body: "Resolves vertical property rights through deterministic spatial hierarchy: Dataset → Building → Floor → Unit → 3D Volume → STHARA Spatial ID.",
               color: "var(--sth-geo)",
               bg: "var(--sth-geo-bg)",
               border: "#D8C8A8",
@@ -423,7 +518,7 @@ export default function DashboardPage() {
                   Pune Cadastral Benchmark
                 </h3>
                 <p className="text-xs mt-1" style={{ color: "var(--sth-text-2)" }}>
-                  Multi-tier parcel parcels, stratified floors, and 3D ULPIN registry.
+                  Multi-tier land parcels, stratified floors, and STHARA Spatial ID registry.
                 </p>
               </div>
               <span
@@ -441,7 +536,7 @@ export default function DashboardPage() {
                 color: "var(--sth-text-2)",
               }}
             >
-              <span>4 Parcels · 3D ULPINs</span>
+              <span>4 Parcels · Spatial IDs</span>
               <Link
                 href="/workspace/2d"
                 className="font-medium transition-colors"

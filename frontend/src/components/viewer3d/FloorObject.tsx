@@ -31,6 +31,17 @@ export function FloorObject({
   const parts = floor.geometry?.parts ?? [];
   if (parts.length === 0) return null;
 
+  const isBasement =
+    floor.level_type === "Basement" || (floor.floor_index !== undefined && floor.floor_index < 0);
+
+  // Distinct chromatic styling: Subterranean Basements = Subsurface Blue; Above Ground = Stratified Emerald
+  const floorColor = isBasement
+    ? "#3b82f6"
+    : (floor.floor_index ?? 0) % 2 === 0
+    ? "#10b981"
+    : "#059669";
+  const floorEdgeColor = isBasement ? "#60a5fa" : "#34d399";
+
   return (
     <group>
       {parts.map((part, idx) => (
@@ -41,11 +52,11 @@ export function FloorObject({
           isHovered={isHovered}
           isDimmed={isDimmed}
           isWireframe={isWireframe}
-          color="#10b981"
-          edgeColor="#34d399"
+          color={floorColor}
+          edgeColor={floorEdgeColor}
           selectedColor="#f59e0b"
           selectedEdgeColor="#fbbf24"
-          opacity={0.8}
+          opacity={isBasement ? 0.85 : 0.8}
           positionOffset={positionOffset}
           onClick={() => onSelect?.(floor.floor_id)}
           onPointerOver={() => setIsHovered(true)}

@@ -26,13 +26,17 @@ import {
   DemoUndergroundResponse,
   TopologyValidationResponse,
   TopologyValidationRequest,
-  OsmUploadResult,
   OsmUploadSummary,
   Osm3DConversionConfig,
   Osm3DConversionResponse,
   ConversionStageReport,
   BuildingMetadataItem,
+  SpatialSourceStatus,
+  DrawingAnalysis,
+  BuildModelResponse,
+  UnifiedProjectDataAnalysis,
 } from "@/types/cadastre";
+import { FloorPlanAssociation } from "@/types/floor_plan";
 import { cadastreApi, ApiError } from "@/lib/api/client";
 
 function extractCentroid(geom: unknown): [number, number] | null {
@@ -128,7 +132,13 @@ export function useCadastre() {
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
   const [explodeDistance, setExplodeDistance] = useState<number>(0);
   const [isDemoRunning, setIsDemoRunning] = useState<boolean>(false);
+  const [demoLandingState, setDemoLandingState] = useState<Record<string, unknown> | null>(null);
   const [isolatedFloorIndex, setIsolatedFloorIndex] = useState<number | null>(null);
+
+  // STEP 3: Floor Plans & Blueprints State
+  const [floorPlans, setFloorPlans] = useState<Record<string, FloorPlanAssociation>>({});
+  const [isUploadingFloorPlan, setIsUploadingFloorPlan] = useState<boolean>(false);
+  const [floorPlanError, setFloorPlanError] = useState<string | null>(null);
 
   // Step 16: Unit / Apartment Entity State
   const [unitsGeojson, setUnitsGeojson] = useState<UnitFeatureCollection | null>(null);
@@ -137,6 +147,11 @@ export function useCadastre() {
   const [unitPropertyRecord, setUnitPropertyRecord] = useState<UnitPropertyRecord | null>(null);
   const [isLoadingUnits, setIsLoadingUnits] = useState<boolean>(false);
   const [unitError, setUnitError] = useState<string | null>(null);
+
+  // STEP 4: Configured 3D Units State
+  const [configuredUnits, setConfiguredUnits] = useState<Record<string, Unit>>({});
+  const [isCreatingUnit, setIsCreatingUnit] = useState<boolean>(false);
+  const [unitCreationError, setUnitCreationError] = useState<string | null>(null);
 
   // Step 17: 3D Unit Volume State
   const [units3DData, setUnits3DData] = useState<GenerateUnits3DResponse | null>(null);
@@ -154,6 +169,19 @@ export function useCadastre() {
   const [topologyData, setTopologyData] = useState<TopologyValidationResponse | null>(null);
   const [isAuditingTopology, setIsAuditingTopology] = useState<boolean>(false);
   const [topologyError, setTopologyError] = useState<string | null>(null);
+
+  // Step 21-36: Drawing Intelligence & Spatial Source Modes State
+  const [spatialSourceStatus, setSpatialSourceStatus] = useState<SpatialSourceStatus | null>(null);
+  const [drawingAnalysis, setDrawingAnalysis] = useState<DrawingAnalysis | null>(null);
+  const [isDrawingImportOpen, setIsDrawingImportOpen] = useState<boolean>(false);
+  const [isDrawingReviewOpen, setIsDrawingReviewOpen] = useState<boolean>(false);
+
+  // Step 37+: Unified Project Data Entry State
+  const [projectDataAnalysis, setProjectDataAnalysis] = useState<UnifiedProjectDataAnalysis | null>(null);
+  const [isAnalyzingProjectData, setIsAnalyzingProjectData] = useState<boolean>(false);
+  const [projectDataError, setProjectDataError] = useState<string | null>(null);
+  const [isProjectDataEntryOpen, setIsProjectDataEntryOpen] = useState<boolean>(false);
+
 
   // OSM File Upload State
   type OsmUploadPhase = "idle" | "selected" | "importing" | "done" | "error";
@@ -262,6 +290,8 @@ export function useCadastre() {
       setElevationResults({});
       setBuildingHeights({});
       setBuildingFloors({});
+      setFloorPlans({});
+      setConfiguredUnits({});
       // Reset synthetic units to null (Units: 0) to avoid stale units across datasets
       setUnitsGeojson(null);
       setUnitsDatasetName(null);
@@ -329,6 +359,248 @@ export function useCadastre() {
       isMounted = false;
     };
   }, [activeDatasetId]);
+
+  // 1c. Hydrate floor plans whenever activeDatasetId changes (Strict Dataset Isolation)
+  useEffect(() => {
+    if (!activeDatasetId) return;
+    let isMounted = true;
+    cadastreApi
+      .getDatasetFloorPlans(activeDatasetId)
+      .then((res) => {
+        if (!isMounted) return;
+        const plansMap: Record<string, FloorPlanAssociation> = {};
+        for (const fp of res.floor_plans) {
+          const key = `${fp.dataset_id}:${fp.building_id}:${fp.floor_id}`;
+          plansMap[key] = fp;
+        }
+        setFloorPlans(plansMap);
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setFloorPlans({});
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeDatasetId]);
+
+  // 1d. Hydrate configured 3D units whenever activeDatasetId changes (Strict Dataset Isolation)
+  useEffect(() => {
+    if (!activeDatasetId) return;
+    let isMounted = true;
+    cadastreApi
+      .getDatasetUnits(activeDatasetId)
+      .then((res) => {
+        if (!isMounted) return;
+        const unitsMap: Record<string, Unit> = {};
+        const results3D: Unit3DResult[] = [];
+        for (const u of res.units) {
+          const key = `${u.dataset_id || activeDatasetId}:${u.building_id}:${u.floor_id}:${u.unit_id}`;
+          unitsMap[key] = u;
+          if (u.geometry_3d) {
+            results3D.push({
+              unit_id: u.unit_id,
+              dataset_id: u.dataset_id || activeDatasetId,
+              property_id: u.property_id,
+              parcel_id: u.parcel_id,
+              building_id: u.building_id,
+              floor_id: u.floor_id,
+              unit_number: u.unit_number,
+              unit_name: u.unit_name,
+              unit_type: u.unit_type,
+              base_elevation: u.base_elevation,
+              top_elevation: u.top_elevation,
+              height: u.height,
+              footprint_area: u.footprint_area,
+              volume_cubic_m: u.volume_cubic_m,
+              surface_area_sqm: ((u.provenance?.surface_area_sqm as number) || undefined),
+              geometry_status: "VALID" as import("@/types/geometry3d").Geometry3DStatus,
+              geometry: u.geometry_3d as import("@/types/geometry3d").Mesh3DCollection,
+              warnings: u.warnings || [],
+              provenance: u.provenance || {},
+            });
+          }
+        }
+        setConfiguredUnits(unitsMap);
+        if (results3D.length > 0) {
+          setUnits3DData({
+            schema_version: "1.0",
+            results: results3D,
+            summary: {
+              requested: results3D.length,
+              successful: results3D.length,
+              failed: 0,
+            },
+          });
+        }
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setConfiguredUnits({});
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeDatasetId]);
+
+  // 1e. Hydrate Spatial Source Status & Latest Drawing/Project Data Analysis (Step 21-37)
+  useEffect(() => {
+    if (!activeDatasetId) return;
+    let isMounted = true;
+
+    Promise.all([
+      cadastreApi.getSpatialSourceStatus(activeDatasetId).catch(() => null),
+      cadastreApi.getLatestDrawingAnalysis(activeDatasetId).catch(() => null),
+      cadastreApi.getLatestProjectDataAnalysis(activeDatasetId).catch(() => null),
+    ])
+      .then(([status, analysis, pData]) => {
+        if (!isMounted) return;
+        setSpatialSourceStatus(status);
+        setDrawingAnalysis(analysis);
+        setProjectDataAnalysis(pData);
+      })
+      .catch(() => {
+        // Ignored
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeDatasetId]);
+
+  const refreshSpatialSourceStatus = useCallback(async () => {
+    if (!activeDatasetId) return;
+    try {
+      const [status, analysis, pData] = await Promise.all([
+        cadastreApi.getSpatialSourceStatus(activeDatasetId).catch(() => null),
+        cadastreApi.getLatestDrawingAnalysis(activeDatasetId).catch(() => null),
+        cadastreApi.getLatestProjectDataAnalysis(activeDatasetId).catch(() => null),
+      ]);
+      setSpatialSourceStatus(status);
+      setDrawingAnalysis(analysis);
+      setProjectDataAnalysis(pData);
+    } catch {
+      // Ignored
+    }
+  }, [activeDatasetId]);
+
+  const uploadAndAnalyzeProjectData = useCallback(
+    async (files: File[], datasetName?: string) => {
+      setIsAnalyzingProjectData(true);
+      setProjectDataError(null);
+      try {
+        const result = await cadastreApi.uploadAndAnalyzeProjectData(
+          activeDatasetId,
+          files,
+          datasetName || activeProjectName
+        );
+        setProjectDataAnalysis(result);
+        if (result.spatial_source_status) {
+          setSpatialSourceStatus(result.spatial_source_status);
+        }
+        if (result.drawing_analysis) {
+          setDrawingAnalysis(result.drawing_analysis);
+        }
+        try {
+          const res = await cadastreApi.getOsmDatasetGeoJSON(activeDatasetId);
+          setBuildingsGeojson(res.raw_geojson);
+        } catch {}
+        return result;
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Unified project data analysis failed";
+        setProjectDataError(msg);
+        return null;
+      } finally {
+        setIsAnalyzingProjectData(false);
+      }
+    },
+    [activeDatasetId, activeProjectName]
+  );
+
+  const loadGoldenDemoProjectData = useCallback(
+    async (datasetName?: string) => {
+      setIsAnalyzingProjectData(true);
+      setProjectDataError(null);
+      try {
+        const result = await cadastreApi.loadGoldenDemoProjectData(
+          activeDatasetId,
+          datasetName || activeProjectName || "Tagore Garden Unified Project"
+        );
+        setProjectDataAnalysis(result);
+        if (result.spatial_source_status) {
+          setSpatialSourceStatus(result.spatial_source_status);
+        }
+        if (result.drawing_analysis) {
+          setDrawingAnalysis(result.drawing_analysis);
+        }
+        try {
+          const res = await cadastreApi.getOsmDatasetGeoJSON(activeDatasetId);
+          setBuildingsGeojson(res.raw_geojson);
+        } catch {}
+        return result;
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Failed to load golden demo project data";
+        setProjectDataError(msg);
+        return null;
+      } finally {
+        setIsAnalyzingProjectData(false);
+      }
+    },
+    [activeDatasetId, activeProjectName]
+  );
+
+  const updateBuildingCorrelation = useCallback(
+    async (correlationId: string, status: string, osmId?: string) => {
+      if (!projectDataAnalysis) return;
+      try {
+        const updated = await cadastreApi.updateBuildingCorrelation(
+          projectDataAnalysis.analysis_id,
+          correlationId,
+          { status, target_osm_building_id: osmId }
+        );
+        setProjectDataAnalysis((prev) => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            building_correlations: prev.building_correlations.map((c) =>
+              c.correlation_id === correlationId ? updated : c
+            ),
+          };
+        });
+      } catch {
+        // Ignored
+      }
+    },
+    [projectDataAnalysis]
+  );
+
+
+  const handleModelBuiltFromDrawings = useCallback(
+    async (result: BuildModelResponse) => {
+      await refreshSpatialSourceStatus();
+      try {
+        const res = await cadastreApi.getOsmDatasetGeoJSON(activeDatasetId);
+        setBuildingsGeojson(res.raw_geojson);
+      } catch {}
+
+      if (result.building_id) {
+        setSelectedBuildingId(result.building_id);
+      }
+
+      try {
+        const unitsRes = await cadastreApi.getDatasetUnits(activeDatasetId);
+        const unitsMap: Record<string, Unit> = {};
+        for (const u of unitsRes.units) {
+          const key = `${u.dataset_id || activeDatasetId}:${u.building_id}:${u.floor_id}:${u.unit_id}`;
+          unitsMap[key] = u;
+        }
+        setConfiguredUnits(unitsMap);
+      } catch {}
+    },
+    [activeDatasetId, refreshSpatialSourceStatus]
+  );
 
   // 2. Load Demo Parcels from FastAPI Backend
   const loadDemoParcels = useCallback(async () => {
@@ -624,6 +896,18 @@ export function useCadastre() {
   // 3e. Execute Full OSM -> 3D Conversion Pipeline
   const runOsm3DConversion = useCallback(
     async (cfgOverride?: Partial<Osm3DConversionConfig>) => {
+      if (!osmUploadFile && spatialSourceStatus) {
+        if (
+          spatialSourceStatus.active_mode === "DRAWINGS_ONLY" ||
+          spatialSourceStatus.osm_building_count === 0
+        ) {
+          console.warn(
+            "[runOsm3DConversion] Aborting conversion: dataset active_mode is DRAWINGS_ONLY or osm_building_count is 0."
+          );
+          return;
+        }
+      }
+
       const activeCfg = {
         ...conversionConfig,
         dataset_id: activeDatasetId,
@@ -670,7 +954,7 @@ export function useCadastre() {
         setIsConverting(false);
       }
     },
-    [conversionConfig, osmUploadFile, activeDatasetId]
+    [conversionConfig, osmUploadFile, activeDatasetId, spatialSourceStatus]
   );
 
   // 3f. Direct Upload and Convert
@@ -1098,6 +1382,438 @@ export function useCadastre() {
       setIsGeneratingFloors3D(false);
     }
   }, [buildingsGeojson, buildingDatasetName, elevationResults]);
+
+  // STEP 1: Generate 3D Floor Solids for a Configured Building Footprint
+  const generateConfiguredBuilding3D = useCallback(
+    async (params: {
+      buildingId: string;
+      numberOfFloors: number;
+      numberOfBasements: number;
+      buildingHeight: number;
+      footprintGeometry?: GeoJSON.Geometry;
+    }) => {
+      const { buildingId, numberOfFloors, numberOfBasements, buildingHeight } = params;
+      if (!buildingId) throw new Error("Building ID is required.");
+      if (numberOfFloors < 1 || !Number.isInteger(numberOfFloors)) {
+        throw new Error("Floors must be an integer ≥ 1.");
+      }
+      if (numberOfBasements < 0 || !Number.isInteger(numberOfBasements)) {
+        throw new Error("Basements must be an integer ≥ 0.");
+      }
+      if (buildingHeight <= 0 || !Number.isFinite(buildingHeight)) {
+        throw new Error("Height must be a positive number.");
+      }
+
+      setIsGeneratingFloors3D(true);
+      setFloors3DError(null);
+
+      try {
+        // Resolve footprint geometry from param or active buildingsGeojson
+        let footprint = params.footprintGeometry;
+        let parcelId: string | null = null;
+        if (!footprint && buildingsGeojson?.features) {
+          const feat = buildingsGeojson.features.find(
+            (f) =>
+              (f.properties?.building_id as string) === buildingId ||
+              (f.id && String(f.id) === buildingId) ||
+              f.properties?.osm_id === buildingId ||
+              `OSM-BUILDING-WAY-${f.properties?.osm_id}` === buildingId
+          );
+          if (feat) {
+            footprint = feat.geometry as unknown as GeoJSON.Geometry;
+            parcelId = (feat.properties?.parcel_id as string) || null;
+          }
+        }
+
+        if (!footprint) {
+          throw new Error(`Could not find 2D footprint geometry for building '${buildingId}'.`);
+        }
+
+        const sampledZ = elevationResults[buildingId]?.elevation_m ?? 0.0;
+        const newRoofZ = sampledZ + buildingHeight;
+        const origin = conversionResult?.summary?.viewer_origin;
+
+        const request: import("@/types/cadastre").BuildingFloors3DRequest = {
+          building_id: buildingId,
+          parcel_id: parcelId,
+          footprint_geometry: footprint,
+          ground_elevation: sampledZ,
+          roof_elevation: newRoofZ,
+          building_height: buildingHeight,
+          number_of_floors: numberOfFloors,
+          number_of_basements: numberOfBasements,
+          source_crs: "EPSG:4326",
+          target_crs: conversionResult?.target_crs || "EPSG:32643",
+          scene_origin: origin as [number, number, number] | undefined,
+        };
+
+        const res = await cadastreApi.generate3DFloors({
+          buildings: [request],
+          target_crs: conversionResult?.target_crs || "EPSG:32643",
+          compute_shared_origin: false,
+        });
+
+        // 1. Regenerate 3D Building Shell Mesh to match updated height
+        try {
+          const bldReq: import("@/types/geometry3d").Building3DRequest = {
+            building_id: buildingId,
+            parcel_id: parcelId || undefined,
+            footprint_geometry: footprint as unknown as Record<string, unknown>,
+            ground_elevation: sampledZ,
+            roof_elevation: newRoofZ,
+            building_height: buildingHeight,
+            source_crs: "EPSG:4326",
+            target_crs: conversionResult?.target_crs || "EPSG:32643",
+            scene_origin: origin as [number, number, number] | undefined,
+          };
+          const bldRes = await cadastreApi.generate3DBuildings({
+            buildings: [bldReq],
+            target_crs: conversionResult?.target_crs || "EPSG:32643",
+            compute_shared_origin: false,
+          });
+          setBuilding3DData((prev) => {
+            if (!prev) return bldRes;
+            const otherResults = prev.results.filter((b) => b.building_id !== buildingId);
+            const newResults = [...otherResults, ...bldRes.results];
+            return {
+              ...prev,
+              results: newResults,
+              summary: {
+                ...prev.summary,
+                requested: newResults.length,
+                successful: newResults.length,
+              },
+            };
+          });
+        } catch {}
+
+        // 2. Merge into existing floors3DData or initialize
+        setFloors3DData((prev) => {
+          if (!prev) return res;
+          const otherResults = prev.results.filter((b) => b.building_id !== buildingId);
+          const newResults = [...otherResults, ...res.results];
+          return {
+            ...prev,
+            results: newResults,
+            summary: {
+              ...prev.summary,
+              requested: newResults.length,
+              successful: newResults.length,
+            },
+          };
+        });
+
+        // 3. Update buildingsGeojson feature properties for 2D map & inspector alignment
+        setBuildingsGeojson((prev) => {
+          if (!prev || !prev.features) return prev;
+          const nextFeatures = prev.features.map((feat) => {
+            const fid = String(feat.properties?.building_id || feat.id || "");
+            if (
+              fid === buildingId ||
+              feat.properties?.osm_id === buildingId ||
+              `OSM-BUILDING-WAY-${feat.properties?.osm_id}` === buildingId
+            ) {
+              return {
+                ...feat,
+                properties: {
+                  ...feat.properties,
+                  building_height: buildingHeight,
+                  roof_elevation: newRoofZ,
+                  number_of_floors: numberOfFloors,
+                  number_of_basements: numberOfBasements,
+                  height_m: buildingHeight,
+                  levels: numberOfFloors,
+                },
+              };
+            }
+            return feat;
+          });
+          return {
+            ...prev,
+            features: nextFeatures,
+          };
+        });
+
+        // 4. Set building heights cache for consistency
+        setBuildingHeights((prev) => ({
+          ...prev,
+          [buildingId]: {
+            building_id: buildingId,
+            roof_elevation: newRoofZ,
+            ground_elevation: sampledZ,
+            building_height: buildingHeight,
+            unit: "meters",
+            status: "AVAILABLE",
+            method: "USER_CONFIGURED",
+            source: "Configured / Derived",
+            confidence_score: 1.0,
+            warnings: [],
+          } as unknown as import("@/types/cadastre").HeightCalculationResult,
+        }));
+
+        // 5. Update buildingFloors cache for floor stack schematics
+        if (res.results && res.results.length > 0) {
+          const matchingBldFloors = res.results.find((b) => b.building_id === buildingId);
+          if (matchingBldFloors) {
+            const mappedFloors = matchingBldFloors.floors.map((fl) => ({
+              floor_id: fl.floor_id,
+              building_id: buildingId,
+              floor_index: fl.floor_index,
+              floor_name: fl.floor_name,
+              base_elevation: fl.base_elevation,
+              top_elevation: fl.top_elevation,
+              floor_height: fl.height,
+              source: fl.source || "Configured / Derived",
+              status: "VALID",
+            }));
+            setBuildingFloors((prev) => ({
+              ...prev,
+              [buildingId]: {
+                building_id: buildingId,
+                building_height: buildingHeight,
+                ground_elevation: sampledZ,
+                roof_elevation: newRoofZ,
+                floor_count: numberOfFloors,
+                floors: mappedFloors,
+                validation_status: "VALID",
+                warnings: matchingBldFloors.warnings || [],
+              } as unknown as import("@/types/cadastre").FloorGenerationResponse,
+            }));
+          }
+        }
+
+        // 6. Prune stale units and update active units to inherit updated floor intervals
+        if (res.results) {
+          const matching = res.results.find((b) => b.building_id === buildingId);
+          const floorMap = new Map(matching?.floors?.map((f) => [f.floor_id, f]) || []);
+          const validFloorIds = new Set(floorMap.keys());
+
+          setConfiguredUnits((prev) => {
+            const next: Record<string, Unit> = {};
+            for (const [k, u] of Object.entries(prev)) {
+              if (u.building_id === buildingId) {
+                if (!validFloorIds.has(u.floor_id)) continue;
+                const fl = floorMap.get(u.floor_id);
+                if (fl) {
+                  const newHeight = fl.height;
+                  const newVol = (u.footprint_area || 0) * newHeight;
+                  next[k] = {
+                    ...u,
+                    base_elevation: fl.base_elevation,
+                    top_elevation: fl.top_elevation,
+                    height: newHeight,
+                    volume_cubic_m: newVol,
+                  };
+                  continue;
+                }
+              }
+              next[k] = u;
+            }
+            return next;
+          });
+
+          // Invalidate stale property volume calculations for this building
+          setProperty3DData((prev) => {
+            if (!prev) return null;
+            const remaining = prev.results.filter((p) => p.building_id !== buildingId);
+            return {
+              ...prev,
+              results: remaining,
+              summary: {
+                ...prev.summary,
+                requested: remaining.length,
+                successful: remaining.length,
+              },
+            };
+          });
+        }
+
+        setSelectedBuildingId(buildingId);
+        setSelectedFloorId(null);
+        setSubView3D("floors");
+        setViewMode("3d");
+        return res;
+      } catch (err: unknown) {
+        const msg =
+          err instanceof ApiError
+            ? err.message
+            : err instanceof Error
+            ? err.message
+            : "Failed to generate configured 3D floor solids.";
+        setFloors3DError(msg);
+        throw err;
+      } finally {
+        setIsGeneratingFloors3D(false);
+      }
+    },
+    [buildingsGeojson, elevationResults, conversionResult]
+  );
+
+  // STEP 3: Floor Plan Document Attachment & Association
+  const attachFloorPlan = useCallback(
+    async (buildingId: string, floorId: string, file: File) => {
+      setIsUploadingFloorPlan(true);
+      setFloorPlanError(null);
+      try {
+        const assoc = await cadastreApi.uploadFloorPlan(activeDatasetId, buildingId, floorId, file);
+        const key = `${activeDatasetId}:${buildingId}:${floorId}`;
+        setFloorPlans((prev) => ({ ...prev, [key]: assoc }));
+        return assoc;
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Failed to upload floor plan document.";
+        setFloorPlanError(msg);
+        throw err;
+      } finally {
+        setIsUploadingFloorPlan(false);
+      }
+    },
+    [activeDatasetId]
+  );
+
+  const removeFloorPlan = useCallback(
+    async (buildingId: string, floorId: string) => {
+      setFloorPlanError(null);
+      try {
+        await cadastreApi.deleteFloorPlan(activeDatasetId, buildingId, floorId);
+        const key = `${activeDatasetId}:${buildingId}:${floorId}`;
+        setFloorPlans((prev) => {
+          const next = { ...prev };
+          delete next[key];
+          return next;
+        });
+        return true;
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Failed to remove floor plan association.";
+        setFloorPlanError(msg);
+        throw err;
+      }
+    },
+    [activeDatasetId]
+  );
+
+  const getActiveFloorPlan = useCallback(
+    (buildingId?: string | null, floorId?: string | null): FloorPlanAssociation | null => {
+      if (!buildingId || !floorId || !activeDatasetId) return null;
+      const key = `${activeDatasetId}:${buildingId}:${floorId}`;
+      return floorPlans[key] || null;
+    },
+    [activeDatasetId, floorPlans]
+  );
+
+  // STEP 4: 3D Unit Modeling & Management
+  const createConfiguredUnit = useCallback(
+    async (payload: import("@/types/cadastre").UnitCreateRequest) => {
+      setIsCreatingUnit(true);
+      setUnitCreationError(null);
+      try {
+        const fullPayload: import("@/types/cadastre").UnitCreateRequest = {
+          ...payload,
+          dataset_id: payload.dataset_id || activeDatasetId,
+        };
+        const unit = await cadastreApi.createUnit(fullPayload);
+        const key = `${unit.dataset_id || activeDatasetId}:${unit.building_id}:${unit.floor_id}:${unit.unit_id}`;
+        setConfiguredUnits((prev) => ({ ...prev, [key]: unit }));
+
+        // Append / update in units3DData for live 3D viewing
+        if (unit.geometry_3d) {
+          const resItem: Unit3DResult = {
+            unit_id: unit.unit_id,
+            dataset_id: unit.dataset_id || activeDatasetId,
+            property_id: unit.property_id,
+            parcel_id: unit.parcel_id,
+            building_id: unit.building_id,
+            floor_id: unit.floor_id,
+            unit_number: unit.unit_number,
+            unit_name: unit.unit_name,
+            unit_type: unit.unit_type,
+            base_elevation: unit.base_elevation,
+            top_elevation: unit.top_elevation,
+            height: unit.height,
+            footprint_area: unit.footprint_area,
+            volume_cubic_m: unit.volume_cubic_m,
+            surface_area_sqm: ((unit.provenance?.surface_area_sqm as number) || undefined),
+            geometry_status: "VALID" as import("@/types/geometry3d").Geometry3DStatus,
+            geometry: unit.geometry_3d as import("@/types/geometry3d").Mesh3DCollection,
+            warnings: unit.warnings || [],
+            provenance: unit.provenance || {},
+          };
+
+          setUnits3DData((prev) => {
+            const others = (prev?.results || []).filter((u) => u.unit_id !== unit.unit_id);
+            const nextList = [...others, resItem];
+            return {
+              schema_version: "1.0",
+              results: nextList,
+              summary: {
+                requested: nextList.length,
+                successful: nextList.length,
+                failed: 0,
+              },
+            };
+          });
+        }
+
+        setSelectedUnitId(unit.unit_id);
+        return unit;
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Failed to create unit volume.";
+        setUnitCreationError(msg);
+        throw err;
+      } finally {
+        setIsCreatingUnit(false);
+      }
+    },
+    [activeDatasetId]
+  );
+
+  const deleteConfiguredUnit = useCallback(
+    async (buildingId: string, floorId: string, unitId: string) => {
+      setUnitCreationError(null);
+      try {
+        await cadastreApi.deleteUnit(activeDatasetId, buildingId, floorId, unitId);
+        const key = `${activeDatasetId}:${buildingId}:${floorId}:${unitId}`;
+        setConfiguredUnits((prev) => {
+          const next = { ...prev };
+          delete next[key];
+          return next;
+        });
+        setUnits3DData((prev) => {
+          if (!prev) return null;
+          const nextResults = prev.results.filter((u) => u.unit_id !== unitId);
+          return {
+            ...prev,
+            results: nextResults,
+            summary: {
+              ...prev.summary,
+              requested: nextResults.length,
+              successful: nextResults.length,
+            },
+          };
+        });
+        if (selectedUnitId === unitId) {
+          setSelectedUnitId(null);
+        }
+        return true;
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Failed to delete unit.";
+        setUnitCreationError(msg);
+        throw err;
+      }
+    },
+    [activeDatasetId, selectedUnitId]
+  );
+
+  const getFloorConfiguredUnits = useCallback(
+    (buildingId: string, floorId: string): Unit[] => {
+      return Object.values(configuredUnits).filter(
+        (u) =>
+          u.building_id === buildingId &&
+          u.floor_id === floorId &&
+          (!u.dataset_id || u.dataset_id === activeDatasetId)
+      );
+    },
+    [configuredUnits, activeDatasetId]
+  );
 
   // Step 12 & 13: Generate / Extrude 3D Property Volumes & 3D ULPIN Prototypes
   const fetchDemoULPINs = useCallback(async () => {
@@ -1712,26 +2428,68 @@ export function useCadastre() {
   const selectedProperty3D: PropertyVolumeResult | null =
     (selectedPropertyId && property3DData?.results.find((p) => p.property_id === selectedPropertyId)) || null;
 
-  // Step 16: Selected Unit
+  // Step 16 & Step 4: Selected Unit (checks configuredUnits first, then synthetic units)
   const selectedUnit: Unit | null = useMemo(() => {
-    if (!unitsGeojson || !selectedUnitId) return null;
+    if (!selectedUnitId) return null;
+    const conf = Object.values(configuredUnits).find((u) => u.unit_id === selectedUnitId);
+    if (conf) return conf;
+    if (!unitsGeojson) return null;
     const feat = unitsGeojson.features.find((f) => f.properties.unit_id === selectedUnitId);
     return feat ? feat.properties : null;
-  }, [unitsGeojson, selectedUnitId]);
+  }, [configuredUnits, unitsGeojson, selectedUnitId]);
 
-  // Step 16: Units for the currently selected floor
+  // Step 16 & Step 4: Units for the currently selected floor
   const selectedFloorUnits: Unit[] = useMemo(() => {
-    if (!unitsGeojson || !selectedFloorId) return [];
+    if (!selectedFloorId) return [];
+    const confList = Object.values(configuredUnits).filter(
+      (u) =>
+        u.floor_id === selectedFloorId &&
+        (!u.dataset_id || u.dataset_id === activeDatasetId)
+    );
+    if (confList.length > 0) return confList;
+    if (!unitsGeojson) return [];
     return unitsGeojson.features
       .filter((f) => f.properties.floor_id === selectedFloorId)
       .map((f) => f.properties);
-  }, [unitsGeojson, selectedFloorId]);
+  }, [configuredUnits, activeDatasetId, unitsGeojson, selectedFloorId]);
 
-  // Step 17: Selected Unit 3D Result
+  // Step 17 & Step 4: Selected Unit 3D Result
   const selectedUnit3D: Unit3DResult | null = useMemo(() => {
-    if (!units3DData || !selectedUnitId) return null;
-    return units3DData.results.find((u) => u.unit_id === selectedUnitId) || null;
-  }, [units3DData, selectedUnitId]);
+    if (!selectedUnitId) return null;
+    if (units3DData) {
+      const match = units3DData.results.find((u) => u.unit_id === selectedUnitId);
+      if (match) return match;
+    }
+    const conf = Object.values(configuredUnits).find((u) => u.unit_id === selectedUnitId);
+    if (conf && conf.geometry_3d) {
+      return {
+        unit_id: conf.unit_id,
+        dataset_id: conf.dataset_id || activeDatasetId,
+        spatial_id: conf.spatial_id || `${conf.dataset_id || activeDatasetId}-${conf.building_id}-${conf.floor_id}-${conf.unit_id}`,
+        property_id: conf.property_id,
+        parcel_id: conf.parcel_id,
+        building_id: conf.building_id,
+        floor_id: conf.floor_id,
+        unit_number: conf.unit_number,
+        unit_name: conf.unit_name,
+        unit_type: conf.unit_type,
+        base_elevation: conf.base_elevation,
+        top_elevation: conf.top_elevation,
+        z_min: conf.z_min ?? conf.base_elevation,
+        z_max: conf.z_max ?? conf.top_elevation,
+        height: conf.height,
+        footprint_area: conf.footprint_area,
+        volume_cubic_m: conf.volume_cubic_m,
+        surface_area_sqm: ((conf.provenance?.surface_area_sqm as number) || undefined),
+        geometry_status: "VALID" as import("@/types/geometry3d").Geometry3DStatus,
+        geometry: conf.geometry_3d as import("@/types/geometry3d").Mesh3DCollection,
+        warnings: conf.warnings || [],
+        provenance: conf.provenance || {},
+      };
+
+    }
+    return null;
+  }, [units3DData, configuredUnits, activeDatasetId, selectedUnitId]);
 
   // Selected Building Metadata from OSM Conversion
   const selectedBuildingMetadata = useMemo<BuildingMetadataItem | null>(() => {
@@ -1742,6 +2500,61 @@ export function useCadastre() {
       ) || null
     );
   }, [selectedBuildingId, conversionResult]);
+
+  // Step 16: Real-World Demonstration System Callbacks
+  const runRealWorldDemo = useCallback(async () => {
+    setIsDemoRunning(true);
+    setGeneralError(null);
+    try {
+      const res = await cadastreApi.launchDemo();
+      setDemoLandingState(res);
+      setActiveDatasetId("STHARA-REALWORLD-DEMO");
+      setActiveDatasetName("Connaught Tower A - Commercial & Public Complex");
+      setSelectedBuildingId("DEMO-BUILDING-001");
+
+      // Seamlessly pre-load 3D extruded building, floor, and unit models
+      try {
+        const [bld3D, fl3D, unit3D] = await Promise.all([
+          cadastreApi.extrudeDemoBuildings(),
+          cadastreApi.extrudeDemoFloors(),
+          cadastreApi.getDemoUnits3D(),
+        ]);
+        if (bld3D) setBuilding3DData(bld3D);
+        if (fl3D) setFloors3DData(fl3D);
+        if (unit3D) setUnits3DData(unit3D);
+      } catch (meshErr) {
+        console.warn("Could not pre-fetch 3D demo meshes:", meshErr);
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to launch real-world demo.";
+      setGeneralError(msg);
+    } finally {
+      setIsDemoRunning(false);
+    }
+  }, [setSelectedBuildingId]);
+
+  const resetRealWorldDemo = useCallback(async () => {
+    setIsDemoRunning(true);
+    setGeneralError(null);
+    try {
+      await cadastreApi.resetDemo();
+      setBuilding3DData(null);
+      setFloors3DData(null);
+      setUnits3DData(null);
+      setProperty3DData(null);
+      setConfiguredUnits({});
+      setSelectedBuildingId(null);
+      setSelectedFloorId(null);
+      setSelectedUnitId(null);
+      setSelectedPropertyId(null);
+      await runRealWorldDemo();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to reset demo.";
+      setGeneralError(msg);
+    } finally {
+      setIsDemoRunning(false);
+    }
+  }, [runRealWorldDemo, setSelectedBuildingId]);
 
   return {
     backendConnected,
@@ -1813,6 +2626,7 @@ export function useCadastre() {
     sampleActiveElevation,
     calculateSelectedBuildingHeight,
     generateSelectedBuildingFloors,
+    generateConfiguredBuilding3D,
     generate3DBuildingModels,
     generate3DFloorModels,
     generate3DPropertyModels,
@@ -1839,9 +2653,13 @@ export function useCadastre() {
     setSelectedUnitId,
     setSelectedParcelId,
     setSelectedBuildingId,
+    // Step 16 Demo controls
     isDemoRunning,
-    runEndToEndDemo,
-    resetDemo,
+    demoLandingState,
+    runRealWorldDemo,
+    resetRealWorldDemo,
+    runEndToEndDemo: runRealWorldDemo,
+    resetDemo: resetRealWorldDemo,
     undergroundBundle,
     selectedUndergroundId,
     setSelectedUndergroundId,
@@ -1883,6 +2701,40 @@ export function useCadastre() {
     setActiveDatasetType,
     activeDatasetHash,
     setActiveDatasetHash,
+    // Step 3: Floor Plans & Blueprints
+    floorPlans,
+    isUploadingFloorPlan,
+    floorPlanError,
+    attachFloorPlan,
+    removeFloorPlan,
+    getActiveFloorPlan,
+    // Step 4: 3D Unit Modeling & Management
+    configuredUnits,
+    isCreatingUnit,
+    unitCreationError,
+    createConfiguredUnit,
+    deleteConfiguredUnit,
+    getFloorConfiguredUnits,
+    // Step 21-36: Drawing Intelligence & Spatial Source Modes
+    spatialSourceStatus,
+    drawingAnalysis,
+    setDrawingAnalysis,
+    isDrawingImportOpen,
+    setIsDrawingImportOpen,
+    isDrawingReviewOpen,
+    setIsDrawingReviewOpen,
+    refreshSpatialSourceStatus,
+    handleModelBuiltFromDrawings,
+    // Step 37+: Unified Project Data Entry
+    projectDataAnalysis,
+    setProjectDataAnalysis,
+    isAnalyzingProjectData,
+    projectDataError,
+    isProjectDataEntryOpen,
+    setIsProjectDataEntryOpen,
+    uploadAndAnalyzeProjectData,
+    loadGoldenDemoProjectData,
+    updateBuildingCorrelation,
   };
 }
 

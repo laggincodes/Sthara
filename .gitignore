@@ -71,4 +71,6 @@ desktop.ini
 data/uploads/
 data/processed/real/ds_*
 data/processed/real/*.bin
+scratch/
+
 

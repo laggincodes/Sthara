@@ -10,6 +10,7 @@ export interface UnitObjectProps {
   isDimmed?: boolean;
   isWireframe?: boolean;
   explodeDistance?: number;
+  floorIndex?: number;
   onSelect?: (unitId: string) => void;
 }
 
@@ -19,12 +20,13 @@ export function UnitObject({
   isDimmed = false,
   isWireframe = false,
   explodeDistance = 0,
+  floorIndex,
   onSelect,
 }: UnitObjectProps) {
   const [isHovered, setIsHovered] = useState(false);
 
-  // Optional vertical visual offset if exploded mode is active
-  const zOffset = explodeDistance;
+  // Vertical visual offset synchronized with parent floor's exploded level
+  const zOffset = (floorIndex !== undefined ? floorIndex : 0) * explodeDistance;
   const positionOffset: [number, number, number] = [0, 0, zOffset];
 
   const parts = unit.geometry?.parts ?? [];
@@ -40,11 +42,11 @@ export function UnitObject({
           isHovered={isHovered}
           isDimmed={isDimmed}
           isWireframe={isWireframe}
-          color="#06b6d4"
-          edgeColor="#22d3ee"
-          selectedColor="#f59e0b"
-          selectedEdgeColor="#fbbf24"
-          opacity={0.85}
+          color="#d97706"
+          edgeColor="#f59e0b"
+          selectedColor="#ea580c"
+          selectedEdgeColor="#fed7aa"
+          opacity={0.9}
           positionOffset={positionOffset}
           onClick={() => onSelect?.(unit.unit_id)}
           onPointerOver={() => setIsHovered(true)}

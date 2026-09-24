@@ -103,8 +103,8 @@ export default function UlpinRegistryPage() {
     crs: "EPSG:32643",
   });
 
-  // Simulated SHA-256 spatial ULPIN hash generator
-  const generatedUlpin = `3D-ULPIN-${activeProperty.parcel_id.replace("PARCEL-", "")}-${activeProperty.unit_number}-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.toUpperCase();
+  // Simulated SHA-256 STHARA spatial ID hash generator
+  const generatedUlpin = `STHARA-SPATIAL-ID-${activeProperty.parcel_id.replace("PARCEL-", "")}-${activeProperty.unit_number}-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.toUpperCase();
 
   const handleVerify = () => {
     setIsVerifying(true);
@@ -113,7 +113,7 @@ export default function UlpinRegistryPage() {
       setIsVerifying(false);
       setVerificationResult({
         valid: true,
-        details: "Deterministic SHA-256 Spatial Hash verified against 3D Cadastral Registry Contract v1.0.",
+        details: "Deterministic SHA-256 STHARA Spatial ID verified against 3D Spatial Registry Contract v1.0.",
       });
     }, 600);
   };
@@ -132,10 +132,10 @@ export default function UlpinRegistryPage() {
             </span>
           </div>
           <h1 className="text-2xl font-bold tracking-tight" style={{ fontFamily: "var(--font-heading)", color: "#252622" }}>
-            3D ULPIN Spatial Identity Registry
+            STHARA Spatial Identity Registry
           </h1>
           <p className="text-xs mt-1" style={{ color: "#62635D" }}>
-            Deterministic volumetric identifier prototype resolving multi-tier vertical ownership spaces.
+            Deterministic spatial identifiers for vertically structured property geometry.
           </p>
         </div>
 
@@ -157,50 +157,49 @@ export default function UlpinRegistryPage() {
           <span>STHARA Prototype 3D Spatial Identity Notice</span>
         </div>
         <p className="leading-relaxed">
-          This 3D ULPIN is a project-specific deterministic identifier prototype designed for volumetric 3D property indexing.
-          It represents a reproducible mathematical hash of the spatial containment hierarchy and is <strong>not an official Government of India ULPIN issuance</strong>.
+          STHARA Spatial ID is a project-specific deterministic spatial identifier for volumetric property indexing. It is not an official government property, ownership, or ULPIN identifier.
         </p>
       </div>
 
       {/* 3. Multi-tier Hierarchy Visualizer Banner */}
       <div className="rounded-md p-6 space-y-4 shadow-sm" style={{ backgroundColor: "#F8F6F0", border: "1px solid #D7D4CB" }}>
         <div className="text-xs uppercase font-semibold" style={{ fontFamily: "var(--font-mono)", color: "#77786F" }}>
-          Cadastral Spatial Resolution Flow
+          SPATIAL IDENTITY FLOW
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 text-center text-xs" style={{ fontFamily: "var(--font-mono)" }}>
           <div className="p-3 rounded-md" style={{ backgroundColor: "#E9E5DA", border: "1px solid #D7D4CB" }}>
-            <div className="text-[10px] uppercase font-semibold" style={{ color: "#77786F" }}>1. Parcel</div>
+            <div className="text-[10px] uppercase font-semibold" style={{ color: "#77786F" }}>1. DATASET</div>
             <div className="font-bold mt-1 text-[11px] truncate" style={{ color: "#A85D48" }}>{activeProperty.parcel_id}</div>
-            <div className="text-[9px] mt-0.5" style={{ color: "#62635D" }}>2D Land Boundary</div>
+            <div className="text-[9px] mt-0.5" style={{ color: "#62635D" }}>Dataset / Boundary</div>
           </div>
 
           <div className="p-3 rounded-md" style={{ backgroundColor: "#E9E5DA", border: "1px solid #D7D4CB" }}>
-            <div className="text-[10px] uppercase font-semibold" style={{ color: "#77786F" }}>2. Building</div>
+            <div className="text-[10px] uppercase font-semibold" style={{ color: "#77786F" }}>2. BUILDING</div>
             <div className="font-bold mt-1 text-[11px] truncate" style={{ color: "#B28A52" }}>{activeProperty.building_id}</div>
             <div className="text-[9px] mt-0.5" style={{ color: "#62635D" }}>Physical Envelope</div>
           </div>
 
           <div className="p-3 rounded-md" style={{ backgroundColor: "#E9E5DA", border: "1px solid #D7D4CB" }}>
-            <div className="text-[10px] uppercase font-semibold" style={{ color: "#77786F" }}>3. Floor</div>
+            <div className="text-[10px] uppercase font-semibold" style={{ color: "#77786F" }}>3. FLOOR</div>
             <div className="font-bold mt-1 text-[11px] truncate" style={{ color: "#252622" }}>{activeProperty.floor_id}</div>
             <div className="text-[9px] mt-0.5" style={{ color: "#62635D" }}>Vertical Stratum</div>
           </div>
 
           <div className="p-3 rounded-md" style={{ backgroundColor: "#E9E5DA", border: "1px solid #D7D4CB" }}>
-            <div className="text-[10px] uppercase font-semibold" style={{ color: "#77786F" }}>4. Unit</div>
+            <div className="text-[10px] uppercase font-semibold" style={{ color: "#77786F" }}>4. UNIT</div>
             <div className="font-bold mt-1 text-[11px] truncate" style={{ color: "#788575" }}>{activeProperty.unit_number}</div>
             <div className="text-[9px] mt-0.5" style={{ color: "#62635D" }}>Apartment / Suite</div>
           </div>
 
           <div className="p-3 rounded-md" style={{ backgroundColor: "#E9E5DA", border: "1px solid #D7D4CB" }}>
-            <div className="text-[10px] uppercase font-semibold" style={{ color: "#77786F" }}>5. 3D Volume</div>
+            <div className="text-[10px] uppercase font-semibold" style={{ color: "#77786F" }}>5. 3D VOLUME</div>
             <div className="font-bold mt-1 text-[11px]" style={{ color: "#A85D48" }}>{activeProperty.volume} m&sup3;</div>
             <div className="text-[9px] mt-0.5" style={{ color: "#62635D" }}>Watertight Solid</div>
           </div>
 
           <div className="p-3 rounded-md" style={{ backgroundColor: "#FAF0EE", border: "1px solid #DDBCB4" }}>
-            <div className="text-[10px] uppercase font-bold" style={{ color: "#A85D48" }}>6. 3D ULPIN</div>
+            <div className="text-[10px] uppercase font-bold" style={{ color: "#A85D48" }}>6. STHARA SPATIAL ID</div>
             <div className="font-bold mt-1 text-[11px] truncate" style={{ color: "#252622" }}>SHA-256 v1</div>
             <div className="text-[9px] mt-0.5" style={{ color: "#A85D48" }}>Canonical Hash</div>
           </div>
@@ -212,7 +211,7 @@ export default function UlpinRegistryPage() {
         {/* Left: Property Selector (5 cols) */}
         <div className="lg:col-span-5 space-y-3">
           <div className="text-xs uppercase tracking-wider font-semibold" style={{ fontFamily: "var(--font-mono)", color: "#77786F" }}>
-            Select Property / Cadastral Entity
+            Select Property / Spatial Entity
           </div>
 
           <div className="space-y-2">
@@ -269,7 +268,7 @@ export default function UlpinRegistryPage() {
           </div>
         </div>
 
-        {/* Right: Selected Property ULPIN Specification & Verification (7 cols) */}
+        {/* Right: Selected Property Spatial ID Specification & Verification (7 cols) */}
         <div className="lg:col-span-7 space-y-4">
           <div className="rounded-md p-6 space-y-6 shadow-sm" style={{ backgroundColor: "#F8F6F0", border: "1px solid #D7D4CB" }}>
             {/* Identity Header */}
@@ -289,10 +288,10 @@ export default function UlpinRegistryPage() {
               </span>
             </div>
 
-            {/* Generated 3D ULPIN Output Display */}
+            {/* Generated STHARA Spatial ID Output Display */}
             <div className="space-y-2">
               <label className="text-xs uppercase tracking-wider font-semibold block" style={{ fontFamily: "var(--font-mono)", color: "#77786F" }}>
-                Deterministic 3D ULPIN Hash (SHA-256)
+                STHARA Spatial ID (Deterministic SHA-256)
               </label>
               <div className="p-3.5 rounded-md text-xs font-semibold break-all leading-relaxed" style={{ fontFamily: "var(--font-mono)", backgroundColor: "#E9E5DA", border: "1px solid #A85D48", color: "#A85D48" }}>
                 {generatedUlpin || "Computing deterministic spatial identity..."}
@@ -351,7 +350,7 @@ export default function UlpinRegistryPage() {
                     <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span>Verify 3D ULPIN Hash</span>
+                    <span>Verify STHARA Spatial ID</span>
                   </>
                 )}
               </button>

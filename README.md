@@ -1,4 +1,4 @@
-﻿# STHARA — 3D Cadastral Intelligence
+# STHARA — 3D Cadastral Intelligence
 
 > Next-generation 3D spatial cadastre, volumetric land rights modeling, and prototype 3D-ULPIN platform. Fusing 2D cadastral, LiDAR, elevation, and building data to generate validated 3D property models and unique 3D ULPINs.
 
@@ -49,13 +49,51 @@ The platform enforces a strict separation between **deterministic computational 
 
 ---
 
-## Technology Stack
-- **Frontend**: Next.js 15+ (App Router), TypeScript, Tailwind CSS, Three.js, React Three Fiber, Lucide React
-- **2D Mapping**: Leaflet / MapLibre GL
-- **Backend**: Python 3.11+, FastAPI, Uvicorn, Pydantic v2
-- **Computational Geometry**: Shapely 2.0+ (GEOS), GeoPandas, PyProj (PROJ)
-- **Database / Data Store**: In-memory spatial cache / GeoJSON (STHARA Fast-Track mode); PostgreSQL 16 + PostGIS 3.4 (Production mode)
-- **AI (Optional)**: Google Gemini Flash API (`google-genai` SDK)
+- **Frontend**: Next.js 15+ (App Router), TypeScript, Tailwind CSS, Three.js, React Three Fiber
+- **2D GIS Mapping**: Leaflet / MapLibre GL
+- **Backend Service**: Python 3.11+, FastAPI, Uvicorn, Pydantic v2
+- **Computational Geometry**: Shapely 2.0+ (GEOS), PyProj (PROJ), GeoPandas, NumPy
+- **Data Persistence**: Local File / GeoJSON Fast-Track Spatial Registry (PostGIS / Supabase Enterprise Deployment Architecture)
+- **AI / Advisory**: Google Gemini Flash API (`google-genai` SDK — Non-Authoritative Advisory Summaries Only)
+
+---
+
+## Technical Claim Audit & Presentation Alignment Matrix
+
+| Presentation Claim | Active Codebase Status | Technical Evidence & Implementation Scope | Truthful Product Labeling |
+| :--- | :---: | :--- | :--- |
+| **2D Cadastral Boundary** | **IMPLEMENTED** | `Shapely` / `GeoPandas` 2D parcel polygons, MapLibre GL layer | 2D Cadastral GIS Polygon |
+| **Building Footprints** | **IMPLEMENTED** | OSM building extraction (`osm_service.py`), 155 real footprints | OpenStreetMap Building Footprint |
+| **Floor Stratification** | **IMPLEMENTED** | Deterministic floor slicing, 4 floor levels, $Z_{min} \dots Z_{max}$ ranges | Configured Floor Stratification |
+| **Property Volume Solids** | **IMPLEMENTED** | Polyhedral 3D watertight extrusions (`3d_extrusion.py`) | 3D Polyhedral Solid Volume |
+| **Underground / Subsurface** | **IMPLEMENTED** | Subterranean basements & utility conduits (`underground_model.py`) | Configured Subsurface Geometry |
+| **Multi-Source Data Fusion** | **IMPLEMENTED** | Multi-source spatial registry (`data_fusion.py`) & provenance | Source-Derived Spatial Lineage |
+| **Drone / Aerial Imagery** | **REFERENCE ONLY** | Image import & reference layer display; no CV photogrammetry | Aerial Reference Base Layer |
+| **LiDAR Point Cloud** | **FUTURE OPTION** | Point cloud infrastructure planned; no raw LAZ/LAS parsing | LiDAR Input — Planned |
+| **DEM / DSM Elevation** | **IMPLEMENTED** | Copernicus 30m DEM elevation sampling (`elevation_service.py`) | DEM Elevation Sampling |
+| **Floor Plans & Blueprints** | **IMPLEMENTED** | Document upload & floor level association (`floor_plan_service.py`) | User-Provided Floor Plan |
+| **GNSS / CORS Positioning** | **REFERENCE ONLY** | Metric coordinate transformation to `EPSG:32643` UTM grid | GNSS/CORS Reference Grid |
+| **X + Y + Z Spatial Fusion** | **IMPLEMENTED** | Planar footprint + DEM elevation + vertical floor heights | 3D Polyhedral Volumetric Fusion |
+| **3D Cadastral Engine** | **IMPLEMENTED** | Watertight polyhedral extrusion, 3D Bounding Box, 3D Queries | 3D Volumetric Cadastre Engine |
+| **Spatial Data Ingestion** | **IMPLEMENTED** | GeoJSON, OpenStreetMap XML, DataMeet reference layers | Multi-Format Spatial Ingestion |
+| **Building Extraction** | **IMPLEMENTED** | `osm_service.py` XML way & relation parser | OSM Building Vector Extraction |
+| **Floor Segmentation** | **IMPLEMENTED** | Deterministic vertical floor height & Z-interval slicing | Source-Derived Floor Slicing |
+| **Vertical Delineation** | **IMPLEMENTED** | 3D polyhedral solid volume stratification | 3D Stratified Spatial Unit |
+| **Topology Validation** | **IMPLEMENTED** | `topology_engine.py` 3D containment, overlap, touch checks | Deterministic 3D Topology Gate |
+| **3D ULPIN Concept** | **PROTOTYPE** | SHA-256 spatial hash prototype (`ulpin_service.py`) | STHARA Spatial ID (Prototype) |
+| **AI / ML Extraction** | **ADVISORY ONLY** | Non-authoritative Gemini natural language explainer | Gemini Advisory Layer (Non-Authoritative) |
+| **3D GIS Viewer** | **IMPLEMENTED** | Three.js / React Three Fiber dual 2D/3D WebGL stage | Three.js WebGL 3D Cadastre |
+| **CesiumJS** | **FUTURE OPTION** | Active viewer is Three.js; CesiumJS available for 3D Tiles | Three.js WebGL Viewer |
+| **GDAL / GEOS** | **IMPLEMENTED (GEOS)** | Shapely 2.0 GEOS & PyProj PROJ integration | Shapely GEOS / PyProj Engine |
+| **Open3D** | **FUTURE OPTION** | Geometry processing uses GEOS / Shapely / NumPy | Python GEOS Geometry Engine |
+| **GeoPandas** | **IMPLEMENTED** | GeoPandas & Shapely used in backend geospatial processors | GeoPandas / Shapely Processing |
+| **PostGIS** | **FUTURE OPTION** | Active runtime uses file/memory isolated registry | Fast-Track Spatial Registry (PostGIS Ready) |
+| **Supabase** | **FUTURE OPTION** | Local offline execution; Supabase planned for cloud multi-user | Local Offline Architecture |
+| **PyTorch / CV** | **FUTURE OPTION** | Deterministic computational geometry extrusion | Deterministic Geometry Extrusion |
+| **OGC 3D Tiles** | **FUTURE OPTION** | Exports Wavefront OBJ & GeoJSON 3D; 3D Tiles planned | Wavefront OBJ & GeoJSON 3D Export |
+| **ISO 19152 / LADM** | **CONCEPT ALIGNED**| Data model structured around Party $\to$ Right $\to$ Spatial Unit | LADM Conceptual Alignment |
+| **Underground Utilities** | **IMPLEMENTED** | `underground_model.py` subterranean basement & conduit solids | Subsurface Conduit & Basement Solids |
+| **Multi-Building Scale** | **IMPLEMENTED** | 155 real building footprints from Tagore Garden, New Delhi | Multi-Building Scalable Cadastre |
 
 ---
 
@@ -80,21 +118,18 @@ The platform enforces a strict separation between **deterministic computational 
 
 ---
 
-## Development Phases
-- **PHASE 0**: Project Foundation & Documentation *(Completed)*
-- **PHASE 1**: Frontend Foundation (Next.js + Tailwind layout) *(Completed)*
-- **PHASE 2**: Backend Foundation (FastAPI + Health check) *(Completed)*
-- **PHASE 3**: Spatial Data Ingestion & Sample Datasets *(Completed)*
-- **PHASE 4**: 2D Parcel & Building Visualization *(Completed)*
-- **PHASE 5**: 3D Property Extrusion Engine *(Completed)*
-- **PHASE 6**: Property Volume Modelling (Stratification) *(Completed)*
-- **PHASE 7**: Deterministic Spatial Validation *(Completed)*
-- **PHASE 8**: Prototype 3D ULPIN Generation *(Completed — Step 13; see [3D_ULPIN.md](3D_ULPIN.md))*
-- **PHASE 9**: 3D Viewer Integration & Exploded View *(Completed — Step 14; see [3D_VIEWER.md](3D_VIEWER.md))*
-- **PHASE 10**: Optional Gemini Intelligence Advisor *(Advisory layer)*
-- **PHASE 11**: Integration Testing *(Completed — Step 15; see [backend/tests/test_e2e_demo.py](backend/tests/test_e2e_demo.py))*
-- **PHASE 12**: Demo Polish & STHARA platform Hardening *(Completed — Step 15; see [Demo Guide](#demo-walkthrough--presentation-guide))*
-- **PHASE 18A**: Real OSM Building Data Ingestion *(Completed — Step 18A; 155 real footprints from New Delhi)*
+## Development Roadmap & Execution Status
+- **STEPS 1–6**: Cadastral Hierarchy & 3D Extrusion Engine *(Completed)*
+- **STEPS 7–8**: 3D Measurement Tools & Spatial Analysis Engine *(Completed)*
+- **STEP 9**: Multi-Source Spatial Data Fusion & Provenance Tracking *(Completed)*
+- **STEPS 10–12**: Topological Conflict & Underground/Basement Modeling *(Completed)*
+- **STEPS 13–15**: Prototype 3D ULPIN Indexing & Platform Verification *(Completed)*
+- **STEP 16**: Real-World Demo System + Hero Property (`Connaught Tower A`, `STHARA-REALWORLD-DEMO`) *(Completed)*
+- **STEP 17**: Real-World Demo Visual & Functional QA *(Completed)*
+- **STEP 18**: Final UX/UI Polish & Matte Architectural Design Language *(Completed)*
+- **STEP 19**: Production Hardening, Upload Protections & Security Sanitization *(Completed)*
+- **STEP 20**: Technical Documentation & GitHub Readiness *(Completed)*
+- **STEP 21**: Production Release Validation & E2E Verification *(Completed — 392/392 tests pass)*
 
 ---
 
@@ -233,7 +268,6 @@ Copy `.env.example` templates if customization is needed:
 > 2. **3D ULPIN Prototype**: The generated 3D ULPIN codes (`3DULPIN-V1-<SHA256>`) represent a **project-specific deterministic prototype design**. It is **NOT** an official Government of India or state-level ULPIN / Bhu-Aadhaar specification.  
 > 3. **Geometric Rights vs. Legal Ownership**: Spatial containment, volume extrusion, and clash detection are purely geometric calculations. Geometric containment within a parcel does **NOT** constitute legal proof of title, tenure, or municipal zoning sanction.  
 > 4. **Deterministic Computational Geometry Authority**: All coordinate projections, spatial intersections, 3D polyhedral extrusions, and hash derivations are computed deterministically using `GEOS`, `Shapely`, `GeoPandas`, and `PyProj`. Generative AI is **strictly non-authoritative** and confined to plain-English advisory summaries.
->>>>>>> d94272d (feat: Initial release of STHARA (3D Cadastral Intelligence) - Steps 1-15 complete)
 
 ## Platform Capability Alignment & Final End-to-End Demo
 

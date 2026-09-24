@@ -5,6 +5,9 @@ from fastapi import APIRouter, HTTPException, status
 
 from app.schemas.unit import (
     Unit,
+    UnitCreate,
+    UnitDeleteResponse,
+    UnitListResponse,
     UnitValidationRequest,
     UnitValidationResult,
     UnitBatchValidationRequest,
@@ -50,6 +53,29 @@ def load_demo_units_from_disk() -> List[Unit]:
     except Exception as e:
         logger.error(f"Failed to load demo_units.geojson: {e}")
         return []
+
+
+@router.post("", response_model=Unit, summary="Create and Register a 3D Unit")
+@router.post("/create", response_model=Unit, summary="Create and Register a 3D Unit (Alias)")
+async def create_unit(request: UnitCreate):
+    """
+    Validates unit 2D polygon footprint, checks strict containment within parent floor,
+    verifies sibling non-overlap, generates watertight 3D solid, and registers the unit.
+    """
+    try:
+        unit = UnitService.create_and_register_unit(request)
+        return unit
+    except ValueError as ve:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(ve),
+        )
+    except Exception as exc:
+        logger.error(f"Error creating unit: {exc}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create unit: {str(exc)}",
+        )
 
 
 @router.get("/demo", summary="Get Synthetic Demo Units (GeoJSON FeatureCollection)")
@@ -217,3 +243,66 @@ async def get_demo_units_3d():
         compute_shared_origin=True,
     )
     return UnitService.generate_batch_units_3d(batch_req)
+
+
+@router.get(
+    "/{dataset_id}/{building_id}/{floor_id}",
+    response_model=List[Unit],
+    summary="Get All Registered Units for a Specific Floor",
+)
+async def get_floor_units(dataset_id: str, building_id: str, floor_id: str):
+    """
+    Retrieves all configured 3D units belonging to the specified floor.
+    Enforces strict floor and dataset boundary isolation.
+    """
+    return UnitService.get_floor_units(dataset_id, building_id, floor_id)
+
+
+@router.delete(
+    "/{dataset_id}/{building_id}/{floor_id}/{unit_id}",
+    response_model=UnitDeleteResponse,
+    summary="Delete a Unit",
+)
+async def delete_unit(dataset_id: str, building_id: str, floor_id: str, unit_id: str):
+    """
+    Deletes a configured unit. Preserves parent floor, building, floor plan, and sibling units.
+    """
+    success = UnitService.delete_unit(dataset_id, building_id, floor_id, unit_id)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Unit '{unit_id}' not found on floor '{floor_id}' in dataset '{dataset_id}'.",
+        )
+    return UnitDeleteResponse(
+        status="success",
+        message="Unit deleted successfully.",
+        dataset_id=dataset_id,
+        building_id=building_id,
+        floor_id=floor_id,
+        unit_id=unit_id,
+    )
+
+
+@router.get(
+    "/{dataset_id}",
+    response_model=UnitListResponse,
+    summary="List All Registered Units for a Dataset",
+)
+async def list_dataset_units(
+    dataset_id: str,
+    building_id: Optional[str] = None,
+    floor_id: Optional[str] = None,
+):
+    """
+    Lists all configured units within a specific dataset ID.
+    Enforces dataset isolation.
+    """
+    units = UnitService.list_dataset_units(dataset_id, building_id=building_id, floor_id=floor_id)
+    return UnitListResponse(
+        dataset_id=dataset_id,
+        building_id=building_id,
+        floor_id=floor_id,
+        total_count=len(units),
+        units=units,
+    )
+

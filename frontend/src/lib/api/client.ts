@@ -67,7 +67,43 @@ import {
   DataMeetLayerInfo,
   DataMeetAlignmentResponse,
   DataMeetMetadataResponse,
+  ContainmentRequest,
+  ContainmentResponse,
+  IntersectionRequest,
+  IntersectionResponse,
+  ProximityRequest,
+  ProximityResponse,
+  VerticalRelationshipRequest,
+  VerticalRelationshipResponse,
+  DimensionsRequest,
+  DimensionsResponse,
+  DistanceRequest,
+  DistanceResponse,
+  QualityEvaluationRequest,
+  QualityEvaluationResponse,
+  SpatialSource,
+  SourceRegisterRequest,
+  SourceFeaturesRequest,
+  SourceListResponse,
+  SourceDeleteResponse,
+  SpatialSourceStatus,
+  DrawingAnalysis,
+  DrawingCandidate,
+  BuildModelRequest,
+  BuildModelResponse,
+  UnifiedProjectDataAnalysis,
+  BuildingCorrelationMatch,
+  BuildingCorrelationUpdateRequest,
 } from "@/types/cadastre";
+import {
+  CombinedSpatialQueryRequest,
+  CombinedSpatialQueryResponse,
+} from "@/types/spatial_analysis";
+import {
+  FloorPlanAssociation,
+  FloorPlanListResponse,
+  FloorPlanDeleteResponse,
+} from "@/types/floor_plan";
 
 const BASE_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1").replace(/\/$/, "");
 
@@ -100,8 +136,19 @@ async function handleResponse<T>(response: Response): Promise<T> {
     }
 
     if (errorData) {
+      const errRecord = errorData as unknown as Record<string, unknown>;
+      const detailMsg =
+        typeof errRecord.detail === "string"
+          ? errRecord.detail
+          : errRecord.detail
+          ? JSON.stringify(errRecord.detail)
+          : undefined;
+      const msg =
+        detailMsg ||
+        errorData.message ||
+        `Request failed with status ${response.status}`;
       throw new ApiError(
-        errorData.message || `Request failed with status ${response.status}`,
+        msg,
         response.status,
         errorData.error_code || "HTTP_ERROR",
         errorData.data?.validation
@@ -109,7 +156,7 @@ async function handleResponse<T>(response: Response): Promise<T> {
     }
 
     if (response.status === 404) {
-      throw new ApiError("Requested cadastral resource was not found.", 404, "NOT_FOUND");
+      throw new ApiError("Requested cadastral resource was not found (HTTP 404).", 404, "NOT_FOUND");
     }
 
     throw new ApiError(
@@ -1505,7 +1552,763 @@ export const cadastreApi = {
       throw new ApiError("Unable to align DataMeet boundary with OSM building dataset.", 0, "NETWORK_UNAVAILABLE");
     }
   },
+
+  /**
+   * Floor Plan / Blueprint Association Methods
+   */
+  async uploadFloorPlan(
+    datasetId: string,
+    buildingId: string,
+    floorId: string,
+    file: File
+  ): Promise<FloorPlanAssociation> {
+    try {
+      const formData = new FormData();
+      formData.append("dataset_id", datasetId);
+      formData.append("building_id", buildingId);
+      formData.append("floor_id", floorId);
+      formData.append("file", file);
+
+      const response = await fetch(`${BASE_URL}/floor-plans/upload`, {
+        method: "POST",
+        body: formData,
+      });
+      return await handleResponse<FloorPlanAssociation>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Failed to upload and attach floor plan document.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  async getFloorPlan(
+    datasetId: string,
+    buildingId: string,
+    floorId: string
+  ): Promise<FloorPlanAssociation | null> {
+    try {
+      const response = await fetch(
+        `${BASE_URL}/floor-plans/${encodeURIComponent(datasetId)}/${encodeURIComponent(buildingId)}/${encodeURIComponent(floorId)}`,
+        {
+          method: "GET",
+          headers: { Accept: "application/json" },
+        }
+      );
+      if (response.status === 404) return null;
+      return await handleResponse<FloorPlanAssociation>(response);
+    } catch (err) {
+      if (err instanceof ApiError && err.statusCode === 404) return null;
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Failed to retrieve floor plan association.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  async getDatasetFloorPlans(datasetId: string): Promise<FloorPlanListResponse> {
+    try {
+      const response = await fetch(
+        `${BASE_URL}/floor-plans/${encodeURIComponent(datasetId)}`,
+        {
+          method: "GET",
+          headers: { Accept: "application/json" },
+        }
+      );
+      return await handleResponse<FloorPlanListResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError(`Failed to fetch floor plans for dataset '${datasetId}'.`, 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  async deleteFloorPlan(
+    datasetId: string,
+    buildingId: string,
+    floorId: string
+  ): Promise<FloorPlanDeleteResponse> {
+    try {
+      const response = await fetch(
+        `${BASE_URL}/floor-plans/${encodeURIComponent(datasetId)}/${encodeURIComponent(buildingId)}/${encodeURIComponent(floorId)}`,
+        {
+          method: "DELETE",
+          headers: { Accept: "application/json" },
+        }
+      );
+      return await handleResponse<FloorPlanDeleteResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Failed to remove floor plan association.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  getFloorPlanViewUrl(datasetId: string, buildingId: string, floorId: string): string {
+    return `${BASE_URL}/floor-plans/${encodeURIComponent(datasetId)}/${encodeURIComponent(buildingId)}/${encodeURIComponent(floorId)}/view`;
+  },
+
+  // =========================================================================
+  // STEP 4: 3D Unit Management
+  // =========================================================================
+  async createUnit(payload: import("@/types/cadastre").UnitCreateRequest): Promise<import("@/types/cadastre").Unit> {
+    try {
+      const response = await fetch(`${BASE_URL}/units`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(payload),
+      });
+      return await handleResponse<import("@/types/cadastre").Unit>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Failed to create unit.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  async getFloorUnits(
+    datasetId: string,
+    buildingId: string,
+    floorId: string
+  ): Promise<import("@/types/cadastre").Unit[]> {
+    try {
+      const response = await fetch(
+        `${BASE_URL}/units/${encodeURIComponent(datasetId)}/${encodeURIComponent(buildingId)}/${encodeURIComponent(floorId)}`,
+        {
+          method: "GET",
+          headers: { Accept: "application/json" },
+        }
+      );
+      return await handleResponse<import("@/types/cadastre").Unit[]>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError(`Failed to fetch units for floor '${floorId}'.`, 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  async getDatasetUnits(
+    datasetId: string,
+    buildingId?: string,
+    floorId?: string
+  ): Promise<import("@/types/cadastre").UnitListResponse> {
+    try {
+      const query = new URLSearchParams();
+      if (buildingId) query.set("building_id", buildingId);
+      if (floorId) query.set("floor_id", floorId);
+      const qs = query.toString() ? `?${query.toString()}` : "";
+
+      const response = await fetch(
+        `${BASE_URL}/units/${encodeURIComponent(datasetId)}${qs}`,
+        {
+          method: "GET",
+          headers: { Accept: "application/json" },
+        }
+      );
+      return await handleResponse<import("@/types/cadastre").UnitListResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError(`Failed to fetch units for dataset '${datasetId}'.`, 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  async deleteUnit(
+    datasetId: string,
+    buildingId: string,
+    floorId: string,
+    unitId: string
+  ): Promise<import("@/types/cadastre").UnitDeleteResponse> {
+    try {
+      const response = await fetch(
+        `${BASE_URL}/units/${encodeURIComponent(datasetId)}/${encodeURIComponent(buildingId)}/${encodeURIComponent(floorId)}/${encodeURIComponent(unitId)}`,
+        {
+          method: "DELETE",
+          headers: { Accept: "application/json" },
+        }
+      );
+      return await handleResponse<import("@/types/cadastre").UnitDeleteResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Failed to delete unit.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Evaluates spatial and elevation containment (e.g. Building contains Floor, Floor contains Unit).
+   */
+  async analyzeContainment(req: ContainmentRequest): Promise<ContainmentResponse> {
+    try {
+      const response = await fetch(`${BASE_URL}/spatial-analysis/containment`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(req),
+      });
+      return await handleResponse<ContainmentResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Failed to execute containment analysis.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Evaluates 3D spatial intersection and positive-area overlap in square meters.
+   */
+  async analyzeIntersection(req: IntersectionRequest): Promise<IntersectionResponse> {
+    try {
+      const response = await fetch(`${BASE_URL}/spatial-analysis/intersection`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(req),
+      });
+      return await handleResponse<IntersectionResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Failed to execute intersection analysis.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Calculates metric 3D Euclidean, 2D planar, and Z vertical proximity distances in meters.
+   */
+  async analyzeProximity(req: ProximityRequest): Promise<ProximityResponse> {
+    try {
+      const response = await fetch(`${BASE_URL}/spatial-analysis/proximity`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(req),
+      });
+      return await handleResponse<ProximityResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Failed to execute proximity analysis.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Classifies vertical relationship (SAME_LEVEL, ABOVE, BELOW, OVERLAPPING_Z_RANGE, DISJOINT_Z_RANGE).
+   */
+  async analyzeVerticalRelationship(req: VerticalRelationshipRequest): Promise<VerticalRelationshipResponse> {
+    try {
+      const response = await fetch(`${BASE_URL}/spatial-analysis/vertical`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(req),
+      });
+      return await handleResponse<VerticalRelationshipResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Failed to execute vertical relationship analysis.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Measures 3D dimensions, footprint area, and volume for a selected object.
+   */
+  async getDimensions(req: DimensionsRequest): Promise<DimensionsResponse> {
+    try {
+      const response = await fetch(`${BASE_URL}/measurements/dimensions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(req),
+      });
+      return await handleResponse<DimensionsResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Failed to measure dimensions.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Measures metric horizontal, vertical, and 3D Euclidean distance between two spatial objects.
+   */
+  async getDistance(req: DistanceRequest): Promise<DistanceResponse> {
+    try {
+      const response = await fetch(`${BASE_URL}/measurements/distance`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(req),
+      });
+      return await handleResponse<DistanceResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Failed to measure distance.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Evaluates Data Quality Status and Cadastral Provenance for a building, floor, or unit.
+   */
+  async evaluateQuality(req: QualityEvaluationRequest): Promise<QualityEvaluationResponse> {
+    try {
+      const response = await fetch(`${BASE_URL}/quality/evaluate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(req),
+      });
+      return await handleResponse<QualityEvaluationResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Failed to evaluate data quality.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Step 9: Lists all registered spatial and reference sources for a dataset.
+   */
+  async listSources(datasetId: string): Promise<SourceListResponse> {
+    try {
+      const response = await fetch(`${BASE_URL}/sources/${encodeURIComponent(datasetId)}`, {
+        method: "GET",
+        headers: { Accept: "application/json" },
+      });
+      return await handleResponse<SourceListResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Failed to list spatial sources.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Step 9: Gets detailed metadata and provenance for a single spatial source.
+   */
+  async getSource(datasetId: string, sourceId: string): Promise<SpatialSource> {
+    try {
+      const response = await fetch(
+        `${BASE_URL}/sources/${encodeURIComponent(datasetId)}/${encodeURIComponent(sourceId)}`,
+        {
+          method: "GET",
+          headers: { Accept: "application/json" },
+        }
+      );
+      return await handleResponse<SpatialSource>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Failed to get spatial source details.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Step 9: Registers a new spatial reference source or layer associated with a dataset.
+   */
+  async registerSource(data: SourceRegisterRequest): Promise<SpatialSource> {
+    try {
+      const response = await fetch(`${BASE_URL}/sources`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(data),
+      });
+      return await handleResponse<SpatialSource>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Failed to register spatial source.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Step 9: Deletes a registered spatial source and its associated reference features.
+   */
+  async deleteSource(datasetId: string, sourceId: string): Promise<SourceDeleteResponse> {
+    try {
+      const response = await fetch(
+        `${BASE_URL}/sources/${encodeURIComponent(datasetId)}/${encodeURIComponent(sourceId)}`,
+        {
+          method: "DELETE",
+          headers: { Accept: "application/json" },
+        }
+      );
+      return await handleResponse<SourceDeleteResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Failed to delete spatial source.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Step 9: Retrieves the GeoJSON FeatureCollection for a registered reference source.
+   */
+  async getSourceFeatures(datasetId: string, sourceId: string): Promise<GeoJSONFeatureCollection> {
+    try {
+      const response = await fetch(
+        `${BASE_URL}/sources/${encodeURIComponent(datasetId)}/${encodeURIComponent(sourceId)}/features`,
+        {
+          method: "GET",
+          headers: { Accept: "application/json" },
+        }
+      );
+      return await handleResponse<GeoJSONFeatureCollection>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Failed to retrieve source features.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Step 9: Attaches or updates reference GeoJSON features for an existing registered spatial source.
+   */
+  async attachSourceFeatures(
+    datasetId: string,
+    sourceId: string,
+    data: SourceFeaturesRequest
+  ): Promise<SpatialSource> {
+    try {
+      const response = await fetch(
+        `${BASE_URL}/sources/${encodeURIComponent(datasetId)}/${encodeURIComponent(sourceId)}/features`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify(data),
+        }
+      );
+      return await handleResponse<SpatialSource>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Failed to attach source features.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Step 10: Executes a combined multi-relationship 3D spatial query between two objects.
+   */
+  async querySpatial(req: CombinedSpatialQueryRequest): Promise<CombinedSpatialQueryResponse> {
+    try {
+      const response = await fetch(`${BASE_URL}/spatial-analysis/query`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(req),
+      });
+      return await handleResponse<CombinedSpatialQueryResponse>(response);
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("Combined spatial query failed.", 0, "NETWORK_UNAVAILABLE");
+    }
+  },
+
+  /**
+   * Step 12: Generates a comprehensive building property report.
+   */
+  async getBuildingReport(datasetId: string, buildingId: string): Promise<Record<string, unknown>> {
+    const response = await fetch(
+      `${BASE_URL}/reports/${encodeURIComponent(datasetId)}/building/${encodeURIComponent(buildingId)}`,
+      { headers: { Accept: "application/json" } }
+    );
+    return await handleResponse<Record<string, unknown>>(response);
+  },
+
+  /**
+   * Step 12: Generates a comprehensive floor property report.
+   */
+  async getFloorReport(datasetId: string, floorId: string): Promise<Record<string, unknown>> {
+    const response = await fetch(
+      `${BASE_URL}/reports/${encodeURIComponent(datasetId)}/floor/${encodeURIComponent(floorId)}`,
+      { headers: { Accept: "application/json" } }
+    );
+    return await handleResponse<Record<string, unknown>>(response);
+  },
+
+  /**
+   * Step 12: Generates a comprehensive unit property report.
+   */
+  async getUnitReport(datasetId: string, unitId: string): Promise<Record<string, unknown>> {
+    const response = await fetch(
+      `${BASE_URL}/reports/${encodeURIComponent(datasetId)}/unit/${encodeURIComponent(unitId)}`,
+      { headers: { Accept: "application/json" } }
+    );
+    return await handleResponse<Record<string, unknown>>(response);
+  },
+
+  /**
+   * Step 16: Launches the STHARA Real-World Demonstration System.
+   */
+  async launchDemo(): Promise<Record<string, unknown>> {
+    const response = await fetch(`${BASE_URL}/demo/launch`, {
+      method: "POST",
+      headers: { Accept: "application/json" },
+    });
+    return await handleResponse<Record<string, unknown>>(response);
+  },
+
+  /**
+   * Step 16: Gets the Hero Demo Property landing state.
+   */
+  async getDemoLandingState(): Promise<Record<string, unknown>> {
+    const response = await fetch(`${BASE_URL}/demo/landing-state`, {
+      method: "GET",
+      headers: { Accept: "application/json" },
+    });
+    return await handleResponse<Record<string, unknown>>(response);
+  },
+
+  /**
+   * Step 16: Resets demo dataset to baseline state.
+   */
+  async resetDemo(): Promise<Record<string, unknown>> {
+    const response = await fetch(`${BASE_URL}/demo/reset`, {
+      method: "POST",
+      headers: { Accept: "application/json" },
+    });
+    return await handleResponse<Record<string, unknown>>(response);
+  },
+
+  /**
+   * Building Blueprint API methods (Building-level blueprint attachments)
+   */
+  getBuildingBlueprintViewUrl(datasetId: string, buildingId: string): string {
+    return `${BASE_URL}/building-blueprints/${encodeURIComponent(datasetId)}/${encodeURIComponent(buildingId)}/view`;
+  },
+
+  async uploadBuildingBlueprint(
+    datasetId: string,
+    buildingId: string,
+    file: File
+  ): Promise<BuildingBlueprintResponse> {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("dataset_id", datasetId);
+    formData.append("building_id", buildingId);
+
+    const response = await fetch(`${BASE_URL}/building-blueprints/upload`, {
+      method: "POST",
+      body: formData,
+    });
+    return await handleResponse<BuildingBlueprintResponse>(response);
+  },
+
+  async getBuildingBlueprint(
+    datasetId: string,
+    buildingId: string
+  ): Promise<BuildingBlueprintResponse> {
+    const response = await fetch(
+      `${BASE_URL}/building-blueprints/${encodeURIComponent(datasetId)}/${encodeURIComponent(buildingId)}`,
+      { headers: { Accept: "application/json" } }
+    );
+    if (response.status === 404) {
+      return {
+        success: true,
+        attached: false,
+        blueprint: null,
+        message: `No building blueprint attached for building '${buildingId}'.`
+      };
+    }
+    return await handleResponse<BuildingBlueprintResponse>(response);
+  },
+
+  async deleteBuildingBlueprint(
+    datasetId: string,
+    buildingId: string
+  ): Promise<BuildingBlueprintResponse> {
+    const response = await fetch(
+      `${BASE_URL}/building-blueprints/${encodeURIComponent(datasetId)}/${encodeURIComponent(buildingId)}`,
+      { method: "DELETE", headers: { Accept: "application/json" } }
+    );
+    return await handleResponse<BuildingBlueprintResponse>(response);
+  },
+
+  // --- DRAWING INTELLIGENCE V1 API ---
+
+  async uploadDrawingSet(
+    files: File[],
+    datasetId: string
+  ): Promise<DrawingAnalysis> {
+    const formData = new FormData();
+    files.forEach((file) => formData.append("files", file));
+    formData.append("dataset_id", datasetId);
+
+    const response = await fetch(`${BASE_URL}/drawing-intelligence/upload`, {
+      method: "POST",
+      body: formData,
+    });
+    return await handleResponse<DrawingAnalysis>(response);
+  },
+
+  async loadGoldenDemoDrawings(datasetId: string): Promise<DrawingAnalysis> {
+    const response = await fetch(
+      `${BASE_URL}/drawing-intelligence/load-demo?dataset_id=${encodeURIComponent(datasetId)}`,
+      { method: "POST", headers: { Accept: "application/json" } }
+    );
+    return await handleResponse<DrawingAnalysis>(response);
+  },
+
+  async getLatestDrawingAnalysis(datasetId: string): Promise<DrawingAnalysis | null> {
+    const response = await fetch(
+      `${BASE_URL}/drawing-intelligence/latest?dataset_id=${encodeURIComponent(datasetId)}`,
+      { headers: { Accept: "application/json" } }
+    );
+    return await handleResponse<DrawingAnalysis | null>(response);
+  },
+
+  async getDrawingAnalysis(analysisId: string): Promise<DrawingAnalysis> {
+    const response = await fetch(
+      `${BASE_URL}/drawing-intelligence/${encodeURIComponent(analysisId)}`,
+      { headers: { Accept: "application/json" } }
+    );
+    return await handleResponse<DrawingAnalysis>(response);
+  },
+
+  getDrawingPageImageUrl(analysisId: string, pageId: string, type: "original" | "processed" = "original"): string {
+    return `${BASE_URL}/drawing-intelligence/${encodeURIComponent(analysisId)}/pages/${encodeURIComponent(pageId)}/image?type=${type}`;
+  },
+
+  async confirmDrawingCandidate(analysisId: string, candidateId: string): Promise<DrawingCandidate> {
+    const response = await fetch(
+      `${BASE_URL}/drawing-intelligence/${encodeURIComponent(analysisId)}/candidates/${encodeURIComponent(candidateId)}/confirm`,
+      { method: "POST", headers: { Accept: "application/json" } }
+    );
+    return await handleResponse<DrawingCandidate>(response);
+  },
+
+  async rejectDrawingCandidate(analysisId: string, candidateId: string): Promise<DrawingCandidate> {
+    const response = await fetch(
+      `${BASE_URL}/drawing-intelligence/${encodeURIComponent(analysisId)}/candidates/${encodeURIComponent(candidateId)}/reject`,
+      { method: "POST", headers: { Accept: "application/json" } }
+    );
+    return await handleResponse<DrawingCandidate>(response);
+  },
+
+  async patchDrawingCandidate(
+    analysisId: string,
+    candidateId: string,
+    update: Partial<DrawingCandidate>
+  ): Promise<DrawingCandidate> {
+    const response = await fetch(
+      `${BASE_URL}/drawing-intelligence/${encodeURIComponent(analysisId)}/candidates/${encodeURIComponent(candidateId)}`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(update),
+      }
+    );
+    return await handleResponse<DrawingCandidate>(response);
+  },
+
+  async getSpatialSourceStatus(datasetId: string): Promise<SpatialSourceStatus> {
+    const response = await fetch(
+      `${BASE_URL}/drawing-intelligence/source-status?dataset_id=${encodeURIComponent(datasetId)}`,
+      { headers: { Accept: "application/json" } }
+    );
+    return await handleResponse<SpatialSourceStatus>(response);
+  },
+
+  async buildStharaModelFromDrawing(
+    analysisId: string,
+    payload: BuildModelRequest
+  ): Promise<BuildModelResponse> {
+    const response = await fetch(
+      `${BASE_URL}/drawing-intelligence/${encodeURIComponent(analysisId)}/build-model`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(payload),
+      }
+    );
+    return await handleResponse<BuildModelResponse>(response);
+  },
+
+  async uploadAndAnalyzeProjectData(
+    datasetId: string,
+    files: File[],
+    datasetName?: string
+  ): Promise<UnifiedProjectDataAnalysis> {
+    const formData = new FormData();
+    formData.append("dataset_id", datasetId);
+    if (datasetName) formData.append("dataset_name", datasetName);
+    files.forEach((file) => formData.append("files", file));
+
+    const response = await fetch(`${BASE_URL}/project-data/analyze`, {
+      method: "POST",
+      headers: { Accept: "application/json" },
+      body: formData,
+    });
+    return await handleResponse<UnifiedProjectDataAnalysis>(response);
+  },
+
+  async loadGoldenDemoProjectData(
+    datasetId: string = "ds_tagore_garden_map_osm",
+    datasetName: string = "Tagore Garden Unified Project"
+  ): Promise<UnifiedProjectDataAnalysis> {
+    const response = await fetch(
+      `${BASE_URL}/project-data/load-golden-demo?dataset_id=${encodeURIComponent(datasetId)}&dataset_name=${encodeURIComponent(datasetName)}`,
+      { method: "POST", headers: { Accept: "application/json" } }
+    );
+    return await handleResponse<UnifiedProjectDataAnalysis>(response);
+  },
+
+  async getLatestProjectDataAnalysis(
+    datasetId: string
+  ): Promise<UnifiedProjectDataAnalysis | null> {
+    const response = await fetch(
+      `${BASE_URL}/project-data/latest?dataset_id=${encodeURIComponent(datasetId)}`,
+      { headers: { Accept: "application/json" } }
+    );
+    return await handleResponse<UnifiedProjectDataAnalysis | null>(response);
+  },
+
+  async updateBuildingCorrelation(
+    analysisId: string,
+    correlationId: string,
+    update: BuildingCorrelationUpdateRequest
+  ): Promise<BuildingCorrelationMatch> {
+    const response = await fetch(
+      `${BASE_URL}/project-data/${encodeURIComponent(analysisId)}/correlations/${encodeURIComponent(correlationId)}`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(update),
+      }
+    );
+    return await handleResponse<BuildingCorrelationMatch>(response);
+  },
 };
+
+export interface BuildingBlueprintRecord {
+  building_blueprint_id: string;
+  dataset_id: string;
+  building_id: string;
+  filename: string;
+  file_type: string;
+  mime_type: string;
+  file_size_bytes: number;
+  storage_path: string;
+  view_url: string;
+  uploaded_at: string;
+  source: string;
+  status: string;
+}
+
+export interface BuildingBlueprintResponse {
+  success: boolean;
+  attached?: boolean;
+  blueprint?: BuildingBlueprintRecord | null;
+  message: string;
+}
+
+// --- DRAWING INTELLIGENCE V1 EXPORTS ---
+
+export type {
+  DrawingType,
+  CandidateType,
+  CandidateStatus,
+  ConfidenceLevel,
+  DocumentRole,
+  SpatialSourceMode,
+  SpatialSourceStatus,
+  GeographicPositioning,
+  NormalizedBBox,
+  DrawingEvidence,
+  DrawingRegion,
+  DrawingCandidate,
+  DrawingPage,
+  DrawingDocument,
+  DrawingAnalysisSummary,
+  DrawingAnalysis,
+  DrawingCandidateUpdate,
+  BuildModelRequest,
+  BuildModelResponse,
+  BuildModelResult,
+} from "@/types/drawing_intelligence";
+
+export type {
+  ProjectSourceCategory,
+  ProjectFileManifestItem,
+  BuildingCorrelationMatch,
+  SpatialEvidenceSummary,
+  ProcessingStage,
+  UnifiedProjectDataAnalysis,
+  BuildingCorrelationUpdateRequest,
+} from "@/types/project_data";
+
+
 
 
 

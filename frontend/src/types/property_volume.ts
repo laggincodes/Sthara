@@ -13,6 +13,9 @@ export interface FloorIntervalSpec {
   base_elevation?: number | null;
   top_elevation?: number | null;
   floor_height?: number | null;
+  level_type?: "Above Ground" | "Basement" | string;
+  level_number?: number | null;
+  source?: string;
 }
 
 export interface BuildingFloors3DRequest {
@@ -23,6 +26,8 @@ export interface BuildingFloors3DRequest {
   roof_elevation?: number | null;
   building_height?: number | null;
   number_of_floors?: number | null;
+  number_of_basements?: number | null;
+  basement_depth?: number | null;
   floor_height?: number | null;
   floors?: FloorIntervalSpec[] | null;
   source_crs?: string;
@@ -51,6 +56,9 @@ export interface Floor3DResult {
   geometry_status: Geometry3DStatus;
   geometry?: Mesh3DCollection | null;
   warnings: string[];
+  level_type?: "Above Ground" | "Basement" | string;
+  level_number?: number;
+  source?: string;
 }
 
 export interface BuildingFloors3DResult {

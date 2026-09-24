@@ -66,11 +66,14 @@ class BuildingMetadataItem(BaseModel):
     z_min: float = 0.0
     z_max: float = 9.0
     levels: Optional[int] = None
+    underground_levels: Optional[int] = None
+    min_level: Optional[int] = None
     floor_unit_available: bool = False
     height_source: str
     area_sqm: float
     volume_cubic_m: float
     source: str = "OpenStreetMap"
+    source_attributes: Optional[Dict[str, Any]] = None
     is_cadastral: bool = False
     validation_status: str = "PASS"
     watertight: bool = True
@@ -79,6 +82,11 @@ class BuildingMetadataItem(BaseModel):
     prototype_3d_ulpin: Optional[str] = None
     bounding_box: Optional[Dict[str, List[float]]] = None
     centroid: Optional[List[float]] = None
+    dataset_id: Optional[str] = None
+    data_quality_status: str = "VALID"
+    containment_status: str = "PASS"
+    provenance: Optional[Dict[str, Any]] = None
+    disclaimer: str = "STHARA Spatial ID is a prototype spatial identifier and is not an official government property or ownership identifier."
 
 class Osm3DConversionSummary(BaseModel):
     buildings: int
@@ -94,6 +102,7 @@ class Osm3DConversionSummary(BaseModel):
 
 class Osm3DConversionResponse(BaseModel):
     success: bool
+    status: str = Field(default="success", description="Status string: success or complete")
     dataset_id: str = Field(default="ds_tagore_garden_map_osm", description="Unique identifier of converted dataset")
     dataset_name: str = Field(default="map.osm", description="Human-readable filename / dataset name")
     source_name: str

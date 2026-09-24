@@ -7,10 +7,21 @@ import { useRouter } from "next/navigation";
 import { useCadastreContext } from "@/context/CadastreContext";
 import { CadastralMap } from "@/components/cadastral/CadastralMap";
 import { ParcelInspector } from "@/components/cadastral/ParcelInspector";
+import { BuildingConfigModal } from "@/components/cadastral/BuildingConfigModal";
+import { DataSourcesPanel } from "@/components/cadastral/DataSourcesPanel";
+import { DrawingImportModal } from "@/components/drawing/DrawingImportModal";
+import { DrawingReviewWorkspace } from "@/components/drawing/DrawingReviewWorkspace";
+import { resolveBuildingSourceAttributes } from "@/lib/cadastral/sourceAttributes";
+import { cadastreApi } from "@/lib/api/client";
 
 export default function Cadastral2DPage() {
   const router = useRouter();
   const [inspectorOpen, setInspectorOpen] = useState(true);
+  const [configModalOpen, setConfigModalOpen] = useState(false);
+  const [inspectorTab, setInspectorTab] = useState<"inspector" | "sources">("inspector");
+  const [visibleReferenceSourceIds, setVisibleReferenceSourceIds] = useState<string[]>([]);
+  const [referenceFeaturesGeojson, setReferenceFeaturesGeojson] = useState<GeoJSONFeatureCollection | null>(null);
+  const [selectedSourceFilter, setSelectedSourceFilter] = useState<string | null>(null);
 
   const {
     isLoading,
@@ -26,6 +37,7 @@ export default function Cadastral2DPage() {
     geojson,
     buildingsGeojson,
     unitsGeojson,
+    configuredUnits,
     validationResult,
     associationData,
     demMetadata,
@@ -35,6 +47,7 @@ export default function Cadastral2DPage() {
     selectedParcel,
     selectedBuildingId,
     selectedBuilding,
+    selectedBuildingMetadata,
     selectedParcelAssociatedBuildings,
     selectedParcelElevation,
     selectedBuildingElevation,
@@ -73,7 +86,24 @@ export default function Cadastral2DPage() {
     activeDatasetId,
     activeDatasetName,
     buildingDatasetName,
+    generateConfiguredBuilding3D,
+    runRealWorldDemo,
+    resetRealWorldDemo,
+    isDemoRunning,
+    spatialSourceStatus,
+    drawingAnalysis,
+    setDrawingAnalysis,
+    isDrawingImportOpen,
+    setIsDrawingImportOpen,
+    isDrawingReviewOpen,
+    setIsDrawingReviewOpen,
+    handleModelBuiltFromDrawings,
   } = useCadastreContext();
+
+  const sourceAttributes = useMemo(() => {
+    if (!selectedBuilding && !selectedBuildingMetadata) return null;
+    return resolveBuildingSourceAttributes(selectedBuilding, selectedBuildingMetadata);
+  }, [selectedBuilding, selectedBuildingMetadata]);
 
   const undergroundGeojson: GeoJSONFeatureCollection | null = useMemo(() => {
     if (!undergroundBundle || !undergroundBundle.features) return null;
@@ -95,6 +125,58 @@ export default function Cadastral2DPage() {
       })),
     };
   }, [undergroundBundle]);
+
+  // Step 9: Reset reference layers and source filter on active dataset switch
+  const [prevDatasetId, setPrevDatasetId] = useState(activeDatasetId);
+  if (activeDatasetId !== prevDatasetId) {
+    setPrevDatasetId(activeDatasetId);
+    setVisibleReferenceSourceIds([]);
+    setReferenceFeaturesGeojson(null);
+    setSelectedSourceFilter(null);
+  }
+
+  // Step 9: Load reference features when visible sources toggle
+  const handleToggleReferenceLayer = async (sourceId: string, visible: boolean) => {
+    const nextIds = visible
+      ? [...visibleReferenceSourceIds, sourceId]
+      : visibleReferenceSourceIds.filter((id) => id !== sourceId);
+    setVisibleReferenceSourceIds(nextIds);
+
+    if (nextIds.length === 0) {
+      setReferenceFeaturesGeojson(null);
+      return;
+    }
+
+    try {
+      const allFeatures: GeoJSONFeature[] = [];
+      for (const sId of nextIds) {
+        const fc = await cadastreApi.getSourceFeatures(activeDatasetId, sId);
+        if (fc && fc.features) {
+          allFeatures.push(...(fc.features as GeoJSONFeature[]));
+        }
+      }
+      setReferenceFeaturesGeojson({
+        type: "FeatureCollection",
+        features: allFeatures,
+      });
+    } catch (err) {
+      console.error("Failed to load reference features:", err);
+    }
+  };
+
+  // Step 9: Source-filtered buildings GeoJSON
+  const displayedBuildingsGeojson = useMemo(() => {
+    if (!buildingsGeojson || !selectedSourceFilter) return buildingsGeojson;
+    if (selectedSourceFilter.toUpperCase().includes("OSM")) return buildingsGeojson;
+    return {
+      ...buildingsGeojson,
+      features: buildingsGeojson.features.filter(
+        (f) =>
+          f.properties?.source_id === selectedSourceFilter ||
+          f.properties?.source === selectedSourceFilter
+      ),
+    };
+  }, [buildingsGeojson, selectedSourceFilter]);
 
   const crsString = validationResult?.crs || geojson?.crs?.properties?.name || "WGS 84 (EPSG:4326)";
   const hasData =
@@ -141,6 +223,72 @@ export default function Cadastral2DPage() {
 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden relative">
+      {/* ── Real-World Demo Action Strip (Visible Change #8 & #10) ───── */}
+      {activeDatasetId === "STHARA-REALWORLD-DEMO" && (
+        <div
+          className="flex items-center justify-between px-4 py-1.5 text-xs shrink-0 z-20 gap-2 border-b"
+          style={{
+            backgroundColor: "var(--sth-sage-bg)",
+            borderColor: "#C0CAC0",
+            fontFamily: "var(--font-mono)",
+          }}
+        >
+          <div className="flex items-center gap-2 flex-wrap">
+            <span
+              className="px-2 py-0.5 rounded font-bold text-[10px] uppercase tracking-wider"
+              style={{ backgroundColor: "var(--sth-sage)", color: "#FFFFFF" }}
+            >
+              REAL-WORLD DEMO ACTIVE
+            </span>
+            <span className="text-[11px] font-semibold" style={{ color: "var(--sth-text)" }}>
+              Connaught Tower A (4 Floors, 7 Units)
+            </span>
+            <span className="text-[10px] hidden md:inline" style={{ color: "var(--sth-text-2)" }}>
+              Source: OpenStreetMap | Geometry: Validated | EPSG:32643
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <button
+              type="button"
+              onClick={() => router.push("/workspace/2d")}
+              className="px-2 py-0.5 rounded text-[11px] font-semibold transition-colors cursor-pointer"
+              style={{ backgroundColor: "var(--sth-card)", color: "var(--sth-text)", border: "1px solid var(--sth-border)" }}
+            >
+              2D MAP
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push("/workspace/3d")}
+              className="px-2 py-0.5 rounded text-[11px] font-semibold transition-colors cursor-pointer"
+              style={{ backgroundColor: "var(--sth-accent)", color: "#FFFFFF" }}
+            >
+              3D VIEW
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setInspectorOpen(true);
+                setInspectorTab("inspector");
+              }}
+              className="px-2 py-0.5 rounded text-[11px] font-semibold transition-colors cursor-pointer"
+              style={{ backgroundColor: "var(--sth-surface)", color: "var(--sth-text)", border: "1px solid var(--sth-border)" }}
+            >
+              INSPECT
+            </button>
+            <button
+              type="button"
+              onClick={resetRealWorldDemo}
+              disabled={isDemoRunning}
+              className="px-2 py-0.5 rounded text-[11px] font-semibold transition-colors cursor-pointer"
+              style={{ backgroundColor: "var(--sth-clay-bg)", color: "var(--sth-clay)", border: "1px solid #DDBCB4" }}
+            >
+              RESET DEMO
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── Sub-header toolbar ──────────────────────────────────────── */}
       <div
         className="flex items-center justify-between px-4 py-2 text-xs shrink-0 z-10 gap-3"
@@ -183,6 +331,87 @@ export default function Cadastral2DPage() {
             {layerBtn("buildings", "Buildings", buildingsGeojson?.features?.length || 0, "accent")}
             {layerBtn("units", "Units", unitsGeojson?.features?.length || 0, "geo")}
             {layerBtn("underground", "Subsurface", undergroundBundle?.total_features || 0, "neutral")}
+
+            {/* Step 9: Sources Launcher */}
+            <button
+              type="button"
+              onClick={() => {
+                setInspectorOpen(true);
+                setInspectorTab("sources");
+              }}
+              className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono border transition-colors cursor-pointer"
+              style={{
+                backgroundColor: inspectorTab === "sources" && inspectorOpen ? "var(--sth-sage-bg)" : "var(--sth-surface)",
+                color: inspectorTab === "sources" && inspectorOpen ? "var(--sth-sage)" : "var(--sth-text-2)",
+                border: "1px solid var(--sth-border)",
+              }}
+              title="Manage Spatial Sources & Reference Layers"
+            >
+              <span>Sources</span>
+              {visibleReferenceSourceIds.length > 0 && (
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+              )}
+            </button>
+
+            {/* Step 37+: Unified Project Data Entry Link */}
+            <Link
+              href="/data"
+              className="flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[11px] font-mono border transition-all cursor-pointer shadow-sm hover:border-[#A85D48]"
+              style={{
+                backgroundColor: "var(--sth-surface)",
+                color: "var(--sth-text)",
+                border: "1px solid var(--sth-border)",
+              }}
+              title="STHARA Unified Project Data Entry: Upload all maps and drawings together"
+            >
+              <span>📁</span>
+              <span className="font-semibold">Project Data</span>
+            </Link>
+
+            {/* Step 21-36: Drawing Intelligence Button */}
+            <button
+              type="button"
+              onClick={() => {
+                if (drawingAnalysis) {
+                  setIsDrawingReviewOpen(true);
+                } else {
+                  setIsDrawingImportOpen(true);
+                }
+              }}
+              className="flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[11px] font-mono border transition-all cursor-pointer shadow-sm"
+              style={{
+                backgroundColor: drawingAnalysis ? "var(--sth-clay-bg)" : "var(--sth-surface)",
+                color: drawingAnalysis ? "var(--sth-accent)" : "var(--sth-text-2)",
+                border: drawingAnalysis ? "1px solid #DDBCB4" : "1px solid var(--sth-border)",
+              }}
+              title="STHARA Drawing Intelligence: Ingest PDFs and generate 3D models"
+            >
+              <span>📐</span>
+              <span className="font-semibold">
+                {drawingAnalysis ? `Drawings (${drawingAnalysis.documents.length})` : "Project Drawings"}
+              </span>
+            </button>
+
+            {spatialSourceStatus?.active_mode === "DRAWINGS_ONLY" && (
+              <span
+                className="px-2 py-0.5 rounded border text-[10px] font-mono font-bold bg-[#A85D48]/10 text-[#A85D48] border-[#DDBCB4]"
+                title="OSM data is missing or empty. Project drawings form the primary spatial source."
+              >
+                MODE B (DRAWINGS ONLY)
+              </span>
+            )}
+
+            {selectedSourceFilter && (
+              <button
+                type="button"
+                onClick={() => setSelectedSourceFilter(null)}
+                className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono bg-amber-950/80 border border-amber-700 text-amber-300 cursor-pointer"
+                title="Click to clear source filter"
+              >
+                <span>Filter: {selectedSourceFilter}</span>
+                <span>✕</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -245,9 +474,10 @@ export default function Cadastral2DPage() {
         <div className="flex-1 h-full min-h-[350px] relative">
           <CadastralMap
             geojson={geojson}
-            buildingsGeojson={buildingsGeojson}
+            buildingsGeojson={displayedBuildingsGeojson}
             unitsGeojson={unitsGeojson}
             undergroundGeojson={undergroundGeojson}
+            referenceFeaturesGeojson={referenceFeaturesGeojson}
             selectedParcelId={selectedParcelId}
             selectedBuildingId={selectedBuildingId}
             selectedUnitId={selectedUnitId}
@@ -275,57 +505,96 @@ export default function Cadastral2DPage() {
                   boxShadow: "0 4px 24px rgba(37,38,34,0.10)",
                 }}
               >
-                <div
-                  className="mb-4 mx-auto flex h-12 w-12 items-center justify-center rounded-md"
-                  style={{
-                    border: "1px solid var(--sth-border)",
-                    backgroundColor: "var(--sth-surface)",
-                    color: "var(--sth-accent)",
-                  }}
-                >
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                  </svg>
-                </div>
-                <h2
-                  className="text-base font-semibold mb-2"
-                  style={{ fontFamily: "var(--font-heading)", color: "var(--sth-text)" }}
-                >
-                  No 2D Data Loaded
-                </h2>
-                <p className="text-xs mb-6 leading-relaxed" style={{ color: "var(--sth-text-2)" }}>
-                  Load cadastral parcels, building footprints, or real OpenStreetMap data to visualize boundaries.
-                </p>
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 flex-wrap">
-                  {[
-                    { label: "Load Parcels", onClick: loadDemoParcels, variant: "sage" },
-                    { label: "Load Buildings", onClick: loadDemoBuildings, variant: "geo" },
-                    { label: "Load Real OSM", onClick: loadRealOSMBuildings, variant: "accent" },
-                    { label: "Load Units", onClick: loadDemoUnits, variant: "neutral" },
-                  ].map((btn) => (
-                    <button
-                      key={btn.label}
-                      type="button"
-                      onClick={btn.onClick}
-                      className="w-full sm:w-auto inline-flex items-center justify-center text-xs font-semibold px-3.5 py-2 rounded-md transition-colors cursor-pointer"
-                      style={
-                        btn.variant === "sage"
-                          ? { backgroundColor: "var(--sth-sage)", color: "#fff" }
-                          : btn.variant === "geo"
-                          ? { backgroundColor: "var(--sth-geo)", color: "#fff" }
-                          : btn.variant === "accent"
-                          ? { backgroundColor: "var(--sth-accent)", color: "#fff" }
-                          : {
-                              border: "1px solid var(--sth-border)",
-                              backgroundColor: "var(--sth-surface)",
-                              color: "var(--sth-text-2)",
-                            }
-                      }
+                {drawingAnalysis ? (
+                  <>
+                    <div
+                      className="mb-4 mx-auto flex h-12 w-12 items-center justify-center rounded-md"
+                      style={{
+                        border: "1px solid #DDBCB4",
+                        backgroundColor: "var(--sth-clay-bg)",
+                        color: "var(--sth-accent)",
+                      }}
                     >
-                      {btn.label}
-                    </button>
-                  ))}
-                </div>
+                      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                    <h2
+                      className="text-base font-semibold mb-2"
+                      style={{ fontFamily: "var(--font-heading)", color: "var(--sth-text)" }}
+                    >
+                      Drawing-Only Project Mode Active
+                    </h2>
+                    <p className="text-xs mb-6 leading-relaxed" style={{ color: "var(--sth-text-2)" }}>
+                      OSM building data is unpopulated for this dataset. {drawingAnalysis.documents.length} project drawing(s) ({drawingAnalysis.summary.detected_floors_count} detected floors) are ready for spatial candidate review.
+                    </p>
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => setIsDrawingReviewOpen(true)}
+                        className="w-full sm:w-auto inline-flex items-center justify-center text-xs font-semibold px-4 py-2 rounded-md transition-colors cursor-pointer shadow-sm"
+                        style={{ backgroundColor: "var(--sth-accent)", color: "#fff" }}
+                      >
+                        📐 Review Drawing Candidates &amp; Build 3D Model
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div
+                      className="mb-4 mx-auto flex h-12 w-12 items-center justify-center rounded-md"
+                      style={{
+                        border: "1px solid var(--sth-border)",
+                        backgroundColor: "var(--sth-surface)",
+                        color: "var(--sth-accent)",
+                      }}
+                    >
+                      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                      </svg>
+                    </div>
+                    <h2
+                      className="text-base font-semibold mb-2"
+                      style={{ fontFamily: "var(--font-heading)", color: "var(--sth-text)" }}
+                    >
+                      No 2D Data Loaded
+                    </h2>
+                    <p className="text-xs mb-6 leading-relaxed" style={{ color: "var(--sth-text-2)" }}>
+                      Load cadastral parcels, building footprints, real OpenStreetMap data, or attach architectural project drawings.
+                    </p>
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 flex-wrap">
+                      {[
+                        { label: "Load Parcels", onClick: loadDemoParcels, variant: "sage" },
+                        { label: "Load Buildings", onClick: loadDemoBuildings, variant: "geo" },
+                        { label: "Load Real OSM", onClick: loadRealOSMBuildings, variant: "accent" },
+                        { label: "Load Units", onClick: loadDemoUnits, variant: "neutral" },
+                        { label: "Import Drawings", onClick: () => setIsDrawingImportOpen(true), variant: "accent" },
+                      ].map((btn) => (
+                        <button
+                          key={btn.label}
+                          type="button"
+                          onClick={btn.onClick}
+                          className="w-full sm:w-auto inline-flex items-center justify-center text-xs font-semibold px-3.5 py-2 rounded-md transition-colors cursor-pointer"
+                          style={
+                            btn.variant === "sage"
+                              ? { backgroundColor: "var(--sth-sage)", color: "#fff" }
+                              : btn.variant === "geo"
+                              ? { backgroundColor: "var(--sth-geo)", color: "#fff" }
+                              : btn.variant === "accent"
+                              ? { backgroundColor: "var(--sth-accent)", color: "#fff" }
+                              : {
+                                  border: "1px solid var(--sth-border)",
+                                  backgroundColor: "var(--sth-surface)",
+                                  color: "var(--sth-text-2)",
+                                }
+                          }
+                        >
+                          {btn.label}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           )}
@@ -359,64 +628,163 @@ export default function Cadastral2DPage() {
         {inspectorOpen && (
           <aside
             aria-label="2D Cadastral Inspector"
-            className="w-full lg:w-[380px] shrink-0 h-full overflow-y-auto"
+            className="w-full lg:w-[380px] shrink-0 h-full flex flex-col overflow-hidden"
             style={{
               borderLeft: "1px solid var(--sth-border)",
               backgroundColor: "var(--sth-card)",
             }}
           >
-            <ParcelInspector
-              selectedParcel={selectedParcel}
-              selectedBuilding={selectedBuilding}
-              associatedBuildingIds={selectedParcelAssociatedBuildings}
-              associationSummary={associationData?.summary}
-              crs={crsString}
-              parcelElevation={selectedParcelElevation}
-              buildingElevation={selectedBuildingElevation}
-              buildingHeight={selectedBuildingHeight}
-              buildingFloors={selectedBuildingFloors}
-              buildingSpec={selectedBuildingSpec}
-              building3D={selectedBuilding3D}
-              buildingFloors3D={selectedBuildingFloors3D}
-              properties3D={property3DData?.results}
-              ulpins3D={ulpins3D}
-              units={unitsGeojson?.features?.map((f) => f.properties)}
-              selectedFloorId={selectedFloorId}
-              selectedPropertyId={selectedPropertyId}
-              selectedUnitId={selectedUnitId}
-              unitPropertyRecord={unitPropertyRecord}
-              demMetadata={demMetadata}
-              isSamplingElevation={isSamplingElevation}
-              isCalculatingHeight={isCalculatingHeight}
-              isGeneratingFloors={isGeneratingFloors}
-              onSelectParcelId={setSelectedParcelId}
-              onSelectBuildingId={setSelectedBuildingId}
-              onSelectFloorId={setSelectedFloorId}
-              onSelectPropertyId={setSelectedPropertyId}
-              onSelectUnitId={setSelectedUnitId}
-              onSampleElevation={sampleActiveElevation}
-              onCalculateHeight={calculateSelectedBuildingHeight}
-              onGenerateFloors={generateSelectedBuildingFloors}
-              onSwitchTo3D={() => {
-                setSubView3D("building");
-                router.push("/workspace/3d");
+            {/* Dock Tab Selector */}
+            <div
+              className="flex border-b text-xs shrink-0"
+              style={{
+                borderColor: "var(--sth-border)",
+                backgroundColor: "var(--sth-surface)",
+                fontFamily: "var(--font-mono)",
               }}
-              onSwitchToFloors3D={() => {
-                setSubView3D("floors");
-                router.push("/workspace/3d");
-              }}
-              onSwitchToProperty3D={() => {
-                setSubView3D("property");
-                router.push("/workspace/3d");
-              }}
-              topologyData={topologyData}
-              isAuditingTopology={isAuditingTopology}
-              onRunTopologyAudit={runTopologyAudit}
-              onLoadDemoTopology={loadDemoTopology}
-            />
+            >
+              <button
+                type="button"
+                onClick={() => setInspectorTab("inspector")}
+                className={`flex-1 py-2 text-center text-[11px] font-medium transition-colors cursor-pointer ${
+                  inspectorTab === "inspector"
+                    ? "font-semibold text-zinc-100 border-b-2"
+                    : "text-zinc-400 hover:text-zinc-200"
+                }`}
+                style={{
+                  borderBottomColor: inspectorTab === "inspector" ? "var(--sth-geo)" : "transparent",
+                }}
+              >
+                Cadastral Inspector
+              </button>
+              <button
+                type="button"
+                onClick={() => setInspectorTab("sources")}
+                className={`flex-1 py-2 text-center text-[11px] font-medium transition-colors cursor-pointer ${
+                  inspectorTab === "sources"
+                    ? "font-semibold text-zinc-100 border-b-2"
+                    : "text-zinc-400 hover:text-zinc-200"
+                }`}
+                style={{
+                  borderBottomColor: inspectorTab === "sources" ? "var(--sth-sage)" : "transparent",
+                }}
+              >
+                Data Sources & Fusion
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto">
+              {inspectorTab === "inspector" ? (
+                <ParcelInspector
+                  selectedParcel={selectedParcel}
+                  selectedBuilding={selectedBuilding}
+                  associatedBuildingIds={selectedParcelAssociatedBuildings}
+                  associationSummary={associationData?.summary}
+                  crs={crsString}
+                  parcelElevation={selectedParcelElevation}
+                  buildingElevation={selectedBuildingElevation}
+                  buildingHeight={selectedBuildingHeight}
+                  buildingFloors={selectedBuildingFloors}
+                  buildingSpec={selectedBuildingSpec}
+                  building3D={selectedBuilding3D}
+                  buildingFloors3D={selectedBuildingFloors3D}
+                  properties3D={property3DData?.results}
+                  ulpins3D={ulpins3D}
+                  units={Object.values(configuredUnits).length > 0 ? Object.values(configuredUnits) : unitsGeojson?.features?.map((f) => f.properties)}
+                  selectedFloorId={selectedFloorId}
+                  selectedPropertyId={selectedPropertyId}
+                  selectedUnitId={selectedUnitId}
+                  unitPropertyRecord={unitPropertyRecord}
+                  demMetadata={demMetadata}
+                  isSamplingElevation={isSamplingElevation}
+                  isCalculatingHeight={isCalculatingHeight}
+                  isGeneratingFloors={isGeneratingFloors}
+                  onSelectParcelId={setSelectedParcelId}
+                  onSelectBuildingId={setSelectedBuildingId}
+                  onSelectFloorId={setSelectedFloorId}
+                  onSelectPropertyId={setSelectedPropertyId}
+                  onSelectUnitId={setSelectedUnitId}
+                  onSampleElevation={sampleActiveElevation}
+                  onCalculateHeight={calculateSelectedBuildingHeight}
+                  onGenerateFloors={generateSelectedBuildingFloors}
+                  onSwitchTo3D={() => {
+                    setSubView3D("building");
+                    router.push("/workspace/3d");
+                  }}
+                  onSwitchToFloors3D={() => {
+                    setSubView3D("floors");
+                    router.push("/workspace/3d");
+                  }}
+                  onSwitchToProperty3D={() => {
+                    setSubView3D("property");
+                    router.push("/workspace/3d");
+                  }}
+                  onConfigureFloors={() => setConfigModalOpen(true)}
+                  topologyData={topologyData}
+                  isAuditingTopology={isAuditingTopology}
+                  onRunTopologyAudit={runTopologyAudit}
+                  onLoadDemoTopology={loadDemoTopology}
+                />
+              ) : (
+                <DataSourcesPanel
+                  key={activeDatasetId}
+                  activeDatasetId={activeDatasetId}
+                  onToggleReferenceLayer={handleToggleReferenceLayer}
+                  visibleReferenceSourceIds={visibleReferenceSourceIds}
+                  onSelectSourceFilter={setSelectedSourceFilter}
+                  selectedSourceFilter={selectedSourceFilter}
+                />
+              )}
+            </div>
           </aside>
         )}
       </div>
+
+      {/* 2D -> 3D Building Floor Configuration Modal */}
+      <BuildingConfigModal
+        isOpen={configModalOpen}
+        onClose={() => setConfigModalOpen(false)}
+        buildingId={selectedBuildingId}
+        buildingName={selectedBuildingId ? `Building ${selectedBuildingId}` : undefined}
+        sourceAttributes={sourceAttributes}
+        initialFloors={sourceAttributes?.defaultFloors || selectedBuildingFloors?.floors?.length || 5}
+        initialBasements={sourceAttributes?.defaultBasements ?? 0}
+        initialHeight={sourceAttributes?.defaultHeight || selectedBuildingHeight?.building_height || 18.0}
+        onGenerate={async (config) => {
+          await generateConfiguredBuilding3D({
+            buildingId: config.buildingId,
+            numberOfFloors: config.numberOfFloors,
+            numberOfBasements: config.numberOfBasements,
+            buildingHeight: config.buildingHeight,
+          });
+          setSubView3D("floors");
+          router.push("/workspace/3d");
+        }}
+      />
+
+      {/* Drawing Import Modal */}
+      <DrawingImportModal
+        isOpen={isDrawingImportOpen}
+        onClose={() => setIsDrawingImportOpen(false)}
+        datasetId={activeDatasetId}
+        onAnalysisReady={(analysis) => {
+          setDrawingAnalysis(analysis);
+          setIsDrawingReviewOpen(true);
+        }}
+      />
+
+      {/* Drawing Review & 3D Model Building Workspace */}
+      {drawingAnalysis && (
+        <DrawingReviewWorkspace
+          isOpen={isDrawingReviewOpen}
+          onClose={() => setIsDrawingReviewOpen(false)}
+          analysis={drawingAnalysis}
+          datasetId={activeDatasetId}
+          onModelBuilt={async (result) => {
+            await handleModelBuiltFromDrawings(result);
+          }}
+        />
+      )}
     </div>
   );
 }
