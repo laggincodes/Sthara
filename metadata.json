@@ -1,0 +1,8 @@
+{
+  "name": "STHARA — 3D Cadastral Intelligence",
+  "description": "Volumetric 3D property models with watertight polyhedral geometry, topological gate validation, and deterministic 3D spatial identity.",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
