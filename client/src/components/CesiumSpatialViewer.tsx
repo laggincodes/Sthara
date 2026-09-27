@@ -248,6 +248,7 @@ export function CesiumSpatialViewer({
   } | null>(null);
   const selectedBuildingLabelEntityRef = useRef<CesiumEntity | null>(null);
   const selectedBuildingIdRef = useRef<string | null>(null);
+  const activeFocusTargetRef = useRef<CesiumCartesian3 | null>(null);
   const imageryLayerRef = useRef<{ show: boolean } | null>(null);
   const streetImageryLayerRef = useRef<{ show: boolean } | null>(null);
   const authorityMarkerRef = useRef<CesiumEntity | null>(null);
@@ -409,31 +410,113 @@ export function CesiumSpatialViewer({
     pdf.save("ulpin-vpm-visual-measurement-report.pdf");
   };
 
-  const getOrbitCenter = (): CesiumCartesian3 => {
-    const viewer = viewerRef.current;
-    if (!viewer) return Cartesian3.fromDegrees(85.054779, 25.6124294, 0);
+  const computeEntityCenter = useCallback(
+    (entity: CesiumEntity): CesiumCartesian3 | null => {
+      const viewer = viewerRef.current;
+      if (!viewer) return null;
+      const time = viewer.clock.currentTime;
+      if (entity.position) {
+        const pos = entity.position.getValue(time);
+        if (pos) return pos;
+      }
+      if (entity.polygon?.hierarchy) {
+        const hierarchy = entity.polygon.hierarchy.getValue(time);
+        if (hierarchy?.positions && hierarchy.positions.length > 0) {
+          return BoundingSphere.fromPoints(hierarchy.positions).center;
+        }
+      }
+      if (entity.polyline?.positions) {
+        const positions = entity.polyline.positions.getValue(time);
+        if (positions && positions.length > 0) {
+          return BoundingSphere.fromPoints(positions).center;
+        }
+      }
+      return null;
+    },
+    [BoundingSphere]
+  );
 
+  const getOrbitCenter = useCallback((): CesiumCartesian3 => {
+    const viewer = viewerRef.current;
+
+    // 1. Highest priority: Persistent active focus target (pinned building / clicked parcel / search result)
+    if (activeFocusTargetRef.current) {
+      return activeFocusTargetRef.current;
+    }
+
+    // 2. Selected building cartesian position
+    if (selectedBuildingData?.positionCartesian) {
+      activeFocusTargetRef.current = selectedBuildingData.positionCartesian;
+      return selectedBuildingData.positionCartesian;
+    }
+
+    // 3. Currently selected entity center
+    if (viewer?.selectedEntity) {
+      const entityCenter = computeEntityCenter(viewer.selectedEntity);
+      if (entityCenter) {
+        activeFocusTargetRef.current = entityCenter;
+        return entityCenter;
+      }
+    }
+
+    // 4. Floor stack data coordinates
     if (floorStackData?.coordinates) {
-      return Cartesian3.fromDegrees(
+      const pos = Cartesian3.fromDegrees(
         floorStackData.coordinates.longitude,
         floorStackData.coordinates.latitude,
         (floorStackData.actualHeightM || 20) / 2
       );
+      activeFocusTargetRef.current = pos;
+      return pos;
     }
-    const canvas = viewer.scene.canvas;
-    if (canvas && canvas.clientWidth > 0 && canvas.clientHeight > 0) {
-      const centerPos =
-        viewer.scene.pickPosition(
-          new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2)
-        ) ??
-        viewer.camera.pickEllipsoid(
-          new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2),
-          viewer.scene.globe.ellipsoid
-        );
-      if (centerPos) return centerPos;
+
+    // 5. If focused dataSource entities exist (from search / focusUlpins)
+    if (focusUlpins?.length && dataSourceRef.current) {
+      const matched = dataSourceRef.current.entities.values.filter(e => {
+        const p = (e.properties?.getValue?.() ?? {}) as Record<string, unknown>;
+        return focusUlpins.includes(String(p.ulpin ?? ""));
+      });
+      if (matched.length > 0) {
+        const center = computeEntityCenter(matched[0]);
+        if (center) {
+          activeFocusTargetRef.current = center;
+          return center;
+        }
+      }
     }
-    return Cartesian3.fromDegrees(85.054779, 25.6124294, 0);
-  };
+
+    // 6. Camera ray pick against terrain / globe (cached into activeFocusTargetRef so subsequent camera actions don't drift)
+    if (viewer) {
+      const canvas = viewer.scene.canvas;
+      if (canvas && canvas.clientWidth > 0 && canvas.clientHeight > 0) {
+        const centerPos =
+          viewer.scene.pickPosition(
+            new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2)
+          ) ??
+          viewer.camera.pickEllipsoid(
+            new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2),
+            viewer.scene.globe.ellipsoid
+          );
+        if (centerPos) {
+          activeFocusTargetRef.current = centerPos;
+          return centerPos;
+        }
+      }
+    }
+
+    // 7. Fallback: IIT Patna default coordinates
+    const defaultCenter = Cartesian3.fromDegrees(85.054779, 25.6124294, 0);
+    return defaultCenter;
+  }, [
+    BoundingSphere,
+    Cartesian2,
+    Cartesian3,
+    computeEntityCenter,
+    floorStackData?.actualHeightM,
+    floorStackData?.coordinates,
+    focusUlpins,
+    selectedBuildingData?.positionCartesian,
+  ]);
 
   const rotateHeading = (deltaDegrees: number) => {
     const viewer = viewerRef.current;
@@ -441,11 +524,12 @@ export function CesiumSpatialViewer({
     if (isOrbiting360) setIsOrbiting360(false);
     const target = getOrbitCenter();
     const currentHeading = viewer.camera.heading;
-    const currentPitch = viewer.camera.pitch;
-    const currentRange = Math.max(
-      Cartesian3.distance(viewer.camera.position, target),
-      65
-    );
+    let currentPitch = viewer.camera.pitch;
+    if (currentPitch > -0.15) currentPitch = -0.45;
+    if (currentPitch < -1.55) currentPitch = -1.55;
+
+    const currentDist = Cartesian3.distance(viewer.camera.position, target);
+    const currentRange = Math.min(Math.max(currentDist, 65), 500);
 
     const newHeading =
       (currentHeading + (deltaDegrees * Math.PI) / 180) % (2 * Math.PI);
@@ -463,10 +547,8 @@ export function CesiumSpatialViewer({
     if (isOrbiting360) setIsOrbiting360(false);
     const target = getOrbitCenter();
     const currentHeading = viewer.camera.heading;
-    const currentRange = Math.max(
-      Cartesian3.distance(viewer.camera.position, target),
-      65
-    );
+    const currentDist = Cartesian3.distance(viewer.camera.position, target);
+    const currentRange = Math.min(Math.max(currentDist, 65), 500);
     const pitchRad = (pitchDegrees * Math.PI) / 180;
     viewer.camera.flyToBoundingSphere(new BoundingSphere(target, 0), {
       offset: new HeadingPitchRange(currentHeading, pitchRad, currentRange),
@@ -480,10 +562,8 @@ export function CesiumSpatialViewer({
     if (!viewer) return;
     if (isOrbiting360) setIsOrbiting360(false);
     const target = getOrbitCenter();
-    const currentRange = Math.max(
-      Cartesian3.distance(viewer.camera.position, target),
-      85
-    );
+    const currentDist = Cartesian3.distance(viewer.camera.position, target);
+    const currentRange = Math.min(Math.max(currentDist, 80), 500);
     viewer.camera.flyToBoundingSphere(new BoundingSphere(target, 0), {
       offset: new HeadingPitchRange(0, -0.78, currentRange),
       duration: 0.5,
@@ -631,6 +711,7 @@ export function CesiumSpatialViewer({
       selectedOsmFeatureRef.current = null;
     }
     selectedBuildingIdRef.current = null;
+    activeFocusTargetRef.current = null;
     setOsmBuildingSelection(null);
     setSourceBuildingSelection(null);
     setSelectedBuildingData(null);
@@ -643,11 +724,13 @@ export function CesiumSpatialViewer({
     if (!viewer) return;
     if (isOrbiting360) setIsOrbiting360(false);
     const target = targetPos ?? selectedBuildingData?.positionCartesian ?? getOrbitCenter();
+    activeFocusTargetRef.current = target;
     const range = Math.max(75, height * 2.8);
     viewer.camera.flyToBoundingSphere(new BoundingSphere(target, 0), {
       offset: new HeadingPitchRange(viewer.camera.heading, -0.62, range),
       duration: 0.75,
     });
+    setCurrentPitchDeg(-35);
   };
 
   useEffect(() => {
@@ -662,13 +745,21 @@ export function CesiumSpatialViewer({
     if (!viewer) return;
 
     let animFrameId: number;
-    const target = selectedBuildingData?.positionCartesian ?? getOrbitCenter();
+    const target = getOrbitCenter();
     let heading = viewer.camera.heading;
-    const pitch = viewer.camera.pitch;
-    const range = Math.max(
-      Cartesian3.distance(viewer.camera.position, target),
-      65
-    );
+    
+    // Adjust pitch to comfortable perspective if entering orbit from straight-down top view
+    let pitch = viewer.camera.pitch;
+    if (pitch < -1.4) {
+      pitch = -0.65;
+      setCurrentPitchDeg(-37);
+    } else if (pitch > -0.15) {
+      pitch = -0.45;
+      setCurrentPitchDeg(-25);
+    }
+
+    const currentDist = Cartesian3.distance(viewer.camera.position, target);
+    const range = Math.min(Math.max(currentDist, 65), 500);
 
     const orbitLoop = () => {
       const v = viewerRef.current;
@@ -691,7 +782,7 @@ export function CesiumSpatialViewer({
         v.camera.lookAtTransform(Matrix4.IDENTITY);
       }
     };
-  }, [isOrbiting360, selectedBuildingData?.positionCartesian, Cartesian3, HeadingPitchRange, Matrix4]);
+  }, [isOrbiting360, getOrbitCenter, Cartesian3, HeadingPitchRange, Matrix4]);
 
   useEffect(() => {
     if (!containerRef.current || viewerRef.current) return;
@@ -829,6 +920,7 @@ export function CesiumSpatialViewer({
       applyOsmBuildingsStyle(visualModeRef.current, osmIdentifier);
 
       if (pickedPosition) {
+        activeFocusTargetRef.current = pickedPosition;
         updateSelectedBuildingLabel(
           pickedPosition,
           displayName,
@@ -1042,7 +1134,7 @@ export function CesiumSpatialViewer({
                 };
               })()
             : undefined;
-          selectOsmBuilding(picked, pickedCoordinates);
+          selectOsmBuilding(picked, pickedCoordinates, pickedPosition ?? undefined);
           return;
         }
         restoreOsmBuildingHighlight();
@@ -1058,6 +1150,12 @@ export function CesiumSpatialViewer({
           const floorLevel = floorIdxProp !== undefined ? Number(floorIdxProp) : Number(floorMatch?.[1]);
           if (Number.isFinite(floorLevel)) {
             viewer.selectedEntity = entity;
+            if (entity) {
+              const floorCenter = computeEntityCenter(entity);
+              if (floorCenter) {
+                activeFocusTargetRef.current = floorCenter;
+              }
+            }
             onFloorSelect?.(floorLevel);
             onMockFloorSelect?.(floorLevel);
             return;
@@ -1065,6 +1163,10 @@ export function CesiumSpatialViewer({
         }
         if (entity && syntheticProperties.demoNonAuthoritative === true) {
           viewer.selectedEntity = entity;
+          const demoCenter = computeEntityCenter(entity);
+          if (demoCenter) {
+            activeFocusTargetRef.current = demoCenter;
+          }
           onSyntheticDemoSelect?.();
           void viewer.flyTo(entity, {
             duration: 0.35,
@@ -1101,6 +1203,12 @@ export function CesiumSpatialViewer({
             ? properties.approvedFloorCount
             : undefined;
 
+        const centerPos = computeEntityCenter(selectedEntity);
+        if (centerPos) {
+          activeFocusTargetRef.current = centerPos;
+          updateSelectedBuildingLabel(centerPos, buildingName, ulpin, h || 15);
+        }
+
         selectedBuildingIdRef.current = ulpin;
         setSelectedBuildingData({
           id: ulpin,
@@ -1109,6 +1217,7 @@ export function CesiumSpatialViewer({
           floors: l,
           source: "PostGIS Municipal Survey",
           ulpin,
+          positionCartesian: centerPos ?? undefined,
           areaSqM:
             typeof properties.areaSqM === "number"
               ? properties.areaSqM
@@ -1121,11 +1230,6 @@ export function CesiumSpatialViewer({
         });
 
         applyOsmBuildingsStyle(visualModeRef.current, ulpin);
-
-        const centerPos = entity.position?.getValue(viewer.clock.currentTime);
-        if (centerPos) {
-          updateSelectedBuildingLabel(centerPos, buildingName, ulpin, h || 15);
-        }
 
         void viewer.flyTo(selectedEntity, {
           duration: 0.55,
@@ -1290,6 +1394,17 @@ export function CesiumSpatialViewer({
     setViewerState("ready");
     let cancelled = false;
 
+    const onCameraChanged = () => {
+      if (!viewer) return;
+      const headingRad = viewer.camera.heading;
+      const pitchRad = viewer.camera.pitch;
+      const headingDeg = Math.round((headingRad * 180) / Math.PI) % 360;
+      const pitchDeg = Math.round((pitchRad * 180) / Math.PI);
+      setCurrentHeadingDeg(headingDeg >= 0 ? headingDeg : headingDeg + 360);
+      setCurrentPitchDeg(pitchDeg);
+    };
+    viewer.camera.changed.addEventListener(onCameraChanged);
+
     // High-reliability Satellite World Imagery with fallback
     const loadSatelliteImagery = async () => {
       if (cancelled || !viewerRef.current) return;
@@ -1396,6 +1511,7 @@ export function CesiumSpatialViewer({
     }
     return () => {
       cancelled = true;
+      viewer.camera.changed.removeEventListener(onCameraChanged);
       osmBuildingsRef.current = null;
       selectedOsmFeatureRef.current = null;
       imageryLayerRef.current = null;
@@ -1759,6 +1875,14 @@ export function CesiumSpatialViewer({
               typeof properties.footprintAreaSquareMetres === "number"
                 ? `${properties.footprintAreaSquareMetres.toLocaleString()} m²`
                 : "Area unavailable";
+            const h =
+              typeof properties.approvedHeightMetres === "number"
+                ? properties.approvedHeightMetres
+                : undefined;
+            const l =
+              typeof properties.approvedFloorCount === "number"
+                ? properties.approvedFloorCount
+                : undefined;
             focusedEntities.forEach((entity, index) => {
               const comparisonColor = index === 0 ? "#73fff1" : "#b48cff";
               const outlineColor = index === 0 ? "#fff3b0" : "#f2dcff";
@@ -1779,6 +1903,24 @@ export function CesiumSpatialViewer({
               }
             });
             viewer.selectedEntity = focusedEntity;
+            const entityCenter = computeEntityCenter(focusedEntity);
+            if (entityCenter) {
+              activeFocusTargetRef.current = entityCenter;
+              updateSelectedBuildingLabel(entityCenter, name, String(properties.ulpin ?? "Source record"), h || 15);
+              setSelectedBuildingData({
+                id: String(properties.ulpin ?? "Source record"),
+                name,
+                height: h,
+                floors: l,
+                source: "PostGIS Municipal Survey",
+                ulpin: String(properties.ulpin ?? ""),
+                positionCartesian: entityCenter,
+                areaSqM:
+                  typeof properties.areaSqM === "number"
+                    ? properties.areaSqM
+                    : undefined,
+              });
+            }
             setSourceBuildingSelection({
               name,
               ulpin: String(properties.ulpin ?? "Source record"),
@@ -1799,10 +1941,12 @@ export function CesiumSpatialViewer({
           });
         } else {
           setFocusSummary(null);
-          viewer.camera.lookAt(
-            Cartesian3.fromDegrees(85.054779, 25.6124294),
-            new HeadingPitchRange(0.22, -1.12, 980)
-          );
+          const defaultCenter = Cartesian3.fromDegrees(85.054779, 25.6124294, 0);
+          activeFocusTargetRef.current = defaultCenter;
+          viewer.camera.flyToBoundingSphere(new BoundingSphere(defaultCenter, 0), {
+            offset: new HeadingPitchRange(0.22, -1.12, 980),
+            duration: 0.7,
+          });
         }
       }
     };
@@ -1971,22 +2115,38 @@ export function CesiumSpatialViewer({
     if (!viewer || !command) return;
     if (command.kind === "zoom-in") viewer.camera.zoomIn(180);
     if (command.kind === "zoom-out") viewer.camera.zoomOut(180);
-    if (command.kind === "north")
-      viewer.camera.lookAt(
-        Cartesian3.fromDegrees(85.054779, 25.6124294),
-        new HeadingPitchRange(0, -1.22, 980)
-      );
+    if (command.kind === "north") {
+      const target = getOrbitCenter();
+      viewer.camera.flyToBoundingSphere(new BoundingSphere(target, 0), {
+        offset: new HeadingPitchRange(0, -0.78, 450),
+        duration: 0.5,
+      });
+      setCurrentHeadingDeg(0);
+      setCurrentPitchDeg(-45);
+    }
     if (command.kind === "focus-site") {
       if (focusUlpins?.length && dataSourceRef.current) {
+        const matched = dataSourceRef.current.entities.values.filter(entity => {
+          const p = (entity.properties?.getValue?.() ?? {}) as Record<string, unknown>;
+          return focusUlpins.includes(String(p.ulpin ?? ""));
+        });
+        if (matched.length > 0) {
+          const center = computeEntityCenter(matched[0]);
+          if (center) {
+            activeFocusTargetRef.current = center;
+          }
+        }
         void viewer.flyTo(dataSourceRef.current, {
           duration: 0.7,
           offset: new HeadingPitchRange(0.22, -0.92, 260),
         });
       } else {
-        viewer.camera.lookAt(
-          Cartesian3.fromDegrees(85.054779, 25.6124294),
-          new HeadingPitchRange(0.22, -1.12, 980)
-        );
+        const defaultCenter = Cartesian3.fromDegrees(85.054779, 25.6124294, 0);
+        activeFocusTargetRef.current = defaultCenter;
+        viewer.camera.flyToBoundingSphere(new BoundingSphere(defaultCenter, 0), {
+          offset: new HeadingPitchRange(0.22, -1.12, 980),
+          duration: 0.7,
+        });
       }
     }
     if (
@@ -2026,10 +2186,14 @@ export function CesiumSpatialViewer({
           unknown
         >;
         viewer.selectedEntity = entity;
+        const center = computeEntityCenter(entity);
+        if (center) {
+          activeFocusTargetRef.current = center;
+        }
         onFeatureSelect?.({ ulpin, properties });
       }
     }
-  }, [command, focusUlpins, onFeatureSelect]);
+  }, [command, computeEntityCenter, focusUlpins, getOrbitCenter, onFeatureSelect]);
 
   return (
     <div
