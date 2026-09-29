@@ -90,6 +90,7 @@ import {
 import { buildPlaceIntelligence } from "./placeIntelligence";
 import {
   getPostgisFeatureCollection,
+  getPostgisHealthStatus,
   searchPostgisLayeredArea,
   updatePostgisFootprint,
   upsertPostgisGeoJsonFeatures,
@@ -163,13 +164,12 @@ const footprintUpdateInput = z
     }
   });
 
-const layeredAreaSearchInput = z.object({
-  query: z
-    .string()
-    .trim()
-    .min(2, "Enter a site, ULPIN, parcel, or ownership reference.")
-    .max(180),
-});
+const layeredAreaSearchInput = z
+  .object({
+    query: z.string().trim().optional().default(""),
+  })
+  .optional()
+  .default({ query: "" });
 
 const buildingResolutionInput = z.object({
   query: z
@@ -856,17 +856,18 @@ export const appRouter = router({
 
   // Spatial & PostGIS Operations
   postgis: router({
+    health: publicProcedure.query(async () => getPostgisHealthStatus()),
     geojson: publicProcedure.query(async () => getPostgisFeatureCollection()),
     syntheticGcpDemo: publicProcedure.query(() =>
       buildSyntheticGcpDemoResult()
     ),
     areaSearch: publicProcedure
       .input(layeredAreaSearchInput)
-      .query(async ({ input }) => searchPostgisLayeredArea(input.query)),
+      .query(async ({ input }) => searchPostgisLayeredArea(input?.query ?? "")),
     placeFacts: publicProcedure
       .input(layeredAreaSearchInput)
       .query(async ({ input }) =>
-        buildPlaceIntelligence(await searchPostgisLayeredArea(input.query))
+        buildPlaceIntelligence(await searchPostgisLayeredArea(input?.query ?? ""))
       ),
     resolveBuilding: publicProcedure
       .input(buildingResolutionInput)
@@ -1250,8 +1251,11 @@ export const appRouter = router({
       .query(async ({ input }) => getCadastralGrievances(input)),
 
     getById: publicProcedure
-      .input(z.object({ idOrNumber: z.union([z.string(), z.number()]) }))
-      .query(async ({ input }) => getGrievanceById(input.idOrNumber)),
+      .input(z.object({ idOrNumber: z.union([z.string(), z.number()]).optional() }).optional())
+      .query(async ({ input }) => {
+        if (!input?.idOrNumber) return null;
+        return getGrievanceById(input.idOrNumber);
+      }),
 
     authorityAction: authorityProcedure
       .input(

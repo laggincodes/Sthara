@@ -14,10 +14,7 @@ describe("source-aware Parcels and Buildings explorer", () => {
   });
 
   it("uses source-backed suggestions and preserves unavailable dimensions as locks", () => {
-    expect(SOURCE_BACKED_EXPLORER_SUGGESTIONS).toContain("IIT Patna");
-    expect(PLACE_EXPLORER_SEGMENTS.buildings.description).toContain(
-      "Restaurant"
-    );
+    expect(SOURCE_BACKED_EXPLORER_SUGGESTIONS).toContain("Rajouri Garden, Delhi");
     expect(PLACE_EXPLORER_UNAVAILABLE_METRICS).toContain("Length");
     expect(PLACE_EXPLORER_UNAVAILABLE_METRICS).toContain("legal parcel");
     expect(PLACE_EXPLORER_UNAVAILABLE_METRICS).toContain("ULPIN");

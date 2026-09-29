@@ -26,7 +26,14 @@ export async function createContext(
     console.warn("[Context] Master seed check non-blocking warning:", err)
   );
 
-  const { userId } = getAuth(opts.req);
+  let userId: string | null = null;
+  try {
+    const auth = getAuth(opts.req);
+    userId = auth.userId ?? null;
+  } catch {
+    // Clerk middleware not mounted or offline mode
+    userId = null;
+  }
 
   if (userId) {
     try {

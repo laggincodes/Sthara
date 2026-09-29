@@ -2,7 +2,7 @@ export const ENV = {
   appId: process.env.VITE_APP_ID ?? "",
   cookieSecret: process.env.JWT_SECRET ?? "",
   databaseUrl: process.env.DATABASE_URL ?? "",
-  postgisDatabaseUrl: process.env.POSTGIS_DATABASE_URL ?? "",
+  postgisDatabaseUrl: process.env.POSTGIS_DATABASE_URL ?? process.env.DATABASE_URL ?? "",
   postgisApiKey: process.env.POSTGIS_API_KEY ?? "",
   oAuthServerUrl: process.env.OAUTH_SERVER_URL ?? "",
   ownerOpenId: process.env.OWNER_OPEN_ID ?? "",

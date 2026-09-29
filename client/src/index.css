@@ -24,31 +24,37 @@
 }
 
 :root {
-  --background: #0a1015;
-  --foreground: #eaf3f2;
-  --card: #111a20;
-  --card-foreground: #eaf3f2;
-  --primary: #2ad4d9;
-  --primary-foreground: #062125;
-  --border: rgba(222, 245, 241, 0.1);
-  --ring: #2ad4d9;
-  --radius: 14px;
-  --nav-width: 250px;
+  --background: #F3F0E8;
+  --foreground: #252622;
+  --card: #F8F6F0;
+  --card-foreground: #252622;
+  --primary: #A85D48;
+  --primary-foreground: #FFFFFF;
+  --secondary: #788575;
+  --secondary-foreground: #FFFFFF;
+  --accent: #B28A52;
+  --muted: #E9E5DA;
+  --muted-foreground: #6F7069;
+  --border: #D7D4CB;
+  --ring: #A85D48;
+  --radius: 8px;
+  --font-sans: 'DM Sans', 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+  --sth-bg: #F3F0E8;
+  --sth-surface: #E9E5DA;
+  --sth-card: #F8F6F0;
+  --sth-text: #252622;
+  --sth-text-2: #6F7069;
+  --sth-border: #D7D4CB;
+  --sth-accent: #A85D48;
+  --sth-secondary: #788575;
+  --sth-gold: #B28A52;
 }
-:root:not(.dark) {
-  --background: #e7f1ef;
-  --foreground: #0d252a;
-  --card: #f5fbfa;
-  --card-foreground: #0d252a;
-  --border: rgba(14, 62, 66, 0.2);
-}
-:root:not(.dark) body {
-  background: #e7f1ef;
-}
-:root:not(.dark) .app-shell,
-:root:not(.dark) .workspace,
-:root:not(.dark) .registry-workspace {
-  filter: brightness(1.12) saturate(0.85);
+
+body {
+  background-color: var(--sth-bg);
+  color: var(--sth-text);
+  font-family: var(--font-sans);
 }
 
 * {

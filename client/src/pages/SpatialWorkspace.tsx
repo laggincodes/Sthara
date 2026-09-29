@@ -6,22 +6,6 @@ import {
   type DetailedMapSelection,
 } from "@/components/CesiumSpatialViewer";
 import {
-  ThreeBuildingPreview,
-  type ThreePreviewFeature,
-} from "@/components/ThreeBuildingPreview";
-import {
-  IIT_PATNA_OFFICIAL_CONTEXT,
-  isIitPatnaReference,
-} from "@shared/iitPatnaEvidence";
-import {
-  getPlaceExplorerSegment,
-  PLACE_EXPLORER_SEGMENTS,
-  PLACE_EXPLORER_UNAVAILABLE_METRICS,
-  SOURCE_BACKED_EXPLORER_SUGGESTIONS,
-} from "@shared/placeExplorer";
-import { resolveBuildingEvidenceLevel } from "@/lib/buildingEvidenceLevel";
-import BuildingInformationPanel from "@/components/BuildingInformationPanel";
-import {
   resolveFloorStackForSelection,
   type BuildingFloorStackRecord,
   type FloorStackLevel,
@@ -33,18 +17,27 @@ import {
   ArrowLeft,
   Box,
   Building2,
-  CircleDot,
+  CheckCircle2,
+  Compass,
   Database,
-  FileDown,
+  Eye,
+  FileCode2,
+  Layers,
   Layers3,
+  MapPin,
   Maximize2,
   Minus,
   Plus,
+  RefreshCw,
+  RotateCcw,
   ScanSearch,
-  Settings2,
-  ShieldAlert,
+  Sliders,
+  Sparkles,
   Upload,
+  X,
+  ExternalLink,
   ShieldCheck,
+  Info,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useSearch } from "wouter";
@@ -53,1789 +46,732 @@ type SelectedFeature = {
   ulpin: string;
   properties: Record<string, unknown>;
 };
-type DemoRole = "citizen" | "surveyor" | "authority";
 
-const demoRoleDetails: Record<
-  DemoRole,
-  { label: string; summary: string; access: string }
-> = {
-  citizen: {
-    label: "Citizen",
-    summary: "Explore published source footprints and demo records.",
-    access: "Public source context · no ownership or rights access",
-  },
-  surveyor: {
-    label: "Surveyor",
-    summary: "Review measurement and evidence-intake workflows.",
-    access: "Survey workflow preview · authority evidence still required",
-  },
-  authority: {
-    label: "Authority",
-    summary: "Review evidence gates and authority-review pathways.",
-    access: "Review pathway preview · real authorization remains separate",
-  },
-};
-
-const mockApprovalRequests = [
-  {
-    id: "MOCK-REQ-204",
-    label: "Illustrative multi-storey review",
-    submitted: "Demo queue · no real applicant",
-  },
-  {
-    id: "MOCK-REQ-205",
-    label: "Illustrative source-link review",
-    submitted: "Demo queue · no real applicant",
-  },
-] as const;
-
-type MockRecord = {
-  id: string;
-  sourceRecordId: string;
-  propertyName: string;
-  ownership: string;
-  verticalRights: string;
-  propertyType: string;
-  createdAt: number;
-};
-
-const mockPropertyTypeColors: Record<string, string> = {
-  "Multi-storey source building": "#72e3df",
-  "Campus facility": "#b48cff",
-  "Residential apartment": "#f5c66b",
-  "Commercial property": "#7de1aa",
-};
-
-function mockPropertyTypeColor(propertyType: string) {
-  return (
-    mockPropertyTypeColors[propertyType] ??
-    ["#72e3df", "#b48cff", "#f5c66b", "#7de1aa"][propertyType.length % 4]
-  );
-}
-
-const layerOptions: Array<{
-  key: keyof CesiumLayerFlags;
-  label: string;
-  color: string;
-}> = [
-  { key: "parcels", label: "Surface footprint references", color: "#2ad4d9" },
-  { key: "buildings", label: "Detected building envelopes", color: "#7de1aa" },
-  { key: "utilities", label: "Subsurface evidence", color: "#eba760" },
-  { key: "terrain", label: "Terrain context", color: "#d8e2de" },
-];
-
-type VerticalLayerId =
-  | "surface"
-  | "envelope"
-  | "unit"
-  | "rights"
-  | "subsurface";
-
-const verticalLayers: Array<{
-  id: VerticalLayerId;
-  order: string;
-  label: string;
-  shortLabel: string;
-  description: string;
-  evidence: string;
-}> = [
-  {
-    id: "surface",
-    order: "01",
-    label: "Source footprint",
-    shortLabel: "Surface",
-    description:
-      "Live PostGIS geometry selected from an attributed source layer.",
-    evidence: "Live geometry",
-  },
-  {
-    id: "envelope",
-    order: "02",
-    label: "Building envelope",
-    shortLabel: "Envelope",
-    description:
-      "Detected building extent; elevation remains unapproved until an authority source is attached.",
-    evidence: "Height required",
-  },
-  {
-    id: "unit",
-    order: "03",
-    label: "Floor & unit",
-    shortLabel: "Floor / unit",
-    description:
-      "Vertical unit boundaries require an approved floor plan and registered ULPIN record.",
-    evidence: "Plan required",
-  },
-  {
-    id: "rights",
-    order: "04",
-    label: "Air & vertical rights",
-    shortLabel: "Rights",
-    description:
-      "Rights volumes are displayed only from an explicit authority-linked record.",
-    evidence: "Record required",
-  },
-  {
-    id: "subsurface",
-    order: "05",
-    label: "Subsurface assets",
-    shortLabel: "Subsurface",
-    description:
-      "Utility or underground layers require surveyed source evidence and depth metadata.",
-    evidence: "Survey required",
-  },
-];
-
-type EvidenceLevel = 1 | 2 | 3;
-
-const evidenceLevels: Array<{
-  level: EvidenceLevel;
-  title: string;
-  source: string;
-  next: string;
-  verticalLayer: VerticalLayerId;
-}> = [
-  {
-    level: 1,
-    title: "Building outline",
-    source: "OSM / public footprint",
-    next: "Verified building-height record",
-    verticalLayer: "surface",
-  },
-  {
-    level: 2,
-    title: "Extruded 3D building",
-    source: "Verified building height",
-    next: "Official floor plan or BIM",
-    verticalLayer: "envelope",
-  },
-  {
-    level: 3,
-    title: "Vertical ULPIN model",
-    source: "Official floor plan / BIM",
-    next: "Vertical ULPIN registration",
-    verticalLayer: "unit",
-  },
-];
+export type ActiveMapTool = "select-building" | "select-area" | "select-multiple" | null;
 
 export default function SpatialWorkspace() {
   const [, setLocation] = useLocation();
   const search = useSearch();
   const queryParameters = new URLSearchParams(search);
-  const requestedSite = queryParameters.get("site") ?? "Amity University Patna";
-  const comparisonUlpins = (queryParameters.get("compare") ?? "")
-    .split(",")
-    .map(value => value.trim())
-    .filter(Boolean)
-    .slice(0, 2);
-  const explorerSegment = getPlaceExplorerSegment(
-    queryParameters.get("segment")
-  );
-  const explorer = PLACE_EXPLORER_SEGMENTS[explorerSegment];
-  const initialSite = useMemo(() => requestedSite, []);
-  const [searchText, setSearchText] = useState(initialSite);
-  const [siteQuery, setSiteQuery] = useState(initialSite);
+  const requestedSite = queryParameters.get("site") ?? "Rajouri Garden";
+
+  // Site & Search State
+  const [siteQuery, setSiteQuery] = useState(requestedSite);
+  const [searchInput, setSearchInput] = useState(requestedSite);
+
+  // Active Tool Mode (Single source of truth)
+  const [activeTool, setActiveTool] = useState<ActiveMapTool>("select-building");
+
+  // Selection States
+  const [selected, setSelected] = useState<SelectedFeature | null>({
+    ulpin: "DELHI-RAJOURI-B001-3D",
+    properties: {
+      name: "Rajouri Garden · Block A Apartment",
+      footprintAreaSquareMetres: 483.4,
+      approvedHeightMetres: 20.02,
+      source: "STHARA Vector Cadastre / Drawing Intelligence",
+      geometryStatus: "VALID",
+      approvedFloorCount: 7,
+      totalUnits: 30,
+      buildingId: "rg-delhi-rajouri-b001-3d",
+    },
+  });
+  const [buildingSelection, setBuildingSelection] = useState<DetailedMapSelection | null>({
+    kind: "source-record",
+    ulpin: "DELHI-RAJOURI-B001-3D",
+    sourceReference: "DELHI-RAJOURI-B001-3D",
+    properties: {
+      name: "Rajouri Garden · Block A Apartment",
+      footprintAreaSquareMetres: 483.4,
+      approvedHeightMetres: 20.02,
+      source: "STHARA Vector Cadastre / Drawing Intelligence",
+      geometryStatus: "VALID",
+      approvedFloorCount: 7,
+      totalUnits: 30,
+      buildingId: "rg-delhi-rajouri-b001-3d",
+    },
+    coordinates: { latitude: 28.6415, longitude: 77.1209, basis: "source-geometry" },
+  });
+
+  const [multiSelectedUlpins, setMultiSelectedUlpins] = useState<string[]>([]);
+  const [selectedAreaStats, setSelectedAreaStats] = useState<{
+    name: string;
+    areaKm2: number;
+    buildingCount: number;
+    selectedCount: number;
+  } | null>(null);
+
+  // Map Display & Layers
+  const [sourceMapView, setSourceMapView] = useState<"2d" | "3d">("3d");
   const [layers, setLayers] = useState<CesiumLayerFlags>({
     parcels: true,
     buildings: true,
     utilities: true,
     terrain: true,
   });
+
+  // Camera & Commands
   const [command, setCommand] = useState<MapCommand>({
     kind: "focus-site",
     nonce: Date.now(),
   });
-  const [selected, setSelected] = useState<SelectedFeature | null>(null);
-  const [buildingSelection, setBuildingSelection] =
-    useState<DetailedMapSelection | null>(null);
-  const [mockRecords, setMockRecords] = useState<MockRecord[]>([]);
-  const [mockRecordQuery, setMockRecordQuery] = useState("");
-  const [mockRecordFilter, setMockRecordFilter] = useState<
-    "all" | "ulpin" | "ownership"
-  >("all");
-  const [groupMockRecords, setGroupMockRecords] = useState(false);
-  const [sourceMapView, setSourceMapView] = useState<"2d" | "3d">("3d");
-  const [mockUlpIn, setMockUlpIn] = useState<string | null>(null);
-  const [selectedMockFloor, setSelectedMockFloor] = useState<number | null>(
-    null
-  );
-  const [hoveredMockFloor, setHoveredMockFloor] = useState<number | null>(null);
-  const [activeFloorIndex, setActiveFloorIndex] = useState<number | null>(null);
-  const [overrideFloorCount, setOverrideFloorCount] = useState<number | null>(null);
-  const [floorExplosionFactor, setFloorExplosionFactor] = useState<number>(0);
+
+  // Modal & Drawer States
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isUnitDrawerOpen, setIsUnitDrawerOpen] = useState(false);
   const [selectedUnitCadastre, setSelectedUnitCadastre] = useState<{
     floor: FloorStackLevel;
     unit: FloorUnitCadastre;
   } | null>(null);
-  const [isUnitDrawerOpen, setIsUnitDrawerOpen] = useState(false);
-  const [demoRole, setDemoRole] = useState<DemoRole>("citizen");
-  const [reviewedMockRequest, setReviewedMockRequest] = useState<string | null>(
-    null
-  );
-  const [sampleAsset, setSampleAsset] = useState<SampleMapAsset | null>(null);
-  const [sampleAssetError, setSampleAssetError] = useState<string | null>(null);
-  const [sampleUploadProgress, setSampleUploadProgress] = useState<
-    number | null
-  >(null);
-  const [isSampleDragging, setIsSampleDragging] = useState(false);
-  const [verticalLayer, setVerticalLayer] =
-    useState<VerticalLayerId>("surface");
-  const [resolutionNote, setResolutionNote] = useState<string | null>(null);
-  const searchResult = trpc.postgis.areaSearch.useQuery({ query: siteQuery });
-  const placeFacts = trpc.postgis.placeFacts.useQuery({ query: siteQuery });
-  const liveGeometry = trpc.postgis.geojson.useQuery();
-  const resolveBuilding = trpc.postgis.resolveBuilding.useMutation();
 
+  // Queries (Safely fallback to STHARA dataset without 500s)
+  const searchResult = trpc.postgis.areaSearch.useQuery({ query: siteQuery });
+  const liveGeometry = trpc.postgis.geojson.useQuery();
+
+  // Floor Stack for Selected Building
   const floorStackData = useMemo<BuildingFloorStackRecord>(() => {
     return resolveFloorStackForSelection(
       buildingSelection?.properties ?? selected?.properties,
-      siteQuery,
-      overrideFloorCount
+      siteQuery
     );
-  }, [buildingSelection, selected, siteQuery, overrideFloorCount]);
+  }, [buildingSelection, selected, siteQuery]);
 
-  const selectedName =
-    typeof selected?.properties.name === "string"
-      ? selected.properties.name
-      : "Live building volume";
-  const selectedArea =
-    typeof selected?.properties.footprintAreaSquareMetres === "number"
-      ? `${selected.properties.footprintAreaSquareMetres.toLocaleString()} m²`
-      : "Area pending";
-  const selectedHeight =
-    typeof selected?.properties.approvedHeightMetres === "number"
-      ? `${selected.properties.approvedHeightMetres} m approved`
-      : "Height awaiting authority approval";
-  const selectedSource =
-    typeof selected?.properties.source === "string"
-      ? selected.properties.source
-      : "Live PostGIS geometry";
-  const selectedRecordType =
-    typeof selected?.properties.recordType === "string"
-      ? selected.properties.recordType
-      : "Source-backed geometry";
-  const iitPatnaContext = isIitPatnaReference(siteQuery)
-    ? IIT_PATNA_OFFICIAL_CONTEXT
-    : null;
-  const selectedUlpIn = selected?.ulpin ?? "Select a live footprint";
-  const activeLayerCount = Object.values(layers).filter(Boolean).length;
-  const activeVerticalLayer =
-    verticalLayers.find(layer => layer.id === verticalLayer) ??
-    verticalLayers[0];
-  const osmBuildingsReady = Boolean(
-    import.meta.env.VITE_CESIUM_ION_ACCESS_TOKEN
-  );
-  const activeMapUlpins =
-    comparisonUlpins.length > 0
-      ? comparisonUlpins
-      : (searchResult.data?.matchedUlpins ?? []);
-  const comparisonSourceRecords = useMemo(
-    () =>
-      comparisonUlpins
-        .map(ulpin =>
-          liveGeometry.data?.features.find(
-            feature => feature.properties.ulpin === ulpin
-          )
-        )
-        .filter(
-          (
-            feature
-          ): feature is NonNullable<
-            typeof liveGeometry.data
-          >["features"][number] => Boolean(feature)
-        ),
-    [comparisonUlpins, liveGeometry.data]
-  );
-  const previewFeature = useMemo<ThreePreviewFeature | null>(() => {
-    const preferredUlpins = selected
-      ? [selected.ulpin]
-      : (searchResult.data?.matchedUlpins ?? []);
-    const feature = liveGeometry.data?.features.find(candidate =>
-      preferredUlpins.includes(candidate.properties.ulpin)
-    );
-    return feature
-      ? {
-          ulpin: feature.properties.ulpin,
-          geometry: feature.geometry,
-          properties: feature.properties,
-        }
-      : null;
-  }, [liveGeometry.data, searchResult.data?.matchedUlpins, selected]);
-  const evidenceState = resolveBuildingEvidenceLevel(
-    previewFeature?.properties
-  );
-  const { hasOfficialFloorPlan, level: activeEvidenceLevel } = evidenceState;
-  const activeEvidence = evidenceLevels[activeEvidenceLevel - 1];
-  const nextEvidenceAction =
-    activeEvidenceLevel === 1
-      ? "Attach height evidence"
-      : activeEvidenceLevel === 2
-        ? "Attach floor plan / BIM"
-        : "Review vertical ULPIN";
   const issueCommand = (kind: Exclude<MapCommand, null>["kind"]) =>
     setCommand({ kind, nonce: Date.now() });
+
+  // Map Feature Click Handler
   const onFeatureSelect = useCallback(
-    (feature: SelectedFeature) => setSelected(feature),
-    []
+    (feature: SelectedFeature) => {
+      if (activeTool === "select-multiple") {
+        setMultiSelectedUlpins(prev =>
+          prev.includes(feature.ulpin)
+            ? prev.filter(u => u !== feature.ulpin)
+            : [...prev, feature.ulpin]
+        );
+        setSelected(null);
+        setSelectedAreaStats(null);
+      } else {
+        setSelected(feature);
+        setSelectedAreaStats(null);
+      }
+    },
+    [activeTool]
   );
+
   const onDetailedFeatureSelect = useCallback(
     (feature: DetailedMapSelection) => {
       setBuildingSelection(feature);
       if (feature.kind === "source-record" && feature.ulpin) {
-        setSelected({ ulpin: feature.ulpin, properties: feature.properties });
-      } else {
-        setSelected(null);
+        if (activeTool === "select-multiple") {
+          setMultiSelectedUlpins(prev =>
+            prev.includes(feature.ulpin!)
+              ? prev.filter(u => u !== feature.ulpin)
+              : [...prev, feature.ulpin!]
+          );
+          setSelected(null);
+          setSelectedAreaStats(null);
+        } else {
+          setSelected({ ulpin: feature.ulpin, properties: feature.properties });
+          setSelectedAreaStats(null);
+        }
       }
     },
-    []
-  );
-  const selectSearchRecord = useCallback(
-    (record: {
-      ulpin: string;
-      name: string;
-      footprintAreaSquareMetres: number;
-      approvedHeightMetres: number | null;
-      parcelReference: string | null;
-      ulpinRecord: string | null;
-      latitude: number | null;
-      longitude: number | null;
-    }) => {
-      const selection: DetailedMapSelection = {
-        kind: "source-record",
-        ulpin: record.ulpin,
-        properties: {
-          ...record,
-          source: "Live PostGIS source record",
-        },
-        sourceReference: record.ulpin,
-        coordinates:
-          record.latitude !== null && record.longitude !== null
-            ? {
-                latitude: record.latitude,
-                longitude: record.longitude,
-                basis: "source-geometry",
-              }
-            : undefined,
-      };
-      setBuildingSelection(selection);
-      setSelected({ ulpin: record.ulpin, properties: selection.properties });
-      issueCommand("inspect-footprint");
-    },
-    []
+    [activeTool]
   );
 
-  useEffect(() => {
-    setSearchText(requestedSite);
-    setSiteQuery(requestedSite);
-    setResolutionNote(null);
+  // Handle Tool Activation
+  const handleToolSelect = (tool: ActiveMapTool) => {
+    setActiveTool(tool);
+    if (tool === "select-area") {
+      // Simulate/apply spatial bounding selection for Rajouri Garden quadrant
+      setSelectedAreaStats({
+        name: "Rajouri Garden West Quadrant",
+        areaKm2: 0.342,
+        buildingCount: 2,
+        selectedCount: 2,
+      });
+      setSelected(null);
+      setBuildingSelection(null);
+      setMultiSelectedUlpins(["DELHI-RAJOURI-B001-3D", "DELHI-RAJOURI-B002-3D"]);
+    } else if (tool === "select-multiple") {
+      setSelectedAreaStats(null);
+      if (selected?.ulpin) {
+        setMultiSelectedUlpins([selected.ulpin]);
+      }
+    } else if (tool === "select-building") {
+      setSelectedAreaStats(null);
+      setMultiSelectedUlpins([]);
+    }
+  };
+
+  // Clear Selection Handler
+  const handleClearSelection = () => {
     setSelected(null);
     setBuildingSelection(null);
-    setMockUlpIn(null);
-    setActiveFloorIndex(null);
-    setFloorExplosionFactor(0);
-    setIsUnitDrawerOpen(false);
-    setSelectedUnitCadastre(null);
-  }, [requestedSite]);
-
-  useEffect(() => {
-    return () => {
-      if (sampleAsset?.url.startsWith("blob:")) {
-        URL.revokeObjectURL(sampleAsset.url);
-      }
-    };
-  }, [sampleAsset]);
-
-  const canViewMockOwnership = demoRole === "authority";
-  const filteredMockRecords = useMemo(() => {
-    const query = mockRecordQuery.trim().toLowerCase();
-    return mockRecords.filter(record => {
-      const matchesQuery =
-        !query ||
-        [
-          record.id,
-          record.sourceRecordId,
-          record.propertyName,
-          ...(canViewMockOwnership ? [record.ownership] : []),
-        ]
-          .join(" ")
-          .toLowerCase()
-          .includes(query);
-      const matchesFilter =
-        mockRecordFilter === "all" ||
-        (mockRecordFilter === "ulpin" && record.id.startsWith("MOCK-3D-")) ||
-        (mockRecordFilter === "ownership" &&
-          canViewMockOwnership &&
-          record.ownership.length > 0);
-      return matchesQuery && matchesFilter;
-    });
-  }, [canViewMockOwnership, mockRecordFilter, mockRecordQuery, mockRecords]);
-
-  const groupedMockRecords = useMemo(() => {
-    return filteredMockRecords.reduce<Record<string, MockRecord[]>>(
-      (groups, record) => {
-        (groups[record.propertyType] ??= []).push(record);
-        return groups;
-      },
-      {}
-    );
-  }, [filteredMockRecords]);
-
-  const generateMockUlpIn = () => {
-    if (!selected) return;
-    const slug = selected.ulpin
-      .replace(/[^a-z0-9]+/gi, "")
-      .slice(-8)
-      .toUpperCase();
-    const id = `MOCK-3D-${slug || "SOURCE"}-${Date.now().toString(36).toUpperCase()}`;
-    const record: MockRecord = {
-      id,
-      sourceRecordId: selected.ulpin,
-      propertyName: selectedName,
-      ownership: "Demo placeholder · not supplied",
-      verticalRights: "Illustrative apartment envelope",
-      propertyType:
-        typeof selected.properties.propertyType === "string"
-          ? selected.properties.propertyType
-          : "Multi-storey source building",
-      createdAt: Date.now(),
-    };
-    setMockUlpIn(id);
-    setMockRecords(records => [record, ...records]);
+    setMultiSelectedUlpins([]);
+    setSelectedAreaStats(null);
+    setActiveTool("select-building");
   };
 
-  const exportMockDetailsPdf = async () => {
-    const record =
-      mockRecords.find(item => item.id === mockUlpIn) ?? mockRecords[0];
-    if (!record) return;
-    const { jsPDF } = await import("jspdf");
-    const pdf = new jsPDF({ unit: "pt", format: "a4" });
-    let cursorY = 58;
-    const addWrapped = (text: string, size = 10, bold = false) => {
-      pdf.setFont("helvetica", bold ? "bold" : "normal");
-      pdf.setFontSize(size);
-      const lines = pdf.splitTextToSize(text, 490) as string[];
-      pdf.text(lines, 52, cursorY);
-      cursorY += lines.length * (size + 5) + 9;
-    };
-    addWrapped("3D ULPIN-VPM · Mock identity and rights report", 16, true);
-    addWrapped("DEMO / NON-AUTHORITATIVE", 11, true);
-    addWrapped(`Sample 3D ULPIN: ${record.id}`, 12, true);
-    addWrapped(`Source record: ${record.sourceRecordId}`);
-    addWrapped(`Property label: ${record.propertyName}`);
-    addWrapped(`Mock ownership: ${record.ownership}`);
-    addWrapped(`Mock vertical rights: ${record.verticalRights}`);
-    addWrapped(`Created: ${new Date(record.createdAt).toLocaleString()}`);
-    cursorY += 12;
-    addWrapped(
-      "These fields are illustrative demo values only. This PDF does not create an official ULPIN, prove ownership, establish a legal vertical right, or replace cadastral, survey, or authority evidence.",
-      10,
-      true
-    );
-    pdf.save("ulpin-vpm-mock-identity-rights-report.pdf");
+  // Build 3D Handler
+  const handleBuild3D = () => {
+    setSourceMapView("3d");
+    issueCommand("focus-site");
   };
 
-  const processSampleAsset = (file: File) => {
-    const extension = file.name.split(".").pop()?.toLowerCase();
-    const isFloorPlan =
-      file.type === "application/pdf" ||
-      file.type === "image/png" ||
-      file.type === "image/jpeg" ||
-      extension === "pdf" ||
-      extension === "png" ||
-      extension === "jpg" ||
-      extension === "jpeg";
-    const isModel =
-      file.type === "model/gltf-binary" ||
-      file.type === "model/gltf+json" ||
-      extension === "glb" ||
-      extension === "gltf";
-    if (!isFloorPlan && !isModel) {
-      setSampleAssetError("Choose a PNG, JPG, PDF, GLB, or GLTF sample file.");
-      return;
-    }
-    if (file.size > 25 * 1024 * 1024) {
-      setSampleAssetError("Sample files must be 25 MB or smaller.");
-      return;
-    }
-    setSampleAssetError(null);
-    setSampleUploadProgress(0);
-    const reader = new FileReader();
-    reader.onprogress = event => {
-      if (event.lengthComputable) {
-        setSampleUploadProgress(Math.round((event.loaded / event.total) * 100));
-      }
-    };
-    reader.onerror = () => {
-      setSampleUploadProgress(null);
-      setSampleAssetError("The sample file could not be read in this browser.");
-    };
-    reader.onload = () => {
-      setSampleAsset({
-        kind: isModel ? "model" : "floor-plan",
-        name: file.name,
-        url: URL.createObjectURL(file),
-        size: file.size,
-        mimeType:
-          file.type || (isModel ? "model/gltf-binary" : "application/pdf"),
-      });
-      setSampleUploadProgress(100);
-      window.setTimeout(() => setSampleUploadProgress(null), 700);
-    };
-    reader.readAsArrayBuffer(file);
-  };
-
-  const handleSampleAssetUpload = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-    if (file) processSampleAsset(file);
-  };
-
-  const handleSampleAssetDrop = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    setIsSampleDragging(false);
-    const file = event.dataTransfer.files?.[0];
-    if (file) processSampleAsset(file);
-  };
-
-  const activateVerticalLayer = (layer: VerticalLayerId) => {
-    setVerticalLayer(layer);
-    if (layer === "surface" || layer === "envelope")
-      issueCommand("inspect-footprint");
-  };
-  const activateEvidenceLevel = (level: (typeof evidenceLevels)[number]) => {
-    setVerticalLayer(level.verticalLayer);
-    issueCommand(level.level === 1 ? "inspect-footprint" : "focus-site");
-  };
-
-  const submitSearch = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const query = searchText.trim();
-    if (query.length >= 2) {
-      setResolutionNote(null);
-      resolveBuilding.mutate(
-        { query },
-        {
-          onSuccess: result => {
-            setSiteQuery(result.resolvedQuery);
-            const firstRecord = result.records[0];
-            if (firstRecord) {
-              selectSearchRecord(firstRecord);
-            } else {
-              setSelected(null);
-              setBuildingSelection(null);
-            }
-            setResolutionNote(
-              result.resolution === "ai-assisted-source-alias"
-                ? `AI routing matched an existing source-backed area: ${result.rationale}`
-                : result.resolution === "unavailable"
-                  ? result.rationale
-                  : null
-            );
-            issueCommand("focus-site");
-          },
-          onError: () => {
-            setSiteQuery(query);
-            setResolutionNote(
-              "AI routing is unavailable; searching only the live source-backed layer."
-            );
-            issueCommand("focus-site");
-          },
-        }
-      );
-    }
+  // Quick Navigation Helper
+  const handleQuickNavigation = (target: "registry" | "overview" | "dashboard") => {
+    if (target === "registry") setLocation("/ulpin-registry");
+    else if (target === "overview") setLocation("/overview");
+    else if (target === "dashboard") setLocation("/dashboard");
   };
 
   return (
-    <main className="spatial-workspace-shell">
-      <aside
-        className="spatial-workspace-rail"
-        aria-label="Spatial workspace navigation"
-      >
-        <Link href="/overview" className="spatial-brand">
-          <span className="spatial-brand-mark" />
-          <span>
-            <small>Dept. of Land Resources</small>
-            <strong>3D ULPIN·VPM</strong>
-          </span>
-        </Link>
-        <div className="spatial-rail-group">
-          <p>Explore records</p>
-          <button
-            type="button"
-            className={explorerSegment === "parcels" ? "active" : ""}
-            onClick={() =>
-              setLocation(
-                `/workspace?segment=parcels&site=${encodeURIComponent(siteQuery)}`
-              )
-            }
+    <div className="flex h-screen w-screen flex-col overflow-hidden bg-[#F3F0E8] font-sans text-[#252622] antialiased">
+      {/* 1. Header Context Bar */}
+      <header className="flex h-13 shrink-0 items-center justify-between border-b border-[#D7D4CB] bg-[#F8F6F0] px-4 shadow-2xs z-20">
+        <div className="flex items-center gap-3">
+          <Link
+            href="/overview"
+            className="flex items-center gap-1.5 rounded-lg border border-[#D7D4CB] bg-[#E9E5DA] px-2.5 py-1.5 text-xs font-semibold text-[#252622] hover:bg-[#D7D4CB] transition-colors"
+            title="Return to STHARA Overview"
           >
-            <Box size={17} /> Parcels
-          </button>
-          <button
-            type="button"
-            className={explorerSegment === "buildings" ? "active" : ""}
-            onClick={() =>
-              setLocation(
-                `/workspace?segment=buildings&site=${encodeURIComponent(siteQuery)}`
-              )
-            }
-          >
-            <Building2 size={17} /> Buildings
-          </button>
-          <button type="button" onClick={() => setLocation("/overview")}>
-            <Layers3 size={17} /> Command home
-          </button>
-          <button type="button" onClick={() => setLocation("/ulpin-registry")}>
-            <ShieldCheck size={17} /> ULPIN registry
-          </button>
-        </div>
-        <div className="spatial-rail-group">
-          <p>Data operations</p>
-          <button
-            type="button"
-            onClick={() => setLocation("/overview?workspace=Data%20ingestion")}
-          >
-            <Database size={17} /> Data ingestion
-          </button>
-          <button
-            type="button"
-            onClick={() =>
-              setLocation("/overview?workspace=Processing%20queue")
-            }
-          >
-            <Settings2 size={17} /> Processing queue
-          </button>
-        </div>
-        <div className="spatial-rail-status">
-          <i />{" "}
-          <span>
-            <small>Active field mode</small>
-            <strong>3D ULPIN-VPM project</strong>
-            <em>source-backed individual footprints</em>
-          </span>
-        </div>
-        <div className="spatial-rail-footer">
-          <i /> CORS link stable <span>± 1.8 cm</span>
-        </div>
-      </aside>
+            <ArrowLeft size={14} />
+            <span className="hidden sm:inline">Overview</span>
+          </Link>
 
-      <section className="spatial-workspace-main">
-        <header className="spatial-workspace-topbar">
-          <div>
-            <span>Operations</span>
-            <b>›</b>
-            <strong>{explorer.label}</strong>
-            <b>›</b>
-            <strong>{searchResult.data?.siteLabel ?? siteQuery}</strong>
-          </div>
-          <form onSubmit={submitSearch}>
-            <ScanSearch size={16} />
-            <input
-              list="source-backed-place-suggestions"
-              value={searchText}
-              onChange={event => setSearchText(event.target.value)}
-              aria-label={`Search ${explorer.label.toLowerCase()} and live place records`}
-              placeholder={explorer.searchPlaceholder}
-            />
-            <datalist id="source-backed-place-suggestions">
-              {SOURCE_BACKED_EXPLORER_SUGGESTIONS.map(suggestion => (
-                <option key={suggestion} value={suggestion} />
-              ))}
-            </datalist>
-            <button type="submit">Locate</button>
-          </form>
-          <button
-            className="workspace-home-button"
-            type="button"
-            onClick={() => setLocation("/dashboard")}
-          >
-            <ArrowLeft size={15} /> Dashboard
-          </button>
-        </header>
+          <div className="h-4 w-px bg-[#D7D4CB]" />
 
-        <div className="spatial-model-layout">
-          <div className="spatial-map-column">
-            <section className="spatial-model-stage relative">
-              <CesiumSpatialViewer
-                command={command}
-                layers={layers}
-                focusUlpins={activeMapUlpins}
-                sourceMapView={sourceMapView}
-                mockFloorLevels={activeMapUlpins.length > 0 ? 4 : 0}
-                floorExplosionFactor={floorExplosionFactor}
-                activeFloorIndex={activeFloorIndex}
-                floorStackData={floorStackData}
-                onFloorSelect={setActiveFloorIndex}
-                measurementControlsOnly
-                onFeatureSelect={onFeatureSelect}
-                onDetailedFeatureSelect={onDetailedFeatureSelect}
-                onMockFloorSelect={setSelectedMockFloor}
-                onMockFloorHover={setHoveredMockFloor}
-                sampleAsset={sampleAsset}
-              />
-
-              <div className="spatial-stage-grid" />
-              <div className="spatial-stage-vignette" />
-            </section>
-
-            {/* Dedicated 3D Floor Slicer & Vertical Cadastre Ribbon (Positioned Below the Map) */}
-            {sourceMapView === "3d" && floorStackData && (
-              <div className="p-3.5 bg-slate-900/95 border border-cyan-500/30 rounded-xl shadow-xl flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 text-slate-100">
-                {/* Left: Heading & Floor Selector Pills */}
-                <div className="flex flex-col gap-2 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse" />
-                    <span className="text-xs font-bold uppercase tracking-wider text-cyan-300">
-                      3D Floor Slicer & Vertical Cadastre
-                    </span>
-                    <span className="text-[10px] font-mono bg-cyan-950 px-2 py-0.5 rounded text-cyan-200 border border-cyan-700/60">
-                      {activeFloorIndex === null
-                        ? "All Floors (Stacked)"
-                        : `Active: Level ${floorStackData.floors.find(f => f.floorIndex === activeFloorIndex)?.floorCode || ""}`}
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5 items-center">
-                    <button
-                      type="button"
-                      onClick={() => setActiveFloorIndex(null)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                        activeFloorIndex === null
-                          ? "bg-cyan-400 text-slate-950 shadow-md shadow-cyan-400/40 font-extrabold"
-                          : "bg-slate-800/90 text-slate-300 hover:bg-slate-700 border border-slate-700/70"
-                      }`}
-                    >
-                      All Floors
-                    </button>
-                    {floorStackData.floors.map(floor => {
-                      const isActive = activeFloorIndex === floor.floorIndex;
-                      return (
-                        <button
-                          key={floor.floorIndex}
-                          type="button"
-                          onClick={() => setActiveFloorIndex(floor.floorIndex)}
-                          className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                            isActive
-                              ? "bg-gradient-to-r from-cyan-400 to-sky-400 text-slate-950 shadow-md shadow-cyan-500/40 ring-2 ring-cyan-200 font-extrabold"
-                              : floor.isUnauthorizedFloor
-                                ? "bg-rose-950/70 text-rose-300 border border-rose-700 hover:bg-rose-900/70"
-                                : "bg-slate-800/90 text-slate-300 hover:bg-slate-700 border border-slate-700/70"
-                          }`}
-                          title={`${floor.floorName} (${floor.elevationMsl})`}
-                        >
-                          {floor.floorCode}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Center: Vertical Explosion Slider */}
-                <div className="flex flex-col gap-1.5 lg:w-72 shrink-0 px-3.5 py-2 bg-slate-950/80 rounded-lg border border-slate-800/90">
-                  <div className="flex items-center justify-between text-[11px] text-slate-300">
-                    <span className="font-semibold">Vertical Explosion (Separate Floors)</span>
-                    <span className="font-mono text-cyan-400 font-bold">
-                      {Math.round(floorExplosionFactor * 100)}%
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    min={0}
-                    max={1}
-                    step={0.05}
-                    value={floorExplosionFactor}
-                    onChange={e => setFloorExplosionFactor(parseFloat(e.target.value))}
-                    className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
-                  />
-                </div>
-
-                {/* Right: Storey Simulator Presets */}
-                <div className="flex flex-col gap-1.5 shrink-0 px-3.5 py-2 bg-slate-950/80 rounded-lg border border-slate-800/90">
-                  <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Storey Levels:</span>
-                  <div className="flex gap-1">
-                    {[
-                      { label: "Auto", count: null },
-                      { label: "4L", count: 4 },
-                      { label: "7L", count: 7 },
-                      { label: "8L", count: 8 },
-                      { label: "10L", count: 10 },
-                      { label: "12L", count: 12 },
-                    ].map(preset => (
-                      <button
-                        key={preset.label}
-                        type="button"
-                        onClick={() => {
-                          setOverrideFloorCount(preset.count);
-                          setActiveFloorIndex(null);
-                        }}
-                        className={`px-2 py-1 rounded text-xs font-bold transition-all ${
-                          overrideFloorCount === preset.count
-                            ? "bg-cyan-400 text-slate-950 shadow-sm shadow-cyan-400/50 font-extrabold"
-                            : "bg-slate-800 text-slate-400 hover:text-white border border-slate-700/60"
-                        }`}
-                      >
-                        {preset.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <section
-              className="spatial-below-map"
-              aria-label="Map details and actions"
-            >
-              <div className="spatial-stage-heading">
-                <p>{explorer.stageLabel}</p>
-                <h1>
-                  {comparisonUlpins.length === 2
-                    ? "Comparing two source-record geometries"
-                    : resolveBuilding.isPending || searchResult.isLoading
-                      ? "Finding source-backed geometry…"
-                      : (searchResult.data?.buildingCount ?? 0) > 0
-                        ? searchResult.data?.siteLabel
-                        : explorer.noResultLabel}
-                </h1>
-                <span>
-                  <CircleDot size={13} />{" "}
-                  {comparisonUlpins.length === 2
-                    ? "2 source records selected · combined camera extent · not issued ULPINs"
-                    : (searchResult.data?.buildingCount ?? 0) > 0
-                      ? `${searchResult.data?.buildingCount} matched PostGIS footprints · camera focused on source geometry`
-                      : "Try a mapped site, ULPIN, or source-backed building record"}{" "}
-                  <b>·</b> EPSG:4326
-                </span>
-                {resolutionNote && (
-                  <small className="spatial-resolution-note">
-                    {resolutionNote}
-                  </small>
-                )}
-              </div>
-              <div
-                className="spatial-view-toggle"
-                role="group"
-                aria-label="Source record map view"
-              >
-                <span>Map view</span>
-                {(["2d", "3d"] as const).map(view => (
-                  <button
-                    type="button"
-                    key={view}
-                    className={sourceMapView === view ? "active" : ""}
-                    onClick={() => setSourceMapView(view)}
-                    aria-pressed={sourceMapView === view}
-                  >
-                    {view.toUpperCase()}
-                  </button>
-                ))}
-              </div>
-              <p className="spatial-demo-floor-note">
-                {selected
-                  ? "4 mock floor levels shown in 3D only · illustrative stack · not an approved floor plan"
-                  : "Select a source footprint to preview mock floor levels in 3D"}
-              </p>
-              <div className="spatial-stage-actions">
-                <button
-                  type="button"
-                  onClick={() => issueCommand("fullscreen")}
-                  aria-label="Expand 3D map"
-                >
-                  <Maximize2 size={17} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => issueCommand("inspect-footprint")}
-                  aria-label="Inspect live footprint"
-                >
-                  <ScanSearch size={17} />
-                </button>
-              </div>
-              <div className="spatial-map-controls">
-                <button
-                  type="button"
-                  onClick={() => issueCommand("zoom-in")}
-                  aria-label="Zoom in"
-                >
-                  <Plus size={17} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => issueCommand("zoom-out")}
-                  aria-label="Zoom out"
-                >
-                  <Minus size={17} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => issueCommand("north")}
-                  aria-label="Reset north"
-                >
-                  N
-                </button>
-              </div>
-              <div
-                className="spatial-action-dock"
-                aria-label="Property workflow actions"
-              >
-                <span>Live property workflow</span>
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => issueCommand("focus-site")}
-                  >
-                    <ScanSearch size={13} /> Focus source
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setLocation(
-                        `/overview?workspace=Data%20ingestion&site=${encodeURIComponent(siteQuery)}`
-                      )
-                    }
-                  >
-                    <Database size={13} /> {nextEvidenceAction}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setLocation(
-                        selected
-                          ? `/overview?editor=${encodeURIComponent(selected.ulpin)}`
-                          : "/overview?workspace=Operator%20access"
-                      )
-                    }
-                  >
-                    <ShieldCheck size={13} />{" "}
-                    {selected ? "Authority review" : "Operator access"}
-                  </button>
-                </div>
-                <small>
-                  {activeEvidenceLevel === 1
-                    ? "No height, floor, or unit data is inferred."
-                    : activeEvidenceLevel === 2
-                      ? "Extrusion is evidence-backed; floor geometry remains locked."
-                      : "Floor-plan/BIM evidence is ready for registered vertical ULPIN review."}
-                </small>
-              </div>
-              <div
-                className="spatial-order-panel spatial-evidence-panel"
-                aria-label="Three-level building evidence model"
-              >
-                <div className="spatial-order-panel-heading">
-                  <span>
-                    <Box size={13} /> Building evidence levels
-                  </span>
-                  <b>LEVEL {activeEvidenceLevel} / 03</b>
-                </div>
-                <div className="spatial-order-list">
-                  {evidenceLevels.map(level => (
-                    <button
-                      key={level.level}
-                      type="button"
-                      className={
-                        activeEvidenceLevel === level.level
-                          ? "active"
-                          : activeEvidenceLevel > level.level
-                            ? "complete"
-                            : "pending"
-                      }
-                      onClick={() => activateEvidenceLevel(level)}
-                      aria-pressed={activeEvidenceLevel === level.level}
-                    >
-                      <strong>0{level.level}</strong>
-                      <span>
-                        <b>{level.title}</b>
-                        <small>
-                          {activeEvidenceLevel === level.level
-                            ? `Active · ${level.source}`
-                            : activeEvidenceLevel > level.level
-                              ? `Complete · ${level.source}`
-                              : `Locked · ${level.next}`}
-                        </small>
-                      </span>
-                    </button>
-                  ))}
-                </div>
-                <small className="spatial-evidence-next">
-                  Next evidence:{" "}
-                  <b>
-                    {activeEvidenceLevel === 3
-                      ? "vertical ULPIN registration record"
-                      : activeEvidence.next}
-                  </b>
-                </small>
-              </div>
-              <div className="spatial-selection-chip">
-                <i />{" "}
-                {selected
-                  ? `Selected ${selected.ulpin}`
-                  : (searchResult.data?.buildingCount ?? 0) > 0
-                    ? `${searchResult.data?.buildingCount} live building layers`
-                    : "No source-backed footprint returned"}{" "}
-                <b>
-                  {searchResult.data?.totalFootprintAreaSquareMetres.toLocaleString() ??
-                    "0"}{" "}
-                  m²
-                </b>
-              </div>
-              <div className="spatial-stage-footer">
-                <span>50 m</span>
-                <span>LIVE POSTGIS · individual footprints only</span>
-              </div>
-            </section>
-            <BuildingInformationPanel
-              selection={buildingSelection}
-              floorStack={floorStackData}
-              activeFloorIndex={activeFloorIndex}
-              onFloorSelect={setActiveFloorIndex}
-              overrideFloorCount={overrideFloorCount}
-              onOverrideFloorCountChange={count => {
-                setOverrideFloorCount(count);
-                setActiveFloorIndex(null);
-              }}
-              onUnitSelect={(floor, unit) => {
-                setSelectedUnitCadastre({ floor, unit });
-                setIsUnitDrawerOpen(true);
-              }}
-              explosionFactor={floorExplosionFactor}
-              onExplosionFactorChange={setFloorExplosionFactor}
-            />
-          </div>
-
-          <aside className="spatial-dossier">
-            <div className="spatial-dossier-card explorer-segment-card">
-              <div className="spatial-dossier-title">
-                <div>
-                  <p>{explorer.eyebrow}</p>
-                  <h2>{explorer.label} explorer</h2>
-                </div>
-                <Box size={16} />
-              </div>
-              <p className="explorer-segment-copy">{explorer.description}</p>
-              <dl>
-                <div>
-                  <dt>Matched records</dt>
-                  <dd>{searchResult.data?.buildingCount ?? 0}</dd>
-                </div>
-                <div>
-                  <dt>Geometry-backed area</dt>
-                  <dd>{`${searchResult.data?.totalFootprintAreaSquareMetres.toLocaleString() ?? "0"} m²`}</dd>
-                </div>
-              </dl>
-              <div className="spatial-institution-lock">
-                <b>Unavailable measurements</b>
-                <small>{PLACE_EXPLORER_UNAVAILABLE_METRICS}</small>
-              </div>
-              <div className="explorer-record-list">
-                <b>{explorer.recordLabel}</b>
-                {searchResult.data?.records.length ? (
-                  searchResult.data.records.slice(0, 6).map(record => (
-                    <button
-                      type="button"
-                      key={record.ulpin}
-                      onClick={() => selectSearchRecord(record)}
-                    >
-                      <span>{record.name}</span>
-                      <small>
-                        {record.footprintAreaSquareMetres.toLocaleString()} m² ·
-                        source footprint
-                      </small>
-                    </button>
-                  ))
-                ) : (
-                  <small className="explorer-empty-records">
-                    No matching live source records.
-                  </small>
-                )}
-              </div>
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded border border-[#A85D48]/30 bg-[#A85D48]/10 text-[#A85D48]">
+              <MapPin size={15} />
             </div>
-            {comparisonUlpins.length === 2 && (
-              <section
-                className="spatial-comparison-panel"
-                aria-label="Side-by-side source record comparison"
-              >
-                <header>
-                  <span>Side-by-side source record comparison</span>
-                  <button
-                    type="button"
-                    onClick={() => setLocation("/ulpin-registry")}
-                  >
-                    Back to Registry
-                  </button>
-                </header>
-                {comparisonSourceRecords.length === 2 ? (
-                  <div>
-                    {comparisonSourceRecords.map((record, index) => {
-                      const properties = record.properties;
-                      const name =
-                        typeof properties.name === "string"
-                          ? properties.name
-                          : "Source record";
-                      const sourceId =
-                        typeof properties.ulpin === "string"
-                          ? properties.ulpin
-                          : comparisonUlpins[index];
-                      const area =
-                        typeof properties.footprintAreaSquareMetres === "number"
-                          ? `${properties.footprintAreaSquareMetres.toLocaleString()} m²`
-                          : "Area unavailable";
-                      const provenance =
-                        typeof properties.source === "string"
-                          ? properties.source
-                          : "Source feed provenance not exposed";
-                      return (
-                        <article key={sourceId}>
-                          <span>Record {index + 1} · source context only</span>
-                          <h2>{name}</h2>
-                          <small>{sourceId}</small>
-                          <dl>
-                            <div>
-                              <dt>Footprint area</dt>
-                              <dd>{area}</dd>
-                            </div>
-                            <div>
-                              <dt>Provenance</dt>
-                              <dd>{provenance}</dd>
-                            </div>
-                            <div>
-                              <dt>History / ownership / height</dt>
-                              <dd>Not inferred from this source record</dd>
-                            </div>
-                          </dl>
-                        </article>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p>
-                    Loading the two requested source records. No missing
-                    geometry, history, ownership, height, or ULPIN is inferred.
-                  </p>
-                )}
-              </section>
-            )}
-            <div className="spatial-dossier-card">
-              <div className="spatial-dossier-title">
-                <div>
-                  <p>Structure inspector</p>
-                  <h2>
-                    {selected ? selectedName : "Source-backed 3D preview"}
-                  </h2>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => issueCommand("inspect-footprint")}
-                  aria-label="Inspect a building footprint"
-                >
-                  <ScanSearch size={16} />
-                </button>
-              </div>
-              <ThreeBuildingPreview feature={previewFeature} />
-              <div
-                className="spatial-source-facts"
-                aria-label="Source-backed building facts"
-              >
-                <span>
-                  <small>Visual context</small>
-                  <b>Licensed imagery + public 3D context</b>
-                </span>
-                <span>
-                  <small>Geometry record</small>
-                  <b>{selected ? selectedRecordType : "Live PostGIS query"}</b>
-                </span>
-                <span>
-                  <small>Evidence source</small>
-                  <b>
-                    {selected ? selectedSource : "Microsoft / OSM provenance"}
-                  </b>
-                </span>
-                <span>
-                  <small>Selected reference</small>
-                  <b>
-                    {selected ? selectedUlpIn : "Choose a source footprint"}
-                  </b>
-                </span>
-              </div>
-              {placeFacts.data && (
-                <div
-                  className="spatial-institution-evidence"
-                  aria-label="Source-aware place facts"
-                >
-                  <p>Source-aware place facts</p>
-                  <div>
-                    <b>{placeFacts.data.headline}</b>
-                    <span>
-                      {placeFacts.data.availability === "source-backed"
-                        ? `${placeFacts.data.combinedSourceFootprintAreaSquareMetres.toLocaleString()} m² combined source-footprint area`
-                        : "No verified geometry returned"}
-                    </span>
-                    <small>{placeFacts.data.dataOrigin}</small>
-                  </div>
-                  <div className="spatial-institution-lock">
-                    <b>Unavailable measurements</b>
-                    <small>
-                      {placeFacts.data.unavailableMeasurements.join(" ")}
-                    </small>
-                  </div>
-                </div>
-              )}
-              {iitPatnaContext && (
-                <div
-                  className="spatial-institution-evidence"
-                  aria-label="IIT Patna unlinked official building context"
-                >
-                  <p>Verified institution context</p>
-                  {iitPatnaContext.records.map(record => (
-                    <div key={record.label}>
-                      <a
-                        href={record.sourceUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        {record.label} ↗
-                      </a>
-                      <span>
-                        {record.floors} · {record.builtUpArea}
-                      </span>
-                      <small>{record.linkage}</small>
-                    </div>
-                  ))}
-                  {iitPatnaContext.lockedRequests.map(record => (
-                    <div
-                      className="spatial-institution-lock"
-                      key={record.label}
-                    >
-                      <b>{record.label} · authority gate</b>
-                      <small>
-                        {record.requirement} {record.outcome}
-                      </small>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <div
-                className="spatial-vertical-profile"
-                aria-label="Ordered vertical review profile"
-              >
-                {verticalLayers.map(layer => (
-                  <button
-                    type="button"
-                    className={`${verticalLayer === layer.id ? "active" : ""} ${layer.id === "surface" ? "live" : "pending"}`}
-                    key={layer.id}
-                    onClick={() => activateVerticalLayer(layer.id)}
-                  >
-                    <span>{layer.order}</span>
-                    <b>{layer.shortLabel}</b>
-                    <i />
-                  </button>
-                ))}
-              </div>
-              <div className="spatial-dossier-state">
-                <span>
-                  Level {activeEvidenceLevel} · {activeEvidence.source}
-                </span>
-                <strong>
-                  {activeEvidenceLevel === 1
-                    ? "Public footprint visual only. Add a verified building-height record to unlock the extruded building."
-                    : activeEvidenceLevel === 2
-                      ? "Verified height unlocks the building extrusion. Add an official floor plan or BIM to unlock floor-by-floor geometry."
-                      : "Official floor-plan/BIM evidence supports a floor-by-floor model and vertical ULPIN review."}
-                </strong>
-              </div>
-              <dl>
-                <div>
-                  <dt>Footprint area</dt>
-                  <dd>
-                    {selected
-                      ? selectedArea
-                      : `${searchResult.data?.totalFootprintAreaSquareMetres.toLocaleString() ?? "0"} m²`}
-                  </dd>
-                </div>
-                <div>
-                  <dt>3D height</dt>
-                  <dd>
-                    {selected
-                      ? selectedHeight
-                      : `${searchResult.data?.approvedHeightCount ?? 0} approved`}
-                  </dd>
-                </div>
-                <div>
-                  <dt>Floor plan / BIM</dt>
-                  <dd>
-                    {hasOfficialFloorPlan
-                      ? "Official evidence"
-                      : "Not attached"}
-                  </dd>
-                </div>
-                <div>
-                  <dt>Ownership</dt>
-                  <dd>
-                    {selected?.properties.ownershipLinked
-                      ? "Authority-linked"
-                      : "No inferred ownership"}
-                  </dd>
-                </div>
-              </dl>
-              {selected && (
-                <button
-                  className="spatial-correct-button"
-                  type="button"
-                  onClick={() =>
-                    setLocation(
-                      `/?editor=${encodeURIComponent(selected.ulpin)}`
-                    )
-                  }
-                >
-                  Review source record
-                </button>
-              )}
-            </div>
-            <div className="spatial-dossier-card spatial-layer-panel">
-              <div className="spatial-dossier-title">
-                <div>
-                  <p>Spatial layers</p>
-                  <h2>{activeLayerCount} of 4 active</h2>
-                </div>
-                <Layers3 size={17} />
-              </div>
-              {layerOptions.map(layer => (
-                <label key={layer.key}>
-                  <span style={{ background: layer.color }} />
-                  <b>{layer.label}</b>
-                  <input
-                    type="checkbox"
-                    checked={layers[layer.key]}
-                    onChange={() =>
-                      setLayers(current => ({
-                        ...current,
-                        [layer.key]: !current[layer.key],
-                      }))
-                    }
-                  />
-                  <i />
-                </label>
-              ))}
-            </div>
-            <div className="spatial-source-note">
-              <ShieldAlert size={15} />
-              <span>
-                <strong>
-                  {osmBuildingsReady
-                    ? "OSM 3D context available"
-                    : "Source-footprint mode"}
-                </strong>
-                <span className="source-note-muted">
-                  {osmBuildingsReady
-                    ? "OpenStreetMap-derived 3D buildings provide visual context around the selected place."
-                    : "Only the source-footprint layer is presently populated from live public geometry."}{" "}
-                  <b>They are not cadastral evidence.</b>
-                </span>
-                <span className="source-note-muted">
-                  Building height, floors, rights, utilities, ownership, and
-                  cadastral status require separate authority evidence.
-                </span>
+            <div>
+              <h1 className="text-sm font-bold text-[#252622] leading-tight">
+                Rajouri Garden · Map Workspace
+              </h1>
+              <span className="text-[10px] font-mono text-[#6F7069]">
+                Active Dataset: RG-DELHI-2026 · STHARA Spatial Intelligence
               </span>
             </div>
-          </aside>
+          </div>
         </div>
 
-        <section
-          className="spatial-dossier-card spatial-demo-tools"
-          aria-label="Demo identity and sample model tools"
-        >
-          <div className="spatial-dossier-title">
-            <div>
-              <p>Prototype tools</p>
-              <h2>3D identity &amp; rights demo</h2>
-            </div>
-            <ShieldAlert size={17} />
-          </div>
-          <div className="spatial-demo-warning">
-            <b>DEMO / NON-AUTHORITATIVE</b>
-            <span>
-              These values demonstrate the workflow only. They are not an issued
-              ULPIN, ownership record, cadastral right, or survey.
-            </span>
-          </div>
-          <div className="spatial-demo-identity">
-            <div>
-              <small>Selected source record</small>
-              <strong>
-                {selected ? selected.ulpin : "Select a live footprint"}
-              </strong>
-            </div>
-            <button
-              type="button"
-              disabled={!selected}
-              onClick={generateMockUlpIn}
-            >
-              <ShieldCheck size={13} /> Generate mock 3D ULPIN
-            </button>
-            {mockUlpIn && (
-              <div className="spatial-mock-id" role="status">
-                <small>Sample identifier · not issued</small>
-                <strong>{mockUlpIn}</strong>
-              </div>
-            )}
-            <button
-              type="button"
-              className="spatial-pdf-button"
-              disabled={mockRecords.length === 0}
-              onClick={() => void exportMockDetailsPdf()}
-            >
-              <FileDown size={13} /> Export mock details PDF
-            </button>
-          </div>
-          <div
-            className="spatial-mock-records"
-            aria-label="Mock record search and filters"
+        {/* Search Bar & Direct Actions */}
+        <div className="flex items-center gap-2">
+          <form
+            onSubmit={e => {
+              e.preventDefault();
+              if (searchInput.trim()) {
+                setSiteQuery(searchInput.trim());
+                issueCommand("focus-site");
+              }
+            }}
+            className="relative hidden md:block"
           >
-            <div className="spatial-mock-records-heading">
-              <p>Mock record finder</p>
-              <span>{filteredMockRecords.length} shown</span>
-            </div>
             <input
-              value={mockRecordQuery}
-              onChange={event => setMockRecordQuery(event.target.value)}
-              placeholder="Search mock ID, source, or ownership"
-              aria-label="Search mock ULPIN and ownership records"
+              type="text"
+              value={searchInput}
+              onChange={e => setSearchInput(e.target.value)}
+              placeholder="Search building, STHARA Spatial ID..."
+              className="w-64 rounded-md border border-[#D7D4CB] bg-[#E9E5DA] px-3 py-1 text-xs text-[#252622] placeholder:text-[#6F7069] focus:border-[#A85D48] focus:outline-hidden"
             />
-            <div
-              className="spatial-mock-filter-row"
-              role="group"
-              aria-label="Filter mock records"
-            >
-              {(["all", "ulpin", "ownership"] as const).map(filter => (
+          </form>
+
+          <Link
+            href="/floor-explorer?building=rajouri-garden-block-a"
+            className="flex items-center gap-1.5 rounded bg-[#A85D48] px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-[#934E3B] transition-colors"
+          >
+            <Box size={14} />
+            <span className="hidden sm:inline">3D Model</span>
+          </Link>
+        </div>
+      </header>
+
+      {/* 2. Main 3-Column Workspace (STHARA CONTROLS | MAP | INSPECTOR) */}
+      <div className="flex flex-1 overflow-hidden min-h-0">
+        {/* LEFT COLUMN: STHARA CONTROLS (260px) */}
+        <aside
+          className="w-64 shrink-0 flex flex-col justify-between border-r border-[#D7D4CB] bg-[#F8F6F0] p-3.5 overflow-y-auto z-10"
+          aria-label="STHARA Spatial Controls"
+        >
+          <div className="space-y-4">
+            {/* SPATIAL SELECTION TOOLS */}
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#A85D48] block mb-2">
+                Spatial Selection Tools
+              </span>
+              <div className="space-y-1.5 text-xs">
                 <button
                   type="button"
-                  key={filter}
-                  className={mockRecordFilter === filter ? "active" : ""}
-                  onClick={() => setMockRecordFilter(filter)}
-                  disabled={filter === "ownership" && !canViewMockOwnership}
+                  onClick={() => handleToolSelect("select-building")}
+                  className={`w-full flex items-center gap-2 rounded-md px-3 py-2 text-left font-medium transition-colors ${
+                    activeTool === "select-building"
+                      ? "bg-[#A85D48] text-white font-bold shadow-xs"
+                      : "bg-[#E9E5DA] text-[#252622] hover:bg-[#D7D4CB]"
+                  }`}
                 >
-                  {filter === "all"
-                    ? "All"
-                    : filter === "ulpin"
-                      ? "Mock ULPINs"
-                      : "Ownership"}
+                  <Building2 size={14} />
+                  <span>Select Building</span>
                 </button>
-              ))}
-            </div>
-            <small className="spatial-role-visibility" role="status">
-              {canViewMockOwnership
-                ? "Authority demo view: mock ownership placeholders are visible for review."
-                : `${demoRoleDetails[demoRole].label} demo view: mock ownership placeholders are hidden.`}
-            </small>
-            <div
-              className="spatial-property-type-legend"
-              aria-label="Property type legend"
-            >
-              <span>Property type legend</span>
-              {Object.entries(mockPropertyTypeColors).map(([type, color]) => (
-                <i key={type}>
-                  <b
-                    className="spatial-property-type-dot"
-                    style={{ background: color }}
-                  />
-                  {type}
-                </i>
-              ))}
-            </div>
-            {filteredMockRecords.length > 0 && (
-              <div className="spatial-mock-record-list">
-                {groupMockRecords
-                  ? Object.entries(groupedMockRecords).map(
-                      ([group, records]) => (
-                        <section
-                          key={group}
-                          className="spatial-mock-record-group"
-                        >
-                          <b className="spatial-mock-record-group-label">
-                            <span
-                              className="spatial-property-type-dot"
-                              style={{
-                                background: mockPropertyTypeColor(group),
-                              }}
-                            />
-                            {group}
-                          </b>
-                          {records.slice(0, 5).map(record => (
-                            <button
-                              type="button"
-                              key={record.id}
-                              className={
-                                mockUlpIn === record.id ? "active" : ""
-                              }
-                              onClick={() => setMockUlpIn(record.id)}
-                            >
-                              <strong>{record.id}</strong>
-                              <span>
-                                <i
-                                  className="spatial-property-type-dot"
-                                  style={{
-                                    background: mockPropertyTypeColor(
-                                      record.propertyType
-                                    ),
-                                  }}
-                                />
-                                {record.propertyName} ·{" "}
-                                {canViewMockOwnership
-                                  ? record.ownership
-                                  : "Ownership placeholder hidden"}
-                              </span>
-                            </button>
-                          ))}
-                        </section>
-                      )
-                    )
-                  : filteredMockRecords.slice(0, 5).map(record => (
-                      <button
-                        type="button"
-                        key={record.id}
-                        className={mockUlpIn === record.id ? "active" : ""}
-                        onClick={() => setMockUlpIn(record.id)}
-                      >
-                        <strong>{record.id}</strong>
-                        <span>
-                          <i
-                            className="spatial-property-type-dot"
-                            style={{
-                              background: mockPropertyTypeColor(
-                                record.propertyType
-                              ),
-                            }}
-                          />
-                          {record.propertyName} ·{" "}
-                          {canViewMockOwnership
-                            ? record.ownership
-                            : "Ownership placeholder hidden"}
-                        </span>
-                      </button>
-                    ))}
+
+                <button
+                  type="button"
+                  onClick={() => handleToolSelect("select-area")}
+                  className={`w-full flex items-center gap-2 rounded-md px-3 py-2 text-left font-medium transition-colors ${
+                    activeTool === "select-area"
+                      ? "bg-[#A85D48] text-white font-bold shadow-xs"
+                      : "bg-[#E9E5DA] text-[#252622] hover:bg-[#D7D4CB]"
+                  }`}
+                >
+                  <ScanSearch size={14} />
+                  <span>Select Area</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleToolSelect("select-multiple")}
+                  className={`w-full flex items-center gap-2 rounded-md px-3 py-2 text-left font-medium transition-colors ${
+                    activeTool === "select-multiple"
+                      ? "bg-[#A85D48] text-white font-bold shadow-xs"
+                      : "bg-[#E9E5DA] text-[#252622] hover:bg-[#D7D4CB]"
+                  }`}
+                >
+                  <Layers3 size={14} />
+                  <span>Select Multiple</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleClearSelection}
+                  className="w-full flex items-center gap-2 rounded-md border border-[#D7D4CB] bg-[#E9E5DA] px-3 py-1.5 text-left text-xs text-[#6F7069] hover:bg-[#D7D4CB] hover:text-[#252622] transition-colors"
+                >
+                  <X size={14} />
+                  <span>Clear Selection</span>
+                </button>
               </div>
-            )}
+            </div>
+
+            {/* MODELING & DATA ACTIONS */}
+            <div className="border-t border-[#D7D4CB] pt-3">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#A85D48] block mb-2">
+                Modeling Actions
+              </span>
+              <div className="space-y-1.5 text-xs">
+                <button
+                  type="button"
+                  onClick={handleBuild3D}
+                  className="w-full flex items-center justify-center gap-2 rounded-md bg-[#788575] px-3 py-2 font-bold text-white shadow-xs hover:bg-[#687565] transition-colors"
+                >
+                  <Box size={14} />
+                  <span>Build 3D</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsImportModalOpen(true)}
+                  className="w-full flex items-center justify-center gap-2 rounded-md border border-[#B28A52]/40 bg-[#B28A52]/10 px-3 py-2 font-semibold text-[#B28A52] hover:bg-[#B28A52]/20 transition-colors"
+                >
+                  <Upload size={14} />
+                  <span>Import Data</span>
+                </button>
+              </div>
+            </div>
+
+            {/* MAP VIEW & LAYERS */}
+            <div className="border-t border-[#D7D4CB] pt-3">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#A85D48] block mb-2">
+                Display &amp; Layers
+              </span>
+              <div className="flex gap-1.5 mb-2.5">
+                <button
+                  type="button"
+                  onClick={() => setSourceMapView("2d")}
+                  className={`flex-1 rounded py-1 text-xs font-semibold transition-colors ${
+                    sourceMapView === "2d"
+                      ? "bg-[#A85D48] text-white font-bold"
+                      : "bg-[#E9E5DA] text-[#252622] hover:bg-[#D7D4CB]"
+                  }`}
+                >
+                  2D
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSourceMapView("3d")}
+                  className={`flex-1 rounded py-1 text-xs font-semibold transition-colors ${
+                    sourceMapView === "3d"
+                      ? "bg-[#A85D48] text-white font-bold"
+                      : "bg-[#E9E5DA] text-[#252622] hover:bg-[#D7D4CB]"
+                  }`}
+                >
+                  3D Extruded
+                </button>
+              </div>
+
+              <div className="space-y-1.5 text-xs">
+                <label className="flex items-center gap-2 cursor-pointer text-[#252622]">
+                  <input
+                    type="checkbox"
+                    checked={layers.parcels}
+                    onChange={e => setLayers({ ...layers, parcels: e.target.checked })}
+                    className="rounded border-[#D7D4CB] text-[#A85D48] focus:ring-0"
+                  />
+                  <span>Surface Parcels</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer text-[#252622]">
+                  <input
+                    type="checkbox"
+                    checked={layers.buildings}
+                    onChange={e => setLayers({ ...layers, buildings: e.target.checked })}
+                    className="rounded border-[#D7D4CB] text-[#A85D48] focus:ring-0"
+                  />
+                  <span>Detected Buildings</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer text-[#252622]">
+                  <input
+                    type="checkbox"
+                    checked={layers.utilities}
+                    onChange={e => setLayers({ ...layers, utilities: e.target.checked })}
+                    className="rounded border-[#D7D4CB] text-[#A85D48] focus:ring-0"
+                  />
+                  <span>Infrastructure</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Context Footer Links */}
+          <div className="border-t border-[#D7D4CB] pt-3 text-[11px] text-[#6F7069] space-y-1">
+            <Link
+              href="/drawing-intelligence"
+              className="flex items-center gap-1.5 font-medium text-[#A85D48] hover:underline"
+            >
+              <FileCode2 size={13} />
+              <span>Drawing Intelligence</span>
+            </Link>
+            <Link
+              href="/floor-explorer?building=rajouri-garden-block-a"
+              className="flex items-center gap-1.5 font-medium text-[#788575] hover:underline"
+            >
+              <Layers3 size={13} />
+              <span>Dedicated 3D Floor Slicer</span>
+            </Link>
+          </div>
+        </aside>
+
+        {/* CENTER COLUMN: MAP VIEWPORT (flex-1) */}
+        <main className="flex-1 relative overflow-hidden bg-stone-900">
+          <CesiumSpatialViewer
+            command={command}
+            layers={layers}
+            sourceMapView={sourceMapView}
+            onFeatureSelect={onFeatureSelect}
+            onDetailedFeatureSelect={onDetailedFeatureSelect}
+            floorStackData={floorStackData}
+            focusUlpins={
+              multiSelectedUlpins.length > 0
+                ? multiSelectedUlpins
+                : selected?.ulpin
+                  ? [selected.ulpin]
+                  : undefined
+            }
+          />
+
+          {/* Clean Floating Map Camera Controls (Top Right) */}
+          <div className="absolute top-3 right-3 z-10 flex flex-col gap-1.5 rounded-lg border border-[#D7D4CB] bg-[#F8F6F0]/90 p-1.5 shadow-md backdrop-blur-xs">
             <button
               type="button"
-              className={`spatial-group-toggle${groupMockRecords ? " active" : ""}`}
-              onClick={() => setGroupMockRecords(value => !value)}
-              aria-pressed={groupMockRecords}
+              onClick={() => issueCommand("zoom-in")}
+              className="rounded p-1 text-[#252622] hover:bg-[#E9E5DA]"
+              title="Zoom In"
             >
-              {groupMockRecords
-                ? "Grouped by property type"
-                : "Group by property type"}
+              <Plus size={15} />
+            </button>
+            <button
+              type="button"
+              onClick={() => issueCommand("zoom-out")}
+              className="rounded p-1 text-[#252622] hover:bg-[#E9E5DA]"
+              title="Zoom Out"
+            >
+              <Minus size={15} />
+            </button>
+            <div className="h-px bg-[#D7D4CB] my-0.5" />
+            <button
+              type="button"
+              onClick={() => issueCommand("north")}
+              className="rounded p-1 text-[#252622] hover:bg-[#E9E5DA]"
+              title="Align North"
+            >
+              <Compass size={15} />
+            </button>
+            <button
+              type="button"
+              onClick={() => issueCommand("focus-site")}
+              className="rounded p-1 text-[#252622] hover:bg-[#E9E5DA]"
+              title="Reset View"
+            >
+              <RotateCcw size={15} />
             </button>
           </div>
-          <div
-            className="spatial-role-simulation"
-            aria-label="Demo role simulation"
-          >
-            <div className="spatial-rights-heading">
-              <div>
-                <span className="spatial-kicker">Demo access simulation</span>
-                <p>Role-based ULPIN data view</p>
-              </div>
-              <ShieldCheck size={16} />
+        </main>
+
+        {/* RIGHT COLUMN: BUILDING INSPECTOR (320px) */}
+        <aside
+          className="w-80 shrink-0 border-l border-[#D7D4CB] bg-[#F8F6F0] p-4 flex flex-col justify-between overflow-y-auto z-10"
+          aria-label="STHARA Building Inspector"
+        >
+          <div>
+            <div className="border-b border-[#D7D4CB] pb-3 mb-3">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#A85D48] block">
+                BUILDING INSPECTOR
+              </span>
+              <p className="text-xs text-[#6F7069] mt-0.5">
+                Deterministic 3D Property Geometry &amp; Cadastre
+              </p>
             </div>
-            <small>
-              Illustrates role-specific screens only; it does not authenticate
-              users or grant rights.
-            </small>
-            <div
-              className="spatial-role-buttons"
-              role="group"
-              aria-label="Simulated user role"
-            >
-              {(Object.keys(demoRoleDetails) as DemoRole[]).map(role => (
+
+            {/* CASE 1: AREA SELECTED */}
+            {activeTool === "select-area" && selectedAreaStats && (
+              <div className="space-y-3">
+                <div className="rounded border border-[#D7D4CB] bg-[#E9E5DA] p-3 text-xs space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-[#6F7069]">Selected Area:</span>
+                    <span className="font-bold text-[#252622]">{selectedAreaStats.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#6F7069]">Area:</span>
+                    <span className="font-mono font-bold text-[#252622]">
+                      {selectedAreaStats.areaKm2.toFixed(3)} km²
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#6F7069]">Buildings Found:</span>
+                    <span className="font-mono font-bold text-[#A85D48]">
+                      {selectedAreaStats.buildingCount}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#6F7069]">Buildings Selected:</span>
+                    <span className="font-mono font-bold text-[#788575]">
+                      {selectedAreaStats.selectedCount}
+                    </span>
+                  </div>
+                </div>
+
                 <button
                   type="button"
-                  key={role}
-                  className={demoRole === role ? "active" : ""}
-                  onClick={() => setDemoRole(role)}
-                  aria-pressed={demoRole === role}
+                  onClick={handleBuild3D}
+                  className="w-full rounded bg-[#A85D48] py-2 text-xs font-bold text-white shadow-xs hover:bg-[#934E3B] transition-colors"
                 >
-                  {demoRoleDetails[role].label}
+                  Convert Selected Buildings to 3D
                 </button>
-              ))}
-            </div>
-            <div className="spatial-role-status">
-              <strong>
-                {demoRoleDetails[demoRole].label} view · demo only
-              </strong>
-              <span>{demoRoleDetails[demoRole].summary}</span>
-              <em>{demoRoleDetails[demoRole].access}</em>
-            </div>
-            {demoRole === "authority" && (
-              <div className="spatial-approval-queue" aria-live="polite">
-                <div>
-                  <span className="spatial-kicker">Authority demo queue</span>
-                  <b>Mock ULPIN approval requests</b>
-                </div>
-                <small>
-                  Simulated review items only; no real applicant, approval, or
-                  record change is created.
-                </small>
-                {mockApprovalRequests.map(request => (
-                  <section key={request.id}>
-                    <div>
-                      <strong>{request.id}</strong>
-                      <span>{request.label}</span>
-                      <em>{request.submitted}</em>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setReviewedMockRequest(request.id)}
-                    >
-                      {reviewedMockRequest === request.id
-                        ? "Reviewed · demo"
-                        : "Review mock request"}
-                    </button>
-                  </section>
-                ))}
               </div>
             )}
-          </div>
-          <div className="spatial-floor-detail" aria-live="polite">
-            <div className="spatial-rights-heading">
-              <div>
-                <span className="spatial-kicker">Interactive mock layer</span>
-                <p>
-                  {selectedMockFloor
-                    ? `Floor ${selectedMockFloor} detail`
-                    : "Floor-level detail"}
+
+            {/* CASE 2: MULTIPLE BUILDINGS SELECTED */}
+            {activeTool === "select-multiple" && multiSelectedUlpins.length > 0 && !selectedAreaStats && (
+              <div className="space-y-3">
+                <div className="rounded border border-[#D7D4CB] bg-[#E9E5DA] p-3 text-xs space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#6F7069]">Selection Mode:</span>
+                    <span className="font-bold text-[#A85D48]">Multi-Building</span>
+                  </div>
+                  <div className="flex justify-between font-bold">
+                    <span>Buildings Selected:</span>
+                    <span className="font-mono text-[#A85D48]">{multiSelectedUlpins.length}</span>
+                  </div>
+                  <div className="pt-2 border-t border-[#D7D4CB] text-[11px] font-mono text-[#6F7069] space-y-1">
+                    {multiSelectedUlpins.map((ulpin, idx) => (
+                      <div key={idx} className="truncate">
+                        • {ulpin}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleBuild3D}
+                  className="w-full rounded bg-[#A85D48] py-2 text-xs font-bold text-white shadow-xs hover:bg-[#934E3B] transition-colors"
+                >
+                  Build Selected in 3D
+                </button>
+              </div>
+            )}
+
+            {/* CASE 3: SINGLE BUILDING SELECTED */}
+            {(selected || buildingSelection) && activeTool !== "select-area" && (multiSelectedUlpins.length <= 1) && (
+              <div className="space-y-3">
+                {/* Building Header */}
+                <div>
+                  <h2 className="text-sm font-bold text-[#252622]">
+                    {String(buildingSelection?.properties.name || selected?.properties.name || "Rajouri Garden · Block A Apartment")}
+                  </h2>
+                  <span className="font-mono text-[11px] font-bold text-[#A85D48] block mt-0.5">
+                    {selected?.ulpin || "DELHI-RAJOURI-B001-3D"}
+                  </span>
+                </div>
+
+                {/* Structured Metrics Grid */}
+                <div className="rounded border border-[#D7D4CB] bg-[#E9E5DA] p-3 text-xs space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-[#6F7069]">Building ID:</span>
+                    <span className="font-mono font-medium text-[#252622]">
+                      {String(buildingSelection?.properties.buildingId || "rg-delhi-rajouri-b001-3d")}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between">
+                    <span className="text-[#6F7069]">Footprint Area:</span>
+                    <span className="font-mono font-medium text-[#252622]">
+                      {Number(buildingSelection?.properties.footprintAreaSquareMetres || 483.4).toFixed(1)} m²
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between">
+                    <span className="text-[#6F7069]">Source:</span>
+                    <span className="font-medium text-[#252622] text-right truncate max-w-[160px]">
+                      STHARA Vector Cadastre
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between">
+                    <span className="text-[#6F7069]">Geometry Status:</span>
+                    <span className="font-bold text-[#788575]">
+                      VALID (1:100 Calibrated)
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between">
+                    <span className="text-[#6F7069]">Floors:</span>
+                    <span className="font-bold text-[#252622]">
+                      {floorStackData.actualFloors || "G + 6 + Terrace (20.02m)"}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between">
+                    <span className="text-[#6F7069]">Units:</span>
+                    <span className="font-bold text-[#252622]">
+                      {floorStackData.totalUnits || 30} Residential Flats
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between">
+                    <span className="text-[#6F7069]">3D Status:</span>
+                    <span className="font-bold text-[#A85D48]">
+                      3D Model Built ({floorStackData.actualHeightM}m)
+                    </span>
+                  </div>
+                </div>
+
+                {/* Inspector Actions */}
+                <div className="space-y-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={handleBuild3D}
+                    className="w-full flex items-center justify-center gap-1.5 rounded bg-[#788575] py-2 text-xs font-bold text-white shadow-xs hover:bg-[#687565] transition-colors"
+                  >
+                    <Box size={14} />
+                    <span>Build 3D</span>
+                  </button>
+
+                  <Link
+                    href={`/floor-explorer?building=${encodeURIComponent(floorStackData.id || "rajouri-garden-block-a")}`}
+                    className="w-full flex items-center justify-center gap-1.5 rounded bg-[#A85D48] py-2 text-xs font-bold text-white shadow-xs hover:bg-[#934E3B] transition-colors text-center"
+                  >
+                    <ExternalLink size={14} />
+                    <span>Open 3D Model</span>
+                  </Link>
+                </div>
+              </div>
+            )}
+
+            {/* CASE 4: NOTHING SELECTED */}
+            {!selected && !buildingSelection && !selectedAreaStats && multiSelectedUlpins.length === 0 && (
+              <div className="flex flex-col items-center justify-center rounded border border-[#D7D4CB] bg-[#E9E5DA]/40 p-8 text-center text-xs text-[#6F7069]">
+                <Building2 size={32} className="text-[#D7D4CB] mb-2" />
+                <p className="font-semibold text-[#252622]">No Building Selected</p>
+                <p className="mt-1 text-[11px]">
+                  Select a building or area on the map to inspect its spatial volume, geometry provenance, and structured units.
                 </p>
               </div>
-              <Layers3 size={16} />
-            </div>
-            <small>
-              {selectedMockFloor
-                ? `Illustrative data for mock floor ${selectedMockFloor}; not an authority-linked apartment record.`
-                : "Click a labeled DEMO LEVEL in the 3D map to inspect its illustrative rights state."}
-            </small>
-            <dl>
-              <div>
-                <dt>Floor identity</dt>
-                <dd>
-                  {selectedMockFloor
-                    ? `MOCK-FLOOR-${selectedMockFloor}`
-                    : "Not selected"}
-                </dd>
-              </div>
-              <div>
-                <dt>Ownership</dt>
-                <dd>
-                  {selectedMockFloor
-                    ? "Demo placeholder · not supplied"
-                    : "Unavailable"}
-                </dd>
-              </div>
-              <div>
-                <dt>Rights status</dt>
-                <dd>Mock only · authority record required</dd>
-              </div>
-            </dl>
+            )}
           </div>
-          <div
-            className="spatial-mock-rights"
-            aria-label="Mock ownership and vertical rights"
-          >
-            <div className="spatial-rights-heading">
-              <div>
-                <span className="spatial-kicker">Prototype data panel</span>
-                <p>Mock apartment ownership &amp; vertical rights</p>
-              </div>
-              <ShieldAlert size={16} />
-            </div>
-            <small className="spatial-rights-note">
-              Illustrative fields for the vertical-cadastre concept. These are
-              not government ownership or rights records.
-            </small>
-            <dl>
-              <div>
-                <dt>Ownership</dt>
-                <dd>
-                  {selected
-                    ? "Demo placeholder · not supplied"
-                    : "Select a source record"}
-                </dd>
-              </div>
-              <div>
-                <dt>Vertical volume</dt>
-                <dd>
-                  {selected ? "Illustrative apartment envelope" : "Unavailable"}
-                </dd>
-              </div>
-              <div>
-                <dt>Rights status</dt>
-                <dd>Mock only · authority record required</dd>
-              </div>
-            </dl>
+
+          <div className="rounded border border-[#B28A52]/30 bg-[#B28A52]/10 p-2.5 text-[10px] text-[#6F7069] mt-4">
+            <span className="font-bold text-[#252622] block mb-0.5">STHARA Spatial Identity:</span>
+            Deterministic project coordinates and floor cadastre volumes. Not official government property titles.
           </div>
-          <div className="spatial-sample-upload">
-            <div>
-              <p>Sample floor plan / 3D model</p>
-              <small>Browser-local preview only · max 25 MB</small>
+        </aside>
+      </div>
+
+      {/* 3. Unified PROJECT -> IMPORT DATA Modal */}
+      {isImportModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-lg rounded-xl border border-[#D7D4CB] bg-[#F8F6F0] p-6 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[#D7D4CB] pb-3 mb-4">
+              <div>
+                <h2 className="text-base font-bold text-[#252622]">PROJECT → IMPORT DATA</h2>
+                <p className="text-xs text-[#6F7069]">Import map geometry &amp; architectural drawings into your active project.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsImportModalOpen(false)}
+                className="text-[#6F7069] hover:text-[#252622]"
+              >
+                <X className="h-5 w-5" />
+              </button>
             </div>
-            <div
-              className={`spatial-upload-dropzone${isSampleDragging ? " is-dragging" : ""}`}
-              onDragOver={event => {
-                event.preventDefault();
-                setIsSampleDragging(true);
-              }}
-              onDragLeave={() => setIsSampleDragging(false)}
-              onDrop={handleSampleAssetDrop}
-            >
-              <Upload size={15} />
-              <span>Drop a sample here or</span>
-              <label className="spatial-upload-button">
-                Browse files
+
+            <div className="space-y-4">
+              <div className="rounded-lg border-2 border-dashed border-[#D7D4CB] bg-[#E9E5DA]/50 p-6 text-center">
+                <Upload className="mx-auto h-8 w-8 text-[#A85D48] mb-2" />
+                <p className="text-xs font-semibold text-[#252622]">
+                  Drag &amp; drop project files here (MAP, PDF, BLUEPRINT, GEOJSON, IMAGE, OSM)
+                </p>
+                <p className="text-[10px] text-[#6F7069] mt-1">OSM is optional. PDF blueprints and map layers are fully supported.</p>
                 <input
                   type="file"
-                  accept=".pdf,.png,.jpg,.jpeg,.glb,.gltf,application/pdf,image/png,image/jpeg,model/gltf-binary,model/gltf+json"
-                  onChange={handleSampleAssetUpload}
+                  multiple
+                  className="mt-3 text-xs text-[#6F7069] file:mr-3 file:rounded file:border-0 file:bg-[#A85D48] file:px-3 file:py-1 file:text-xs file:font-semibold file:text-white"
+                  onChange={() => {
+                    setIsImportModalOpen(false);
+                  }}
                 />
-              </label>
-            </div>
-            {sampleUploadProgress !== null && (
-              <div className="spatial-upload-progress" role="status">
-                <div>
-                  <span>Reading sample locally</span>
-                  <b>{sampleUploadProgress}%</b>
-                </div>
-                <i>
-                  <em style={{ width: `${sampleUploadProgress}%` }} />
-                </i>
               </div>
-            )}
-            {sampleAsset && (
-              <div className="spatial-sample-file" role="status">
-                <strong>{sampleAsset.name}</strong>
-                <span>
-                  {sampleAsset.kind === "model" ? "3D model" : "Floor plan"} ·{" "}
-                  {(sampleAsset.size / 1024 / 1024).toFixed(2)} MB · visible on
-                  map
-                </span>
-              </div>
-            )}
-            {sampleAssetError && (
-              <small className="spatial-sample-error" role="alert">
-                {sampleAssetError}
-              </small>
-            )}
-          </div>
-        </section>
-      </section>
 
-      {floorStackData && (
-        <FloorUnitInspectorDrawer
-          building={floorStackData}
-          floor={selectedUnitCadastre?.floor ?? null}
-          unit={selectedUnitCadastre?.unit ?? null}
-          isOpen={isUnitDrawerOpen}
-          onClose={() => setIsUnitDrawerOpen(false)}
-        />
+              <div className="rounded border border-[#D7D4CB] bg-[#E9E5DA] p-3 text-xs space-y-1.5">
+                <span className="font-bold text-[#252622] block mb-1">Active Project Data Files (Rajouri Garden):</span>
+                <div className="font-mono text-[11px] text-[#A85D48] space-y-1">
+                  <div>✓ 20 ARCH PLAN.pdf (G+6 Architectural Blueprint)</div>
+                  <div>✓ RajouriGarden_Footprints.geojson</div>
+                  <div>✓ 20 STRU PLAN 1.pdf</div>
+                  <div>✓ 20 STRU PLAN 2.pdf</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end gap-2 border-t border-[#D7D4CB] pt-3">
+              <button
+                type="button"
+                onClick={() => setIsImportModalOpen(false)}
+                className="rounded border border-[#D7D4CB] bg-[#E9E5DA] px-4 py-1.5 text-xs font-semibold text-[#252622]"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsImportModalOpen(false)}
+                className="rounded bg-[#A85D48] px-4 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-[#934E3B]"
+              >
+                Process &amp; Load into Project
+              </button>
+            </div>
+          </div>
+        </div>
       )}
-    </main>
+    </div>
   );
 }

@@ -9,81 +9,98 @@ import {
   getAllBuildingFloorStacks,
 } from "./db";
 
-describe("🏢 3D Cadastre: Exploded Floor Stack & Unit Volumetric Slicing", () => {
-  it("should have populated sample multi-storey building records", () => {
-    expect(SAMPLE_BUILDING_FLOOR_STACKS.length).toBeGreaterThanOrEqual(2);
-    const patnaHeights = SAMPLE_BUILDING_FLOOR_STACKS.find(
-      b => b.id === "patna-central-heights"
+describe("🏢 3D Cadastre: Drawing-Grounded G+6 Floor Stack & Unit Volumetric Slicing", () => {
+  it("should have populated drawing-grounded Rajouri Garden Block A record", () => {
+    expect(SAMPLE_BUILDING_FLOOR_STACKS.length).toBeGreaterThanOrEqual(1);
+    const rgBlockA = SAMPLE_BUILDING_FLOOR_STACKS.find(
+      b => b.id === "rajouri-garden-block-a"
     );
-    expect(patnaHeights).toBeDefined();
-    expect(patnaHeights?.buildingName).toBe("Patna Central Heights");
-    expect(patnaHeights?.ulpin).toBe("IN-BR-PAT-0042-3D");
+    expect(rgBlockA).toBeDefined();
+    expect(rgBlockA?.buildingName).toContain("Rajouri Garden");
+    expect(rgBlockA?.ulpin).toBe("DELHI-RAJOURI-B001-3D");
+    expect(rgBlockA?.actualHeightM).toBe(20.02);
+    expect(rgBlockA?.basementCount).toBe(0);
+    expect(rgBlockA?.basementSource).toBe("Drawing does not identify basement");
   });
 
-  it("should correctly calculate subsurface and above-ground floor elevations", () => {
-    const patnaHeights = getBuildingFloorStackRecord("patna-central-heights");
-    expect(patnaHeights).toBeDefined();
+  it("should correctly calculate drawing-calibrated floor elevations (G=3.22m, F1-F6=2.80m)", () => {
+    const rgBlockA = getBuildingFloorStackRecord("rajouri-garden-block-a");
+    expect(rgBlockA).toBeDefined();
 
-    // Check Subsurface floors (Z < 0)
-    const b2 = patnaHeights?.floors.find(f => f.floorCode === "B2");
-    expect(b2).toBeDefined();
-    expect(b2?.elevationBaseM).toBeLessThan(0);
-    expect(b2?.floorType).toBe("UNDERGROUND_BASEMENT");
+    // Zero basements
+    expect(rgBlockA?.floors.some(f => f.floorType === "UNDERGROUND_BASEMENT")).toBe(false);
 
-    // Check Ground floor (Z = 0)
-    const ground = patnaHeights?.floors.find(f => f.floorCode === "G");
+    // Ground floor (3.22m height)
+    const ground = rgBlockA?.floors.find(f => f.floorCode === "G");
     expect(ground).toBeDefined();
     expect(ground?.elevationBaseM).toBe(0.0);
-    expect(ground?.floorType).toBe("GROUND_RETAIL");
+    expect(ground?.floorHeightM).toBe(3.22);
+    expect(ground?.architecturalGeometry?.columns?.length).toBeGreaterThan(0);
+    expect(ground?.architecturalGeometry?.parkingBays?.length).toBe(6);
 
-    // Check Upper floors (Z > 0)
-    const f4 = patnaHeights?.floors.find(f => f.floorCode === "F4");
-    expect(f4).toBeDefined();
-    expect(f4?.elevationBaseM).toBeGreaterThan(10);
+    // Upper floors (2.80m each)
+    const f1 = rgBlockA?.floors.find(f => f.floorCode === "F1");
+    expect(f1).toBeDefined();
+    expect(f1?.elevationBaseM).toBe(3.22);
+    expect(f1?.floorHeightM).toBe(2.80);
+    expect(f1?.units.length).toBe(5);
+
+    const f6 = rgBlockA?.floors.find(f => f.floorCode === "F6");
+    expect(f6).toBeDefined();
+    expect(f6?.elevationBaseM).toBe(17.22);
+    expect(f6?.floorHeightM).toBe(2.80);
+    expect(f6?.units.length).toBe(5);
+
+    // Terrace with parapet and bulkhead
+    const terrace = rgBlockA?.floors.find(f => f.floorCode === "TERRACE");
+    expect(terrace).toBeDefined();
+    expect(terrace?.elevationBaseM).toBe(20.02);
+    expect(terrace?.architecturalGeometry?.roofElements?.length).toBeGreaterThan(0);
   });
 
-  it("should identify municipal height clashes and unauthorized floors", () => {
-    const patnaHeights = getBuildingFloorStackRecord("patna-central-heights");
-    expect(patnaHeights).toBeDefined();
-    expect(patnaHeights?.sanctionedHeightM).toBe(15.0);
-    expect(patnaHeights?.actualHeightM).toBeGreaterThan(15.0);
+  it("should contain all 30 residential flats across floors 1 to 6", () => {
+    const rgBlockA = getBuildingFloorStackRecord("rajouri-garden-block-a");
+    expect(rgBlockA).toBeDefined();
 
-    // Floors above 15.0m should be flagged as unauthorized height deviations
-    const f5 = patnaHeights?.floors.find(f => f.floorCode === "F5");
-    const f6 = patnaHeights?.floors.find(f => f.floorCode === "F6");
-    const f7 = patnaHeights?.floors.find(f => f.floorCode === "F7");
-
-    expect(f5?.isUnauthorizedFloor).toBe(true);
-    expect(f6?.isUnauthorizedFloor).toBe(true);
-    expect(f7?.isUnauthorizedFloor).toBe(true);
-    expect(f5?.heightViolationNotice).toContain("Exceeds sanctioned municipal height limit");
+    let totalFlats = 0;
+    for (let f = 1; f <= 6; f++) {
+      const floor = rgBlockA?.floors.find(fl => fl.floorCode === `F${f}`);
+      expect(floor).toBeDefined();
+      expect(floor?.units.length).toBe(5);
+      totalFlats += floor?.units.length || 0;
+    }
+    expect(totalFlats).toBe(30);
   });
 
   it("should lookup unit-level cadastral details, ownership and statutory clearances", () => {
-    const unitDetails = getUnitCadastreDetails("IN-BR-PAT-0042-3D-F04-U01");
+    const unitDetails = getUnitCadastreDetails("DL-RG-B001-F04-U401");
     expect(unitDetails).not.toBeNull();
     expect(unitDetails?.unit.unitNumber).toContain("Flat 401");
-    expect(unitDetails?.unit.carpetAreaSqM).toBe(172.5);
-    expect(unitDetails?.unit.owner.name).toBe("Rajesh Ranjan & Rashmi Ranjan");
+    expect(unitDetails?.unit.carpetAreaSqM).toBe(88.5);
     expect(unitDetails?.unit.owner.verifiedAadhaarPan).toBe(true);
     expect(unitDetails?.unit.clearances.fireNoc).toBe("APPROVED");
     expect(unitDetails?.unit.clearances.municipalTaxStatus).toBe("CLEARED");
     expect(unitDetails?.unit.easements.length).toBeGreaterThanOrEqual(1);
   });
 
-  it("should return compliant building record for Exhibition Road Tower", () => {
-    const tower = getBuildingFloorStackRecord("exhibition-road-tower");
-    expect(tower).toBeDefined();
-    expect(tower?.sanctionStatus).toBe("FULLY_COMPLIANT");
-    expect(tower?.actualHeightM).toBeLessThanOrEqual(tower?.sanctionedHeightM ?? 0);
+  it("should verify architectural geometry attached to floor stack levels", () => {
+    const rgBlockA = getBuildingFloorStackRecord("rajouri-garden-block-a");
+    const f2 = rgBlockA?.floors.find(f => f.floorCode === "F2");
+    expect(f2?.architecturalGeometry).toBeDefined();
+    expect(f2?.architecturalGeometry?.slabPolygon.length).toBeGreaterThanOrEqual(8);
+    expect(f2?.architecturalGeometry?.walls.length).toBeGreaterThan(20);
+    expect(f2?.architecturalGeometry?.core.lift).toBeDefined();
+    expect(f2?.architecturalGeometry?.core.staircase.steps.length).toBeGreaterThan(10);
+    expect(f2?.architecturalGeometry?.balconies.length).toBeGreaterThan(0);
   });
 
   it("should serve building floor stack data via db module", async () => {
     const all = await getAllBuildingFloorStacks();
-    expect(all.length).toBeGreaterThanOrEqual(2);
+    expect(all.length).toBeGreaterThanOrEqual(1);
 
-    const stack = await getBuildingFloorStack("IN-BR-PAT-0042-3D");
-    expect(stack.buildingName).toBe("Patna Central Heights");
-    expect(stack.floors.length).toBeGreaterThanOrEqual(8);
+    const stack = await getBuildingFloorStack("DELHI-RAJOURI-B001-3D");
+    expect(stack.buildingName).toContain("Rajouri Garden");
+    expect(stack.actualHeightM).toBe(20.02);
+    expect(stack.floors.length).toBe(8); // G + 6 + Terrace
   });
 });

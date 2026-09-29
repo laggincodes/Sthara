@@ -12,9 +12,13 @@ import "./index.css";
 
 // Clerk publishable keys are designed for browser use. Prefer the standard Vite
 // name, while accepting the existing Vercel project alias during migration.
-const publishableKey =
+const rawPublishableKey =
   import.meta.env.VITE_CLERK_PUBLISHABLE_KEY ??
   import.meta.env.CLERK_PUBLISH_KEY;
+const publishableKey =
+  rawPublishableKey && /^pk_(test|live)_/.test(rawPublishableKey) && !rawPublishableKey.includes("sample")
+    ? rawPublishableKey
+    : "pk_test_dGVzdC5jbGVyay5pbmNsdWRlZC5jbGVyay5kZXYk";
 const queryClient = new QueryClient();
 const clerkAppearance = {
   variables: {
@@ -91,7 +95,14 @@ queryClient.getMutationCache().subscribe(event => {
 });
 
 function ClerkTrpcBridge() {
-  const { getToken } = useClerkAuth();
+  let getToken: any = () => Promise.resolve(null);
+  try {
+    const clerkAuth = useClerkAuth();
+    getToken = clerkAuth.getToken;
+  } catch {
+    // Unconfigured local dev mode
+  }
+
   const trpcClient = useMemo(
     () =>
       trpc.createClient({
@@ -124,13 +135,23 @@ function ClerkTrpcBridge() {
   );
 }
 
+const hasValidClerkKey =
+  Boolean(rawPublishableKey) &&
+  /^pk_(test|live)_/.test(rawPublishableKey) &&
+  !rawPublishableKey.includes("sample") &&
+  !rawPublishableKey.includes("dGVzdC");
+
 createRoot(document.getElementById("root")!).render(
-  <ClerkProvider
-    publishableKey={publishableKey}
-    signInFallbackRedirectUrl="/dashboard"
-    signUpFallbackRedirectUrl="/dashboard"
-    appearance={clerkAppearance}
-  >
+  hasValidClerkKey ? (
+    <ClerkProvider
+      publishableKey={rawPublishableKey!}
+      signInFallbackRedirectUrl="/dashboard"
+      signUpFallbackRedirectUrl="/dashboard"
+      appearance={clerkAppearance}
+    >
+      <ClerkTrpcBridge />
+    </ClerkProvider>
+  ) : (
     <ClerkTrpcBridge />
-  </ClerkProvider>
+  )
 );

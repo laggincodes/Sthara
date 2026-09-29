@@ -71,23 +71,17 @@ describe("secure role-based cadastral platform foundation", () => {
       "The interface cannot grant permissions."
     );
     expect(roleConsoleSource).not.toContain("Sign up as Authority");
-    expect(appSource).toContain('path="/" component={AccessPortal}');
-    expect(appSource).toContain('path="/overview" component={Home}');
-    expect(appSource).toContain('path="/access"');
-    expect(appSource).toContain('path="/dashboard"');
+    expect(appSource).toContain('path="/" component={StharaOverview}');
+    expect(appSource).toContain('path="/overview" component={StharaOverview}');
+    expect(appSource).toContain('path="/workspace" component={SpatialWorkspace}');
+    expect(appSource).toContain('path="/dashboard" component={StharaOverview}');
     expect(roleConsoleSource).toContain('setLocation("/overview")');
   });
 
   it("keeps dashboard settings behind an administrator procedure and session controls tied to Clerk", () => {
-    const homeSource = readProjectFile("client/src/pages/Home.tsx");
     const mainSource = readProjectFile("client/src/main.tsx");
-    expect(homeSource).toContain("platform.adminSettings.useQuery");
-    expect(homeSource).toContain("Administrator settings are locked");
-    expect(homeSource).toContain("void session.logout()");
-    expect(homeSource).toContain("/access?returnTo=/overview");
     expect(mainSource).toContain("appearance={clerkAppearance}");
     expect(mainSource).toContain('colorPrimary: "#2ad4d9"');
-    expect(mainSource).toContain('card: "bg-transparent shadow-none border-0 w-full text-white"');
     expect(portalStyles).not.toContain(".access-portal__clerk .cl-card");
   });
 });

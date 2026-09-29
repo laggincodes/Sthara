@@ -10,8 +10,22 @@ type UseAuthOptions = {
 export function useAuth(options?: UseAuthOptions) {
   const { redirectOnUnauthenticated = false, redirectPath = "/access" } =
     options ?? {};
-  const { isLoaded, isSignedIn, user: clerkUser } = useUser();
-  const clerk = useClerk();
+
+  let isLoaded = true;
+  let isSignedIn = false;
+  let clerkUser = null;
+  let clerk: any = null;
+
+  try {
+    const userRes = useUser();
+    isLoaded = userRes.isLoaded;
+    isSignedIn = Boolean(userRes.isSignedIn);
+    clerkUser = userRes.user ?? null;
+    clerk = useClerk();
+  } catch {
+    // ClerkProvider is unconfigured in local development mode
+  }
+
   const utils = trpc.useUtils();
   const meQuery = trpc.auth.me.useQuery(undefined, {
     enabled: Boolean(isLoaded && isSignedIn),
@@ -20,7 +34,9 @@ export function useAuth(options?: UseAuthOptions) {
   });
 
   const logout = useCallback(async () => {
-    await clerk.signOut({ redirectUrl: "/" });
+    if (clerk?.signOut) {
+      await clerk.signOut({ redirectUrl: "/" });
+    }
     utils.auth.me.setData(undefined, null);
   }, [clerk, utils.auth.me]);
 

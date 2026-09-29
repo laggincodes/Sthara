@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { useLocation, useSearch } from "wouter";
 import {
   SAMPLE_BUILDING_FLOOR_STACKS,
-  type BuildingFloorStackRecord,
   type FloorStackLevel,
   type FloorUnitCadastre,
 } from "@shared/floorCadastre";
@@ -15,19 +14,19 @@ import {
   FileText,
   Layers,
   ArrowLeft,
-  Sparkles,
   MapPin,
   CheckCircle2,
-  AlertCircle,
-  HelpCircle,
-  Maximize2,
+  ChevronLeft,
+  ChevronRight,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 
 export default function FloorExplorer() {
   const [, setLocation] = useLocation();
   const search = useSearch();
   const queryParams = new URLSearchParams(search);
-  const buildingIdParam = queryParams.get("building") || "patna-central-heights";
+  const buildingIdParam = queryParams.get("building") || "rajouri-garden-block-a";
 
   // Active Building State
   const [selectedBuildingId, setSelectedBuildingId] = useState(buildingIdParam);
@@ -36,17 +35,20 @@ export default function FloorExplorer() {
     SAMPLE_BUILDING_FLOOR_STACKS[0];
 
   // 3D Controls State
-  const [explosionFactor, setExplosionFactor] = useState(0.4);
+  const [explosionFactor, setExplosionFactor] = useState(0.35);
   const [clashMode, setClashMode] = useState(false);
   const [blueprintMode, setBlueprintMode] = useState(false);
   const [selectedFloorIndex, setSelectedFloorIndex] = useState<number | null>(null);
+
+  // Left Panel Collapsed State (Responsive)
+  const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(true);
 
   // Inspector Drawer State
   const [selectedUnit, setSelectedUnit] = useState<FloorUnitCadastre | null>(null);
   const [selectedFloor, setSelectedFloor] = useState<FloorStackLevel | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-  // Handle floor selection from pills or 3D
+  // Handle floor selection synchronized between left panel & direct 3D click
   const handleFloorSelect = (floor: FloorStackLevel | null) => {
     if (!floor) {
       setSelectedFloorIndex(null);
@@ -64,53 +66,86 @@ export default function FloorExplorer() {
   ) => {
     setSelectedUnit(unit);
     setSelectedFloor(floor);
+    if (floor) {
+      setSelectedFloorIndex(floor.floorIndex);
+    }
     if (unit) {
       setIsDrawerOpen(true);
     }
   };
 
+  // Sort floors top-to-bottom for natural vertical architectural representation
+  const sortedFloors = [...currentBuilding.floors].sort(
+    (a, b) => b.floorIndex - a.floorIndex
+  );
+
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-slate-950 text-slate-100 font-sans">
-      {/* Top Navigation & Command Bar */}
-      <header className="h-16 shrink-0 bg-slate-900/90 backdrop-blur-xl border-b border-slate-800 px-4 flex items-center justify-between z-30">
-        {/* Left: Back & Title */}
+    <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#F3F0E8] text-[#252622] font-sans">
+      {/* Top Header & Context Bar */}
+      <header className="h-14 shrink-0 bg-[#F8F6F0] border-b border-[#D7D4CB] px-4 flex items-center justify-between z-30">
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => setLocation("/dashboard")}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border border-slate-700 text-xs font-semibold transition-colors"
+            onClick={() => setLocation("/workspace")}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#E9E5DA] text-[#252622] hover:bg-[#D7D4CB] border border-[#D7D4CB] text-xs font-semibold transition-colors"
+            title="Return to Map Workspace"
           >
             <ArrowLeft size={14} />
-            <span>Dashboard</span>
+            <span>Map Workspace</span>
           </button>
 
-          <div className="h-5 w-px bg-slate-700 mx-1 hidden sm:block" />
+          <div className="h-4 w-px bg-[#D7D4CB] mx-1 hidden sm:block" />
 
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-sky-500/20 text-sky-400 border border-sky-500/30">
-              <Layers size={18} />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#A85D48]/30 bg-[#A85D48]/10 text-[#A85D48]">
+              <Layers size={16} />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-sm sm:text-base font-bold text-white tracking-tight">
-                  3D Exploded Floor Cadastre & Volumetric Slicing
+                <h1 className="text-xs sm:text-sm font-bold text-[#252622] tracking-tight">
+                  3D Model Explorer
                 </h1>
-                <span className="hidden md:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                  <Sparkles size={10} />
-                  Top 6 3D Features Active
+                <span className="hidden md:inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#E9E5DA] text-[#6F7069] border border-[#D7D4CB]">
+                  {currentBuilding.ulpin}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 hidden sm:block">
-                Interactive vertical cadastral subdivision, sub-surface basements, air-rights & spatial clash visualizer
-              </p>
             </div>
           </div>
         </div>
 
-        {/* Right: Building Switcher & Quick Navigation */}
+        {/* Right Header: Building Selector & Mode Toggles */}
         <div className="flex items-center gap-2 sm:gap-3">
-          <div className="flex items-center gap-1.5 bg-slate-950/80 px-2.5 py-1.5 rounded-xl border border-slate-700/80">
-            <Building2 size={15} className="text-sky-400" />
+          {/* Blueprint Drape Toggle */}
+          <button
+            type="button"
+            onClick={() => setBlueprintMode(!blueprintMode)}
+            className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              blueprintMode
+                ? "bg-[#A85D48] text-white shadow-xs border border-[#A85D48]"
+                : "bg-[#E9E5DA] text-[#252622] hover:bg-[#D7D4CB] border border-[#D7D4CB]"
+            }`}
+          >
+            <FileText size={13} />
+            <span>2D CAD Drape</span>
+          </button>
+
+          {/* Spatial Clash Toggle */}
+          <button
+            type="button"
+            onClick={() => setClashMode(!clashMode)}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              clashMode
+                ? "bg-rose-600 text-white shadow-xs border border-rose-500"
+                : "bg-[#E9E5DA] text-[#252622] hover:bg-[#D7D4CB] border border-[#D7D4CB]"
+            }`}
+          >
+            <AlertTriangle size={13} />
+            <span>Clash Review</span>
+          </button>
+
+          {/* Building Switcher */}
+          <div className="flex items-center gap-1.5 bg-[#E9E5DA] px-2.5 py-1.5 rounded-lg border border-[#D7D4CB]">
+            <Building2 size={14} className="text-[#A85D48]" />
             <select
               value={selectedBuildingId}
               onChange={e => {
@@ -119,146 +154,164 @@ export default function FloorExplorer() {
                 setSelectedUnit(null);
                 setIsDrawerOpen(false);
               }}
-              className="bg-transparent text-xs font-semibold text-white focus:outline-none cursor-pointer pr-2"
+              className="bg-transparent text-xs font-semibold text-[#252622] focus:outline-none cursor-pointer pr-1"
             >
               {SAMPLE_BUILDING_FLOOR_STACKS.map(b => (
-                <option key={b.id} value={b.id} className="bg-slate-900 text-white">
+                <option key={b.id} value={b.id}>
                   {b.buildingName} ({b.floors.length} Floors)
                 </option>
               ))}
             </select>
           </div>
-
-          <button
-            type="button"
-            onClick={() => setLocation("/workspace")}
-            className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 text-xs font-semibold transition-colors"
-          >
-            <MapPin size={13} />
-            <span>3D GIS Map</span>
-          </button>
         </div>
       </header>
 
-      {/* Sub-Header: Building Metrics & Interactive Mode Toggles */}
-      <div className="bg-slate-900/60 border-b border-slate-800/80 px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs z-20">
-        {/* Building Telemetry Tags */}
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="px-2.5 py-1 rounded-lg bg-slate-800/80 text-slate-300 font-mono text-[11px] border border-slate-700">
-            3D ULPIN: <b className="text-sky-300">{currentBuilding.ulpin}</b>
-          </span>
-          <span className="px-2.5 py-1 rounded-lg bg-slate-800/80 text-slate-300 text-[11px] border border-slate-700">
-            Sanction: <b className="text-slate-100">{currentBuilding.sanctionedFloors}</b>
-          </span>
-          <span className="px-2.5 py-1 rounded-lg bg-slate-800/80 text-slate-300 text-[11px] border border-slate-700">
-            Actual Extrusion: <b className="text-slate-100">{currentBuilding.actualFloors}</b>
-          </span>
-
-          {currentBuilding.sanctionStatus === "SANCTIONED_WITH_DEVIATIONS" ? (
-            <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-950/60 text-red-400 font-semibold text-[11px] border border-red-500/40">
-              <AlertTriangle size={13} />
-              Height Clash (+{(currentBuilding.actualHeightM - currentBuilding.sanctionedHeightM).toFixed(1)}m)
-            </span>
-          ) : (
-            <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-950/60 text-emerald-400 font-semibold text-[11px] border border-emerald-500/40">
-              <CheckCircle2 size={13} />
-              Fully Compliant Height
-            </span>
-          )}
-        </div>
-
-        {/* Feature Mode Action Toggles */}
-        <div className="flex items-center gap-2">
-          {/* Spatial Clash Toggle */}
-          <button
-            type="button"
-            onClick={() => setClashMode(!clashMode)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-semibold transition-all ${
-              clashMode
-                ? "bg-red-500 text-white shadow-lg shadow-red-500/30 border border-red-400"
-                : "bg-slate-800/90 text-slate-300 hover:text-white border border-slate-700"
-            }`}
-          >
-            <AlertTriangle size={14} />
-            <span>4. Municipal Clash Mode</span>
-          </button>
-
-          {/* Blueprint Drape Toggle */}
-          <button
-            type="button"
-            onClick={() => setBlueprintMode(!blueprintMode)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-semibold transition-all ${
-              blueprintMode
-                ? "bg-sky-500 text-white shadow-lg shadow-sky-500/30 border border-sky-400"
-                : "bg-slate-800/90 text-slate-300 hover:text-white border border-slate-700"
-            }`}
-          >
-            <FileText size={14} />
-            <span>6. 2D Blueprint Drape</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Floor Filter Bar (Pills) */}
-      <div className="bg-slate-950/80 border-b border-slate-800/60 px-4 py-2 flex items-center gap-1.5 overflow-x-auto custom-scrollbar z-20">
-        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider pr-2 flex items-center gap-1 shrink-0">
-          <Layers size={13} />
-          Floor Filter:
-        </span>
-        <button
-          type="button"
-          onClick={() => handleFloorSelect(null)}
-          className={`px-3 py-1 rounded-lg text-xs font-bold transition-all shrink-0 ${
-            selectedFloorIndex === null
-              ? "bg-sky-500 text-white shadow-md shadow-sky-500/20"
-              : "bg-slate-800/80 text-slate-400 hover:text-white border border-slate-700/60"
+      {/* Main Workspace: Left Floor Panel + 3D Viewport */}
+      <div className="flex-1 flex overflow-hidden relative">
+        {/* LEFT-SIDE VERTICAL FLOOR CONTROL PANEL */}
+        <aside
+          className={`shrink-0 border-r border-[#D7D4CB] bg-[#F8F6F0] flex flex-col justify-between transition-all duration-200 z-20 ${
+            isLeftPanelOpen ? "w-64" : "w-12"
           }`}
         >
-          All Floors ({currentBuilding.floors.length})
-        </button>
-        {currentBuilding.floors.map(floor => {
-          const isSelected = selectedFloorIndex === floor.floorIndex;
-          const isClash = floor.isUnauthorizedFloor && clashMode;
-          return (
+          {/* Top of Floor Panel: Header & Toggle */}
+          <div className="p-3 border-b border-[#D7D4CB] flex items-center justify-between">
+            {isLeftPanelOpen && (
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs font-bold uppercase tracking-wider text-[#A85D48]">
+                  FLOORS
+                </span>
+                <span className="text-[10px] text-[#6F7069] font-mono">
+                  ({currentBuilding.floors.length})
+                </span>
+              </div>
+            )}
             <button
-              key={floor.floorCode}
               type="button"
-              onClick={() => handleFloorSelect(isSelected ? null : floor)}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${
-                isSelected
-                  ? "bg-sky-500 text-white shadow-md shadow-sky-500/20"
-                  : isClash
-                    ? "bg-red-950/70 text-red-300 border border-red-500/50 hover:bg-red-900/60"
-                    : floor.floorIndex < 0
-                      ? "bg-cyan-950/60 text-cyan-300 border border-cyan-700/50 hover:bg-cyan-900/50"
-                      : "bg-slate-800/80 text-slate-300 hover:text-white border border-slate-700/60"
+              onClick={() => setIsLeftPanelOpen(!isLeftPanelOpen)}
+              className="p-1 rounded text-[#6F7069] hover:text-[#252622] hover:bg-[#E9E5DA] transition-colors ml-auto"
+              title={isLeftPanelOpen ? "Collapse Panel" : "Expand Floor Panel"}
+            >
+              {isLeftPanelOpen ? <PanelLeftClose size={15} /> : <PanelLeftOpen size={15} />}
+            </button>
+          </div>
+
+          {/* Floor Selection List */}
+          <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
+            {/* ALL FLOORS Option */}
+            <button
+              type="button"
+              onClick={() => handleFloorSelect(null)}
+              className={`w-full text-left rounded-lg px-3 py-2 text-xs font-bold transition-all flex items-center justify-between ${
+                selectedFloorIndex === null
+                  ? "bg-[#A85D48] text-white shadow-xs"
+                  : "bg-[#E9E5DA] text-[#252622] hover:bg-[#D7D4CB] border border-[#D7D4CB]"
               }`}
             >
-              <span>{floor.floorCode}</span>
-              {floor.isUnauthorizedFloor && (
-                <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-ping" />
+              <span>{isLeftPanelOpen ? "ALL FLOORS" : "ALL"}</span>
+              {isLeftPanelOpen && (
+                <span className="text-[10px] font-mono opacity-80">
+                  {currentBuilding.floors.length} Levels
+                </span>
               )}
             </button>
-          );
-        })}
+
+            {/* Dynamic Individual Floor Items */}
+            {sortedFloors.map(floor => {
+              const isSelected = selectedFloorIndex === floor.floorIndex;
+              const isClash = floor.isUnauthorizedFloor && clashMode;
+              return (
+                <button
+                  key={floor.floorCode}
+                  type="button"
+                  onClick={() => handleFloorSelect(isSelected ? null : floor)}
+                  className={`w-full text-left rounded-lg px-3 py-2 text-xs font-semibold transition-all flex items-center justify-between ${
+                    isSelected
+                      ? "bg-[#A85D48] text-white font-bold shadow-xs ring-1 ring-[#A85D48]"
+                      : isClash
+                        ? "bg-rose-100 text-rose-800 border border-rose-300 hover:bg-rose-200"
+                        : "bg-[#E9E5DA] text-[#252622] hover:bg-[#D7D4CB] border border-[#D7D4CB]"
+                  }`}
+                  title={`${floor.floorName} (${floor.elevationMsl})`}
+                >
+                  <div className="flex items-center gap-2 truncate">
+                    <span className="font-mono font-bold w-7 shrink-0 text-center">
+                      {floor.floorCode}
+                    </span>
+                    {isLeftPanelOpen && (
+                      <span className="truncate text-[11px] font-medium opacity-90">
+                        {floor.floorName.split("·")[0]}
+                      </span>
+                    )}
+                  </div>
+
+                  {isLeftPanelOpen && (
+                    <span className="text-[10px] font-mono shrink-0 opacity-70">
+                      {floor.units.length > 0 ? `${floor.units.length}U` : ""}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Bottom of Floor Panel: EXPLODE FLOORS Slider */}
+          {isLeftPanelOpen ? (
+            <div className="p-3 border-t border-[#D7D4CB] bg-[#E9E5DA]/40 space-y-2">
+              <div className="flex items-center justify-between text-xs font-bold">
+                <span className="text-[11px] text-[#A85D48] font-mono uppercase tracking-wider">
+                  EXPLODE FLOORS
+                </span>
+                <span className="font-mono text-[11px] text-[#252622]">
+                  {Math.round(explosionFactor * 100)}%
+                </span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.02"
+                value={explosionFactor}
+                onChange={e => setExplosionFactor(parseFloat(e.target.value))}
+                className="w-full h-1.5 bg-[#D7D4CB] rounded appearance-none cursor-pointer accent-[#A85D48]"
+              />
+              <div className="flex justify-between text-[9px] font-mono text-[#6F7069]">
+                <span>0% Solid</span>
+                <span>50% Sep</span>
+                <span>100% Explode</span>
+              </div>
+            </div>
+          ) : (
+            <div className="p-2 border-t border-[#D7D4CB] text-center">
+              <button
+                type="button"
+                onClick={() => setIsLeftPanelOpen(true)}
+                className="p-1 rounded text-[#6F7069] hover:text-[#252622]"
+                title="Expand Floor Panel to adjust Explode Slider"
+              >
+                <Sliders size={14} />
+              </button>
+            </div>
+          )}
+        </aside>
+
+        {/* 3D WebGL Canvas Viewport (Takes majority of screen) */}
+        <main className="flex-1 relative overflow-hidden bg-stone-900">
+          <ThreeFloorStackViewer
+            building={currentBuilding}
+            selectedFloorIndex={selectedFloorIndex}
+            selectedUnitId={selectedUnit?.id || null}
+            explosionFactor={explosionFactor}
+            clashMode={clashMode}
+            blueprintMode={blueprintMode}
+            onSelectFloor={handleFloorSelect}
+            onSelectUnit={handleUnitSelect}
+            onExplosionChange={setExplosionFactor}
+          />
+        </main>
       </div>
 
-      {/* Main 3D WebGL Canvas Area */}
-      <div className="flex-1 relative overflow-hidden">
-        <ThreeFloorStackViewer
-          building={currentBuilding}
-          selectedFloorIndex={selectedFloorIndex}
-          selectedUnitId={selectedUnit?.id || null}
-          explosionFactor={explosionFactor}
-          clashMode={clashMode}
-          blueprintMode={blueprintMode}
-          onSelectFloor={handleFloorSelect}
-          onSelectUnit={handleUnitSelect}
-          onExplosionChange={setExplosionFactor}
-        />
-      </div>
-
-      {/* Slide-Over Forensic Deed Inspector Drawer */}
+      {/* Forensic Unit Inspector Drawer */}
       <FloorUnitInspectorDrawer
         building={currentBuilding}
         floor={selectedFloor}

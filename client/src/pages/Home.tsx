@@ -241,7 +241,7 @@ export default function Home() {
     useState<MapEvidenceFilter>("all");
   const [autocompleteOpen, setAutocompleteOpen] = useState(false);
   const resolvedWorkspaceSite =
-    areaSearchQuery.trim() || "Amity University Patna";
+    areaSearchQuery.trim() || "Rajouri Garden";
   const [sourceGeometry, setSourceGeometry] = useState("");
   const [editorForm, setEditorForm] = useState({
     geometry: "",
@@ -268,7 +268,7 @@ export default function Home() {
   const authQuery = trpc.auth.me.useQuery();
   const session = useAuth();
   const areaSearchInput = useMemo(
-    () => ({ query: areaSearchRequest ?? "Amity University Patna" }),
+    () => ({ query: areaSearchRequest ?? "Rajouri Garden" }),
     [areaSearchRequest]
   );
   const areaSearch = trpc.postgis.areaSearch.useQuery(areaSearchInput, {

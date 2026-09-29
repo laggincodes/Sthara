@@ -237,14 +237,14 @@ export function BuildingInformationPanel({
     valueFrom(properties, ["buildingId", "osmIdentifier", "osm_id", "id", "featureId"]);
   const buildingId = rawBuildingId && rawBuildingId !== "Not exposed by OSM tile" ? rawBuildingId : notAvailable;
 
-  const rawUlpin = floorStack?.ulpin ?? valueFrom(properties, ["ulpin", "ULPIN"]);
-  const ulpin = rawUlpin ? rawUlpin : notAvailable;
+  const rawUlpin = floorStack?.ulpin ?? valueFrom(properties, ["ulpin", "ULPIN", "spatialId"]);
+  const ulpin = rawUlpin ? rawUlpin : "STHARA-SPATIAL-ID-PENDING";
 
   const sourceName = floorStack
-    ? "National 3D ULPIN Cadastre / Municipal Authority"
+    ? "STHARA Spatial Property Model / Drawing Intelligence"
     : isOsm
       ? "OpenStreetMap / Cesium Ion 3D Photogrammetry Tiles"
-      : "PostGIS Municipal GIS Spatial Database";
+      : "PostGIS Spatial Database";
 
   const sourceCategory = isOsm ? "Visual Context Only" : "Authoritative GIS Survey Layer";
 

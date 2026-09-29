@@ -20,9 +20,9 @@ const buildingInfoPanelSource = readFileSync(
 );
 
 describe("Map-Native Multi-Storey Floor Slicer & Cadastral Slicing", () => {
-  it("resolves realistic 3D floor stack for IIT Patna search queries", () => {
-    const stack = resolveFloorStackForSelection(null, "IIT Patna");
-    expect(stack.buildingName).toContain("IIT Patna");
+  it("resolves realistic 3D floor stack for Rajouri Garden project queries", () => {
+    const stack = resolveFloorStackForSelection(null, "Rajouri Garden");
+    expect(stack.buildingName).toContain("Rajouri Garden");
     expect(stack.floors.length).toBeGreaterThanOrEqual(4);
     
     const groundFloor = stack.floors.find(f => f.floorCode === "G");
@@ -31,25 +31,35 @@ describe("Map-Native Multi-Storey Floor Slicer & Cadastral Slicing", () => {
 
     const f1Floor = stack.floors.find(f => f.floorCode === "F1");
     expect(f1Floor).toBeDefined();
-    expect(f1Floor?.units[0].ulpin3d).toContain("IN-BR-PAT-IITP");
+    expect(f1Floor?.units[0].ulpin3d).toContain("DL-RG-");
 
     const terrace = stack.floors.find(f => f.floorCode === "TERRACE");
     expect(terrace).toBeDefined();
   });
 
-  it("dynamically resolves 7, 8, 10, 12 floor stacks based on height, typology, and user overrides", () => {
-    // 1. Height-derived (e.g. 25.6m height -> ~8 floors)
-    const eightFloorHeightStack = resolveFloorStackForSelection({ approvedHeightMetres: 25.6, name: "Ganga View Residency" });
-    // Total floor objects = B1 (for >=6 floors) + G + F1..F7 + Terrace
-    expect(eightFloorHeightStack.floors.some(f => f.floorCode === "F7")).toBe(true);
-    expect(eightFloorHeightStack.floors.some(f => f.floorCode === "B1")).toBe(true);
-    expect(eightFloorHeightStack.floors.some(f => f.floorCode === "TERRACE")).toBe(true);
+  it("enforces NO BASEMENT BY DEFAULT unless explicit evidence is provided", () => {
+    // 1. Standard G+6 building without explicit basement evidence
+    const defaultStack = resolveFloorStackForSelection({ approvedHeightMetres: 22.4, name: "Block A Apartment" });
+    expect(defaultStack.basementCount).toBe(0);
+    expect(defaultStack.basementSource).toBe("Drawing does not identify basement");
+    expect(defaultStack.floors.some(f => f.floorCode === "B1")).toBe(false);
+    expect(defaultStack.floors.some(f => f.floorCode === "G")).toBe(true);
 
-    // 2. High-rise typology keyword (Tower -> 12 floors)
-    const towerStack = resolveFloorStackForSelection({ name: "Patna Tech Tower" });
+    // 2. Explicit basement evidence provided
+    const basementStack = resolveFloorStackForSelection({
+      name: "Commercial Complex with Basement",
+      hasExplicitBasement: true,
+      basementCount: 1,
+    });
+    expect(basementStack.basementCount).toBe(1);
+    expect(basementStack.basementSource).toBe("Drawing explicitly identifies basement");
+    expect(basementStack.floors.some(f => f.floorCode === "B1")).toBe(true);
+  });
+
+  it("dynamically resolves floor stacks based on height, typology, and user overrides", () => {
+    const towerStack = resolveFloorStackForSelection({ name: "Ring Road Tower" });
     expect(towerStack.floors.some(f => f.floorCode === "F11")).toBe(true);
 
-    // 3. User Storey Level Override (e.g. 10 floors)
     const custom10FloorStack = resolveFloorStackForSelection(null, "Custom Building", 10);
     expect(custom10FloorStack.floors.some(f => f.floorCode === "F9")).toBe(true);
     expect(custom10FloorStack.floors.some(f => f.floorCode === "TERRACE")).toBe(true);
@@ -63,14 +73,17 @@ describe("Map-Native Multi-Storey Floor Slicer & Cadastral Slicing", () => {
     expect(cesiumViewerSource).toContain("3D Cadastre Level");
   });
 
-  it("SpatialWorkspace mounts the on-map 3D Floor Slicer dock and connects to CesiumSpatialViewer", () => {
-    expect(workspaceSource).toContain("3D Floor Slicer");
-    expect(workspaceSource).toContain("Vertical Explosion (Separate Floors)");
-    expect(workspaceSource).toContain("floorExplosionFactor={floorExplosionFactor}");
-    expect(workspaceSource).toContain("activeFloorIndex={activeFloorIndex}");
+  it("SpatialWorkspace mounts STHARA controls, map tools, and import modal", () => {
+    expect(workspaceSource).toContain("Select Building");
+    expect(workspaceSource).toContain("Select Area");
+    expect(workspaceSource).toContain("Select Multiple");
+    expect(workspaceSource).toContain("Clear Selection");
+    expect(workspaceSource).toContain("Build 3D");
+    expect(workspaceSource).toContain("Import Data");
+    expect(workspaceSource).toContain("BUILDING INSPECTOR");
     expect(workspaceSource).toContain("floorStackData={floorStackData}");
-    expect(workspaceSource).toContain("overrideFloorCount");
-    expect(workspaceSource).toContain("FloorUnitInspectorDrawer");
+    expect(workspaceSource).toContain("Dedicated 3D Floor Slicer");
+    expect(workspaceSource).toContain("PROJECT → IMPORT DATA");
   });
 
   it("BuildingInformationPanel provides interactive floor selector pills, units list, and 3D ULPIN copy", () => {

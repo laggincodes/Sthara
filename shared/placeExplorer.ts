@@ -1,11 +1,9 @@
 export type PlaceExplorerSegment = "parcels" | "buildings";
 
 export const SOURCE_BACKED_EXPLORER_SUGGESTIONS = [
-  "Amity University Patna",
-  "IIT Patna",
-  "AIIMS Patna",
-  "Gandhi Maidan Patna",
-  "Koramangala 5th Block",
+  "Rajouri Garden, Delhi",
+  "Block A Rajouri Garden",
+  "Ring Road Spatial Cadastre",
 ] as const;
 
 export const PLACE_EXPLORER_SEGMENTS: Record<
@@ -35,8 +33,8 @@ export const PLACE_EXPLORER_SEGMENTS: Record<
     eyebrow: "Source-aware building-place explorer",
     stageLabel: "Live source-backed building context",
     description:
-      "Routes supported college, institution, university, and place searches to existing live geometry. Restaurant and other unmatched searches remain explicitly unavailable.",
-    searchPlaceholder: "Search a college, university, restaurant, or place",
+      "Routes supported spatial property searches to existing live geometry.",
+    searchPlaceholder: "Search a project building or spatial ID",
     recordLabel: "Matched building footprints",
     noResultLabel: "No verified 3D building footprint matched this query.",
   },

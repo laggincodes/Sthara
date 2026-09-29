@@ -46,7 +46,7 @@ export function FloorUnitInspectorDrawer({
 
   const copyUlpin = () => {
     navigator.clipboard.writeText(unit.ulpin3d);
-    toast.success("3D ULPIN Copied to Clipboard", {
+    toast.success("STHARA Spatial ID Copied to Clipboard", {
       description: unit.ulpin3d,
     });
   };
@@ -63,16 +63,16 @@ export function FloorUnitInspectorDrawer({
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(18);
       doc.setFont("helvetica", "bold");
-      doc.text("GOVERNMENT OF BIHAR · URBAN LAND REGISTRY", 105, 18, { align: "center" });
+      doc.text("STHARA SPATIAL REGISTRY · 3D PROPERTY CERTIFICATE", 105, 18, { align: "center" });
 
       doc.setFontSize(11);
       doc.setFont("helvetica", "normal");
       doc.setTextColor(56, 189, 248); // Sky 400
-      doc.text("NATIONAL 3D CADASTRAL RECORD & VERTICAL PROPERTY CERTIFICATE", 105, 28, { align: "center" });
+      doc.text("OFFICIAL 3D CADASTRAL RECORD & VERTICAL SPATIAL ID CERTIFICATE", 105, 28, { align: "center" });
 
       doc.setFontSize(9);
       doc.setTextColor(203, 213, 225);
-      doc.text("Under National Land Records Modernization Programme (NLRMP) · 3D ULPIN System", 105, 36, { align: "center" });
+      doc.text("Spatial Cadastral Management & High-Precision Property Registry", 105, 36, { align: "center" });
 
       // Certificate Number & Timestamp
       doc.setFontSize(9);
@@ -97,7 +97,7 @@ export function FloorUnitInspectorDrawer({
 
       doc.setFont("helvetica", "bold");
       doc.setTextColor(2, 132, 199);
-      doc.text(`Unique 14-Digit 3D ULPIN: ${unit.ulpin3d}`, 105, 72);
+      doc.text(`STHARA Spatial ID: ${unit.ulpin3d}`, 105, 72);
       doc.setFont("helvetica", "normal");
       doc.setTextColor(15, 23, 42);
       doc.text(`Municipal Sanction No: ${building.municipalSanctionNo}`, 105, 79);
